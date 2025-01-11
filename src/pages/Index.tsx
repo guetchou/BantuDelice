@@ -28,6 +28,25 @@ interface Order {
   rating?: number;
 }
 
+const getStatusBadgeColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return 'bg-yellow-500/20 text-yellow-500';
+    case 'accepted':
+      return 'bg-blue-500/20 text-blue-500';
+    case 'preparing':
+      return 'bg-purple-500/20 text-purple-500';
+    case 'ready':
+      return 'bg-emerald-500/20 text-emerald-500';
+    case 'delivered':
+      return 'bg-green-500/20 text-green-500';
+    case 'cancelled':
+      return 'bg-red-500/20 text-red-500';
+    default:
+      return 'bg-gray-500/20 text-gray-500';
+  }
+};
+
 const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
