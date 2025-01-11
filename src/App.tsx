@@ -22,7 +22,7 @@ function App() {
         <div className={`pt-16 ${isCollapsed ? 'pl-20' : 'pl-64'} transition-all duration-300`}>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+            <Route path="/" element={<Index />} />
             <Route path="/restaurants" element={<Restaurants />} />
             <Route path="/restaurant/:restaurantId/menu" element={<RestaurantMenu />} />
             <Route path="/contacts" element={
