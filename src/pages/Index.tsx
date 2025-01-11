@@ -2,18 +2,12 @@ import { Users, DollarSign, Target, Award, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { AuthError, AuthApiError } from '@supabase/supabase-js';
 import DashboardCard from "@/components/DashboardCard";
 import DashboardChart from "@/components/DashboardChart";
 import DashboardBarChart from "@/components/DashboardBarChart";
 import Navbar from "@/components/Navbar";
-import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 
 interface IndexProps {
   isCollapsed: boolean;
@@ -49,10 +43,7 @@ const getStatusBadgeColor = (status: string) => {
 };
 
 const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [authError, setAuthError] = useState<string>("");
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalRevenue: 0,
@@ -60,196 +51,6 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
     completionRate: 0,
     averageRating: 0
   });
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const getErrorMessage = (error: AuthError) => {
-    if (error instanceof AuthApiError) {
-      switch (error.message) {
-        case 'Email not confirmed':
-          return 'Veuillez confirmer votre email avant de vous connecter. En développement, vous pouvez désactiver cette option dans les paramètres Supabase.';
-        case 'Invalid login credentials':
-          return 'Email ou mot de passe incorrect';
-        case 'Email address is invalid':
-          return 'Veuillez utiliser une adresse email valide';
-        case 'Password should be at least 6 characters':
-          return 'Le mot de passe doit contenir au moins 6 caractères';
-        case 'User already registered':
-          return 'Un compte existe déjà avec cette adresse email';
-        default:
-          return error.message;
-      }
-    }
-    return error.message;
-  };
-
-  const handleSignUp = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) {
-        setAuthError(getErrorMessage(error));
-        toast({
-          variant: "destructive",
-          title: "Erreur d'inscription",
-          description: getErrorMessage(error),
-        });
-        console.error('Erreur lors de l\'inscription:', error.message);
-      } else {
-        toast({
-          title: "Inscription réussie",
-          description: "Veuillez vérifier votre email pour confirmer votre compte.",
-        });
-        console.log('Utilisateur inscrit avec succès:', data);
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'inscription:", error);
-      setAuthError("Une erreur inattendue s'est produite lors de l'inscription.");
-    }
-  };
-
-  const handleQuickLogin = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        setAuthError(getErrorMessage(error));
-        toast({
-          variant: "destructive",
-          title: "Erreur de connexion",
-          description: getErrorMessage(error),
-        });
-        console.error('Erreur de connexion:', error.message);
-      }
-    } catch (error) {
-      console.error("Erreur de connexion:", error);
-      setAuthError("Une erreur inattendue s'est produite lors de la connexion.");
-    }
-  };
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        setAuthError("");
-        console.log('Utilisateur connecté:', session?.user?.email);
-      }
-      if (event === 'USER_UPDATED') {
-        const handleError = async () => {
-          const { error } = await supabase.auth.getSession();
-          if (error) {
-            setAuthError(getErrorMessage(error));
-            toast({
-              variant: "destructive",
-              title: "Erreur d'authentification",
-              description: getErrorMessage(error)
-            });
-          }
-        };
-        handleError();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [toast]);
-
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
-  }
-
-  if (!session) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-emerald-900 to-cyan-900">
-        <h1 className="text-3xl font-bold text-white mb-8">Buntudelice</h1>
-        <div className="w-full max-w-md glass-effect p-8 rounded-lg">
-          {authError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{authError}</AlertDescription>
-            </Alert>
-          )}
-          <Auth
-            supabaseClient={supabase}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#10b981',
-                    brandAccent: '#059669',
-                  },
-                },
-              },
-            }}
-            localization={{
-              variables: {
-                sign_up: {
-                  email_label: 'Email',
-                  password_label: 'Mot de passe',
-                  button_label: 'S\'inscrire',
-                  loading_button_label: 'Inscription...',
-                  social_provider_text: 'Se connecter avec {{provider}}',
-                  link_text: 'Vous n\'avez pas de compte ? Inscrivez-vous'
-                },
-                sign_in: {
-                  email_label: 'Email',
-                  password_label: 'Mot de passe',
-                  button_label: 'Se connecter',
-                  loading_button_label: 'Connexion...',
-                  social_provider_text: 'Se connecter avec {{provider}}',
-                  link_text: 'Déjà un compte ? Connectez-vous'
-                }
-              }
-            }}
-            providers={[]}
-          />
-          
-          <div className="mt-8 space-y-2">
-            <p className="text-sm text-gray-400 mb-2">Connexion rapide (Développement uniquement)</p>
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => handleQuickLogin('admin.buntudelice@gmail.com', 'admin123')}
-            >
-              Connexion Admin
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => handleQuickLogin('restaurant.buntudelice@gmail.com', 'restaurant123')}
-            >
-              Connexion Restaurant
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => handleQuickLogin('livreur.buntudelice@gmail.com', 'livreur123')}
-            >
-              Connexion Livreur
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-cyan-900 flex relative">
