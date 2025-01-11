@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      delivery_drivers: {
+        Row: {
+          average_rating: number | null
+          created_at: string | null
+          current_latitude: number | null
+          current_longitude: number | null
+          id: string
+          last_location_update: string | null
+          status: string | null
+          total_deliveries: number | null
+          user_id: string | null
+        }
+        Insert: {
+          average_rating?: number | null
+          created_at?: string | null
+          current_latitude?: number | null
+          current_longitude?: number | null
+          id?: string
+          last_location_update?: string | null
+          status?: string | null
+          total_deliveries?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          average_rating?: number | null
+          created_at?: string | null
+          current_latitude?: number | null
+          current_longitude?: number | null
+          id?: string
+          last_location_update?: string | null
+          status?: string | null
+          total_deliveries?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       delivery_tracking: {
         Row: {
           delivered_at: string | null
@@ -156,8 +192,10 @@ export type Database = {
       orders: {
         Row: {
           accepted_at: string | null
+          actual_delivery_time: string | null
           created_at: string
           delivery_address: string
+          estimated_delivery_time: string | null
           id: string
           payment_status: string
           prepared_at: string | null
@@ -173,8 +211,10 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          actual_delivery_time?: string | null
           created_at?: string
           delivery_address: string
+          estimated_delivery_time?: string | null
           id?: string
           payment_status?: string
           prepared_at?: string | null
@@ -190,8 +230,10 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          actual_delivery_time?: string | null
           created_at?: string
           delivery_address?: string
+          estimated_delivery_time?: string | null
           id?: string
           payment_status?: string
           prepared_at?: string | null
@@ -241,6 +283,7 @@ export type Database = {
         Row: {
           address: string
           created_at: string
+          estimated_preparation_time: number | null
           id: string
           latitude: number | null
           longitude: number | null
@@ -250,6 +293,7 @@ export type Database = {
         Insert: {
           address: string
           created_at?: string
+          estimated_preparation_time?: number | null
           id?: string
           latitude?: number | null
           longitude?: number | null
@@ -259,6 +303,7 @@ export type Database = {
         Update: {
           address?: string
           created_at?: string
+          estimated_preparation_time?: number | null
           id?: string
           latitude?: number | null
           longitude?: number | null
