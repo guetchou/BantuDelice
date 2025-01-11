@@ -105,6 +105,11 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
           const { error } = await supabase.auth.getSession();
           if (error) {
             setAuthError(getErrorMessage(error));
+            toast({
+              variant: "destructive",
+              title: "Erreur d'authentification",
+              description: getErrorMessage(error)
+            });
           }
         };
         handleError();
@@ -112,7 +117,7 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
