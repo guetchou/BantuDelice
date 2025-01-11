@@ -8,38 +8,93 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
   message: string;
-  created_at: string;
+  type: string;
   read: boolean;
+  created_at: string;
 }
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      // Cette partie sera implémentée une fois que nous aurons créé la table notifications
-      // Pour l'instant, nous utilisons des données factices
-      setNotifications([
-        {
-          id: "1",
-          message: "Bienvenue sur la plateforme !",
-          created_at: new Date().toISOString(),
-          read: false,
-        },
-      ]);
-      setUnreadCount(1);
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        setNotifications(data || []);
+        setUnreadCount(data?.filter(n => !n.read).length || 0);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les notifications",
+          variant: "destructive",
+        });
+      }
     };
 
     fetchNotifications();
-  }, []);
+
+    // Subscribe to real-time notifications
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications'
+        },
+        (payload) => {
+          console.log('Notification change received:', payload);
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("id", notificationId);
+
+      if (error) throw error;
+
+      setNotifications(notifications.map(n => 
+        n.id === notificationId ? { ...n, read: true } : n
+      ));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de marquer la notification comme lue",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -53,15 +108,31 @@ const NotificationBell = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuContent align="end" className="w-80">
         {notifications.length === 0 ? (
-          <DropdownMenuItem>Aucune notification</DropdownMenuItem>
+          <DropdownMenuItem className="text-muted-foreground">
+            Aucune notification
+          </DropdownMenuItem>
         ) : (
           notifications.map((notification) => (
-            <DropdownMenuItem key={notification.id} className="flex flex-col items-start">
-              <span className="font-medium">{notification.message}</span>
-              <span className="text-xs text-gray-500">
-                {new Date(notification.created_at).toLocaleDateString()}
+            <DropdownMenuItem
+              key={notification.id}
+              className={`flex flex-col items-start p-4 space-y-1 cursor-pointer ${
+                !notification.read ? "bg-muted/50" : ""
+              }`}
+              onClick={() => markAsRead(notification.id)}
+            >
+              <div className="flex items-center justify-between w-full">
+                <span className="font-medium">{notification.message}</span>
+                {!notification.read && (
+                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {new Date(notification.created_at).toLocaleDateString("fr-FR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             </DropdownMenuItem>
           ))
