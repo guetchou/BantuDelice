@@ -29,7 +29,7 @@ function App() {
               path="/contacts"
               element={
                 <ProtectedRoute>
-                  <Contacts />
+                  <Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
                 </ProtectedRoute>
               }
             />
@@ -37,7 +37,7 @@ function App() {
               path="/deals"
               element={
                 <ProtectedRoute>
-                  <Deals />
+                  <Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
                 </ProtectedRoute>
               }
             />
@@ -45,7 +45,7 @@ function App() {
               path="/admin"
               element={
                 <ProtectedRoute>
-                  <Admin />
+                  <Admin isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
                 </ProtectedRoute>
               }
             />
