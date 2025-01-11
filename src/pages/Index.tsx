@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { AuthError, AuthApiError } from '@supabase/supabase-js';
 import DashboardCard from "@/components/DashboardCard";
 import DashboardChart from "@/components/DashboardChart";
 import DashboardBarChart from "@/components/DashboardBarChart";
@@ -11,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import { useToast } from "@/components/ui/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface IndexProps {
   isCollapsed: boolean;
@@ -30,6 +32,7 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [authError, setAuthError] = useState<string>("");
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalRevenue: 0,
@@ -55,85 +58,40 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch orders and set up real-time subscription
-  useEffect(() => {
-    if (!session) return;
-
-    const fetchOrders = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setOrders(data || []);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger les commandes",
-        });
+  const getErrorMessage = (error: AuthError) => {
+    if (error instanceof AuthApiError) {
+      switch (error.message) {
+        case 'Email address is invalid':
+          return 'Veuillez utiliser une adresse email valide (ex: exemple@gmail.com)';
+        case 'User already registered':
+          return 'Un compte existe déjà avec cette adresse email';
+        case 'Invalid login credentials':
+          return 'Email ou mot de passe incorrect';
+        default:
+          return error.message;
       }
-    };
-
-    fetchOrders();
-
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('public:orders')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders'
-        },
-        (payload) => {
-          console.log('Real-time update:', payload);
-          fetchOrders(); // Refresh orders when changes occur
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [session, toast]);
-
-  // Calculate stats
-  useEffect(() => {
-    if (!orders.length) return;
-
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((acc, order) => acc + order.total_amount, 0);
-    const activeDeliveries = orders.filter(o => ['pending', 'accepted', 'preparing'].includes(o.status)).length;
-    const completedOrders = orders.filter(o => o.status === 'completed').length;
-    const completionRate = Math.round((completedOrders / totalOrders) * 100);
-    const ratings = orders.filter(o => o.rating).map(o => o.rating as number);
-    const averageRating = ratings.length 
-      ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
-      : 0;
-
-    setStats({
-      totalOrders,
-      totalRevenue,
-      activeDeliveries,
-      completionRate,
-      averageRating
-    });
-  }, [orders]);
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'pending': return 'bg-yellow-500';
-      case 'accepted': return 'bg-blue-500';
-      case 'preparing': return 'bg-purple-500';
-      default: return 'bg-gray-500';
     }
+    return error.message;
   };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        setAuthError("");
+      }
+      if (event === 'USER_UPDATED') {
+        const handleError = async () => {
+          const { error } = await supabase.auth.getSession();
+          if (error) {
+            setAuthError(getErrorMessage(error));
+          }
+        };
+        handleError();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
@@ -144,6 +102,11 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-emerald-900 to-cyan-900">
         <h1 className="text-3xl font-bold text-white mb-8">Buntudelice</h1>
         <div className="w-full max-w-md glass-effect p-8 rounded-lg">
+          {authError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
           <Auth
             supabaseClient={supabase}
             appearance={{
@@ -156,6 +119,26 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
                   },
                 },
               },
+            }}
+            localization={{
+              variables: {
+                sign_up: {
+                  email_label: 'Email',
+                  password_label: 'Mot de passe',
+                  button_label: 'S\'inscrire',
+                  loading_button_label: 'Inscription...',
+                  social_provider_text: 'Se connecter avec {{provider}}',
+                  link_text: 'Vous n\'avez pas de compte ? Inscrivez-vous'
+                },
+                sign_in: {
+                  email_label: 'Email',
+                  password_label: 'Mot de passe',
+                  button_label: 'Se connecter',
+                  loading_button_label: 'Connexion...',
+                  social_provider_text: 'Se connecter avec {{provider}}',
+                  link_text: 'Déjà un compte ? Connectez-vous'
+                }
+              }
             }}
             providers={[]}
           />
