@@ -28,7 +28,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return null; // or a loading spinner
+    return null; // ou un spinner de chargement
   }
 
   if (!isAuthenticated) {
