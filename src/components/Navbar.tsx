@@ -1,8 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavbarProps {
   isCollapsed: boolean;
@@ -11,8 +13,26 @@ interface NavbarProps {
 
 const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const isActive = (path: string) => location.pathname === path;
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .single();
+
+      setIsAdmin(roles?.role === "admin");
+    };
+
+    checkAdminRole();
+  }, []);
   
   return (
     <div className={cn(
@@ -85,6 +105,22 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
             <PieChart className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span>Commandes</span>}
           </Link>
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={cn(
+                "flex items-center p-3 rounded-lg transition-colors",
+                isCollapsed ? "justify-center" : "space-x-3",
+                isActive("/admin") 
+                  ? "bg-white/20 text-white" 
+                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+              )}
+            >
+              <Settings className="h-5 w-5 flex-shrink-0" />
+              {!isCollapsed && <span>Administration</span>}
+            </Link>
+          )}
         </div>
       </nav>
       <Separator orientation="vertical" className="h-full opacity-20" />

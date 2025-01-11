@@ -95,7 +95,9 @@ export type Database = {
           prepared_at: string | null
           rating: number | null
           rating_comment: string | null
+          restaurant_comment: string | null
           restaurant_id: string
+          restaurant_rating: number | null
           status: string
           total_amount: number
           updated_at: string
@@ -110,7 +112,9 @@ export type Database = {
           prepared_at?: string | null
           rating?: number | null
           rating_comment?: string | null
+          restaurant_comment?: string | null
           restaurant_id: string
+          restaurant_rating?: number | null
           status?: string
           total_amount: number
           updated_at?: string
@@ -125,7 +129,9 @@ export type Database = {
           prepared_at?: string | null
           rating?: number | null
           rating_comment?: string | null
+          restaurant_comment?: string | null
           restaurant_id?: string
+          restaurant_rating?: number | null
           status?: string
           total_amount?: number
           updated_at?: string

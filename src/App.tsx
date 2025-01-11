@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Contacts from "./pages/Contacts";
 import ContactDetails from "./pages/ContactDetails";
 import Deals from "./pages/Deals";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => {
             <Route path="/contacts" element={<Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
             <Route path="/contacts/:id" element={<ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
             <Route path="/deals" element={<Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+            <Route path="/admin" element={<Admin isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
