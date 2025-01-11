@@ -81,19 +81,49 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
   const getErrorMessage = (error: AuthError) => {
     if (error instanceof AuthApiError) {
       switch (error.message) {
-        case 'Email address is invalid':
-          return 'Veuillez utiliser une adresse email valide (ex: exemple@gmail.com)';
-        case 'User already registered':
-          return 'Un compte existe déjà avec cette adresse email';
-        case 'Invalid login credentials':
-          return 'Email ou mot de passe incorrect';
         case 'Email not confirmed':
           return 'Veuillez confirmer votre email avant de vous connecter. En développement, vous pouvez désactiver cette option dans les paramètres Supabase.';
+        case 'Invalid login credentials':
+          return 'Email ou mot de passe incorrect';
+        case 'Email address is invalid':
+          return 'Veuillez utiliser une adresse email valide';
+        case 'Password should be at least 6 characters':
+          return 'Le mot de passe doit contenir au moins 6 caractères';
+        case 'User already registered':
+          return 'Un compte existe déjà avec cette adresse email';
         default:
           return error.message;
       }
     }
     return error.message;
+  };
+
+  const handleSignUp = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        setAuthError(getErrorMessage(error));
+        toast({
+          variant: "destructive",
+          title: "Erreur d'inscription",
+          description: getErrorMessage(error),
+        });
+        console.error('Erreur lors de l\'inscription:', error.message);
+      } else {
+        toast({
+          title: "Inscription réussie",
+          description: "Veuillez vérifier votre email pour confirmer votre compte.",
+        });
+        console.log('Utilisateur inscrit avec succès:', data);
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'inscription:", error);
+      setAuthError("Une erreur inattendue s'est produite lors de l'inscription.");
+    }
   };
 
   const handleQuickLogin = async (email: string, password: string) => {
@@ -109,9 +139,11 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
           title: "Erreur de connexion",
           description: getErrorMessage(error),
         });
+        console.error('Erreur de connexion:', error.message);
       }
     } catch (error) {
       console.error("Erreur de connexion:", error);
+      setAuthError("Une erreur inattendue s'est produite lors de la connexion.");
     }
   };
 
@@ -119,6 +151,7 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN') {
         setAuthError("");
+        console.log('Utilisateur connecté:', session?.user?.email);
       }
       if (event === 'USER_UPDATED') {
         const handleError = async () => {
@@ -189,7 +222,6 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
             providers={[]}
           />
           
-          {/* Quick Login Buttons - Development Only */}
           <div className="mt-8 space-y-2">
             <p className="text-sm text-gray-400 mb-2">Connexion rapide (Développement uniquement)</p>
             <Button 
