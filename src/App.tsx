@@ -25,26 +25,38 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/restaurants" element={<Restaurants />} />
             <Route path="/restaurant/:restaurantId/menu" element={<RestaurantMenu />} />
-            <Route path="/contacts" element={
-              <ProtectedRoute>
-                <Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-              </ProtectedRoute>
-            } />
-            <Route path="/deals" element={
-              <ProtectedRoute>
-                <Deals isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin" element={
-              <ProtectedRoute>
-                <Admin isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/contacts"
+              element={
+                <ProtectedRoute>
+                  <Contacts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/deals"
+              element={
+                <ProtectedRoute>
+                  <Deals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </div>
       </BrowserRouter>
