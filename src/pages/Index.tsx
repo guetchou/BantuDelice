@@ -86,6 +86,8 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
           return 'Un compte existe déjà avec cette adresse email';
         case 'Invalid login credentials':
           return 'Email ou mot de passe incorrect';
+        case 'Email not confirmed':
+          return 'Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception.';
         default:
           return error.message;
       }
