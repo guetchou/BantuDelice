@@ -9,7 +9,7 @@ import DashboardCard from "@/components/DashboardCard";
 import DashboardChart from "@/components/DashboardChart";
 import DashboardBarChart from "@/components/DashboardBarChart";
 import Navbar from "@/components/Navbar";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
