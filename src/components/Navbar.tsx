@@ -75,7 +75,8 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           <Link
             to="/deals"
             className={cn(
-              "flex items-center p-3 rounded-d ? "justify-center" : "space-x-3",
+              "flex items-center p-3 rounded-lg transition-colors",
+              isCollapsed ? "justify-center" : "space-x-3",
               isActive("/deals") 
                 ? "bg-white/20 text-white" 
                 : "text-gray-300 hover:bg-white/10 hover:text-white"
