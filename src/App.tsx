@@ -52,11 +52,7 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-              </ProtectedRoute>
-            } />
+            <Route path="/" element={<Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
             <Route path="/contacts" element={
               <ProtectedRoute>
                 <Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
