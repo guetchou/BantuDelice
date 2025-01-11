@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { truck, creditCard, mapPin, star } from "lucide-react";
+import { Truck, CreditCard, MapPin, Star } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
 const Index = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean; setIsCollapsed: (value: boolean) => void }) => {
@@ -60,19 +60,19 @@ const Index = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean; setIsCol
             <ServiceCard
               title="Commande de Repas"
               description="Vos plats préférés livrés chauds et rapidement"
-              icon={<truck className="h-8 w-8" />}
+              icon={<Truck className="h-8 w-8" />}
               action={() => navigate("/menu")}
             />
             <ServiceCard
               title="Réservation de Taxis"
               description="Voyagez en toute tranquillité et confort"
-              icon={<mapPin className="h-8 w-8" />}
+              icon={<MapPin className="h-8 w-8" />}
               action={() => navigate("/taxis")}
             />
             <ServiceCard
               title="Paiement Sécurisé"
               description="Transactions sûres et rapides"
-              icon={<creditCard className="h-8 w-8" />}
+              icon={<CreditCard className="h-8 w-8" />}
               action={() => navigate("/payment")}
             />
           </div>
@@ -160,7 +160,7 @@ const TestimonialCard = ({
   <Card className="p-6 glass-effect">
     <div className="flex items-center mb-4">
       {Array.from({ length: rating }).map((_, i) => (
-        <star key={i} className="h-5 w-5 text-yellow-400" />
+        <Star key={i} className="h-5 w-5 text-yellow-400" />
       ))}
     </div>
     <p className="text-gray-300 mb-4">{comment}</p>
