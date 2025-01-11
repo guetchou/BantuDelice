@@ -1,10 +1,11 @@
-import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight, Settings } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight, Settings, LogOut } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface NavbarProps {
   isCollapsed: boolean;
@@ -13,6 +14,8 @@ interface NavbarProps {
 
 const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   
   const isActive = (path: string) => location.pathname === path;
@@ -33,6 +36,19 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
 
     checkAdminRole();
   }, []);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la déconnexion",
+        variant: "destructive",
+      });
+    } else {
+      navigate("/auth");
+    }
+  };
   
   return (
     <div className={cn(
@@ -121,6 +137,18 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
               {!isCollapsed && <span>Administration</span>}
             </Link>
           )}
+
+          <button
+            onClick={handleLogout}
+            className={cn(
+              "flex items-center p-3 rounded-lg transition-colors w-full",
+              isCollapsed ? "justify-center" : "space-x-3",
+              "text-gray-300 hover:bg-white/10 hover:text-white mt-auto"
+            )}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Déconnexion</span>}
+          </button>
         </div>
       </nav>
       <Separator orientation="vertical" className="h-full opacity-20" />
