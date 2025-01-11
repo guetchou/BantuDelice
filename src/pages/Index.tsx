@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface IndexProps {
   isCollapsed: boolean;
@@ -87,12 +88,31 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
         case 'Invalid login credentials':
           return 'Email ou mot de passe incorrect';
         case 'Email not confirmed':
-          return 'Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception.';
+          return 'Veuillez confirmer votre email avant de vous connecter. En développement, vous pouvez désactiver cette option dans les paramètres Supabase.';
         default:
           return error.message;
       }
     }
     return error.message;
+  };
+
+  const handleQuickLogin = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setAuthError(getErrorMessage(error));
+        toast({
+          variant: "destructive",
+          title: "Erreur de connexion",
+          description: getErrorMessage(error),
+        });
+      }
+    } catch (error) {
+      console.error("Erreur de connexion:", error);
+    }
   };
 
   useEffect(() => {
@@ -168,6 +188,32 @@ const Index = ({ isCollapsed, setIsCollapsed }: IndexProps) => {
             }}
             providers={[]}
           />
+          
+          {/* Quick Login Buttons - Development Only */}
+          <div className="mt-8 space-y-2">
+            <p className="text-sm text-gray-400 mb-2">Connexion rapide (Développement uniquement)</p>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleQuickLogin('admin.buntudelice@gmail.com', 'admin123')}
+            >
+              Connexion Admin
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleQuickLogin('restaurant.buntudelice@gmail.com', 'restaurant123')}
+            >
+              Connexion Restaurant
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleQuickLogin('livreur.buntudelice@gmail.com', 'livreur123')}
+            >
+              Connexion Livreur
+            </Button>
+          </div>
         </div>
       </div>
     );
