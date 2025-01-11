@@ -1,66 +1,33 @@
+import { useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import Navbar from "./components/Navbar";
+import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import Contacts from "./pages/Contacts";
-import ContactDetails from "./pages/ContactDetails";
 import Deals from "./pages/Deals";
 import Admin from "./pages/Admin";
-import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
+import Restaurants from "./pages/Restaurants";
+import RestaurantMenu from "./pages/RestaurantMenu";
 
-const queryClient = new QueryClient();
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    checkAuth();
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (isAuthenticated === null) {
-    return <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-cyan-900 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-    </div>;
-  }
-
-  return isAuthenticated ? children : <Navigate to="/auth" replace />;
-};
-
-const App = () => {
+function App() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <div className="min-h-screen">
+      <BrowserRouter>
+        <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        <div className={`pt-16 ${isCollapsed ? 'pl-20' : 'pl-64'} transition-all duration-300`}>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Index isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} />
+            <Route path="/restaurants" element={<Restaurants />} />
+            <Route path="/restaurant/:restaurantId/menu" element={<RestaurantMenu />} />
             <Route path="/contacts" element={
               <ProtectedRoute>
                 <Contacts isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-              </ProtectedRoute>
-            } />
-            <Route path="/contacts/:id" element={
-              <ProtectedRoute>
-                <ContactDetails isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
               </ProtectedRoute>
             } />
             <Route path="/deals" element={
@@ -73,11 +40,17 @@ const App = () => {
                 <Admin isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
               </ProtectedRoute>
             } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+        </div>
+      </BrowserRouter>
+      <Toaster />
+    </div>
   );
-};
+}
 
 export default App;
