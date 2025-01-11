@@ -25,8 +25,8 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
           isCollapsed ? "justify-center" : "justify-between"
         )}>
           {!isCollapsed && (
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary/80 to-cyan-400 bg-clip-text text-transparent">
-              CRM
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+              Buntudelice
             </h1>
           )}
           <Button
@@ -55,7 +55,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
             )}
           >
             <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Dashboard</span>}
+            {!isCollapsed && <span>Tableau de bord</span>}
           </Link>
           
           <Link
@@ -83,7 +83,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
             )}
           >
             <PieChart className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Deals</span>}
+            {!isCollapsed && <span>Commandes</span>}
           </Link>
         </div>
       </nav>
