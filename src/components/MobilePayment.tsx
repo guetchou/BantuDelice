@@ -79,7 +79,7 @@ const MobilePayment: React.FC<MobilePaymentProps> = ({ amount, onPaymentComplete
 
       <div className="space-y-2">
         <Label>Montant à payer</Label>
-        <div className="text-2xl font-bold">{amount.toLocaleString()} FC</div>
+        <div className="text-2xl font-bold">{amount.toLocaleString()} FCFA</div>
       </div>
 
       <Button
