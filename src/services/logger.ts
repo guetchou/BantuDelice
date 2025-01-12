@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
@@ -7,14 +7,24 @@ interface LogEntry {
   message: string;
   timestamp: string;
   data?: any;
+  context?: {
+    userId?: string;
+    route?: string;
+    component?: string;
+    action?: string;
+  };
 }
 
 class Logger {
   private static instance: Logger;
   private logs: LogEntry[] = [];
   private readonly MAX_LOGS = 1000;
+  private readonly STORAGE_KEY = 'app_logs';
 
-  private constructor() {}
+  private constructor() {
+    this.loadLogsFromStorage();
+    window.addEventListener('beforeunload', () => this.saveLogsToStorage());
+  }
 
   static getInstance(): Logger {
     if (!Logger.instance) {
@@ -23,39 +33,58 @@ class Logger {
     return Logger.instance;
   }
 
-  private formatMessage(level: LogLevel, message: string, data?: any): LogEntry {
+  private formatMessage(level: LogLevel, message: string, data?: any, context?: LogEntry['context']): LogEntry {
     return {
       level,
       message,
       timestamp: new Date().toISOString(),
-      data
+      data,
+      context: {
+        ...context,
+        route: window.location.pathname,
+      }
     };
   }
 
   private store(entry: LogEntry) {
+    console.log(`[${entry.level.toUpperCase()}] ${entry.message}`, {
+      data: entry.data,
+      context: entry.context,
+      timestamp: entry.timestamp
+    });
+
     this.logs.push(entry);
     if (this.logs.length > this.MAX_LOGS) {
       this.logs.shift();
     }
-    
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      const consoleMethod = entry.level === 'error' ? console.error : 
-                           entry.level === 'warn' ? console.warn : 
-                           entry.level === 'debug' ? console.debug :
-                           console.log;
-      
-      consoleMethod(`[${entry.level.toUpperCase()}] ${entry.message}`, entry.data || '');
+  }
+
+  private loadLogsFromStorage() {
+    try {
+      const storedLogs = localStorage.getItem(this.STORAGE_KEY);
+      if (storedLogs) {
+        this.logs = JSON.parse(storedLogs);
+      }
+    } catch (error) {
+      console.error('Error loading logs from storage:', error);
     }
   }
 
-  info(message: string, data?: any) {
-    const entry = this.formatMessage('info', message, data);
+  private saveLogsToStorage() {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.logs));
+    } catch (error) {
+      console.error('Error saving logs to storage:', error);
+    }
+  }
+
+  info(message: string, data?: any, context?: LogEntry['context']) {
+    const entry = this.formatMessage('info', message, data, context);
     this.store(entry);
   }
 
-  warn(message: string, data?: any) {
-    const entry = this.formatMessage('warn', message, data);
+  warn(message: string, data?: any, context?: LogEntry['context']) {
+    const entry = this.formatMessage('warn', message, data, context);
     this.store(entry);
     toast({
       title: "Attention",
@@ -64,8 +93,8 @@ class Logger {
     });
   }
 
-  error(message: string, data?: any) {
-    const entry = this.formatMessage('error', message, data);
+  error(message: string, data?: any, context?: LogEntry['context']) {
+    const entry = this.formatMessage('error', message, data, context);
     this.store(entry);
     toast({
       title: "Erreur",
@@ -74,19 +103,42 @@ class Logger {
     });
   }
 
-  debug(message: string, data?: any) {
+  debug(message: string, data?: any, context?: LogEntry['context']) {
     if (process.env.NODE_ENV === 'development') {
-      const entry = this.formatMessage('debug', message, data);
+      const entry = this.formatMessage('debug', message, data, context);
       this.store(entry);
     }
   }
 
-  getLogs(): LogEntry[] {
-    return [...this.logs];
+  getLogs(filter?: { level?: LogLevel; startDate?: Date; endDate?: Date }): LogEntry[] {
+    let filteredLogs = [...this.logs];
+    
+    if (filter?.level) {
+      filteredLogs = filteredLogs.filter(log => log.level === filter.level);
+    }
+    
+    if (filter?.startDate) {
+      filteredLogs = filteredLogs.filter(log => 
+        new Date(log.timestamp) >= filter.startDate!
+      );
+    }
+    
+    if (filter?.endDate) {
+      filteredLogs = filteredLogs.filter(log => 
+        new Date(log.timestamp) <= filter.endDate!
+      );
+    }
+    
+    return filteredLogs;
   }
 
   clearLogs() {
     this.logs = [];
+    localStorage.removeItem(this.STORAGE_KEY);
+  }
+
+  exportLogs(): string {
+    return JSON.stringify(this.logs, null, 2);
   }
 }
 
