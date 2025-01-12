@@ -4,13 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useSidebar } from "@/contexts/SidebarContext";
 
-interface ContactsProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
+const Contacts = () => {
+  const { isCollapsed } = useSidebar();
   const [search, setSearch] = useState("");
 
   const mockContacts = [
@@ -20,7 +17,7 @@ const Contacts = ({ isCollapsed, setIsCollapsed }: ContactsProps) => {
 
   return (
     <div className="min-h-screen bg-white flex relative">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <Navbar />
       <main className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
         isCollapsed ? 'ml-[60px]' : 'ml-[60px] sm:ml-64'
       }`}>

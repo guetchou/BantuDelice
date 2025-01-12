@@ -2,24 +2,15 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartBar, TrendingUp, DollarSign, Clock } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useSidebar } from "@/contexts/SidebarContext";
 import DashboardChart from "@/components/DashboardChart";
 import DashboardBarChart from "@/components/DashboardBarChart";
 
-interface AnalyticsDashboardProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const AnalyticsDashboard = ({ isCollapsed, setIsCollapsed }: AnalyticsDashboardProps) => {
+const AnalyticsDashboard = () => {
+  const { isCollapsed } = useSidebar();
   const [timeRange, setTimeRange] = useState("7d");
 
   const { data: stats, isLoading } = useQuery({
@@ -67,7 +58,7 @@ const AnalyticsDashboard = ({ isCollapsed, setIsCollapsed }: AnalyticsDashboardP
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <Navbar />
       <div className="flex-1 p-8 pt-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Rapports Analytiques</h1>

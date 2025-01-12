@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 interface Deal {
   id: string;
@@ -16,12 +17,8 @@ interface DealsState {
   closed: Deal[];
 }
 
-interface DealsProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
+const Deals = () => {
+  const { isCollapsed } = useSidebar();
   const [deals, setDeals] = useState<DealsState>({
     lead: [
       { id: "1", title: "Enterprise Deal", value: "$50,000", company: "Tech Corp" },
@@ -67,7 +64,7 @@ const Deals = ({ isCollapsed, setIsCollapsed }: DealsProps) => {
 
   return (
     <div className="min-h-screen bg-white flex relative">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <Navbar isCollapsed={isCollapsed} />
       <main 
         className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
           isCollapsed ? 'ml-[60px]' : 'ml-[60px] sm:ml-64'

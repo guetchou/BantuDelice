@@ -2,35 +2,19 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import Navbar from "@/components/Navbar";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { useSidebar } from "@/contexts/SidebarContext";
 
-interface AdminProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const Admin = ({ isCollapsed, setIsCollapsed }: AdminProps) => {
+const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { isCollapsed } = useSidebar();
 
   // Check if user is admin
   useEffect(() => {
@@ -117,7 +101,7 @@ const Admin = ({ isCollapsed, setIsCollapsed }: AdminProps) => {
   if (!isAdmin) {
     return (
       <div className="flex min-h-screen bg-background">
-        <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        <Navbar />
         <div className="flex-1 p-8 pt-6">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -127,7 +111,7 @@ const Admin = ({ isCollapsed, setIsCollapsed }: AdminProps) => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <Navbar />
       <div className="flex-1 p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Administration</h2>

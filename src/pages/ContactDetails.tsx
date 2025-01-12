@@ -2,13 +2,10 @@ import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Mail, Phone, Building, MapPin } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useSidebar } from "@/contexts/SidebarContext";
 
-interface ContactDetailsProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) => {
+const ContactDetails = () => {
+  const { isCollapsed } = useSidebar();
   const { id } = useParams();
 
   const contact = {
@@ -26,7 +23,7 @@ const ContactDetails = ({ isCollapsed, setIsCollapsed }: ContactDetailsProps) =>
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <Navbar />
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'} p-8`}>
         <div className="mb-8">
           <h1 className="text-3xl font-bold">{contact.name}</h1>

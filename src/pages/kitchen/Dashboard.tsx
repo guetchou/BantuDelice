@@ -24,7 +24,7 @@ interface Order {
 }
 
 const KitchenDashboard = () => {
-  const { isCollapsed, setIsCollapsed } = useSidebar();
+  const { isCollapsed } = useSidebar();
   const { toast } = useToast();
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
 
@@ -118,13 +118,9 @@ const KitchenDashboard = () => {
     }
   };
 
-  if (isLoading) {
-    return <div>Chargement...</div>;
-  }
-
   return (
     <div className="flex min-h-screen bg-background">
-      <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <Navbar />
       <div className="flex-1 p-8 pt-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Interface Cuisine</h1>
