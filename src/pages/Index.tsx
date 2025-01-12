@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Truck, CreditCard, MapPin, Star, ShoppingCart, Car, Calendar, GasPump, Package, Ticket } from "lucide-react";
+import { Truck, CreditCard, MapPin, Star, ShoppingCart, Car, Calendar, Package, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -91,7 +91,7 @@ const Index = () => {
           </Card>
           
           <Card className="p-6 text-center">
-            <GasPump className="w-12 h-12 mx-auto mb-4 text-primary" />
+            <Package className="w-12 h-12 mx-auto mb-4 text-primary" />
             <h3 className="text-xl font-semibold mb-2">Réservation de Gaz</h3>
             <p className="text-gray-600 mb-4">
               Approvisionnement rapide et sécurisé
