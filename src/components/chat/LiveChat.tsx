@@ -10,11 +10,13 @@ interface Message {
   user_id: string;
   message: string;
   created_at: string;
+  agent_id?: string;
+  is_bot?: boolean;
   profiles?: {
-    first_name: string;
-    last_name: string;
-    avatar_url: string;
-  };
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+  } | null;
 }
 
 const LiveChat = () => {
@@ -23,8 +25,9 @@ const LiveChat = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Charger les messages existants
+    // Load existing messages
     const loadMessages = async () => {
+      console.log('Loading messages...');
       const { data, error } = await supabase
         .from('chat_messages')
         .select(`
@@ -39,16 +42,17 @@ const LiveChat = () => {
         .limit(50);
 
       if (error) {
-        console.error('Erreur lors du chargement des messages:', error);
+        console.error('Error loading messages:', error);
         return;
       }
 
-      setMessages(data || []);
+      console.log('Messages loaded:', data);
+      setMessages(data as Message[]);
     };
 
     loadMessages();
 
-    // Souscrire aux nouveaux messages
+    // Subscribe to new messages
     const channel = supabase
       .channel('chat_messages')
       .on(
@@ -59,6 +63,7 @@ const LiveChat = () => {
           table: 'chat_messages'
         },
         (payload) => {
+          console.log('New message received:', payload);
           setMessages(current => [...current, payload.new as Message]);
         }
       )
@@ -80,6 +85,7 @@ const LiveChat = () => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
+    console.log('Sending message:', newMessage);
     const { error } = await supabase
       .from('chat_messages')
       .insert([
@@ -90,7 +96,7 @@ const LiveChat = () => {
       ]);
 
     if (error) {
-      console.error('Erreur lors de l\'envoi du message:', error);
+      console.error('Error sending message:', error);
       return;
     }
 
@@ -100,7 +106,7 @@ const LiveChat = () => {
   return (
     <div className="flex flex-col h-[500px] bg-white rounded-lg shadow-lg">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">Chat en direct</h2>
+        <h2 className="text-lg font-semibold">Live Chat</h2>
       </div>
       
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
@@ -132,10 +138,10 @@ const LiveChat = () => {
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Écrivez votre message..."
+            placeholder="Write your message..."
             className="flex-1"
           />
-          <Button type="submit">Envoyer</Button>
+          <Button type="submit">Send</Button>
         </div>
       </form>
     </div>
