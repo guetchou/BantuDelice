@@ -29,7 +29,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     const initializeMap = async () => {
       try {
         const { data, error } = await supabase
-          .rpc<SecretResponse, RPCParams>('get_secret', { 
+          .rpc<SecretResponse>('get_secret', { 
             secret_name: 'MAPBOX_PUBLIC_TOKEN' 
           });
         
