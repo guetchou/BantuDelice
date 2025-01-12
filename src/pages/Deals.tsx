@@ -64,7 +64,7 @@ const Deals = () => {
 
   return (
     <div className="min-h-screen bg-white flex relative">
-      <Navbar isCollapsed={isCollapsed} />
+      <Navbar />
       <main 
         className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
           isCollapsed ? 'ml-[60px]' : 'ml-[60px] sm:ml-64'

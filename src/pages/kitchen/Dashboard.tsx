@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Timer, ChefHat } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 interface OrderItem {
   item_name: string;
@@ -62,7 +61,7 @@ const KitchenDashboard = () => {
           schema: "public",
           table: "orders",
         },
-        (payload: RealtimePostgresChangesPayload<Order>) => {
+        (payload) => {
           console.log("Order change received:", payload);
           if (payload.new && 'id' in payload.new) {
             setActiveOrders((prev) =>
