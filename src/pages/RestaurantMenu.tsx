@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -11,9 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import DeliveryMap from "@/components/DeliveryMap";
 import MobilePayment from "@/components/MobilePayment";
-import { ShoppingCart, MapPin } from "lucide-react";
+import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
+import MenuItemCard from "@/components/restaurant/MenuItemCard";
+import CartSummary from "@/components/restaurant/CartSummary";
 
 interface Restaurant {
   id: string;
@@ -82,10 +81,6 @@ const RestaurantMenu = () => {
     });
   };
 
-  const getTotalAmount = () => {
-    return cart.reduce((total, item) => total + item.price, 0);
-  };
-
   const handlePaymentComplete = async () => {
     try {
       if (!restaurantId) throw new Error('Restaurant ID is required');
@@ -95,7 +90,7 @@ const RestaurantMenu = () => {
         .insert([
           {
             restaurant_id: restaurantId,
-            total_amount: getTotalAmount(),
+            total_amount: cart.reduce((total, item) => total + item.price, 0),
             status: 'pending',
             payment_status: 'completed',
             delivery_address: "Address to be implemented", // TODO: Add address input
@@ -129,68 +124,28 @@ const RestaurantMenu = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <h1 className="text-3xl font-bold mb-6">{restaurant.name}</h1>
-          
-          <div className="mb-8">
-            <div className="flex items-center text-gray-600 mb-4">
-              <MapPin className="w-5 h-5 mr-2" />
-              <span>{restaurant.address}</span>
-            </div>
-            
-            <DeliveryMap 
-              restaurantLocation={[restaurant.longitude, restaurant.latitude]}
-            />
-          </div>
+          <RestaurantHeader 
+            name={restaurant.name}
+            address={restaurant.address}
+            coordinates={[restaurant.longitude, restaurant.latitude]}
+          />
 
           <div className="grid grid-cols-1 gap-4">
             {menuItems.map((item) => (
-              <Card key={item.id} className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-gray-600">{item.description}</p>
-                    <p className="mt-2 font-bold">{item.price.toLocaleString()} FC</p>
-                  </div>
-                  <Button onClick={() => addToCart(item)}>
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Ajouter
-                  </Button>
-                </div>
-              </Card>
+              <MenuItemCard 
+                key={item.id} 
+                item={item} 
+                onAddToCart={addToCart}
+              />
             ))}
           </div>
         </div>
 
         <div className="sticky top-20">
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">Votre commande</h2>
-            {cart.length === 0 ? (
-              <p className="text-gray-600">Votre panier est vide</p>
-            ) : (
-              <>
-                <div className="space-y-4 mb-6">
-                  {cart.map((item, index) => (
-                    <div key={index} className="flex justify-between">
-                      <span>{item.name}</span>
-                      <span>{item.price.toLocaleString()} FC</span>
-                    </div>
-                  ))}
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between font-bold">
-                      <span>Total</span>
-                      <span>{getTotalAmount().toLocaleString()} FC</span>
-                    </div>
-                  </div>
-                </div>
-                <Button 
-                  className="w-full"
-                  onClick={() => setShowPaymentModal(true)}
-                >
-                  Procéder au paiement
-                </Button>
-              </>
-            )}
-          </Card>
+          <CartSummary 
+            items={cart}
+            onCheckout={() => setShowPaymentModal(true)}
+          />
         </div>
       </div>
 
@@ -200,7 +155,7 @@ const RestaurantMenu = () => {
             <DialogTitle>Paiement mobile</DialogTitle>
           </DialogHeader>
           <MobilePayment 
-            amount={getTotalAmount()} 
+            amount={cart.reduce((total, item) => total + item.price, 0)} 
             onPaymentComplete={handlePaymentComplete}
           />
         </DialogContent>
