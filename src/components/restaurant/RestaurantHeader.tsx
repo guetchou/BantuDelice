@@ -1,5 +1,5 @@
 import { MapPin } from "lucide-react";
-import DeliveryMap from "../DeliveryMap";
+import DeliveryMap from "@/components/DeliveryMap";
 
 interface RestaurantHeaderProps {
   name: string;
@@ -9,15 +9,17 @@ interface RestaurantHeaderProps {
 
 const RestaurantHeader = ({ name, address, coordinates }: RestaurantHeaderProps) => {
   return (
-    <div className="mb-8">
-      <h1 className="text-3xl font-bold mb-6">{name}</h1>
-      <div className="flex items-center text-gray-600 mb-4">
-        <MapPin className="w-5 h-5 mr-2" />
-        <span>{address}</span>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">{name}</h1>
+        <div className="flex items-center text-gray-600">
+          <MapPin className="w-5 h-5 mr-2" />
+          <span>{address}</span>
+        </div>
       </div>
       <DeliveryMap 
-        latitude={coordinates[0]}
-        longitude={coordinates[1]}
+        latitude={coordinates[1]}
+        longitude={coordinates[0]}
         zoom={14}
       />
     </div>

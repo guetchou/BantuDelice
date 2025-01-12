@@ -19,33 +19,37 @@ const DeliveryMap = ({
 
   useEffect(() => {
     const initializeMap = async () => {
-      const { data, error } = await supabase.rpc('get_secret', {
-        name: 'MAPBOX_PUBLIC_TOKEN'
-      });
-
-      if (error) {
-        console.error('Error fetching Mapbox token:', error);
-        return;
-      }
-
-      if (!data || typeof data !== 'string') {
-        console.error('Invalid Mapbox token');
-        return;
-      }
-
-      mapboxgl.accessToken = data;
-
-      if (mapContainer.current) {
-        map.current = new mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/streets-v11',
-          center: [longitude, latitude],
-          zoom: zoom
+      try {
+        const { data, error } = await supabase.rpc('get_secret', {
+          name: 'MAPBOX_PUBLIC_TOKEN'
         });
 
-        new mapboxgl.Marker()
-          .setLngLat([longitude, latitude])
-          .addTo(map.current);
+        if (error) {
+          console.error('Error fetching Mapbox token:', error);
+          return;
+        }
+
+        if (!data || typeof data !== 'string') {
+          console.error('Invalid Mapbox token');
+          return;
+        }
+
+        mapboxgl.accessToken = data;
+
+        if (mapContainer.current) {
+          map.current = new mapboxgl.Map({
+            container: mapContainer.current,
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [longitude, latitude],
+            zoom: zoom
+          });
+
+          new mapboxgl.Marker()
+            .setLngLat([longitude, latitude])
+            .addTo(map.current);
+        }
+      } catch (error) {
+        console.error('Error initializing map:', error);
       }
     };
 
