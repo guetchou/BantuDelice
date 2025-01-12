@@ -56,11 +56,7 @@ const LiveChat = () => {
           created_at: msg.created_at,
           agent_id: msg.agent_id,
           is_bot: msg.is_bot,
-          profiles: msg.profiles || {
-            first_name: null,
-            last_name: null,
-            avatar_url: null
-          }
+          profiles: msg.profiles || null
         }));
         setMessages(typedMessages);
       }
@@ -86,11 +82,7 @@ const LiveChat = () => {
             created_at: payload.new.created_at,
             agent_id: payload.new.agent_id,
             is_bot: payload.new.is_bot,
-            profiles: {
-              first_name: null,
-              last_name: null,
-              avatar_url: null
-            }
+            profiles: null // Pour les nouveaux messages, nous devrons peut-être charger le profil séparément
           };
           setMessages(current => [...current, newMsg]);
         }
