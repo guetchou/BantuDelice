@@ -21,7 +21,7 @@ const DeliveryMap = ({
     const initializeMap = async () => {
       try {
         const { data, error } = await supabase.rpc('get_secret', {
-          name: 'MAPBOX_PUBLIC_TOKEN'
+          secret_name: 'MAPBOX_PUBLIC_TOKEN'
         });
 
         if (error) {
