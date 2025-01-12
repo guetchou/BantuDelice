@@ -22,10 +22,14 @@ interface Order {
   order_items: OrderItem[];
 }
 
-const KitchenDashboard = () => {
+interface KitchenDashboardProps {
+  isCollapsed: boolean;
+  setIsCollapsed: (value: boolean) => void;
+}
+
+const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps) => {
   const { toast } = useToast();
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["kitchen-orders"],

@@ -28,7 +28,7 @@ const App = () => {
         />
         <Route
           path="/kitchen"
-          element={<KitchenDashboard />}
+          element={<KitchenDashboard isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />}
         />
         <Route
           path="/analytics"
