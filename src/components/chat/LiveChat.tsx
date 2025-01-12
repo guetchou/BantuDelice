@@ -5,6 +5,12 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+interface Profile {
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+}
+
 interface Message {
   id: string;
   user_id: string;
@@ -12,11 +18,7 @@ interface Message {
   created_at: string;
   agent_id?: string;
   is_bot?: boolean;
-  profiles?: {
-    first_name: string | null;
-    last_name: string | null;
-    avatar_url: string | null;
-  } | null;
+  profiles?: Profile | null;
 }
 
 const LiveChat = () => {
@@ -55,7 +57,7 @@ const LiveChat = () => {
             last_name: null,
             avatar_url: null
           }
-        })) as Message[];
+        }));
         setMessages(typedMessages);
       }
     };
