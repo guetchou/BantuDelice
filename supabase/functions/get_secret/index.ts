@@ -18,13 +18,14 @@ serve(async (req) => {
       throw new Error('Invalid secret name')
     }
 
-    // Get the secret directly from Deno.env
+    // Get the secret directly from environment variables
     const secret = Deno.env.get(secret_name)
     
     if (!secret) {
       throw new Error(`Secret ${secret_name} not found`)
     }
 
+    // Return the secret value directly
     return new Response(
       JSON.stringify(secret),
       {
@@ -33,6 +34,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Error in get_secret function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
