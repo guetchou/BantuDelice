@@ -12,7 +12,6 @@ import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 interface OrderItem {
   item_name: string;
   quantity: number;
-  notes?: string;
 }
 
 interface Order {
@@ -40,8 +39,7 @@ const KitchenDashboard = () => {
           user_id,
           order_items (
             item_name,
-            quantity,
-            notes
+            quantity
           )
         `)
         .in("status", ["pending", "preparing"])
@@ -65,7 +63,7 @@ const KitchenDashboard = () => {
         },
         (payload: RealtimePostgresChangesPayload<Order>) => {
           console.log("Order change received:", payload);
-          if (payload.new) {
+          if (payload.new && 'id' in payload.new) {
             setActiveOrders((prev) =>
               prev.map((order) =>
                 order.id === payload.new.id ? { ...order, ...payload.new } : order
@@ -159,11 +157,6 @@ const KitchenDashboard = () => {
                         <span>
                           {item.quantity}x {item.item_name}
                         </span>
-                        {item.notes && (
-                          <span className="text-sm text-muted-foreground">
-                            {item.notes}
-                          </span>
-                        )}
                       </li>
                     ))}
                   </ul>

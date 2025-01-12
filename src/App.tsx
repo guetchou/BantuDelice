@@ -18,15 +18,21 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route 
+          path="/admin" 
+          element={<Admin isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} 
+        />
+        <Route 
+          path="/dashboard" 
+          element={<Dashboard isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />} 
+        />
         <Route
           path="/kitchen"
           element={<KitchenDashboard />}
         />
         <Route
           path="/analytics"
-          element={<AnalyticsDashboard />}
+          element={<AnalyticsDashboard isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />}
         />
         <Route path="/profile" element={<Profile />} />
       </Routes>
