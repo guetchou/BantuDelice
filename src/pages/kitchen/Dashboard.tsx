@@ -7,23 +7,16 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Timer, ChefHat } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { useSidebar } from "@/contexts/SidebarContext";
+import { Database } from "@/integrations/supabase/types";
 
-interface OrderItem {
-  item_name: string;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  status: string;
-  created_at: string;
-  user_id: string;
-  order_items: OrderItem[];
-}
+type Order = Database["public"]["Tables"]["orders"]["Row"] & {
+  order_items: Array<{
+    item_name: string;
+    quantity: number;
+  }>;
+};
 
 const KitchenDashboard = () => {
-  const { isCollapsed } = useSidebar();
   const { toast } = useToast();
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
 
@@ -63,10 +56,10 @@ const KitchenDashboard = () => {
         },
         (payload) => {
           console.log("Order change received:", payload);
-          if (payload.new && 'id' in payload.new) {
+          if (payload.new && typeof payload.new === "object" && "id" in payload.new) {
             setActiveOrders((prev) =>
               prev.map((order) =>
-                order.id === payload.new.id ? { ...order, ...payload.new } : order
+                order.id === payload.new.id ? { ...order, ...payload.new as Order } : order
               )
             );
           }
