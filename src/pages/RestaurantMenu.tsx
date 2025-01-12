@@ -14,6 +14,9 @@ import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
 import MenuItemCard from "@/components/restaurant/MenuItemCard";
 import CartSummary from "@/components/restaurant/CartSummary";
 import DeliveryMap from "@/components/DeliveryMap";
+import { CartProvider } from "@/contexts/CartContext";
+import CartDrawer from "@/components/cart/CartDrawer";
+import MenuItemCustomization from "@/components/menu/MenuItemCustomization";
 
 interface Restaurant {
   id: string;
@@ -78,6 +81,8 @@ const RestaurantMenu = () => {
     },
     enabled: !!restaurantId
   });
+
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
   const addToCart = (item: MenuItem) => {
     setCart([...cart, item]);
@@ -145,61 +150,61 @@ const RestaurantMenu = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
+    <CartProvider>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-start mb-8">
           <RestaurantHeader 
             name={restaurant.name}
             address={restaurant.address}
             coordinates={[restaurant.longitude, restaurant.latitude]}
           />
-
-          <div className="grid grid-cols-1 gap-4 mt-8">
-            {menuItems.map((item) => (
-              <MenuItemCard 
-                key={item.id} 
-                item={item} 
-                onAddToCart={addToCart}
-              />
-            ))}
-          </div>
+          <CartDrawer />
         </div>
 
-        <div className="sticky top-20">
-          <CartSummary 
-            items={cart}
-            onCheckout={() => setShowPaymentModal(true)}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {menuItems.map((item) => (
+            <MenuItemCard 
+              key={item.id} 
+              item={item} 
+              onAddToCart={() => setSelectedItem(item)}
+            />
+          ))}
+        </div>
 
-          {showDeliveryMap && (
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-4">Suivi de la livraison</h3>
-              <div className="mb-4">
-                <span className="text-sm font-medium">
-                  Statut: {deliveryStatus === 'preparing' ? 'En préparation' : 'En livraison'}
-                </span>
-              </div>
-              <DeliveryMap 
-                latitude={restaurant.latitude}
-                longitude={restaurant.longitude}
-              />
+        <MenuItemCustomization
+          item={selectedItem!}
+          open={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+        />
+
+        <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Paiement mobile</DialogTitle>
+            </DialogHeader>
+            <MobilePayment 
+              amount={cart.reduce((total, item) => total + item.price, 0)} 
+              onPaymentComplete={handlePaymentComplete}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {showDeliveryMap && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">Suivi de la livraison</h3>
+            <div className="mb-4">
+              <span className="text-sm font-medium">
+                Statut: {deliveryStatus === 'preparing' ? 'En préparation' : 'En livraison'}
+              </span>
             </div>
-          )}
-        </div>
+            <DeliveryMap 
+              latitude={restaurant.latitude}
+              longitude={restaurant.longitude}
+            />
+          </div>
+        )}
       </div>
-
-      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Paiement mobile</DialogTitle>
-          </DialogHeader>
-          <MobilePayment 
-            amount={cart.reduce((total, item) => total + item.price, 0)} 
-            onPaymentComplete={handlePaymentComplete}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
+    </CartProvider>
   );
 };
 
