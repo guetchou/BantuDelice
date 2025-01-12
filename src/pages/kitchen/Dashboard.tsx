@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Timer, ChefHat } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useSidebar } from "@/contexts/SidebarContext";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 interface OrderItem {
@@ -22,12 +23,8 @@ interface Order {
   order_items: OrderItem[];
 }
 
-interface KitchenDashboardProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps) => {
+const KitchenDashboard = () => {
+  const { isCollapsed, setIsCollapsed } = useSidebar();
   const { toast } = useToast();
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
 

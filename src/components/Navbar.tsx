@@ -6,13 +6,10 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useSidebar } from "@/contexts/SidebarContext";
 
-interface NavbarProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
-
-const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
+const Navbar = () => {
+  const { isCollapsed, setIsCollapsed } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -49,7 +46,7 @@ const Navbar = ({ isCollapsed, setIsCollapsed }: NavbarProps) => {
       navigate("/auth");
     }
   };
-  
+
   return (
     <div className={cn(
       "fixed left-0 top-0 h-full flex transition-all duration-300 z-50",
