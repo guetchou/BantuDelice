@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { 
   MapPin, Phone, Mail, Star, ShoppingCart, Car, Fuel, Package, 
-  Ticket, Utensils, Home, Bike, ShoppingBag, Briefcase, Heart, Book 
+  Ticket, Utensils, Home, Bike, ShoppingBag, Briefcase, Heart, Book,
+  ChefHat, Building, GraduationCap, House, Doctor
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,10 +29,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-2xl">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Commandez vos repas préférés en un seul clic !
+              Découvrez la Cuisine Congolaise !
             </h1>
             <p className="text-xl text-white/90 mb-8">
-              Livraison rapide, repas chauds et savoureux directement chez vous.
+              Des plats authentiques et savoureux livrés directement chez vous.
             </p>
             <div className="flex flex-wrap gap-4">
               <Button 
@@ -46,7 +47,7 @@ const Index = () => {
                 variant="outline"
                 className="text-white border-white hover:bg-white/10"
               >
-                Découvrir nos Services
+                Découvrir nos Spécialités
               </Button>
             </div>
           </div>
@@ -64,23 +65,23 @@ const Index = () => {
               <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
               <h3 className="text-xl font-semibold mb-2">Commande de Repas</h3>
               <p className="text-gray-600 mb-4">
-                Vos plats préférés livrés chauds et rapidement
+                Vos plats congolais préférés livrés chauds
               </p>
               <Button onClick={() => navigate('/restaurants')}>Commander</Button>
             </Card>
             
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
               <Car className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Réservation de Taxis</h3>
+              <h3 className="text-xl font-semibold mb-2">Transport VIP</h3>
               <p className="text-gray-600 mb-4">
-                Voyagez en toute tranquillité et confort
+                Service de transport personnalisé
               </p>
               <Button variant="outline">Réserver</Button>
             </Card>
             
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
               <Fuel className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Réservation de Gaz</h3>
+              <h3 className="text-xl font-semibold mb-2">Livraison de Gaz</h3>
               <p className="text-gray-600 mb-4">
                 Approvisionnement rapide et sécurisé
               </p>
@@ -98,18 +99,18 @@ const Index = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Utensils className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Traiteur</h3>
+              <ChefHat className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Traiteur Événementiel</h3>
               <p className="text-gray-600">
-                Service traiteur pour vos événements
+                Service traiteur spécialisé en cuisine congolaise
               </p>
             </Card>
             
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Home className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <House className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
               <h3 className="text-xl font-semibold mb-2">Services Ménagers</h3>
               <p className="text-gray-600">
-                Nettoyage et entretien à domicile
+                Entretien et nettoyage professionnel
               </p>
             </Card>
             
@@ -117,90 +118,97 @@ const Index = () => {
               <Bike className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
               <h3 className="text-xl font-semibold mb-2">Location de Vélos</h3>
               <p className="text-gray-600">
-                Explorez la ville à vélo
+                Découvrez la ville autrement
               </p>
             </Card>
 
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
               <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Courses</h3>
+              <h3 className="text-xl font-semibold mb-2">Courses à Domicile</h3>
               <p className="text-gray-600">
-                Livraison de courses à domicile
+                Livraison de vos courses quotidiennes
               </p>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* Complementary Services */}
+      {/* New Services Section 1 */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
-            Services Complémentaires
+            Services Spécialisés
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Package className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Livraison de Colis</h3>
+              <Building className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Location Immobilière</h3>
               <p className="text-gray-600">
-                Expédition rapide et sécurisée
+                Trouvez votre logement idéal
               </p>
             </Card>
             
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Ticket className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Réservation de Billets</h3>
-              <p className="text-gray-600">
-                Bus, train, avion, bateaux
-              </p>
-            </Card>
-            
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Star className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Services VIP</h3>
-              <p className="text-gray-600">
-                Services personnalisés haut de gamme
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Professional Services */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Services Professionnels
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Briefcase className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Services aux Entreprises</h3>
-              <p className="text-gray-600">
-                Solutions professionnelles sur mesure
-              </p>
-            </Card>
-            
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Heart className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Services de Santé</h3>
+              <Doctor className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Assistance Médicale</h3>
               <p className="text-gray-600">
                 Consultation et soins à domicile
               </p>
             </Card>
             
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Book className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Formation</h3>
+              <GraduationCap className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Soutien Scolaire</h3>
               <p className="text-gray-600">
-                Cours et formations personnalisés
+                Cours particuliers et aide aux devoirs
               </p>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* New Services Section 2 */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Services Professionnels
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Briefcase className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Services Juridiques</h3>
+              <p className="text-gray-600">
+                Conseil et assistance juridique
+              </p>
+            </Card>
+            
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Heart className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Aide aux Personnes</h3>
+              <p className="text-gray-600">
+                Services d'assistance personnalisée
+              </p>
+            </Card>
+            
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Book className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Formation Continue</h3>
+              <p className="text-gray-600">
+                Développement professionnel
+              </p>
+            </Card>
+
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Package className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Déménagement</h3>
+              <p className="text-gray-600">
+                Service complet de déménagement
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
