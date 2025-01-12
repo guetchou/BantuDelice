@@ -20,12 +20,13 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   useEffect(() => {
     const initializeMap = async () => {
       try {
-        const { data: { secret }, error } = await supabase
+        const { data, error } = await supabase
           .rpc('get_secret', { secret_name: 'MAPBOX_PUBLIC_TOKEN' });
         
         if (error) throw error;
+        if (!data) throw new Error('No Mapbox token found');
 
-        mapboxgl.accessToken = secret;
+        mapboxgl.accessToken = data.secret;
 
         if (!mapContainer.current) return;
 
