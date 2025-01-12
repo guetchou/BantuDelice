@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { 
   MapPin, Phone, Mail, Star, ShoppingCart, Car, Fuel, Package, 
   Ticket, Utensils, Home, Bike, ShoppingBag, Briefcase, Heart, Book,
-  ChefHat, Building, GraduationCap, House, Doctor
+  ChefHat, Building, GraduationCap, House, Stethoscope
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -149,7 +149,7 @@ const Index = () => {
             </Card>
             
             <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Doctor className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <Stethoscope className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
               <h3 className="text-xl font-semibold mb-2">Assistance Médicale</h3>
               <p className="text-gray-600">
                 Consultation et soins à domicile
