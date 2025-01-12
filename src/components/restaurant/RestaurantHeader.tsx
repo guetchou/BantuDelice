@@ -20,7 +20,6 @@ const RestaurantHeader = ({ name, address, coordinates }: RestaurantHeaderProps)
       <DeliveryMap 
         latitude={coordinates[1]}
         longitude={coordinates[0]}
-        zoom={14}
       />
     </div>
   );

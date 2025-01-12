@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,12 +13,12 @@ serve(async (req) => {
   try {
     const { secret_name } = await req.json()
     
-    // Vérifier que le nom du secret est valide
+    // Verify that the secret name is valid
     if (!secret_name || typeof secret_name !== 'string') {
       throw new Error('Invalid secret name')
     }
 
-    // Récupérer le secret depuis les variables d'environnement
+    // Get the secret directly from Deno.env
     const secret = Deno.env.get(secret_name)
     
     if (!secret) {
@@ -27,7 +26,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ secret }),
+      JSON.stringify(secret),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
