@@ -30,6 +30,7 @@ interface MenuItem {
   price: number;
   category: string | null;
   available: boolean;
+  image_url: string | null;
 }
 
 const RestaurantMenu = () => {
