@@ -48,7 +48,7 @@ const RestaurantMenu = () => {
         .from('restaurants')
         .select('*')
         .eq('id', restaurantId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       if (!data) throw new Error('Restaurant not found');
@@ -58,7 +58,7 @@ const RestaurantMenu = () => {
   });
 
   // Fetch menu items
-  const { data: menuItems } = useQuery({
+  const { data: menuItems = [] } = useQuery({
     queryKey: ['menuItems', restaurantId],
     queryFn: async () => {
       if (!restaurantId) throw new Error('Restaurant ID is required');
@@ -69,8 +69,7 @@ const RestaurantMenu = () => {
         .eq('restaurant_id', restaurantId);
       
       if (error) throw error;
-      if (!data) return [];
-      return data as MenuItem[];
+      return (data || []) as MenuItem[];
     },
     enabled: !!restaurantId
   });
@@ -122,7 +121,7 @@ const RestaurantMenu = () => {
     }
   };
 
-  if (!restaurant || !menuItems) {
+  if (!restaurant) {
     return <div>Chargement...</div>;
   }
 

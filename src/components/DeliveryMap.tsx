@@ -8,10 +8,6 @@ interface DeliveryMapProps {
   deliveryLocation?: [number, number];
 }
 
-interface SecretResponse {
-  secret: string;
-}
-
 const DeliveryMap: React.FC<DeliveryMapProps> = ({ 
   restaurantLocation = [2.3522, 48.8566], // Default to Paris coordinates
   deliveryLocation 
@@ -24,15 +20,16 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   useEffect(() => {
     const initializeMap = async () => {
       try {
-        const { data, error } = await supabase
-          .rpc('get_secret', { 
-            secret_name: 'MAPBOX_PUBLIC_TOKEN' 
-          }) as { data: SecretResponse | null; error: Error | null };
+        const { data: secretData, error: secretError } = await supabase
+          .from('secrets')
+          .select('value')
+          .eq('name', 'MAPBOX_PUBLIC_TOKEN')
+          .single();
         
-        if (error) throw error;
-        if (!data) throw new Error('No Mapbox token found');
+        if (secretError) throw secretError;
+        if (!secretData?.value) throw new Error('No Mapbox token found');
 
-        mapboxgl.accessToken = data.secret;
+        mapboxgl.accessToken = secretData.value;
 
         if (!mapContainer.current) return;
 
