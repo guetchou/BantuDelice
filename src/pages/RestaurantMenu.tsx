@@ -15,14 +15,31 @@ import DeliveryMap from "@/components/DeliveryMap";
 import MobilePayment from "@/components/MobilePayment";
 import { ShoppingCart, MapPin } from "lucide-react";
 
+interface Restaurant {
+  id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  category: string | null;
+  available: boolean;
+}
+
 const RestaurantMenu = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const { toast } = useToast();
-  const [cart, setCart] = useState<any[]>([]);
+  const [cart, setCart] = useState<MenuItem[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Fetch restaurant details
-  const { data: restaurant } = useQuery({
+  const { data: restaurant } = useQuery<Restaurant>({
     queryKey: ['restaurant', restaurantId],
     queryFn: async () => {
       if (!restaurantId) throw new Error('Restaurant ID is required');
@@ -34,13 +51,14 @@ const RestaurantMenu = () => {
         .single();
       
       if (error) throw error;
+      if (!data) throw new Error('Restaurant not found');
       return data;
     },
     enabled: !!restaurantId
   });
 
   // Fetch menu items
-  const { data: menuItems } = useQuery({
+  const { data: menuItems } = useQuery<MenuItem[]>({
     queryKey: ['menuItems', restaurantId],
     queryFn: async () => {
       if (!restaurantId) throw new Error('Restaurant ID is required');
@@ -51,12 +69,13 @@ const RestaurantMenu = () => {
         .eq('restaurant_id', restaurantId);
       
       if (error) throw error;
+      if (!data) return [];
       return data;
     },
     enabled: !!restaurantId
   });
 
-  const addToCart = (item: any) => {
+  const addToCart = (item: MenuItem) => {
     setCart([...cart, item]);
     toast({
       title: "Article ajouté",
@@ -70,8 +89,9 @@ const RestaurantMenu = () => {
 
   const handlePaymentComplete = async () => {
     try {
-      // Create order in database
-      const { data, error } = await supabase
+      if (!restaurantId) throw new Error('Restaurant ID is required');
+      
+      const { error } = await supabase
         .from('orders')
         .insert([
           {
