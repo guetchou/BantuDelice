@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -25,7 +24,7 @@ interface MenuItemCustomizationProps {
     customization_options?: {
       [key: string]: string[];
     };
-  };
+  } | null;
   open: boolean;
   onClose: () => void;
 }
@@ -34,6 +33,19 @@ const MenuItemCustomization = ({ item, open, onClose }: MenuItemCustomizationPro
   const { addToCart } = useCart();
   const [options, setOptions] = React.useState<Record<string, string>>({});
   const [specialInstructions, setSpecialInstructions] = React.useState('');
+
+  // Reset state when dialog closes
+  React.useEffect(() => {
+    if (!open) {
+      setOptions({});
+      setSpecialInstructions('');
+    }
+  }, [open]);
+
+  // Don't render the dialog if there's no item
+  if (!item) {
+    return null;
+  }
 
   const handleAddToCart = () => {
     addToCart({
