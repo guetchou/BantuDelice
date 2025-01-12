@@ -8,7 +8,6 @@ interface DeliveryMapProps {
   deliveryLocation?: [number, number];
 }
 
-// Define the type for the RPC response
 interface SecretResponse {
   secret: string;
 }
