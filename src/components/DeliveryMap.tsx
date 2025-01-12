@@ -9,8 +9,12 @@ interface DeliveryMapProps {
 }
 
 // Define the type for the RPC response
-type SecretResponse = {
+interface SecretResponse {
   secret: string;
+}
+
+interface RPCParams {
+  secret_name: string;
 }
 
 const DeliveryMap: React.FC<DeliveryMapProps> = ({ 
@@ -26,7 +30,9 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     const initializeMap = async () => {
       try {
         const { data, error } = await supabase
-          .rpc<SecretResponse, { secret_name: string }>('get_secret', { secret_name: 'MAPBOX_PUBLIC_TOKEN' });
+          .rpc<SecretResponse, RPCParams>('get_secret', { 
+            secret_name: 'MAPBOX_PUBLIC_TOKEN' 
+          });
         
         if (error) throw error;
         if (!data) throw new Error('No Mapbox token found');
