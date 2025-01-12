@@ -10,8 +10,13 @@ interface MenuItem {
   price: number;
   image_url: string;
   available: boolean;
-  spicy_level: number;
   dietary_preferences: string[];
+  category: string;
+  cuisine_type: string;
+  customization_options: any;
+  popularity_score: number;
+  restaurant_id: string;
+  created_at: string;
 }
 
 const MenuList = () => {
@@ -50,11 +55,6 @@ const MenuList = () => {
             </div>
             <p className="text-gray-600 text-sm mb-4">{item.description}</p>
             <div className="flex flex-wrap gap-2">
-              {item.spicy_level > 0 && (
-                <Badge variant="secondary">
-                  {Array(item.spicy_level).fill('🌶️').join('')}
-                </Badge>
-              )}
               {item.dietary_preferences?.map((pref) => (
                 <Badge key={pref} variant="outline">{pref}</Badge>
               ))}
