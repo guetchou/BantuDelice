@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -22,7 +22,6 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen">
-        <BrowserRouter>
           <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
           <div className={`pt-16 ${isCollapsed ? 'pl-20' : 'pl-64'} transition-all duration-300`}>
             <Routes>
@@ -64,7 +63,6 @@ function App() {
               />
             </Routes>
           </div>
-        </BrowserRouter>
         <Toaster />
       </div>
     </QueryClientProvider>
