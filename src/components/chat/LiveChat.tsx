@@ -25,9 +25,9 @@ const LiveChat = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Load existing messages
+    // Charger les messages existants
     const loadMessages = async () => {
-      console.log('Loading messages...');
+      console.log('Chargement des messages...');
       const { data, error } = await supabase
         .from('chat_messages')
         .select(`
@@ -42,17 +42,27 @@ const LiveChat = () => {
         .limit(50);
 
       if (error) {
-        console.error('Error loading messages:', error);
+        console.error('Erreur lors du chargement des messages:', error);
         return;
       }
 
-      console.log('Messages loaded:', data);
-      setMessages(data as Message[]);
+      console.log('Messages chargés:', data);
+      if (data) {
+        const typedMessages = data.map(msg => ({
+          ...msg,
+          profiles: msg.profiles || {
+            first_name: null,
+            last_name: null,
+            avatar_url: null
+          }
+        })) as Message[];
+        setMessages(typedMessages);
+      }
     };
 
     loadMessages();
 
-    // Subscribe to new messages
+    // Souscrire aux nouveaux messages
     const channel = supabase
       .channel('chat_messages')
       .on(
@@ -63,8 +73,16 @@ const LiveChat = () => {
           table: 'chat_messages'
         },
         (payload) => {
-          console.log('New message received:', payload);
-          setMessages(current => [...current, payload.new as Message]);
+          console.log('Nouveau message reçu:', payload);
+          const newMsg = {
+            ...payload.new,
+            profiles: {
+              first_name: null,
+              last_name: null,
+              avatar_url: null
+            }
+          } as Message;
+          setMessages(current => [...current, newMsg]);
         }
       )
       .subscribe();
@@ -75,7 +93,7 @@ const LiveChat = () => {
   }, []);
 
   useEffect(() => {
-    // Scroll to bottom when new messages arrive
+    // Défiler vers le bas lors de nouveaux messages
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
@@ -85,7 +103,7 @@ const LiveChat = () => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    console.log('Sending message:', newMessage);
+    console.log('Envoi du message:', newMessage);
     const { error } = await supabase
       .from('chat_messages')
       .insert([
@@ -96,7 +114,7 @@ const LiveChat = () => {
       ]);
 
     if (error) {
-      console.error('Error sending message:', error);
+      console.error('Erreur lors de l\'envoi du message:', error);
       return;
     }
 
@@ -106,7 +124,7 @@ const LiveChat = () => {
   return (
     <div className="flex flex-col h-[500px] bg-white rounded-lg shadow-lg">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">Live Chat</h2>
+        <h2 className="text-lg font-semibold">Chat en direct</h2>
       </div>
       
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
@@ -138,10 +156,10 @@ const LiveChat = () => {
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Write your message..."
+            placeholder="Écrivez votre message..."
             className="flex-1"
           />
-          <Button type="submit">Send</Button>
+          <Button type="submit">Envoyer</Button>
         </div>
       </form>
     </div>
