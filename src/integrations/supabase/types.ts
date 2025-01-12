@@ -244,6 +244,35 @@ export type Database = {
         }
         Relationships: []
       }
+      favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          menu_item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          menu_item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          menu_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       featured_items: {
         Row: {
           active: boolean | null
@@ -779,6 +808,44 @@ export type Database = {
           starts_at?: string | null
         }
         Relationships: []
+      }
+      ratings: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          menu_item_id: string
+          rating: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          menu_item_id: string
+          rating: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          menu_item_id?: string
+          rating?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restaurants: {
         Row: {

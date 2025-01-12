@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -29,6 +29,7 @@ const ITEMS_PER_PAGE = 6;
 
 const MenuList = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     search: "",
@@ -44,7 +45,6 @@ const MenuList = () => {
         .select('*')
         .eq('available', true);
 
-      // Appliquer les filtres
       if (filters.search) {
         query = query.textSearch('search_vector', filters.search);
       }
@@ -53,7 +53,6 @@ const MenuList = () => {
         query = query.eq('category', filters.category);
       }
 
-      // Appliquer le tri
       switch (filters.sortBy) {
         case 'price_asc':
           query = query.order('price', { ascending: true });
@@ -88,20 +87,85 @@ const MenuList = () => {
     }
   });
 
+  const addToFavoritesMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('favorites')
+        .upsert([
+          {
+            user_id: session.session.user.id,
+            menu_item_id: itemId,
+          }
+        ]);
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
+      toast({
+        title: "Ajouté aux favoris",
+        description: "Le plat a été ajouté à vos favoris",
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding to favorites:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'ajout aux favoris",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const addRatingMutation = useMutation({
+    mutationFn: async ({ itemId, rating }: { itemId: string; rating: number }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('ratings')
+        .upsert([
+          {
+            user_id: session.session.user.id,
+            menu_item_id: itemId,
+            rating,
+          }
+        ]);
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+      toast({
+        title: "Note ajoutée",
+        description: "Votre note a été enregistrée",
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding rating:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'ajout de la note",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleFavorite = async (itemId: string) => {
-    // TODO: Implémenter la logique des favoris
-    toast({
-      title: "Fonctionnalité à venir",
-      description: "Le système de favoris sera bientôt disponible !",
-    });
+    addToFavoritesMutation.mutate(itemId);
   };
 
   const handleRate = async (itemId: string, rating: number) => {
-    // TODO: Implémenter la logique de notation
-    toast({
-      title: "Fonctionnalité à venir",
-      description: "Le système de notation sera bientôt disponible !",
-    });
+    addRatingMutation.mutate({ itemId, rating });
   };
 
   if (isLoading) {
