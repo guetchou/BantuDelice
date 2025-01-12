@@ -60,7 +60,7 @@ class Logger {
     toast({
       title: "Attention",
       description: message,
-      variant: "warning",
+      variant: "default",
     });
   }
 
