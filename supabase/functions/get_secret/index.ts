@@ -6,6 +6,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -18,14 +19,16 @@ serve(async (req) => {
       throw new Error('Invalid secret name')
     }
 
-    // Get the secret directly from environment variables
+    // Get the secret directly from Deno.env
     const secret = Deno.env.get(secret_name)
     
     if (!secret) {
+      console.error(`Secret ${secret_name} not found in environment variables`)
       throw new Error(`Secret ${secret_name} not found`)
     }
 
-    // Return the secret value directly
+    console.log(`Successfully retrieved secret: ${secret_name}`)
+    
     return new Response(
       JSON.stringify(secret),
       {
