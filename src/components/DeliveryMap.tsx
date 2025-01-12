@@ -20,9 +20,10 @@ const DeliveryMap = ({
   useEffect(() => {
     const initializeMap = async () => {
       try {
-        const { data: secretData, error: secretError } = await supabase.rpc('get_secret', {
-          secret_name: 'MAPBOX_PUBLIC_TOKEN'
-        });
+        const { data: secretData, error: secretError } = await supabase
+          .rpc('get_secret', {
+            secret_name: 'MAPBOX_PUBLIC_TOKEN'
+          });
 
         if (secretError) {
           console.error('Error fetching Mapbox token:', secretError);
@@ -34,9 +35,11 @@ const DeliveryMap = ({
           return;
         }
 
+        // Set the access token
         mapboxgl.accessToken = secretData;
 
-        if (mapContainer.current) {
+        // Only create the map if it hasn't been created yet
+        if (mapContainer.current && !map.current) {
           map.current = new mapboxgl.Map({
             container: mapContainer.current,
             style: 'mapbox://styles/mapbox/streets-v11',
@@ -44,6 +47,7 @@ const DeliveryMap = ({
             zoom: zoom
           });
 
+          // Add marker
           new mapboxgl.Marker()
             .setLngLat([longitude, latitude])
             .addTo(map.current);
@@ -55,6 +59,7 @@ const DeliveryMap = ({
 
     initializeMap();
 
+    // Cleanup function
     return () => {
       if (map.current) {
         map.current.remove();
