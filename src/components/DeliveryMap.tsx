@@ -34,13 +34,7 @@ const DeliveryMap = ({
           return;
         }
 
-        const token = secretData.secret;
-        if (!token || typeof token !== 'string') {
-          console.error('Invalid Mapbox token format');
-          return;
-        }
-
-        mapboxgl.accessToken = token;
+        mapboxgl.accessToken = secretData;
 
         if (mapContainer.current) {
           map.current = new mapboxgl.Map({
