@@ -4,41 +4,69 @@ import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Alert } from "@/components/ui/alert";
-import { AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
+import { logger } from "@/services/logger";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    logger.info("Page d'authentification chargée");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
+      logger.info("État d'authentification changé:", { event, sessionExists: !!session });
       
       if (event === "SIGNED_IN" && session) {
+        logger.info("Utilisateur connecté, redirection vers l'accueil");
         navigate("/");
       }
       if (event === "SIGNED_OUT") {
+        logger.info("Utilisateur déconnecté");
         setError(null);
       }
       if (event === "PASSWORD_RECOVERY") {
         setError("Un email de récupération a été envoyé.");
       }
 
-      // Handle authentication errors from the session
+      // Gestion des erreurs d'authentification
       const authError = (session as any)?.error;
       if (authError) {
-        console.error("Auth error:", authError);
+        logger.error("Erreur d'authentification:", { error: authError });
         handleError(authError as AuthError);
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Vérification de la session au chargement
+    checkSession();
+
+    return () => {
+      logger.info("Nettoyage des écouteurs d'authentification");
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
+  const checkSession = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) {
+      logger.error("Erreur lors de la vérification de la session:", { error });
+      handleError(error);
+      return;
+    }
+    if (session) {
+      logger.info("Session existante trouvée, redirection vers l'accueil");
+      navigate("/");
+    }
+  };
+
   const handleError = (error: AuthError) => {
-    console.error("Auth error:", error);
+    logger.error("Erreur d'authentification détaillée:", { 
+      code: error.code,
+      message: error.message,
+      status: error.status
+    });
+
     switch (error.message) {
       case "Invalid login credentials":
         setError("Identifiants invalides. Veuillez vérifier votre email et mot de passe.");
