@@ -3,7 +3,11 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Heart, Star } from "lucide-react";
 import FloatingPager from "@/components/ui/floating-pager";
+import MenuFilters from "./MenuFilters";
+import { useToast } from "@/hooks/use-toast";
 
 interface MenuItem {
   id: string;
@@ -24,20 +28,81 @@ interface MenuItem {
 const ITEMS_PER_PAGE = 6;
 
 const MenuList = () => {
+  const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState({
+    search: "",
+    category: "",
+    sortBy: "" as "price_asc" | "price_desc" | "popularity" | "",
+  });
 
   const { data: menuItems, isLoading } = useQuery({
-    queryKey: ['menuItems'],
+    queryKey: ['menuItems', filters],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('menu_items')
         .select('*')
         .eq('available', true);
+
+      // Appliquer les filtres
+      if (filters.search) {
+        query = query.textSearch('search_vector', filters.search);
+      }
+
+      if (filters.category) {
+        query = query.eq('category', filters.category);
+      }
+
+      // Appliquer le tri
+      switch (filters.sortBy) {
+        case 'price_asc':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price_desc':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'popularity':
+          query = query.order('popularity_score', { ascending: false });
+          break;
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data as MenuItem[];
     }
   });
+
+  const { data: categories } = useQuery({
+    queryKey: ['menuCategories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('category')
+        .not('category', 'is', null);
+      
+      if (error) throw error;
+      
+      const uniqueCategories = Array.from(new Set(data.map(item => item.category)));
+      return uniqueCategories.filter(Boolean);
+    }
+  });
+
+  const handleFavorite = async (itemId: string) => {
+    // TODO: Implémenter la logique des favoris
+    toast({
+      title: "Fonctionnalité à venir",
+      description: "Le système de favoris sera bientôt disponible !",
+    });
+  };
+
+  const handleRate = async (itemId: string, rating: number) => {
+    // TODO: Implémenter la logique de notation
+    toast({
+      title: "Fonctionnalité à venir",
+      description: "Le système de notation sera bientôt disponible !",
+    });
+  };
 
   if (isLoading) {
     return <div>Chargement des plats...</div>;
@@ -48,19 +113,46 @@ const MenuList = () => {
 
   return (
     <div className="relative min-h-screen">
+      <MenuFilters
+        categories={categories || []}
+        onFilterChange={setFilters}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
         {paginatedItems?.map((item) => (
           <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             {item.image_url && (
-              <img 
-                src={item.image_url} 
-                alt={item.name}
-                className="w-full h-48 object-cover"
-              />
+              <div className="relative">
+                <img 
+                  src={item.image_url} 
+                  alt={item.name}
+                  className="w-full h-48 object-cover"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                  onClick={() => handleFavorite(item.id)}
+                >
+                  <Heart className="h-5 w-5" />
+                </Button>
+              </div>
             )}
             <div className="p-4">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold">{item.name}</h3>
+                <div>
+                  <h3 className="text-lg font-semibold">{item.name}</h3>
+                  <div className="flex items-center gap-1 text-yellow-500">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className="h-4 w-4 cursor-pointer"
+                        onClick={() => handleRate(item.id, star)}
+                        fill={star <= (item.popularity_score || 0) / 20 ? "currentColor" : "none"}
+                      />
+                    ))}
+                  </div>
+                </div>
                 <span className="text-lg font-bold">{item.price / 100}€</span>
               </div>
               <p className="text-gray-600 text-sm mb-4">{item.description}</p>
@@ -68,6 +160,9 @@ const MenuList = () => {
                 {item.dietary_preferences?.map((pref) => (
                   <Badge key={pref} variant="outline">{pref}</Badge>
                 ))}
+                {item.category && (
+                  <Badge variant="secondary">{item.category}</Badge>
+                )}
               </div>
             </div>
           </Card>
