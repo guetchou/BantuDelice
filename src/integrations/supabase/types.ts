@@ -9,6 +9,113 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      booking_items: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          id: string
+          item_type: string | null
+          name: string | null
+          notes: string | null
+          options: Json | null
+          quantity: number | null
+          unit_price: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          item_type?: string | null
+          name?: string | null
+          notes?: string | null
+          options?: Json | null
+          quantity?: number | null
+          unit_price?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          item_type?: string | null
+          name?: string | null
+          notes?: string | null
+          options?: Json | null
+          quantity?: number | null
+          unit_price?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_items_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          booking_type: string | null
+          created_at: string | null
+          end_time: string | null
+          id: string
+          service_provider_id: string | null
+          special_requirements: Json | null
+          start_time: string | null
+          status: string | null
+          time_slot_id: string | null
+          total_amount: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          booking_type?: string | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          service_provider_id?: string | null
+          special_requirements?: Json | null
+          start_time?: string | null
+          status?: string | null
+          time_slot_id?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          booking_type?: string | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          service_provider_id?: string | null
+          special_requirements?: Json | null
+          start_time?: string | null
+          status?: string | null
+          time_slot_id?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_time_slot_id_fkey"
+            columns: ["time_slot_id"]
+            isOneToOne: false
+            referencedRelation: "time_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_drivers: {
         Row: {
           average_rating: number | null
@@ -89,6 +196,167 @@ export type Database = {
           },
         ]
       }
+      dietary_restrictions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      menu_item_dietary_restrictions: {
+        Row: {
+          dietary_restriction_id: string
+          menu_item_id: string
+        }
+        Insert: {
+          dietary_restriction_id: string
+          menu_item_id: string
+        }
+        Update: {
+          dietary_restriction_id?: string
+          menu_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_dietary_restrictions_dietary_restriction_id_fkey"
+            columns: ["dietary_restriction_id"]
+            isOneToOne: false
+            referencedRelation: "dietary_restrictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_dietary_restrictions_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_item_recommendations: {
+        Row: {
+          created_at: string | null
+          menu_item_id: string
+          recommended_item_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          menu_item_id: string
+          recommended_item_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          menu_item_id?: string
+          recommended_item_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_recommendations_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_recommendations_recommended_item_id_fkey"
+            columns: ["recommended_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_item_tags: {
+        Row: {
+          menu_item_id: string
+          tag_id: string
+        }
+        Insert: {
+          menu_item_id: string
+          tag_id: string
+        }
+        Update: {
+          menu_item_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_tags_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "menu_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_item_variations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          menu_item_id: string | null
+          name: string
+          portion_size: string | null
+          price: number
+          serves: number | null
+          spicy_level: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          menu_item_id?: string | null
+          name: string
+          portion_size?: string | null
+          price: number
+          serves?: number | null
+          spicy_level?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          menu_item_id?: string | null
+          name?: string
+          portion_size?: string | null
+          price?: number
+          serves?: number | null
+          spicy_level?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_variations_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           available: boolean | null
@@ -144,6 +412,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      menu_tags: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -300,6 +589,57 @@ export type Database = {
         }
         Relationships: []
       }
+      promotions: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          days_of_week: Json | null
+          description: string | null
+          discount_percentage: number | null
+          end_time: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          max_discount: number | null
+          min_purchase: number | null
+          name: string
+          start_time: string | null
+          starts_at: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          days_of_week?: Json | null
+          description?: string | null
+          discount_percentage?: number | null
+          end_time?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_discount?: number | null
+          min_purchase?: number | null
+          name: string
+          start_time?: string | null
+          starts_at?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          days_of_week?: Json | null
+          description?: string | null
+          discount_percentage?: number | null
+          end_time?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_discount?: number | null
+          min_purchase?: number | null
+          name?: string
+          start_time?: string | null
+          starts_at?: string | null
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           address: string
@@ -332,6 +672,133 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      service_providers: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          location: Json | null
+          name: string
+          phone: string | null
+          services_offered: Json | null
+          type: string
+          updated_at: string | null
+          working_hours: Json | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: Json | null
+          name: string
+          phone?: string | null
+          services_offered?: Json | null
+          type: string
+          updated_at?: string | null
+          working_hours?: Json | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: Json | null
+          name?: string
+          phone?: string | null
+          services_offered?: Json | null
+          type?: string
+          updated_at?: string | null
+          working_hours?: Json | null
+        }
+        Relationships: []
+      }
+      time_slots: {
+        Row: {
+          capacity: number | null
+          created_at: string | null
+          end_time: string | null
+          id: string
+          is_available: boolean | null
+          service_provider_id: string | null
+          start_time: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          is_available?: boolean | null
+          service_provider_id?: string | null
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          is_available?: boolean | null
+          service_provider_id?: string | null
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_slots_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracking_points: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          id: string
+          location: Json | null
+          recorded_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          location?: Json | null
+          recorded_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          location?: Json | null
+          recorded_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_points_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
