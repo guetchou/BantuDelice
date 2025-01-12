@@ -1,11 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MapPin, Phone, Mail, Star, ShoppingCart, Car, Calendar, Package, Ticket, Users, Building, Heart, Shield, Trophy, MessageSquare } from "lucide-react";
+import { MapPin, Phone, Mail, Star, ShoppingCart, Shield, Trophy, Heart, MessageSquare, Users, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 import {
   Carousel,
@@ -14,6 +12,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import DeliveryMap from "@/components/DeliveryMap";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -182,9 +181,9 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Contact Section */}
+      {/* Contact Section with Map */}
       <section className="py-16 bg-gray-50 rounded-lg">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Contactez-nous</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
@@ -218,6 +217,11 @@ const Index = () => {
                 <Phone className="w-6 h-6 text-primary" />
                 <span>+33 1 23 45 67 89</span>
               </div>
+              <DeliveryMap 
+                latitude={48.8566}
+                longitude={2.3522}
+                zoom={14}
+              />
             </div>
           </div>
         </div>
