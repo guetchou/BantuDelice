@@ -13,8 +13,6 @@ interface Restaurant {
   address: string;
   latitude: number | null;
   longitude: number | null;
-  cuisine_type: string | null;
-  average_price_range: string | null;
   created_at: string;
   estimated_preparation_time: number | null;
   user_id: string | null;
@@ -39,16 +37,9 @@ const Restaurants = () => {
 
       if (error) throw error;
       
-      // Transform the data to match the Restaurant interface
-      const transformedData: Restaurant[] = (data || []).map(restaurant => ({
-        ...restaurant,
-        cuisine_type: restaurant.cuisine_type || null,
-        average_price_range: restaurant.average_price_range || null
-      }));
-      
-      setRestaurants(transformedData);
-      setFilteredRestaurants(transformedData);
-      console.log("Restaurants fetched:", transformedData);
+      setRestaurants(data || []);
+      setFilteredRestaurants(data || []);
+      console.log("Restaurants fetched:", data);
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       toast({
@@ -74,20 +65,6 @@ const Restaurants = () => {
       filtered = filtered.filter(restaurant =>
         restaurant.name.toLowerCase().includes(filters.search.toLowerCase()) ||
         restaurant.address.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
-
-    // Filter by cuisine type
-    if (filters.cuisineType && filters.cuisineType !== 'all') {
-      filtered = filtered.filter(restaurant =>
-        restaurant.cuisine_type === filters.cuisineType
-      );
-    }
-
-    // Filter by price range
-    if (filters.priceRange && filters.priceRange !== 'all') {
-      filtered = filtered.filter(restaurant =>
-        restaurant.average_price_range === filters.priceRange
       );
     }
 

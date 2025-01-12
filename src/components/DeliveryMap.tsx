@@ -24,13 +24,12 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
         const { data, error } = await supabase
           .rpc('get_secret', { 
             name: 'MAPBOX_PUBLIC_TOKEN' 
-          });
+          }) as { data: string | null, error: Error | null };
         
         if (error) throw error;
         if (!data) throw new Error('No Mapbox token found');
 
-        // Ensure the token is a string and set it
-        mapboxgl.accessToken = data as string;
+        mapboxgl.accessToken = data;
 
         if (!mapContainer.current) return;
 
