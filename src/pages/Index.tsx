@@ -1,3 +1,4 @@
+import { useState } from "react";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import EssentialServices from "@/components/home/EssentialServices";
@@ -10,6 +11,8 @@ import Newsletter from "@/components/home/Newsletter";
 import Footer from "@/components/Footer";
 
 const Index = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
     <main className="min-h-screen">
       <HeroSection />
