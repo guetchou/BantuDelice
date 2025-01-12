@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
 
 interface DeliveryMapProps {
   latitude: number;
@@ -12,101 +11,75 @@ interface DeliveryMapProps {
 const DeliveryMap = ({ latitude, longitude }: DeliveryMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchMapboxToken = async () => {
       try {
         console.log('Fetching Mapbox token...');
-        const { data, error } = await supabase.rpc('get_secret', {
-          secret_name: 'MAPBOX_PUBLIC_TOKEN'
-        });
-
+        const { data, error } = await supabase.functions.invoke('get_mapbox_token');
+        
         if (error) {
-          console.error('Error fetching Mapbox token:', error);
+          console.error('Error in fetchMapboxToken:', error);
           throw error;
         }
 
-        if (!data) {
-          throw new Error('No Mapbox token returned');
+        if (!data?.token) {
+          throw new Error('No token returned from server');
         }
 
-        console.log('Successfully retrieved Mapbox token');
-        setMapboxToken(data);
+        return data.token;
       } catch (err) {
-        console.error('Error in fetchMapboxToken:', err);
-        setError('Unable to load map at this time');
-        toast({
-          title: "Map Error",
-          description: "Unable to initialize the map. Please try again later.",
-          variant: "destructive",
-        });
+        console.error('Error fetching Mapbox token:', err);
+        setError('Erreur lors du chargement de la carte');
+        throw err;
       }
     };
 
-    fetchMapboxToken();
-  }, [toast]);
+    const initializeMap = async () => {
+      if (!mapContainer.current) return;
 
-  useEffect(() => {
-    if (!mapboxToken || !mapContainer.current) return;
+      try {
+        const token = await fetchMapboxToken();
+        mapboxgl.accessToken = token;
 
-    try {
-      console.log('Initializing Mapbox map...');
-      mapboxgl.accessToken = mapboxToken;
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [longitude, latitude],
-        zoom: 14
-      });
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: [longitude, latitude],
+          zoom: 14
+        });
 
-      // Add navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        new mapboxgl.Marker()
+          .setLngLat([longitude, latitude])
+          .addTo(map.current);
 
-      // Add marker for restaurant location
-      new mapboxgl.Marker()
-        .setLngLat([longitude, latitude])
-        .addTo(map.current);
+      } catch (err) {
+        console.error('Error initializing map:', err);
+        setError('Erreur lors de l\'initialisation de la carte');
+      }
+    };
 
-      console.log('Map initialized successfully');
-
-    } catch (err) {
-      console.error('Error initializing map:', err);
-      setError('Unable to initialize map');
-      toast({
-        title: "Map Error",
-        description: "There was a problem displaying the map.",
-        variant: "destructive",
-      });
-    }
+    initializeMap();
 
     return () => {
-      map.current?.remove();
+      if (map.current) {
+        map.current.remove();
+      }
     };
-  }, [mapboxToken, latitude, longitude, toast]);
+  }, [latitude, longitude]);
 
   if (error) {
     return (
-      <div className="h-[300px] flex items-center justify-center bg-gray-100 rounded-lg">
-        <p className="text-gray-500">{error}</p>
-      </div>
-    );
-  }
-
-  if (!mapboxToken) {
-    return (
-      <div className="h-[300px] flex items-center justify-center bg-gray-100 rounded-lg">
-        <p className="text-gray-500">Loading map...</p>
+      <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
+        <p className="text-red-500">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[300px] rounded-lg overflow-hidden">
-      <div ref={mapContainer} className="h-full w-full" />
+    <div className="h-64 rounded-lg overflow-hidden">
+      <div ref={mapContainer} className="w-full h-full" />
     </div>
   );
 };
