@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 
 interface DeliveryMapProps {
   latitude: number;
@@ -13,29 +14,46 @@ const DeliveryMap = ({ latitude, longitude }: DeliveryMapProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchMapboxToken = async () => {
       try {
+        console.log('Fetching Mapbox token...');
         const { data, error } = await supabase.rpc('get_secret', {
           secret_name: 'MAPBOX_PUBLIC_TOKEN'
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching Mapbox token:', error);
+          throw error;
+        }
+
+        if (!data) {
+          throw new Error('No Mapbox token returned');
+        }
+
+        console.log('Successfully retrieved Mapbox token');
         setMapboxToken(data);
       } catch (err) {
-        console.error('Error fetching Mapbox token:', err);
+        console.error('Error in fetchMapboxToken:', err);
         setError('Unable to load map at this time');
+        toast({
+          title: "Map Error",
+          description: "Unable to initialize the map. Please try again later.",
+          variant: "destructive",
+        });
       }
     };
 
     fetchMapboxToken();
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     if (!mapboxToken || !mapContainer.current) return;
 
     try {
+      console.log('Initializing Mapbox map...');
       mapboxgl.accessToken = mapboxToken;
       
       map.current = new mapboxgl.Map({
@@ -53,15 +71,22 @@ const DeliveryMap = ({ latitude, longitude }: DeliveryMapProps) => {
         .setLngLat([longitude, latitude])
         .addTo(map.current);
 
+      console.log('Map initialized successfully');
+
     } catch (err) {
       console.error('Error initializing map:', err);
       setError('Unable to initialize map');
+      toast({
+        title: "Map Error",
+        description: "There was a problem displaying the map.",
+        variant: "destructive",
+      });
     }
 
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, latitude, longitude]);
+  }, [mapboxToken, latitude, longitude, toast]);
 
   if (error) {
     return (
