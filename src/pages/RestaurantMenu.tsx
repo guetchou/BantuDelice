@@ -16,7 +16,7 @@ import MobilePayment from "@/components/MobilePayment";
 import { ShoppingCart, MapPin } from "lucide-react";
 
 const RestaurantMenu = () => {
-  const { restaurantId } = useParams();
+  const { restaurantId } = useParams<{ restaurantId: string }>();
   const { toast } = useToast();
   const [cart, setCart] = useState<any[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -25,6 +25,8 @@ const RestaurantMenu = () => {
   const { data: restaurant } = useQuery({
     queryKey: ['restaurant', restaurantId],
     queryFn: async () => {
+      if (!restaurantId) throw new Error('Restaurant ID is required');
+      
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
@@ -33,13 +35,16 @@ const RestaurantMenu = () => {
       
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!restaurantId
   });
 
   // Fetch menu items
   const { data: menuItems } = useQuery({
     queryKey: ['menuItems', restaurantId],
     queryFn: async () => {
+      if (!restaurantId) throw new Error('Restaurant ID is required');
+
       const { data, error } = await supabase
         .from('menu_items')
         .select('*')
@@ -47,7 +52,8 @@ const RestaurantMenu = () => {
       
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!restaurantId
   });
 
   const addToCart = (item: any) => {
