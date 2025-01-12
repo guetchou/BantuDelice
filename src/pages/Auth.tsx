@@ -22,17 +22,15 @@ const Auth = () => {
       if (event === "SIGNED_OUT") {
         setError(null);
       }
-      if (event === "USER_DELETED") {
-        setError("Le compte a été supprimé.");
-      }
       if (event === "PASSWORD_RECOVERY") {
         setError("Un email de récupération a été envoyé.");
       }
-      // Handle authentication errors
-      if (event === "SIGNED_OUT" && session?.error) {
-        const authError = session.error as AuthError;
+
+      // Handle authentication errors from the session
+      const authError = (session as any)?.error;
+      if (authError) {
         console.error("Auth error:", authError);
-        handleError(authError);
+        handleError(authError as AuthError);
       }
     });
 
