@@ -1,74 +1,88 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DeliveryMapProps {
-  latitude?: number;
-  longitude?: number;
-  zoom?: number;
+  latitude: number;
+  longitude: number;
 }
 
-const DeliveryMap = ({ 
-  latitude = 48.8566, 
-  longitude = 2.3522, 
-  zoom = 13 
-}: DeliveryMapProps) => {
+const DeliveryMap = ({ latitude, longitude }: DeliveryMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const initializeMap = async () => {
+    const fetchMapboxToken = async () => {
       try {
-        const { data: secretData, error: secretError } = await supabase
-          .rpc('get_secret', {
-            secret_name: 'MAPBOX_PUBLIC_TOKEN'
-          });
+        const { data, error } = await supabase.rpc('get_secret', {
+          secret_name: 'MAPBOX_PUBLIC_TOKEN'
+        });
 
-        if (secretError) {
-          console.error('Error fetching Mapbox token:', secretError);
-          return;
-        }
-
-        if (!secretData) {
-          console.error('No Mapbox token found');
-          return;
-        }
-
-        // Set the access token
-        mapboxgl.accessToken = secretData;
-
-        // Only create the map if it hasn't been created yet
-        if (mapContainer.current && !map.current) {
-          map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [longitude, latitude],
-            zoom: zoom
-          });
-
-          // Add marker
-          new mapboxgl.Marker()
-            .setLngLat([longitude, latitude])
-            .addTo(map.current);
-        }
-      } catch (error) {
-        console.error('Error initializing map:', error);
+        if (error) throw error;
+        setMapboxToken(data);
+      } catch (err) {
+        console.error('Error fetching Mapbox token:', err);
+        setError('Unable to load map at this time');
       }
     };
 
-    initializeMap();
+    fetchMapboxToken();
+  }, []);
 
-    // Cleanup function
+  useEffect(() => {
+    if (!mapboxToken || !mapContainer.current) return;
+
+    try {
+      mapboxgl.accessToken = mapboxToken;
+      
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [longitude, latitude],
+        zoom: 14
+      });
+
+      // Add navigation controls
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // Add marker for restaurant location
+      new mapboxgl.Marker()
+        .setLngLat([longitude, latitude])
+        .addTo(map.current);
+
+    } catch (err) {
+      console.error('Error initializing map:', err);
+      setError('Unable to initialize map');
+    }
+
     return () => {
-      if (map.current) {
-        map.current.remove();
-      }
+      map.current?.remove();
     };
-  }, [latitude, longitude, zoom]);
+  }, [mapboxToken, latitude, longitude]);
+
+  if (error) {
+    return (
+      <div className="h-[300px] flex items-center justify-center bg-gray-100 rounded-lg">
+        <p className="text-gray-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (!mapboxToken) {
+    return (
+      <div className="h-[300px] flex items-center justify-center bg-gray-100 rounded-lg">
+        <p className="text-gray-500">Loading map...</p>
+      </div>
+    );
+  }
 
   return (
-    <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
+    <div className="h-[300px] rounded-lg overflow-hidden">
+      <div ref={mapContainer} className="h-full w-full" />
+    </div>
   );
 };
 
