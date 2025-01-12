@@ -13,31 +13,40 @@ const EssentialServices = () => {
           Nos Services Essentiels
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+          <Card className="p-6 text-center hover:shadow-lg transition-all duration-300">
             <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
             <h3 className="text-xl font-semibold mb-2">Commande de Repas</h3>
-            <p className="text-gray-600 mb-4">
-              Vos plats congolais préférés livrés chauds
+            <p className="text-gray-600 mb-6">
+              Vos plats congolais préférés livrés chauds et dans les meilleurs délais
             </p>
-            <Button onClick={() => navigate('/restaurants')}>Commander</Button>
+            <Button 
+              onClick={() => navigate('/restaurants')}
+              className="w-full bg-indigo-600 hover:bg-indigo-700"
+            >
+              Commander
+            </Button>
           </Card>
           
-          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+          <Card className="p-6 text-center hover:shadow-lg transition-all duration-300">
             <Car className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
             <h3 className="text-xl font-semibold mb-2">Transport VIP</h3>
-            <p className="text-gray-600 mb-4">
-              Service de transport personnalisé
+            <p className="text-gray-600 mb-6">
+              Service de transport personnalisé avec chauffeurs professionnels
             </p>
-            <Button variant="outline">Réserver</Button>
+            <Button variant="outline" className="w-full">
+              Réserver
+            </Button>
           </Card>
           
-          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+          <Card className="p-6 text-center hover:shadow-lg transition-all duration-300">
             <Fuel className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
             <h3 className="text-xl font-semibold mb-2">Livraison de Gaz</h3>
-            <p className="text-gray-600 mb-4">
-              Approvisionnement rapide et sécurisé
+            <p className="text-gray-600 mb-6">
+              Approvisionnement rapide et sécurisé à votre porte
             </p>
-            <Button variant="outline">Commander</Button>
+            <Button variant="outline" className="w-full">
+              Commander
+            </Button>
           </Card>
         </div>
       </div>
