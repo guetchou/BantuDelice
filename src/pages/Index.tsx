@@ -5,41 +5,30 @@ import AdditionalServices from "@/components/home/AdditionalServices";
 import ProfessionalServices from "@/components/home/ProfessionalServices";
 import SpecializedServices from "@/components/home/SpecializedServices";
 import CulturalServices from "@/components/home/CulturalServices";
-import MenuList from "@/components/menu/MenuList";
-import ServiceList from "@/components/services/ServiceList";
 import Testimonials from "@/components/home/Testimonials";
 import Newsletter from "@/components/home/Newsletter";
 import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <main className="min-h-screen">
       <HeroSection />
-      <FeaturedCarousel />
-      <div className="container mx-auto px-4">
-        <section className="py-12">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            Notre Menu
-          </h2>
-          <MenuList />
-        </section>
-        
-        <section className="py-12">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            Nos Services
-          </h2>
-          <ServiceList />
-        </section>
+      <div className="space-y-16">
+        <FeaturedCarousel />
+        <EssentialServices />
+        <div className="bg-gray-50">
+          <AdditionalServices />
+          <ProfessionalServices />
+        </div>
+        <SpecializedServices />
+        <div className="bg-gray-50">
+          <CulturalServices />
+        </div>
+        <Testimonials />
+        <Newsletter />
       </div>
-      <EssentialServices />
-      <AdditionalServices />
-      <ProfessionalServices />
-      <SpecializedServices />
-      <CulturalServices />
-      <Testimonials />
-      <Newsletter />
       <Footer />
-    </div>
+    </main>
   );
 };
 
