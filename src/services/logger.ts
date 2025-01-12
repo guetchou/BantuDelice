@@ -89,7 +89,7 @@ class Logger {
     toast({
       title: "Attention",
       description: message,
-      variant: "default",
+      variant: "default"
     });
   }
 
@@ -99,7 +99,7 @@ class Logger {
     toast({
       title: "Erreur",
       description: message,
-      variant: "destructive",
+      variant: "destructive"
     });
   }
 
