@@ -90,12 +90,25 @@ const RestaurantMenu = () => {
   const handlePaymentComplete = async () => {
     try {
       if (!restaurantId) throw new Error('Restaurant ID is required');
-      
+
+      // Get the current user's session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour passer une commande",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
       const { error } = await supabase
         .from('orders')
         .insert([
           {
             restaurant_id: restaurantId,
+            user_id: session.user.id, // Add the user_id
             total_amount: cart.reduce((total, item) => total + item.price, 0),
             status: 'pending',
             payment_status: 'completed',
@@ -103,7 +116,10 @@ const RestaurantMenu = () => {
           }
         ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating order:', error);
+        throw error;
+      }
 
       setShowPaymentModal(false);
       setShowDeliveryMap(true);
