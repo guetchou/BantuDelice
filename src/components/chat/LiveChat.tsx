@@ -57,7 +57,7 @@ const LiveChat = () => {
             last_name: null,
             avatar_url: null
           }
-        }));
+        })) satisfies Message[];
         setMessages(typedMessages);
       }
     };
@@ -83,7 +83,7 @@ const LiveChat = () => {
               last_name: null,
               avatar_url: null
             }
-          } as Message;
+          } satisfies Message;
           setMessages(current => [...current, newMsg]);
         }
       )
