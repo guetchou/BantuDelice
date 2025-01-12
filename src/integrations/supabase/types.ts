@@ -197,6 +197,7 @@ export type Database = {
           delivery_address: string
           estimated_delivery_time: string | null
           id: string
+          payment_method: string | null
           payment_status: string
           prepared_at: string | null
           rating: number | null
@@ -205,6 +206,7 @@ export type Database = {
           restaurant_id: string
           restaurant_rating: number | null
           status: string
+          tip_amount: number | null
           total_amount: number
           updated_at: string
           user_id: string | null
@@ -216,6 +218,7 @@ export type Database = {
           delivery_address: string
           estimated_delivery_time?: string | null
           id?: string
+          payment_method?: string | null
           payment_status?: string
           prepared_at?: string | null
           rating?: number | null
@@ -224,6 +227,7 @@ export type Database = {
           restaurant_id: string
           restaurant_rating?: number | null
           status?: string
+          tip_amount?: number | null
           total_amount: number
           updated_at?: string
           user_id?: string | null
@@ -235,6 +239,7 @@ export type Database = {
           delivery_address?: string
           estimated_delivery_time?: string | null
           id?: string
+          payment_method?: string | null
           payment_status?: string
           prepared_at?: string | null
           rating?: number | null
@@ -243,6 +248,7 @@ export type Database = {
           restaurant_id?: string
           restaurant_rating?: number | null
           status?: string
+          tip_amount?: number | null
           total_amount?: number
           updated_at?: string
           user_id?: string | null
