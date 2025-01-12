@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import FilterBar from "@/components/restaurant/FilterBar";
 
 interface Restaurant {
   id: string;
@@ -12,10 +13,13 @@ interface Restaurant {
   address: string;
   latitude: number | null;
   longitude: number | null;
+  cuisine_type: string | null;
+  average_price_range: string | null;
 }
 
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -31,7 +35,10 @@ const Restaurants = () => {
         .select("*");
 
       if (error) throw error;
+      
       setRestaurants(data || []);
+      setFilteredRestaurants(data || []);
+      console.log("Restaurants fetched:", data);
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       toast({
@@ -44,6 +51,39 @@ const Restaurants = () => {
     }
   };
 
+  const handleFilterChange = (filters: {
+    search: string;
+    cuisineType: string;
+    dietaryPreference: string;
+    priceRange: string;
+  }) => {
+    let filtered = [...restaurants];
+
+    // Filter by search term
+    if (filters.search) {
+      filtered = filtered.filter(restaurant =>
+        restaurant.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        restaurant.address.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+
+    // Filter by cuisine type
+    if (filters.cuisineType) {
+      filtered = filtered.filter(restaurant =>
+        restaurant.cuisine_type === filters.cuisineType
+      );
+    }
+
+    // Filter by price range
+    if (filters.priceRange) {
+      filtered = filtered.filter(restaurant =>
+        restaurant.average_price_range === filters.priceRange
+      );
+    }
+
+    setFilteredRestaurants(filtered);
+  };
+
   if (loading) {
     return <div>Chargement...</div>;
   }
@@ -51,8 +91,11 @@ const Restaurants = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Restaurants à proximité</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {restaurants.map((restaurant) => (
+      
+      <FilterBar onFilterChange={handleFilterChange} />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        {filteredRestaurants.map((restaurant) => (
           <Card key={restaurant.id} className="p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
               <div>

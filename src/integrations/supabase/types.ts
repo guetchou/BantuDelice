@@ -94,9 +94,14 @@ export type Database = {
           available: boolean | null
           category: string | null
           created_at: string
+          cuisine_type: string | null
+          customization_options: Json | null
           description: string | null
+          dietary_preferences: string[] | null
           id: string
+          image_url: string | null
           name: string
+          popularity_score: number | null
           price: number
           restaurant_id: string | null
         }
@@ -104,9 +109,14 @@ export type Database = {
           available?: boolean | null
           category?: string | null
           created_at?: string
+          cuisine_type?: string | null
+          customization_options?: Json | null
           description?: string | null
+          dietary_preferences?: string[] | null
           id?: string
+          image_url?: string | null
           name: string
+          popularity_score?: number | null
           price: number
           restaurant_id?: string | null
         }
@@ -114,9 +124,14 @@ export type Database = {
           available?: boolean | null
           category?: string | null
           created_at?: string
+          cuisine_type?: string | null
+          customization_options?: Json | null
           description?: string | null
+          dietary_preferences?: string[] | null
           id?: string
+          image_url?: string | null
           name?: string
+          popularity_score?: number | null
           price?: number
           restaurant_id?: string | null
         }
@@ -295,6 +310,8 @@ export type Database = {
           longitude: number | null
           name: string
           user_id: string | null
+          cuisine_type: string | null;
+          average_price_range: string | null;
         }
         Insert: {
           address: string
@@ -305,6 +322,8 @@ export type Database = {
           longitude?: number | null
           name: string
           user_id?: string | null
+          cuisine_type?: string | null;
+          average_price_range?: string | null;
         }
         Update: {
           address?: string
@@ -315,6 +334,8 @@ export type Database = {
           longitude?: number | null
           name?: string
           user_id?: string | null
+          cuisine_type?: string | null;
+          average_price_range?: string | null;
         }
         Relationships: []
       }
@@ -335,7 +356,7 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
-          user_id?: string
+          user_id: string
         }
         Relationships: []
       }
@@ -364,7 +385,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -418,10 +439,10 @@ export type TablesUpdate<
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+      Update: infer U
+    }
+    ? U
+    : never
     : never
 
 export type Enums<
