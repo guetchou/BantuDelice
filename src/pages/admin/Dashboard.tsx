@@ -1,115 +1,119 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DashboardBarChart } from "@/components/DashboardBarChart";
-import { DashboardChart } from "@/components/DashboardChart";
-import { DashboardCard } from "@/components/DashboardCard";
-import { 
-  Users, ShoppingBag, CreditCard, TrendingUp,
-  ChefHat, Clock, Star, Calendar
-} from "lucide-react";
+import DashboardBarChart from "@/components/DashboardBarChart";
+import DashboardChart from "@/components/DashboardChart";
+import DashboardCard from "@/components/DashboardCard";
+
+interface WalletData {
+  balance: number;
+  currency: string;
+}
+
+interface LoyaltyData {
+  points: number;
+  level: string;
+}
 
 const Dashboard = () => {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboardStats'],
-    queryFn: async () => {
-      const today = new Date();
-      const startOfDay = new Date(today.setHours(0,0,0,0)).toISOString();
-      const endOfDay = new Date(today.setHours(23,59,59,999)).toISOString();
+  const navigate = useNavigate();
+  const [wallet, setWallet] = useState<WalletData | null>(null);
+  const [loyalty, setLoyalty] = useState<LoyaltyData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-      const [orders, users, revenue] = await Promise.all([
-        supabase
-          .from('orders')
-          .select('*')
-          .gte('created_at', startOfDay)
-          .lte('created_at', endOfDay),
-        supabase
-          .from('profiles')
-          .select('count', { count: 'exact' }),
-        supabase
-          .from('orders')
-          .select('total_amount')
-          .gte('created_at', startOfDay)
-          .lte('created_at', endOfDay)
-      ]);
-
-      if (orders.error || users.error || revenue.error) {
-        throw new Error('Erreur lors de la récupération des statistiques');
+  useEffect(() => {
+    const loadUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/auth");
+        return;
       }
 
-      const totalRevenue = revenue.data.reduce((acc, order) => acc + order.total_amount, 0);
+      // Charger les données du portefeuille
+      const { data: walletData } = await supabase
+        .from("wallets")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
 
-      return {
-        ordersToday: orders.data.length,
-        totalUsers: users.count || 0,
-        revenueToday: totalRevenue,
-        averageOrderValue: orders.data.length ? totalRevenue / orders.data.length : 0
-      };
-    },
-    refetchInterval: 300000 // Rafraîchir toutes les 5 minutes
-  });
+      if (walletData) {
+        setWallet(walletData);
+      }
 
-  if (isLoading) {
-    return <div>Chargement du tableau de bord...</div>;
+      // Charger les points de fidélité
+      const { data: loyaltyData } = await supabase
+        .from("loyalty_points")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (loyaltyData) {
+        setLoyalty(loyaltyData);
+      }
+
+      setLoading(false);
+    };
+
+    loadUserData();
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Chargement...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Tableau de bord</h1>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Tableau de bord</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Portefeuille électronique */}
         <DashboardCard
-          title="Commandes aujourd'hui"
-          value={stats?.ordersToday.toString() || "0"}
-          description="Total des commandes du jour"
-          icon={ShoppingBag}
+          title="Portefeuille"
+          value={`${wallet?.balance?.toLocaleString()} ${wallet?.currency || "XAF"}`}
+          icon={<Wallet className="w-8 h-8 text-primary" />}
         />
+
+        {/* Points de fidélité */}
         <DashboardCard
-          title="Chiffre d'affaires"
-          value={`${(stats?.revenueToday / 100).toLocaleString()} FCFA`}
-          description="Revenus du jour"
-          icon={CreditCard}
+          title="Fidélité"
+          value={`${loyalty?.points?.toLocaleString()} points`}
+          icon={<Award className="w-8 h-8 text-primary" />}
+          trend={{ value: loyalty?.points || 0, isPositive: loyalty?.points > 0 }}
         />
+
+        {/* Historique des transactions */}
         <DashboardCard
-          title="Utilisateurs"
-          value={stats?.totalUsers.toString() || "0"}
-          description="Nombre total d'utilisateurs"
-          icon={Users}
+          title="Transactions"
+          value="Historique de vos opérations"
+          icon={<History className="w-8 h-8 text-primary" />}
         />
+
+        {/* Factures et reçus */}
         <DashboardCard
-          title="Panier moyen"
-          value={`${(stats?.averageOrderValue / 100).toLocaleString()} FCFA`}
-          description="Valeur moyenne des commandes"
-          icon={TrendingUp}
+          title="Factures"
+          value="Gérez vos factures et reçus"
+          icon={<Receipt className="w-8 h-8 text-primary" />}
+        />
+
+        {/* Cartes de paiement */}
+        <DashboardCard
+          title="Moyens de paiement"
+          value="Gérez vos cartes et méthodes de paiement"
+          icon={<CreditCard className="w-8 h-8 text-primary" />}
+        />
+
+        {/* Analyses */}
+        <DashboardCard
+          title="Analyses"
+          value="Statistiques et prévisions"
+          icon={<TrendingUp className="w-8 h-8 text-primary" />}
         />
       </div>
-
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="analytics">Analyses</TabsTrigger>
-          <TabsTrigger value="reports">Rapports</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Ventes hebdomadaires</h3>
-                <DashboardBarChart />
-              </div>
-            </Card>
-            <Card className="col-span-3">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Répartition des commandes</h3>
-                <DashboardChart />
-              </div>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };

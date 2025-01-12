@@ -730,8 +730,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+          addresses: string[] | null
           avatar_url: string | null
           created_at: string
+          dietary_preferences: string[] | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -739,8 +741,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          addresses?: string[] | null
           avatar_url?: string | null
           created_at?: string
+          dietary_preferences?: string[] | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -748,8 +752,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          addresses?: string[] | null
           avatar_url?: string | null
           created_at?: string
+          dietary_preferences?: string[] | null
           first_name?: string | null
           id?: string
           last_name?: string | null

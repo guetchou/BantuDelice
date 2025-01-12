@@ -41,7 +41,7 @@ const OrderHistory = () => {
               <Badge variant={
                 order.status === 'completed' ? 'default' :
                 order.status === 'pending' ? 'secondary' :
-                order.status === 'processing' ? 'warning' : 'destructive'
+                order.status === 'processing' ? 'secondary' : 'destructive'
               }>
                 {order.status === 'completed' ? 'Terminée' :
                  order.status === 'pending' ? 'En attente' :
