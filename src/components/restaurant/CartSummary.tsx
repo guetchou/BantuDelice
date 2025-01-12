@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ShoppingBag } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -17,26 +18,39 @@ const CartSummary = ({ items, onCheckout }: CartSummaryProps) => {
 
   return (
     <Card className="p-6">
-      <h2 className="text-xl font-bold mb-4">Votre commande</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold">Votre commande</h2>
+        <ShoppingBag className="w-6 h-6 text-gray-400" />
+      </div>
+
       {items.length === 0 ? (
-        <p className="text-gray-600">Votre panier est vide</p>
+        <div className="text-center py-8">
+          <p className="text-gray-500">Votre panier est vide</p>
+          <p className="text-sm text-gray-400 mt-2">Ajoutez des plats pour commencer</p>
+        </div>
       ) : (
         <>
           <div className="space-y-4 mb-6">
             {items.map((item, index) => (
-              <div key={index} className="flex justify-between">
-                <span>{item.name}</span>
+              <div key={index} className="flex justify-between items-center">
+                <div>
+                  <span className="font-medium">{item.name}</span>
+                </div>
                 <span>{item.price.toLocaleString()} FC</span>
               </div>
             ))}
-            <div className="border-t pt-4">
-              <div className="flex justify-between font-bold">
+            <div className="border-t pt-4 mt-4">
+              <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
                 <span>{getTotalAmount().toLocaleString()} FC</span>
               </div>
             </div>
           </div>
-          <Button className="w-full" onClick={onCheckout}>
+          <Button 
+            className="w-full"
+            size="lg"
+            onClick={onCheckout}
+          >
             Procéder au paiement
           </Button>
         </>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ import MobilePayment from "@/components/MobilePayment";
 import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
 import MenuItemCard from "@/components/restaurant/MenuItemCard";
 import CartSummary from "@/components/restaurant/CartSummary";
+import DeliveryMap from "@/components/DeliveryMap";
 
 interface Restaurant {
   id: string;
@@ -34,8 +35,11 @@ interface MenuItem {
 const RestaurantMenu = () => {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [cart, setCart] = useState<MenuItem[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showDeliveryMap, setShowDeliveryMap] = useState(false);
+  const [deliveryStatus, setDeliveryStatus] = useState<string>('');
 
   // Fetch restaurant details
   const { data: restaurant } = useQuery({
@@ -65,7 +69,8 @@ const RestaurantMenu = () => {
       const { data, error } = await supabase
         .from('menu_items')
         .select('*')
-        .eq('restaurant_id', restaurantId);
+        .eq('restaurant_id', restaurantId)
+        .eq('available', true);
       
       if (error) throw error;
       return (data || []) as MenuItem[];
@@ -100,6 +105,8 @@ const RestaurantMenu = () => {
       if (error) throw error;
 
       setShowPaymentModal(false);
+      setShowDeliveryMap(true);
+      setDeliveryStatus('preparing');
       setCart([]);
       
       toast({
@@ -130,7 +137,7 @@ const RestaurantMenu = () => {
             coordinates={[restaurant.longitude, restaurant.latitude]}
           />
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-4 mt-8">
             {menuItems.map((item) => (
               <MenuItemCard 
                 key={item.id} 
@@ -146,6 +153,21 @@ const RestaurantMenu = () => {
             items={cart}
             onCheckout={() => setShowPaymentModal(true)}
           />
+
+          {showDeliveryMap && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4">Suivi de la livraison</h3>
+              <div className="mb-4">
+                <span className="text-sm font-medium">
+                  Statut: {deliveryStatus === 'preparing' ? 'En préparation' : 'En livraison'}
+                </span>
+              </div>
+              <DeliveryMap 
+                latitude={restaurant.latitude}
+                longitude={restaurant.longitude}
+              />
+            </div>
+          )}
         </div>
       </div>
 
