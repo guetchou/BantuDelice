@@ -28,7 +28,7 @@ const LiveChat = () => {
   
   useEffect(() => {
     const loadMessages = async () => {
-      console.log('Chargement des messages...');
+      console.log('Loading messages...');
       const { data: messagesData, error } = await supabase
         .from('chat_messages')
         .select(`
@@ -43,11 +43,11 @@ const LiveChat = () => {
         .limit(50);
 
       if (error) {
-        console.error('Erreur lors du chargement des messages:', error);
+        console.error('Error loading messages:', error);
         return;
       }
 
-      console.log('Messages chargés:', messagesData);
+      console.log('Messages loaded:', messagesData);
       if (messagesData) {
         const typedMessages: Message[] = messagesData.map(msg => ({
           id: msg.id,
@@ -56,7 +56,7 @@ const LiveChat = () => {
           created_at: msg.created_at,
           agent_id: msg.agent_id,
           is_bot: msg.is_bot,
-          profiles: msg.profiles || null
+          profiles: msg.profiles && !('error' in msg.profiles) ? msg.profiles : null
         }));
         setMessages(typedMessages);
       }
@@ -74,7 +74,7 @@ const LiveChat = () => {
           table: 'chat_messages'
         },
         (payload) => {
-          console.log('Nouveau message reçu:', payload);
+          console.log('New message received:', payload);
           const newMsg: Message = {
             id: payload.new.id,
             user_id: payload.new.user_id || '',
@@ -82,7 +82,7 @@ const LiveChat = () => {
             created_at: payload.new.created_at,
             agent_id: payload.new.agent_id,
             is_bot: payload.new.is_bot,
-            profiles: null // Pour les nouveaux messages, nous devrons peut-être charger le profil séparément
+            profiles: null // For new messages, we'll need to load the profile separately
           };
           setMessages(current => [...current, newMsg]);
         }
@@ -104,7 +104,7 @@ const LiveChat = () => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    console.log('Envoi du message:', newMessage);
+    console.log('Sending message:', newMessage);
     const { error } = await supabase
       .from('chat_messages')
       .insert([
@@ -115,7 +115,7 @@ const LiveChat = () => {
       ]);
 
     if (error) {
-      console.error('Erreur lors de l\'envoi du message:', error);
+      console.error('Error sending message:', error);
       return;
     }
 
@@ -125,7 +125,7 @@ const LiveChat = () => {
   return (
     <div className="flex flex-col h-[500px] bg-white rounded-lg shadow-lg">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">Chat en direct</h2>
+        <h2 className="text-lg font-semibold">Live Chat</h2>
       </div>
       
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
@@ -157,10 +157,10 @@ const LiveChat = () => {
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Écrivez votre message..."
+            placeholder="Write your message..."
             className="flex-1"
           />
-          <Button type="submit">Envoyer</Button>
+          <Button type="submit">Send</Button>
         </div>
       </form>
     </div>
