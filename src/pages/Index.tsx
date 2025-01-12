@@ -133,41 +133,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* New Services Section 1 */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Services Spécialisés
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Building className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Location Immobilière</h3>
-              <p className="text-gray-600">
-                Trouvez votre logement idéal
-              </p>
-            </Card>
-            
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <Stethoscope className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Assistance Médicale</h3>
-              <p className="text-gray-600">
-                Consultation et soins à domicile
-              </p>
-            </Card>
-            
-            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-              <GraduationCap className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
-              <h3 className="text-xl font-semibold mb-2">Soutien Scolaire</h3>
-              <p className="text-gray-600">
-                Cours particuliers et aide aux devoirs
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* New Services Section 2 */}
+      {/* Professional Services */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
@@ -209,6 +175,83 @@ const Index = () => {
         </div>
       </section>
 
+      {/* New Services Section 1 */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Services Spécialisés
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Building className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Location Immobilière</h3>
+              <p className="text-gray-600">
+                Trouvez votre logement idéal
+              </p>
+            </Card>
+            
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Stethoscope className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Assistance Médicale</h3>
+              <p className="text-gray-600">
+                Consultation et soins à domicile
+              </p>
+            </Card>
+            
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <GraduationCap className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Soutien Scolaire</h3>
+              <p className="text-gray-600">
+                Cours particuliers et aide aux devoirs
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* New Services Section 2 */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Services Culturels
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <ChefHat className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Cours de Cuisine</h3>
+              <p className="text-gray-600">
+                Apprenez la cuisine congolaise
+              </p>
+            </Card>
+            
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Utensils className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Événements Culinaires</h3>
+              <p className="text-gray-600">
+                Dégustations et festivals
+              </p>
+            </Card>
+            
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Book className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Bibliothèque Culturelle</h3>
+              <p className="text-gray-600">
+                Livres et ressources sur la culture congolaise
+              </p>
+            </Card>
+
+            <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+              <Heart className="w-12 h-12 mx-auto mb-4 text-indigo-600" />
+              <h3 className="text-xl font-semibold mb-2">Club Social</h3>
+              <p className="text-gray-600">
+                Rencontres et échanges culturels
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
@@ -239,7 +282,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* Newsletter Section */}
       <section className="py-16 bg-indigo-600 text-white">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
