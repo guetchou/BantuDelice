@@ -14,6 +14,13 @@ import Admin from "./pages/Admin";
 import Profile from "./pages/Profile";
 import Restaurants from "./pages/Restaurants";
 import RestaurantMenu from "./pages/RestaurantMenu";
+import Deposit from "./pages/wallet/Deposit";
+import Withdraw from "./pages/wallet/Withdraw";
+import Transactions from "./pages/wallet/Transactions";
+import Invoices from "./pages/wallet/Invoices";
+import PaymentMethods from "./pages/wallet/PaymentMethods";
+import Analytics from "./pages/wallet/Analytics";
+import Rewards from "./pages/loyalty/Rewards";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -39,7 +46,6 @@ const queryClient = new QueryClient({
 function App() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Log application startup
   useEffect(() => {
     logger.info("Application démarrée");
     return () => {
@@ -58,6 +64,8 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/restaurants" element={<Restaurants />} />
               <Route path="/restaurant/:restaurantId/menu" element={<RestaurantMenu />} />
+              
+              {/* Routes protégées */}
               <Route
                 path="/contacts"
                 element={
@@ -87,6 +95,66 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Profile />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Nouvelles routes pour le portefeuille */}
+              <Route
+                path="/wallet/deposit"
+                element={
+                  <ProtectedRoute>
+                    <Deposit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wallet/withdraw"
+                element={
+                  <ProtectedRoute>
+                    <Withdraw />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wallet/transactions"
+                element={
+                  <ProtectedRoute>
+                    <Transactions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wallet/invoices"
+                element={
+                  <ProtectedRoute>
+                    <Invoices />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wallet/payment-methods"
+                element={
+                  <ProtectedRoute>
+                    <PaymentMethods />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wallet/analytics"
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Route pour les récompenses */}
+              <Route
+                path="/loyalty/rewards"
+                element={
+                  <ProtectedRoute>
+                    <Rewards />
                   </ProtectedRoute>
                 }
               />
