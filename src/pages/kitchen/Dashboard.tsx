@@ -13,15 +13,18 @@ interface KitchenDashboardProps {
   setIsCollapsed: (value: boolean) => void;
 }
 
+interface OrderItem {
+  item_name: string;
+  quantity: number;
+  notes?: string;
+}
+
 interface Order {
   id: string;
   status: string;
   created_at: string;
-  order_items: {
-    item_name: string;
-    quantity: number;
-    notes?: string;
-  }[];
+  user_id: string;
+  order_items: OrderItem[];
   estimated_preparation_time?: number;
 }
 
@@ -38,6 +41,7 @@ const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps
           id,
           status,
           created_at,
+          user_id,
           estimated_preparation_time,
           order_items (
             item_name,
@@ -64,9 +68,8 @@ const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps
           schema: "public",
           table: "orders",
         },
-        (payload) => {
+        (payload: { new: Order }) => {
           console.log("Order change received:", payload);
-          // Refresh orders when changes occur
           setActiveOrders((prev) =>
             prev.map((order) =>
               order.id === payload.new.id ? { ...order, ...payload.new } : order
@@ -102,11 +105,14 @@ const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps
       });
 
       // Create notification for order status change
-      await supabase.from("notifications").insert({
-        user_id: orders?.find((o) => o.id === orderId)?.user_id,
-        type: "order_status",
-        message: `Votre commande est maintenant ${newStatus}`,
-      });
+      const orderToUpdate = activeOrders.find((o) => o.id === orderId);
+      if (orderToUpdate) {
+        await supabase.from("notifications").insert({
+          user_id: orderToUpdate.user_id,
+          type: "order_status",
+          message: `Votre commande est maintenant ${newStatus}`,
+        });
+      }
     } catch (error) {
       console.error("Error updating order status:", error);
       toast({
