@@ -39,7 +39,7 @@ const RestaurantMenu = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Fetch restaurant details
-  const { data: restaurant } = useQuery<Restaurant>({
+  const { data: restaurant } = useQuery({
     queryKey: ['restaurant', restaurantId],
     queryFn: async () => {
       if (!restaurantId) throw new Error('Restaurant ID is required');
@@ -52,13 +52,13 @@ const RestaurantMenu = () => {
       
       if (error) throw error;
       if (!data) throw new Error('Restaurant not found');
-      return data;
+      return data as Restaurant;
     },
     enabled: !!restaurantId
   });
 
   // Fetch menu items
-  const { data: menuItems } = useQuery<MenuItem[]>({
+  const { data: menuItems } = useQuery({
     queryKey: ['menuItems', restaurantId],
     queryFn: async () => {
       if (!restaurantId) throw new Error('Restaurant ID is required');
@@ -70,7 +70,7 @@ const RestaurantMenu = () => {
       
       if (error) throw error;
       if (!data) return [];
-      return data;
+      return data as MenuItem[];
     },
     enabled: !!restaurantId
   });

@@ -12,10 +12,6 @@ interface SecretResponse {
   secret: string;
 }
 
-interface RPCParams {
-  secret_name: string;
-}
-
 const DeliveryMap: React.FC<DeliveryMapProps> = ({ 
   restaurantLocation = [2.3522, 48.8566], // Default to Paris coordinates
   deliveryLocation 
@@ -29,9 +25,9 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     const initializeMap = async () => {
       try {
         const { data, error } = await supabase
-          .rpc<SecretResponse>('get_secret', { 
+          .rpc('get_secret', { 
             secret_name: 'MAPBOX_PUBLIC_TOKEN' 
-          });
+          }) as { data: SecretResponse | null; error: Error | null };
         
         if (error) throw error;
         if (!data) throw new Error('No Mapbox token found');
