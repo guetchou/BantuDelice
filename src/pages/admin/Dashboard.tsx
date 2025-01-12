@@ -4,6 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardBarChart from "@/components/DashboardBarChart";
 import DashboardChart from "@/components/DashboardChart";
 import DashboardCard from "@/components/DashboardCard";
+import { 
+  Wallet, 
+  Award, 
+  History as HistoryIcon, 
+  Receipt, 
+  CreditCard, 
+  TrendingUp 
+} from "lucide-react";
 
 interface WalletData {
   balance: number;
@@ -90,7 +98,7 @@ const Dashboard = () => {
         <DashboardCard
           title="Transactions"
           value="Historique de vos opérations"
-          icon={<History className="w-8 h-8 text-primary" />}
+          icon={<HistoryIcon className="w-8 h-8 text-primary" />}
         />
 
         {/* Factures et reçus */}
