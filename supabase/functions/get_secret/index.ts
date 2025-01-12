@@ -19,7 +19,7 @@ serve(async (req) => {
       throw new Error('Invalid secret name')
     }
 
-    // Get the secret directly from Deno.env
+    // Get the secret from Deno.env
     const secret = Deno.env.get(secret_name)
     
     if (!secret) {
