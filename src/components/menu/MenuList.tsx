@@ -9,7 +9,7 @@ interface MenuItem {
   description: string;
   price: number;
   image_url: string;
-  is_available: boolean;
+  available: boolean;
   spicy_level: number;
   dietary_preferences: string[];
 }
@@ -21,7 +21,7 @@ const MenuList = () => {
       const { data, error } = await supabase
         .from('menu_items')
         .select('*')
-        .eq('is_available', true);
+        .eq('available', true);
       
       if (error) throw error;
       return data as MenuItem[];
