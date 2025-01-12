@@ -16,8 +16,8 @@ interface Message {
   user_id: string;
   message: string;
   created_at: string;
-  agent_id?: string;
-  is_bot?: boolean;
+  agent_id?: string | null;
+  is_bot?: boolean | null;
   profiles?: Profile | null;
 }
 
@@ -27,10 +27,9 @@ const LiveChat = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Charger les messages existants
     const loadMessages = async () => {
       console.log('Chargement des messages...');
-      const { data, error } = await supabase
+      const { data: messagesData, error } = await supabase
         .from('chat_messages')
         .select(`
           *,
@@ -48,23 +47,27 @@ const LiveChat = () => {
         return;
       }
 
-      console.log('Messages chargés:', data);
-      if (data) {
-        const typedMessages = data.map(msg => ({
-          ...msg,
+      console.log('Messages chargés:', messagesData);
+      if (messagesData) {
+        const typedMessages: Message[] = messagesData.map(msg => ({
+          id: msg.id,
+          user_id: msg.user_id || '',
+          message: msg.message,
+          created_at: msg.created_at,
+          agent_id: msg.agent_id,
+          is_bot: msg.is_bot,
           profiles: msg.profiles || {
             first_name: null,
             last_name: null,
             avatar_url: null
           }
-        })) satisfies Message[];
+        }));
         setMessages(typedMessages);
       }
     };
 
     loadMessages();
 
-    // Souscrire aux nouveaux messages
     const channel = supabase
       .channel('chat_messages')
       .on(
@@ -76,14 +79,19 @@ const LiveChat = () => {
         },
         (payload) => {
           console.log('Nouveau message reçu:', payload);
-          const newMsg = {
-            ...payload.new,
+          const newMsg: Message = {
+            id: payload.new.id,
+            user_id: payload.new.user_id || '',
+            message: payload.new.message,
+            created_at: payload.new.created_at,
+            agent_id: payload.new.agent_id,
+            is_bot: payload.new.is_bot,
             profiles: {
               first_name: null,
               last_name: null,
               avatar_url: null
             }
-          } satisfies Message;
+          };
           setMessages(current => [...current, newMsg]);
         }
       )
@@ -95,7 +103,6 @@ const LiveChat = () => {
   }, []);
 
   useEffect(() => {
-    // Défiler vers le bas lors de nouveaux messages
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
