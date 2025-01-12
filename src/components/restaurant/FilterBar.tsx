@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -21,9 +20,9 @@ interface FilterBarProps {
 const FilterBar = ({ onFilterChange }: FilterBarProps) => {
   const [filters, setFilters] = useState({
     search: "",
-    cuisineType: "",
-    dietaryPreference: "",
-    priceRange: "",
+    cuisineType: "all",
+    dietaryPreference: "all",
+    priceRange: "all",
   });
 
   const handleFilterChange = (key: string, value: string) => {
@@ -49,7 +48,7 @@ const FilterBar = ({ onFilterChange }: FilterBarProps) => {
           <SelectValue placeholder="Type de cuisine" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous</SelectItem>
+          <SelectItem value="all">Tous les types</SelectItem>
           <SelectItem value="congolais">Congolais</SelectItem>
           <SelectItem value="italien">Italien</SelectItem>
           <SelectItem value="japonais">Japonais</SelectItem>
@@ -65,7 +64,7 @@ const FilterBar = ({ onFilterChange }: FilterBarProps) => {
           <SelectValue placeholder="Préférences alimentaires" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous</SelectItem>
+          <SelectItem value="all">Toutes les préférences</SelectItem>
           <SelectItem value="vegetarien">Végétarien</SelectItem>
           <SelectItem value="vegan">Vegan</SelectItem>
           <SelectItem value="sans_gluten">Sans gluten</SelectItem>
@@ -80,7 +79,7 @@ const FilterBar = ({ onFilterChange }: FilterBarProps) => {
           <SelectValue placeholder="Gamme de prix" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous</SelectItem>
+          <SelectItem value="all">Tous les prix</SelectItem>
           <SelectItem value="low">$ Économique</SelectItem>
           <SelectItem value="medium">$$ Moyen</SelectItem>
           <SelectItem value="high">$$$ Élevé</SelectItem>
