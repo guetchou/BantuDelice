@@ -13,13 +13,26 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
+      
       if (event === "SIGNED_IN" && session) {
         navigate("/");
       }
       if (event === "SIGNED_OUT") {
         setError(null);
+      }
+      if (event === "USER_DELETED") {
+        setError("Le compte a été supprimé.");
+      }
+      if (event === "PASSWORD_RECOVERY") {
+        setError("Un email de récupération a été envoyé.");
+      }
+      // Handle authentication errors
+      if (event === "SIGNED_OUT" && session?.error) {
+        const authError = session.error as AuthError;
+        console.error("Auth error:", authError);
+        handleError(authError);
       }
     });
 
@@ -32,11 +45,20 @@ const Auth = () => {
       case "Invalid login credentials":
         setError("Identifiants invalides. Veuillez vérifier votre email et mot de passe.");
         break;
+      case "Email not confirmed":
+        setError("Veuillez confirmer votre email avant de vous connecter.");
+        break;
       case "Signup requires a valid password":
         setError("Le mot de passe doit contenir au moins 6 caractères.");
         break;
+      case "User not found":
+        setError("Aucun utilisateur trouvé avec ces identifiants.");
+        break;
+      case "Invalid email":
+        setError("L'adresse email n'est pas valide.");
+        break;
       default:
-        setError(error.message);
+        setError(error.message || "Une erreur s'est produite. Veuillez réessayer.");
     }
   };
 
