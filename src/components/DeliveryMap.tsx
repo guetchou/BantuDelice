@@ -19,7 +19,7 @@ const DeliveryMap = ({
 
   useEffect(() => {
     const initializeMap = async () => {
-      const { data: { token }, error } = await supabase.rpc('get_secret', {
+      const { data, error } = await supabase.rpc('get_secret', {
         name: 'MAPBOX_PUBLIC_TOKEN'
       });
 
@@ -28,12 +28,12 @@ const DeliveryMap = ({
         return;
       }
 
-      if (!token || typeof token !== 'string') {
+      if (!data || typeof data !== 'string') {
         console.error('Invalid Mapbox token');
         return;
       }
 
-      mapboxgl.accessToken = token;
+      mapboxgl.accessToken = data;
 
       if (mapContainer.current) {
         map.current = new mapboxgl.Map({

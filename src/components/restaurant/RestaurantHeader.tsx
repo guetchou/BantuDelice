@@ -15,7 +15,11 @@ const RestaurantHeader = ({ name, address, coordinates }: RestaurantHeaderProps)
         <MapPin className="w-5 h-5 mr-2" />
         <span>{address}</span>
       </div>
-      <DeliveryMap restaurantLocation={coordinates} />
+      <DeliveryMap 
+        latitude={coordinates[0]}
+        longitude={coordinates[1]}
+        zoom={14}
+      />
     </div>
   );
 };
