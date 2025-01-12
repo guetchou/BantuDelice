@@ -1,4 +1,5 @@
 import HeroSection from "@/components/home/HeroSection";
+import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import EssentialServices from "@/components/home/EssentialServices";
 import AdditionalServices from "@/components/home/AdditionalServices";
 import ProfessionalServices from "@/components/home/ProfessionalServices";
@@ -14,6 +15,7 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <HeroSection />
+      <FeaturedCarousel />
       <div className="container mx-auto px-4">
         <section className="py-12">
           <h2 className="text-3xl font-bold text-center mb-8">

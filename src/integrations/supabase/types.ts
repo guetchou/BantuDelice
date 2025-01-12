@@ -116,6 +116,33 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          id: string
+          is_bot: boolean | null
+          message: string
+          user_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_bot?: boolean | null
+          message: string
+          user_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_bot?: boolean | null
+          message?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       delivery_drivers: {
         Row: {
           average_rating: number | null
@@ -214,6 +241,45 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      featured_items: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          item_id: string
+          priority: number | null
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          item_id: string
+          priority?: number | null
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          item_id?: string
+          priority?: number | null
+          title?: string
+          type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -372,6 +438,7 @@ export type Database = {
           popularity_score: number | null
           price: number
           restaurant_id: string | null
+          search_vector: unknown | null
         }
         Insert: {
           available?: boolean | null
@@ -387,6 +454,7 @@ export type Database = {
           popularity_score?: number | null
           price: number
           restaurant_id?: string | null
+          search_vector?: unknown | null
         }
         Update: {
           available?: boolean | null
@@ -402,6 +470,7 @@ export type Database = {
           popularity_score?: number | null
           price?: number
           restaurant_id?: string | null
+          search_vector?: unknown | null
         }
         Relationships: [
           {
@@ -649,6 +718,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
+          search_vector: unknown | null
           user_id: string | null
         }
         Insert: {
@@ -659,6 +729,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
+          search_vector?: unknown | null
           user_id?: string | null
         }
         Update: {
@@ -669,6 +740,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
+          search_vector?: unknown | null
           user_id?: string | null
         }
         Relationships: []
