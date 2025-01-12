@@ -5,13 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Timer, ChefHat, Bell } from "lucide-react";
+import { Timer, ChefHat } from "lucide-react";
 import Navbar from "@/components/Navbar";
-
-interface KitchenDashboardProps {
-  isCollapsed: boolean;
-  setIsCollapsed: (value: boolean) => void;
-}
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 interface OrderItem {
   item_name: string;
@@ -25,12 +21,12 @@ interface Order {
   created_at: string;
   user_id: string;
   order_items: OrderItem[];
-  estimated_preparation_time?: number;
 }
 
-const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps) => {
+const KitchenDashboard = () => {
   const { toast } = useToast();
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["kitchen-orders"],
@@ -42,7 +38,6 @@ const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps
           status,
           created_at,
           user_id,
-          estimated_preparation_time,
           order_items (
             item_name,
             quantity,
@@ -55,7 +50,7 @@ const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps
       if (error) throw error;
       return data as Order[];
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 
   useEffect(() => {
@@ -68,13 +63,15 @@ const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps
           schema: "public",
           table: "orders",
         },
-        (payload: { new: Order }) => {
+        (payload: RealtimePostgresChangesPayload<Order>) => {
           console.log("Order change received:", payload);
-          setActiveOrders((prev) =>
-            prev.map((order) =>
-              order.id === payload.new.id ? { ...order, ...payload.new } : order
-            )
-          );
+          if (payload.new) {
+            setActiveOrders((prev) =>
+              prev.map((order) =>
+                order.id === payload.new.id ? { ...order, ...payload.new } : order
+              )
+            );
+          }
         }
       )
       .subscribe();
@@ -104,7 +101,6 @@ const KitchenDashboard = ({ isCollapsed, setIsCollapsed }: KitchenDashboardProps
         description: `Commande ${orderId} marquée comme ${newStatus}`,
       });
 
-      // Create notification for order status change
       const orderToUpdate = activeOrders.find((o) => o.id === orderId);
       if (orderToUpdate) {
         await supabase.from("notifications").insert({
