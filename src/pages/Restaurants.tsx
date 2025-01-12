@@ -15,6 +15,9 @@ interface Restaurant {
   longitude: number | null;
   cuisine_type: string | null;
   average_price_range: string | null;
+  created_at: string;
+  estimated_preparation_time: number | null;
+  user_id: string | null;
 }
 
 const Restaurants = () => {
@@ -36,9 +39,16 @@ const Restaurants = () => {
 
       if (error) throw error;
       
-      setRestaurants(data || []);
-      setFilteredRestaurants(data || []);
-      console.log("Restaurants fetched:", data);
+      // Transform the data to match the Restaurant interface
+      const transformedData: Restaurant[] = (data || []).map(restaurant => ({
+        ...restaurant,
+        cuisine_type: restaurant.cuisine_type || null,
+        average_price_range: restaurant.average_price_range || null
+      }));
+      
+      setRestaurants(transformedData);
+      setFilteredRestaurants(transformedData);
+      console.log("Restaurants fetched:", transformedData);
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       toast({
@@ -68,14 +78,14 @@ const Restaurants = () => {
     }
 
     // Filter by cuisine type
-    if (filters.cuisineType) {
+    if (filters.cuisineType && filters.cuisineType !== 'all') {
       filtered = filtered.filter(restaurant =>
         restaurant.cuisine_type === filters.cuisineType
       );
     }
 
     // Filter by price range
-    if (filters.priceRange) {
+    if (filters.priceRange && filters.priceRange !== 'all') {
       filtered = filtered.filter(restaurant =>
         restaurant.average_price_range === filters.priceRange
       );
@@ -106,7 +116,7 @@ const Restaurants = () => {
                 </div>
                 <div className="flex items-center text-gray-600 mb-4">
                   <Clock className="w-4 h-4 mr-2" />
-                  <span>25-35 min</span>
+                  <span>{restaurant.estimated_preparation_time || 25}-{(restaurant.estimated_preparation_time || 25) + 10} min</span>
                   <Star className="w-4 h-4 ml-4 mr-1 text-yellow-400" />
                   <span>4.5</span>
                 </div>

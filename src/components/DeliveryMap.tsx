@@ -29,9 +29,8 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
         if (error) throw error;
         if (!data) throw new Error('No Mapbox token found');
 
-        // Ensure the token is a string
-        const mapboxToken: string = data.toString();
-        mapboxgl.accessToken = mapboxToken;
+        // Ensure the token is a string and set it
+        mapboxgl.accessToken = data as string;
 
         if (!mapContainer.current) return;
 
