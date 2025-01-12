@@ -20,21 +20,27 @@ const DeliveryMap = ({
   useEffect(() => {
     const initializeMap = async () => {
       try {
-        const { data, error } = await supabase.rpc('get_secret', {
+        const { data: secretData, error: secretError } = await supabase.rpc('get_secret', {
           secret_name: 'MAPBOX_PUBLIC_TOKEN'
         });
 
-        if (error) {
-          console.error('Error fetching Mapbox token:', error);
+        if (secretError) {
+          console.error('Error fetching Mapbox token:', secretError);
           return;
         }
 
-        if (!data || typeof data !== 'string') {
-          console.error('Invalid Mapbox token');
+        if (!secretData) {
+          console.error('No Mapbox token found');
           return;
         }
 
-        mapboxgl.accessToken = data;
+        const token = secretData.secret;
+        if (!token || typeof token !== 'string') {
+          console.error('Invalid Mapbox token format');
+          return;
+        }
+
+        mapboxgl.accessToken = token;
 
         if (mapContainer.current) {
           map.current = new mapboxgl.Map({
