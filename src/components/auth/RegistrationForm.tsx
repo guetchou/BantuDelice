@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +25,20 @@ import ProfilePhotoUpload from "@/components/profile/ProfilePhotoUpload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
+
+// Ajout de la fonction getErrorMessage
+const getErrorMessage = (error: AuthError): string => {
+  switch (error.message) {
+    case "User already registered":
+      return "Cet email est déjà utilisé";
+    case "Invalid email":
+      return "Email invalide";
+    case "Weak password":
+      return "Le mot de passe est trop faible";
+    default:
+      return error.message;
+  }
+};
 
 const phoneRegex = /^(\+242|0)[1-9]\d{8}$/;
 
@@ -403,3 +418,4 @@ export const RegistrationForm = ({ onCancel }: RegistrationFormProps) => {
     </motion.div>
   );
 };
+

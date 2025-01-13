@@ -10,16 +10,19 @@ import { useRestaurant } from "@/components/restaurant/useRestaurant";
 import { useToast } from "@/components/ui/use-toast";
 
 const RestaurantMenu = () => {
-  const { restaurantId } = useParams();
+  const { restaurantId } = useParams<{ restaurantId: string }>();
   const { toast } = useToast();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDeliveryMap, setShowDeliveryMap] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState<string>('');
   const [orderAmount, setOrderAmount] = useState(0);
 
-  const { data: restaurant, isLoading } = useRestaurant(restaurantId || '');
+  // Utilisez directement restaurantId au lieu de l'ID littéral
+  const { data: restaurant, isLoading } = useRestaurant(restaurantId);
 
   useEffect(() => {
+    if (!restaurantId) return;
+
     const channel = supabase
       .channel('order-status')
       .on('postgres_changes', { 
