@@ -24,9 +24,14 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${userId}-${Math.random()}.${fileExt}`;
+      // Use a timestamp instead of random number for better uniqueness
+      const timestamp = new Date().getTime();
+      // If we're in pre-registration (temp userId), store in a temporary folder
+      const filePath = userId === 'temp' 
+        ? `temp/${timestamp}.${fileExt}`
+        : `${userId}/${timestamp}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
 
@@ -38,10 +43,13 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
         .from('avatars')
         .getPublicUrl(filePath);
 
-      await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', userId);
+      // Only update the profile if we have a real user ID
+      if (userId !== 'temp') {
+        await supabase
+          .from('profiles')
+          .update({ avatar_url: publicUrl })
+          .eq('id', userId);
+      }
 
       onUploadComplete(publicUrl);
       
@@ -50,6 +58,7 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
         description: "Votre photo de profil a été mise à jour.",
       });
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Erreur",
         description: "Erreur lors du téléchargement de l'image.",
@@ -65,7 +74,7 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
       <Avatar className="h-24 w-24">
         <AvatarImage src={currentAvatarUrl || undefined} alt="Photo de profil" />
         <AvatarFallback>
-          {userId.slice(0, 2).toUpperCase()}
+          {userId === 'temp' ? 'UP' : userId.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       
