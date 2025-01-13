@@ -10,6 +10,7 @@ import { logger } from "@/services/logger";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ProfilePhotoUpload from "@/components/profile/ProfilePhotoUpload";
 import { 
   Form, 
   FormControl, 
@@ -28,6 +29,8 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 
+const phoneRegex = /^(\+242|00242|0)[1-9]\d{8}$/;
+
 const registrationSchema = z.object({
   email: z.string().email("Email invalide"),
   password: z.string()
@@ -38,7 +41,7 @@ const registrationSchema = z.object({
   confirmPassword: z.string(),
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  phone: z.string().regex(/^(\+33|0)[1-9](\d{2}){4}$/, "Numéro de téléphone invalide"),
+  phone: z.string().regex(phoneRegex, "Format: +242XXXXXXXXX ou 0XXXXXXXXX"),
   address: z.string().min(10, "L'adresse doit être complète"),
   city: z.string().min(2, "La ville est requise"),
   postalCode: z.string().regex(/^\d{5}$/, "Code postal invalide"),
@@ -51,7 +54,8 @@ const registrationSchema = z.object({
   gender: z.enum(["male", "female", "other"]),
   preferredLanguage: z.string(),
   newsletter: z.boolean(),
-  bio: z.string().max(500, "La biographie ne doit pas dépasser 500 caractères"),
+  bio: z.string().optional(),
+  avatarUrl: z.string().optional()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
   path: ["confirmPassword"],
@@ -63,14 +67,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
-
-  const form = useForm<RegistrationForm>({
-    resolver: zodResolver(registrationSchema),
-    defaultValues: {
-      newsletter: false,
-      preferredLanguage: "fr",
-    },
-  });
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     logger.info("Page d'authentification chargée");
@@ -143,6 +140,16 @@ const Auth = () => {
     }
   };
 
+  const form = useForm<RegistrationForm>({
+    resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      newsletter: false,
+      preferredLanguage: "fr",
+      bio: "",
+      avatarUrl: ""
+    },
+  });
+
   const onSubmit = async (data: RegistrationForm) => {
     try {
       const { error } = await supabase.auth.signUp({
@@ -161,6 +168,7 @@ const Auth = () => {
             preferred_language: data.preferredLanguage,
             newsletter: data.newsletter,
             bio: data.bio,
+            avatar_url: avatarUrl
           }
         }
       });
@@ -200,6 +208,14 @@ const Auth = () => {
         {isRegistering ? (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="mb-6">
+                <ProfilePhotoUpload
+                  userId="temp"
+                  currentAvatarUrl={avatarUrl}
+                  onUploadComplete={setAvatarUrl}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="email"
@@ -279,8 +295,11 @@ const Auth = () => {
                   <FormItem>
                     <FormLabel>Téléphone</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input placeholder="+242XXXXXXXXX" {...field} />
                     </FormControl>
+                    <FormDescription>
+                      Format: +242XXXXXXXXX ou 0XXXXXXXXX
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -389,7 +408,7 @@ const Auth = () => {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="fr">Français</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="en">Anglais</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -423,7 +442,7 @@ const Auth = () => {
                 name="bio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Biographie</FormLabel>
+                    <FormLabel>Biographie (optionnelle)</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Parlez-nous un peu de vous..."
