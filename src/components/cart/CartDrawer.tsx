@@ -62,7 +62,6 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Créer la commande
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -71,14 +70,13 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
           total_amount: state.total,
           status: 'pending',
           payment_status: 'completed',
-          delivery_address: "À implémenter", // TODO: Add address input
+          delivery_address: "À implémenter",
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
 
-      // Créer les éléments de la commande
       const orderItems = state.items.map(item => ({
         order_id: order.id,
         item_name: item.name,
@@ -92,7 +90,6 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
 
       if (itemsError) throw itemsError;
 
-      // Initialiser le suivi de livraison
       const { error: trackingError } = await supabase
         .from('delivery_tracking')
         .insert({
