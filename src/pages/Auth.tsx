@@ -120,7 +120,7 @@ const Auth = () => {
       <AnimatePresence mode="wait">
         {isRegistering ? (
           <RegistrationForm 
-            onCancel={() => setIsRegistering(false)} 
+            onCancel={() => setIsRegistering(false)}
             onSuccess={() => {
               toast.success("Inscription réussie ! Veuillez vérifier votre email.");
               setIsRegistering(false);

@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 
 interface LoginFormProps {
   onRegister: () => void;
+  onForgotPassword?: () => void; // Make this optional since it's a new prop
 }
 
-export const LoginForm = ({ onRegister }: LoginFormProps) => {
+export const LoginForm = ({ onRegister, onForgotPassword }: LoginFormProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -54,14 +55,27 @@ export const LoginForm = ({ onRegister }: LoginFormProps) => {
         }}
       />
 
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full mt-4"
-        onClick={onRegister}
-      >
-        Créer un compte
-      </Button>
+      <div className="space-y-2 mt-4">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={onRegister}
+        >
+          Créer un compte
+        </Button>
+        
+        {onForgotPassword && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-sm"
+            onClick={onForgotPassword}
+          >
+            Mot de passe oublié ?
+          </Button>
+        )}
+      </div>
     </motion.div>
   );
 };

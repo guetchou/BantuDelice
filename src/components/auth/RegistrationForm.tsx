@@ -76,9 +76,10 @@ type RegistrationForm = z.infer<typeof registrationSchema>;
 
 interface RegistrationFormProps {
   onCancel: () => void;
+  onSuccess?: () => void; // Make this optional since it's a new prop
 }
 
-export const RegistrationForm = ({ onCancel }: RegistrationFormProps) => {
+export const RegistrationForm = ({ onCancel, onSuccess }: RegistrationFormProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const form = useForm<RegistrationForm>({
     resolver: zodResolver(registrationSchema),
@@ -116,6 +117,7 @@ export const RegistrationForm = ({ onCancel }: RegistrationFormProps) => {
       if (error) throw error;
 
       toast.success("Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
+      onSuccess?.(); // Call onSuccess if provided
       onCancel();
     } catch (error) {
       if (error instanceof AuthError) {
