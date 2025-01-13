@@ -4,13 +4,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MobilePaymentProps {
   amount: number;
   onPaymentComplete: () => void;
+  driverId?: string;
+  orderId?: string;
+  description?: string;
 }
 
-const MobilePayment: React.FC<MobilePaymentProps> = ({ amount, onPaymentComplete }) => {
+const MobilePayment: React.FC<MobilePaymentProps> = ({ 
+  amount, 
+  onPaymentComplete,
+  driverId,
+  orderId,
+  description 
+}) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [provider, setProvider] = useState('mtn');
   const [loading, setLoading] = useState(false);
@@ -20,6 +30,23 @@ const MobilePayment: React.FC<MobilePaymentProps> = ({ amount, onPaymentComplete
     try {
       // Simuler un paiement pour la démonstration
       await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Si c'est un paiement de livreur, créer l'enregistrement
+      if (driverId) {
+        const { error } = await supabase
+          .from('driver_payments')
+          .insert({
+            driver_id: driverId,
+            amount,
+            payment_method: provider,
+            description,
+            order_id: orderId,
+            status: 'completed',
+            paid_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+      }
       
       toast({
         title: "Paiement initié",
@@ -31,11 +58,12 @@ const MobilePayment: React.FC<MobilePaymentProps> = ({ amount, onPaymentComplete
       
       toast({
         title: "Paiement réussi",
-        description: "Votre commande a été confirmée",
+        description: "Votre paiement a été confirmé",
       });
       
       onPaymentComplete();
     } catch (error) {
+      console.error("Erreur de paiement:", error);
       toast({
         title: "Erreur de paiement",
         description: "Une erreur est survenue lors du paiement",

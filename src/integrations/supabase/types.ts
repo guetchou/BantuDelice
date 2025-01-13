@@ -146,6 +146,7 @@ export type Database = {
       delivery_drivers: {
         Row: {
           average_rating: number | null
+          commission_rate: number | null
           created_at: string | null
           current_latitude: number | null
           current_longitude: number | null
@@ -153,10 +154,12 @@ export type Database = {
           last_location_update: string | null
           status: string | null
           total_deliveries: number | null
+          total_earnings: number | null
           user_id: string | null
         }
         Insert: {
           average_rating?: number | null
+          commission_rate?: number | null
           created_at?: string | null
           current_latitude?: number | null
           current_longitude?: number | null
@@ -164,10 +167,12 @@ export type Database = {
           last_location_update?: string | null
           status?: string | null
           total_deliveries?: number | null
+          total_earnings?: number | null
           user_id?: string | null
         }
         Update: {
           average_rating?: number | null
+          commission_rate?: number | null
           created_at?: string | null
           current_latitude?: number | null
           current_longitude?: number | null
@@ -175,6 +180,7 @@ export type Database = {
           last_location_update?: string | null
           status?: string | null
           total_deliveries?: number | null
+          total_earnings?: number | null
           user_id?: string | null
         }
         Relationships: []
@@ -243,6 +249,57 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      driver_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          driver_id: string
+          id: string
+          order_id: string | null
+          paid_at: string | null
+          payment_method: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          driver_id: string
+          id?: string
+          order_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          driver_id?: string
+          id?: string
+          order_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_payments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       favorites: {
         Row: {
