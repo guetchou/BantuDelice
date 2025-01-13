@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { NavigationProvider } from "@/contexts/NavigationContext";
 
 // Pages
 import Index from "@/pages/Index";
@@ -12,44 +11,42 @@ import RestaurantDashboard from "@/pages/restaurant/Dashboard";
 
 const AppRoutes = () => {
   return (
-    <NavigationProvider>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/delivery/dashboard"
-          element={
-            <ProtectedRoute>
-              <DeliveryDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/restaurant/dashboard"
-          element={
-            <ProtectedRoute>
-              <RestaurantDashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </NavigationProvider>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/delivery/dashboard"
+        element={
+          <ProtectedRoute>
+            <DeliveryDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/dashboard"
+        element={
+          <ProtectedRoute>
+            <RestaurantDashboard />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 };
 
