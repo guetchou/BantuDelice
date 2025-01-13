@@ -1196,6 +1196,7 @@ export type Database = {
     }
     Enums: {
       user_role:
+        | "superadmin"
         | "admin"
         | "restaurant"
         | "delivery"
