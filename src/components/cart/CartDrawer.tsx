@@ -15,12 +15,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useLocation } from 'react-router-dom';
 
 const CartDrawer = () => {
   const { state, updateQuantity, removeFromCart, clearCart } = useCart();
   const [showPayment, setShowPayment] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const location = useLocation();
+  const restaurantId = location.pathname.split('/')[2]; // Get restaurant ID from URL
 
   const handleCheckout = async () => {
     try {
@@ -57,6 +60,7 @@ const CartDrawer = () => {
         .from('orders')
         .insert({
           user_id: user.id,
+          restaurant_id: restaurantId,
           total_amount: state.total,
           status: 'pending',
           payment_status: 'completed',

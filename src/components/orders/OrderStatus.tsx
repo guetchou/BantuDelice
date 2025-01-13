@@ -3,10 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Clock, ChefHat, Truck, CheckCircle } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
 
 interface OrderStatusProps {
   orderId: string;
 }
+
+type Order = Database['public']['Tables']['orders']['Row'];
+type DeliveryTracking = Database['public']['Tables']['delivery_tracking']['Row'];
 
 const OrderStatus = ({ orderId }: OrderStatusProps) => {
   const [status, setStatus] = useState<string>('pending');
@@ -26,8 +30,9 @@ const OrderStatus = ({ orderId }: OrderStatusProps) => {
         },
         (payload) => {
           console.log('Order status update:', payload);
-          if (payload.new) {
-            setStatus(payload.new.status);
+          const newOrder = payload.new as Order;
+          if (newOrder) {
+            setStatus(newOrder.status);
           }
         }
       )
@@ -46,8 +51,9 @@ const OrderStatus = ({ orderId }: OrderStatusProps) => {
         },
         (payload) => {
           console.log('Delivery status update:', payload);
-          if (payload.new) {
-            setDeliveryStatus(payload.new.status);
+          const newDelivery = payload.new as DeliveryTracking;
+          if (newDelivery) {
+            setDeliveryStatus(newDelivery.status);
           }
         }
       )

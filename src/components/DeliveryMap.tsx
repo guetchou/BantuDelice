@@ -2,12 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
 interface DeliveryMapProps {
   latitude: number;
   longitude: number;
   orderId?: string;
 }
+
+type DeliveryTracking = Database['public']['Tables']['delivery_tracking']['Row'];
 
 const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -78,8 +81,9 @@ const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
           },
           (payload) => {
             console.log('Delivery tracking update:', payload);
-            if (payload.new && marker.current && map.current) {
-              const { latitude: newLat, longitude: newLng } = payload.new;
+            const newLocation = payload.new as DeliveryTracking;
+            if (newLocation && marker.current && map.current) {
+              const { latitude: newLat, longitude: newLng } = newLocation;
               if (newLat && newLng) {
                 marker.current.setLngLat([newLng, newLat]);
                 map.current.easeTo({
