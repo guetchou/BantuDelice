@@ -1,51 +1,54 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import DashboardCard from "@/components/DashboardCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Timer, ChefHat } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import { Database } from "@/integrations/supabase/types";
-import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { Clock, ChefHat, Check } from "lucide-react";
 
-type Order = Database["public"]["Tables"]["orders"]["Row"] & {
-  order_items: Array<{
-    item_name: string;
-    quantity: number;
-  }>;
-};
+interface Order {
+  id: string;
+  status: string;
+  created_at: string;
+  restaurant_id: string;
+  total_amount: number;
+  delivery_address: string;
+  user_id: string;
+  accepted_at?: string;
+  prepared_at?: string;
+}
 
 const KitchenDashboard = () => {
-  const { toast } = useToast();
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
-
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ["kitchen-orders"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          id,
-          status,
-          created_at,
-          user_id,
-          order_items (
-            item_name,
-            quantity
-          )
-        `)
-        .in("status", ["pending", "preparing"])
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-      return data as Order[];
-    },
-    refetchInterval: 30000,
-  });
+  const { toast } = useToast();
 
   useEffect(() => {
+    // Fetch initial orders
+    const fetchOrders = async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .in("status", ["pending", "accepted", "preparing"])
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching orders:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les commandes",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setActiveOrders(data as Order[]);
+    };
+
+    fetchOrders();
+
+    // Subscribe to real-time updates
     const channel = supabase
       .channel("orders-changes")
       .on(
@@ -57,8 +60,8 @@ const KitchenDashboard = () => {
         },
         (payload: RealtimePostgresChangesPayload<Order>) => {
           console.log("Order change received:", payload);
-          const newOrder = payload.new as Order;
-          if (newOrder && 'id' in newOrder) {
+          const newOrder = payload.new;
+          if (newOrder && typeof newOrder === 'object' && 'id' in newOrder) {
             setActiveOrders((prev) =>
               prev.map((order) =>
                 order.id === newOrder.id ? { ...order, ...newOrder } : order
@@ -72,108 +75,118 @@ const KitchenDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
-
-  useEffect(() => {
-    if (orders) {
-      setActiveOrders(orders);
-    }
-  }, [orders]);
+  }, [toast]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", orderId);
+    const { error } = await supabase
+      .from("orders")
+      .update({ 
+        status: newStatus,
+        ...(newStatus === 'accepted' ? { accepted_at: new Date().toISOString() } : {}),
+        ...(newStatus === 'prepared' ? { prepared_at: new Date().toISOString() } : {})
+      })
+      .eq("id", orderId);
 
-      if (error) throw error;
-
-      toast({
-        title: "Statut mis à jour",
-        description: `Commande ${orderId} marquée comme ${newStatus}`,
-      });
-
-      const orderToUpdate = activeOrders.find((o) => o.id === orderId);
-      if (orderToUpdate) {
-        await supabase.from("notifications").insert({
-          user_id: orderToUpdate.user_id,
-          type: "order_status",
-          message: `Votre commande est maintenant ${newStatus}`,
-        });
-      }
-    } catch (error) {
-      console.error("Error updating order status:", error);
+    if (error) {
+      console.error("Error updating order:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour le statut",
+        description: "Impossible de mettre à jour la commande",
         variant: "destructive",
       });
+      return;
     }
+
+    toast({
+      title: "Succès",
+      description: "La commande a été mise à jour",
+    });
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Navbar />
-      <div className="flex-1 p-8 pt-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Interface Cuisine</h1>
-          <ChefHat className="w-8 h-8" />
-        </div>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Tableau de bord - Cuisine</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {activeOrders.map((order) => (
-            <Card key={order.id} className="relative">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-medium">
-                  Commande #{order.id.slice(0, 8)}
-                </CardTitle>
-                <Badge
-                  variant={order.status === "preparing" ? "default" : "secondary"}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <DashboardCard
+          title="Commandes en attente"
+          value={activeOrders.filter((o) => o.status === "pending").length.toString()}
+          icon={<Clock className="w-6 h-6" />}
+        />
+        <DashboardCard
+          title="Commandes en préparation"
+          value={activeOrders.filter((o) => o.status === "preparing").length.toString()}
+          icon={<ChefHat className="w-6 h-6" />}
+        />
+        <DashboardCard
+          title="Commandes prêtes"
+          value={activeOrders.filter((o) => o.status === "prepared").length.toString()}
+          icon={<Check className="w-6 h-6" />}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {activeOrders.map((order) => (
+          <Card key={order.id} className="p-4">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="font-semibold">Commande #{order.id.slice(0, 8)}</h3>
+                <p className="text-sm text-gray-500">
+                  {new Date(order.created_at).toLocaleString()}
+                </p>
+              </div>
+              <Badge
+                variant={
+                  order.status === "pending"
+                    ? "default"
+                    : order.status === "accepted"
+                    ? "secondary"
+                    : "success"
+                }
+              >
+                {order.status}
+              </Badge>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <p>
+                <span className="font-medium">Montant:</span>{" "}
+                {(order.total_amount / 100).toFixed(2)}€
+              </p>
+              <p>
+                <span className="font-medium">Adresse:</span>{" "}
+                {order.delivery_address}
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              {order.status === "pending" && (
+                <Button
+                  className="flex-1"
+                  onClick={() => updateOrderStatus(order.id, "accepted")}
                 >
-                  {order.status}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Timer className="w-4 h-4" />
-                    <span>
-                      {new Date(order.created_at).toLocaleTimeString("fr-FR")}
-                    </span>
-                  </div>
-                  <ul className="space-y-2">
-                    {order.order_items.map((item, index) => (
-                      <li key={index} className="flex justify-between">
-                        <span>
-                          {item.quantity}x {item.item_name}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex gap-2 mt-4">
-                    {order.status === "pending" && (
-                      <Button
-                        onClick={() => updateOrderStatus(order.id, "preparing")}
-                        className="w-full"
-                      >
-                        Commencer la préparation
-                      </Button>
-                    )}
-                    {order.status === "preparing" && (
-                      <Button
-                        onClick={() => updateOrderStatus(order.id, "completed")}
-                        className="w-full"
-                      >
-                        Terminer
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  Accepter
+                </Button>
+              )}
+              {order.status === "accepted" && (
+                <Button
+                  className="flex-1"
+                  onClick={() => updateOrderStatus(order.id, "preparing")}
+                >
+                  Commencer la préparation
+                </Button>
+              )}
+              {order.status === "preparing" && (
+                <Button
+                  className="flex-1"
+                  onClick={() => updateOrderStatus(order.id, "prepared")}
+                >
+                  Marquer comme prêt
+                </Button>
+              )}
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
   );
