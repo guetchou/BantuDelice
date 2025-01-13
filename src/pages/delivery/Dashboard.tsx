@@ -59,14 +59,19 @@ const DeliveryDashboard = () => {
           .from("delivery_drivers")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
 
+        if (!driverData) {
+          toast.error("Profil de livreur non trouvé");
+          return;
+        }
+
         setStats({
-          totalDeliveries: driverData.total_deliveries,
+          totalDeliveries: driverData.total_deliveries || 0,
           averageRating: driverData.average_rating || 0,
-          currentStatus: driverData.status,
+          currentStatus: driverData.status || 'unavailable',
         });
       } catch (error) {
         console.error("Error loading delivery stats:", error);
