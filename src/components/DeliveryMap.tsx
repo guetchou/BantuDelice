@@ -6,11 +6,13 @@ import { supabase } from '@/integrations/supabase/client';
 interface DeliveryMapProps {
   latitude: number;
   longitude: number;
+  orderId?: string;
 }
 
-const DeliveryMap = ({ latitude, longitude }: DeliveryMapProps) => {
+const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const marker = useRef<mapboxgl.Marker | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ const DeliveryMap = ({ latitude, longitude }: DeliveryMapProps) => {
           zoom: 14
         });
 
-        new mapboxgl.Marker()
+        marker.current = new mapboxgl.Marker()
           .setLngLat([longitude, latitude])
           .addTo(map.current);
 
@@ -62,12 +64,48 @@ const DeliveryMap = ({ latitude, longitude }: DeliveryMapProps) => {
 
     initializeMap();
 
+    // Souscrire aux mises à jour en temps réel si un orderId est fourni
+    if (orderId) {
+      const channel = supabase
+        .channel('delivery-tracking')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'delivery_tracking',
+            filter: `order_id=eq.${orderId}`
+          },
+          (payload) => {
+            console.log('Delivery tracking update:', payload);
+            if (payload.new && marker.current && map.current) {
+              const { latitude: newLat, longitude: newLng } = payload.new;
+              if (newLat && newLng) {
+                marker.current.setLngLat([newLng, newLat]);
+                map.current.easeTo({
+                  center: [newLng, newLat],
+                  duration: 1000
+                });
+              }
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+        if (map.current) {
+          map.current.remove();
+        }
+      };
+    }
+
     return () => {
       if (map.current) {
         map.current.remove();
       }
     };
-  }, [latitude, longitude]);
+  }, [latitude, longitude, orderId]);
 
   if (error) {
     return (

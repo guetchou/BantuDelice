@@ -1,13 +1,114 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import MobilePayment from '@/components/MobilePayment';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const CartDrawer = () => {
-  const { state, updateQuantity, removeFromCart } = useCart();
+  const { state, updateQuantity, removeFromCart, clearCart } = useCart();
+  const [showPayment, setShowPayment] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleCheckout = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour passer une commande",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setShowPayment(true);
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la commande",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePaymentComplete = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // Créer la commande
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          total_amount: state.total,
+          status: 'pending',
+          payment_status: 'completed',
+          delivery_address: "À implémenter", // TODO: Add address input
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Créer les éléments de la commande
+      const orderItems = state.items.map(item => ({
+        order_id: order.id,
+        item_name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Initialiser le suivi de livraison
+      const { error: trackingError } = await supabase
+        .from('delivery_tracking')
+        .insert({
+          order_id: order.id,
+          status: 'preparing',
+        });
+
+      if (trackingError) throw trackingError;
+
+      toast({
+        title: "Commande confirmée",
+        description: "Votre commande a été enregistrée avec succès",
+      });
+
+      clearCart();
+      setShowPayment(false);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création de la commande",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Sheet>
@@ -82,12 +183,31 @@ const CartDrawer = () => {
               <span>Total</span>
               <span>{(state.total / 100).toLocaleString()} FCFA</span>
             </div>
-            <Button className="w-full">
-              Passer la commande
+            <Button 
+              className="w-full" 
+              onClick={handleCheckout}
+              disabled={loading}
+            >
+              {loading ? "Traitement en cours..." : "Passer la commande"}
             </Button>
           </div>
         )}
       </SheetContent>
+
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Paiement</DialogTitle>
+            <DialogDescription>
+              Choisissez votre mode de paiement pour finaliser la commande
+            </DialogDescription>
+          </DialogHeader>
+          <MobilePayment
+            amount={state.total}
+            onPaymentComplete={handlePaymentComplete}
+          />
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 };
