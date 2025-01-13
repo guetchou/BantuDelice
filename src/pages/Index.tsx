@@ -1,26 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Star, Clock, MapPin, Phone, Filter, ChefHat } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, ChefHat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import EssentialServices from "@/components/home/EssentialServices";
@@ -31,6 +15,9 @@ import CulturalServices from "@/components/home/CulturalServices";
 import Testimonials from "@/components/home/Testimonials";
 import Newsletter from "@/components/home/Newsletter";
 import Footer from "@/components/Footer";
+import RestaurantCard from "@/components/restaurants/RestaurantCard";
+import RestaurantFilters from "@/components/restaurants/RestaurantFilters";
+import CategoryList from "@/components/restaurants/CategoryList";
 
 interface MenuItem {
   id: string;
@@ -50,6 +37,15 @@ interface Restaurant {
   distance?: number;
   menu_items?: MenuItem[];
 }
+
+const categories = [
+  { id: 'Tout', label: 'Tout', icon: ChefHat },
+  { id: 'Congolais', label: 'Congolais', icon: ChefHat },
+  { id: 'Fast Food', label: 'Fast Food', icon: ChefHat },
+  { id: 'Healthy', label: 'Healthy', icon: ChefHat },
+  { id: 'Pizza', label: 'Pizza', icon: ChefHat },
+  { id: 'Asiatique', label: 'Asiatique', icon: ChefHat }
+];
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('Tout');
@@ -96,7 +92,6 @@ const Index = () => {
         throw error;
       }
 
-      // Process and filter results based on price range
       let filteredData = data as Restaurant[];
       if (priceRange !== 'all') {
         filteredData = filteredData.filter(restaurant => {
@@ -110,7 +105,6 @@ const Index = () => {
         });
       }
 
-      // Sort results
       return filteredData.sort((a, b) => {
         switch(sortBy) {
           case 'rating':
@@ -123,15 +117,6 @@ const Index = () => {
       });
     }
   });
-
-  const categories = [
-    { id: 'Tout', label: 'Tout', icon: ChefHat },
-    { id: 'Congolais', label: 'Congolais', icon: ChefHat },
-    { id: 'Fast Food', label: 'Fast Food', icon: ChefHat },
-    { id: 'Healthy', label: 'Healthy', icon: ChefHat },
-    { id: 'Pizza', label: 'Pizza', icon: ChefHat },
-    { id: 'Asiatique', label: 'Asiatique', icon: ChefHat }
-  ];
 
   const handleRestaurantClick = (restaurantId: string) => {
     console.log('Navigating to restaurant:', restaurantId);
@@ -149,57 +134,12 @@ const Index = () => {
             <h2 className="text-3xl font-bold text-gray-900">
               Livraison de Repas
             </h2>
-            
-            {/* Filters Button */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Filter className="w-4 h-4" />
-                  Filtres
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filtres</SheetTitle>
-                  <SheetDescription>
-                    Affinez votre recherche de restaurants
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">
-                      Gamme de prix
-                    </label>
-                    <Select value={priceRange} onValueChange={setPriceRange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez une gamme de prix" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tous les prix</SelectItem>
-                        <SelectItem value="low">€ (Moins de 5000 XAF)</SelectItem>
-                        <SelectItem value="medium">€€ (5000-15000 XAF)</SelectItem>
-                        <SelectItem value="high">€€€ (Plus de 15000 XAF)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">
-                      Trier par
-                    </label>
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un critère de tri" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="rating">Note</SelectItem>
-                        <SelectItem value="preparation_time">Temps de préparation</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <RestaurantFilters
+              priceRange={priceRange}
+              setPriceRange={setPriceRange}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+            />
           </div>
           
           {/* Search Bar */}
@@ -215,19 +155,11 @@ const Index = () => {
           </div>
 
           {/* Categories */}
-          <div className="flex space-x-4 overflow-x-auto pb-4 mb-8 scrollbar-hide">
-            {categories.map(({ id, label, icon: Icon }) => (
-              <Button
-                key={id}
-                variant={selectedCategory === id ? "default" : "outline"}
-                onClick={() => setSelectedCategory(id)}
-                className="whitespace-nowrap flex items-center gap-2"
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-              </Button>
-            ))}
-          </div>
+          <CategoryList
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
 
           {/* Restaurants Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -245,46 +177,11 @@ const Index = () => {
                 </div>
               ))
             ) : restaurants?.map((restaurant) => (
-              <div
+              <RestaurantCard
                 key={restaurant.id}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1 cursor-pointer"
-                onClick={() => handleRestaurantClick(restaurant.id)}
-              >
-                <div className="relative">
-                  <img
-                    src={restaurant.image_url || 'https://images.unsplash.com/photo-1466721591366-2d5fba72006d'}
-                    alt={restaurant.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  {restaurant.distance && (
-                    <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold text-primary">
-                      {restaurant.distance} km
-                    </div>
-                  )}
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {restaurant.name}
-                  </h3>
-                  <div className="flex items-center text-sm text-gray-600 mb-4">
-                    {restaurant.rating && (
-                      <div className="flex items-center">
-                        <Star className="w-5 h-5 text-yellow-400" />
-                        <span className="ml-1 font-medium">{restaurant.rating}</span>
-                      </div>
-                    )}
-                    <span className="mx-2">•</span>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4" />
-                      <span className="ml-1">{restaurant.estimated_preparation_time} min</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    <span className="truncate">{restaurant.address}</span>
-                  </div>
-                </div>
-              </div>
+                restaurant={restaurant}
+                onClick={handleRestaurantClick}
+              />
             ))}
           </div>
         </div>
