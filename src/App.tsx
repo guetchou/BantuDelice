@@ -9,20 +9,73 @@ import { SidebarProvider } from "@/contexts/SidebarContext";
 import NotificationBell from "@/components/NotificationBell";
 import Restaurants from "@/pages/Restaurants";
 import RestaurantMenu from "@/pages/RestaurantMenu";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Navbar from "@/components/Navbar";
+import { Toaster } from "@/components/ui/sonner";
 
 const App = () => {
   return (
     <SidebarProvider>
-      <NotificationBell />
+      <Toaster position="top-right" />
       <Routes>
-        <Route path="/" element={<Dashboard />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/kitchen" element={<KitchenDashboard />} />
-        <Route path="/analytics" element={<AnalyticsDashboard />} />
-        <Route path="/restaurants" element={<Restaurants />} />
-        <Route path="/restaurant/:restaurantId/menu" element={<RestaurantMenu />} />
+        
+        {/* Protected Routes */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Navbar />
+            <NotificationBell />
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <Navbar />
+            <NotificationBell />
+            <Admin />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Navbar />
+            <NotificationBell />
+            <Profile />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/kitchen" element={
+          <ProtectedRoute>
+            <Navbar />
+            <NotificationBell />
+            <KitchenDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/analytics" element={
+          <ProtectedRoute>
+            <Navbar />
+            <NotificationBell />
+            <AnalyticsDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/restaurants" element={
+          <ProtectedRoute>
+            <Navbar />
+            <NotificationBell />
+            <Restaurants />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/restaurant/:restaurantId/menu" element={
+          <ProtectedRoute>
+            <Navbar />
+            <NotificationBell />
+            <RestaurantMenu />
+          </ProtectedRoute>
+        } />
       </Routes>
     </SidebarProvider>
   );

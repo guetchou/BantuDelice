@@ -1,38 +1,57 @@
-import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { ReactNode, useEffect, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { logger } from "@/services/logger";
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        logger.info("Vérification de l'authentification:", { 
+          isAuthenticated: !!session,
+          path: location.pathname 
+        });
+        setIsAuthenticated(!!session);
+      } catch (error) {
+        logger.error("Erreur lors de la vérification de l'authentification:", { error });
+        setIsAuthenticated(false);
+      }
     };
 
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      logger.info("Changement d'état d'authentification:", { 
+        isAuthenticated: !!session,
+        path: location.pathname 
+      });
       setIsAuthenticated(!!session);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [location]);
 
   if (isAuthenticated === null) {
-    return null; // ou un spinner de chargement
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    logger.info("Redirection vers la page d'authentification:", { 
+      from: location.pathname 
+    });
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
