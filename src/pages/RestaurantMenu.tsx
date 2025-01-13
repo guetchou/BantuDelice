@@ -20,6 +20,7 @@ const RestaurantMenu = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDeliveryMap, setShowDeliveryMap] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState<string>('');
+  const [orderAmount, setOrderAmount] = useState(0);
 
   const { data: restaurant, isLoading } = useRestaurant(restaurantId);
 
@@ -40,15 +41,14 @@ const RestaurantMenu = () => {
 
       const { error } = await supabase
         .from('orders')
-        .insert([
-          {
-            restaurant_id: restaurantId,
-            user_id: session.user.id,
-            status: 'pending',
-            payment_status: 'completed',
-            delivery_address: "Address to be implemented",
-          }
-        ]);
+        .insert({
+          restaurant_id: restaurantId,
+          user_id: session.user.id,
+          status: 'pending',
+          payment_status: 'completed',
+          delivery_address: "Address to be implemented",
+          total_amount: orderAmount
+        });
 
       if (error) throw error;
 
@@ -83,7 +83,7 @@ const RestaurantMenu = () => {
             address={restaurant.address}
             coordinates={[restaurant.longitude, restaurant.latitude]}
           />
-          <CartDrawer />
+          <CartDrawer onOrderAmount={setOrderAmount} />
         </div>
 
         <MenuList />
@@ -98,6 +98,7 @@ const RestaurantMenu = () => {
           open={showPaymentModal}
           onOpenChange={setShowPaymentModal}
           onPaymentComplete={handlePaymentComplete}
+          amount={orderAmount}
         />
 
         <DeliveryStatus 

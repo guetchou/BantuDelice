@@ -17,13 +17,17 @@ import {
 } from "@/components/ui/dialog";
 import { useLocation } from 'react-router-dom';
 
-const CartDrawer = () => {
+interface CartDrawerProps {
+  onOrderAmount?: (amount: number) => void;
+}
+
+const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
   const { state, updateQuantity, removeFromCart, clearCart } = useCart();
   const [showPayment, setShowPayment] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
-  const restaurantId = location.pathname.split('/')[2]; // Get restaurant ID from URL
+  const restaurantId = location.pathname.split('/')[2];
 
   const handleCheckout = async () => {
     try {
@@ -38,6 +42,9 @@ const CartDrawer = () => {
         return;
       }
 
+      if (onOrderAmount) {
+        onOrderAmount(state.total);
+      }
       setShowPayment(true);
     } catch (error) {
       console.error('Error during checkout:', error);
@@ -130,6 +137,7 @@ const CartDrawer = () => {
         <SheetHeader>
           <SheetTitle>Votre panier</SheetTitle>
         </SheetHeader>
+        
         <ScrollArea className="h-[calc(100vh-200px)] mt-4">
           {state.items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -181,6 +189,7 @@ const CartDrawer = () => {
             </div>
           )}
         </ScrollArea>
+
         {state.items.length > 0 && (
           <div className="mt-4 space-y-4">
             <div className="flex justify-between font-medium">
