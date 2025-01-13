@@ -17,6 +17,7 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true);
+      console.log('Starting avatar upload process...');
 
       if (!event.target.files || event.target.files.length === 0) {
         throw new Error('Vous devez sélectionner une image à télécharger.');
@@ -24,31 +25,45 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
 
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      // Use a timestamp instead of random number for better uniqueness
       const timestamp = new Date().getTime();
-      // If we're in pre-registration (temp userId), store in a temporary folder
       const filePath = userId === 'temp' 
         ? `temp/${timestamp}.${fileExt}`
         : `${userId}/${timestamp}.${fileExt}`;
 
+      console.log('Uploading file to path:', filePath);
+
       const { error: uploadError, data } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
+        console.error('Upload error details:', uploadError);
         throw uploadError;
       }
+
+      console.log('Upload successful, getting public URL...');
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
+      console.log('Public URL generated:', publicUrl);
+
       // Only update the profile if we have a real user ID
       if (userId !== 'temp') {
-        await supabase
+        console.log('Updating user profile with new avatar URL...');
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({ avatar_url: publicUrl })
           .eq('id', userId);
+
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+          throw updateError;
+        }
       }
 
       onUploadComplete(publicUrl);
@@ -59,9 +74,18 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
       });
     } catch (error) {
       console.error('Upload error:', error);
+      let errorMessage = "Erreur lors du téléchargement de l'image.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // @ts-ignore
+        errorMessage = error.message || error.error_description || errorMessage;
+      }
+      
       toast({
         title: "Erreur",
-        description: "Erreur lors du téléchargement de l'image.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
