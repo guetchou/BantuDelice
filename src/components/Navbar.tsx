@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { BackButton } from "@/components/navigation/BackButton";
 
 const Navbar = () => {
   const { isCollapsed, setIsCollapsed } = useSidebar();
@@ -58,9 +59,12 @@ const Navbar = () => {
           isCollapsed ? "justify-center" : "justify-between"
         )}>
           {!isCollapsed && (
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              Buntudelice
-            </h1>
+            <>
+              <BackButton />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                Buntudelice
+              </h1>
+            </>
           )}
           <Button
             variant="ghost"
