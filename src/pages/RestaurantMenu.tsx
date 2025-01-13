@@ -10,15 +10,15 @@ import { useRestaurant } from "@/components/restaurant/useRestaurant";
 import { useToast } from "@/components/ui/use-toast";
 
 const RestaurantMenu = () => {
-  const { restaurantId } = useParams<{ restaurantId: string }>();
+  const params = useParams();
+  const restaurantId = params.restaurantId;
   const { toast } = useToast();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showDeliveryMap, setShowDeliveryMap] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState<string>('');
   const [orderAmount, setOrderAmount] = useState(0);
 
-  // Utilisez directement restaurantId au lieu de l'ID littéral
-  const { data: restaurant, isLoading } = useRestaurant(restaurantId);
+  const { data: restaurant, isLoading, error } = useRestaurant(restaurantId);
 
   useEffect(() => {
     if (!restaurantId) return;
@@ -75,8 +75,12 @@ const RestaurantMenu = () => {
     }
   };
 
-  if (isLoading || !restaurant) {
+  if (isLoading) {
     return <div>Chargement...</div>;
+  }
+
+  if (error || !restaurant) {
+    return <div>Restaurant non trouvé</div>;
   }
 
   return (
@@ -85,7 +89,7 @@ const RestaurantMenu = () => {
         <RestaurantHeader 
           name={restaurant.name}
           address={restaurant.address}
-          coordinates={[restaurant.longitude, restaurant.latitude]}
+          coordinates={[restaurant.longitude || 0, restaurant.latitude || 0]}
         />
         <CartDrawer onOrderAmount={setOrderAmount} />
       </div>
@@ -103,8 +107,8 @@ const RestaurantMenu = () => {
         show={showDeliveryMap}
         status={deliveryStatus}
         restaurant={{
-          latitude: restaurant.latitude,
-          longitude: restaurant.longitude
+          latitude: restaurant.latitude || 0,
+          longitude: restaurant.longitude || 0
         }}
       />
     </div>
