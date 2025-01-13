@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Star, Clock, MapPin, Phone } from 'lucide-react';
+import { Search, Star, Clock, MapPin, Phone, Filter, ChefHat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import EssentialServices from "@/components/home/EssentialServices";
@@ -31,15 +46,27 @@ interface Restaurant {
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('Tout');
   const [searchQuery, setSearchQuery] = useState('');
+  const [priceRange, setPriceRange] = useState('all');
+  const [sortBy, setSortBy] = useState('rating');
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const { data: restaurants, isLoading } = useQuery({
-    queryKey: ['restaurants', searchQuery, selectedCategory],
+    queryKey: ['restaurants', searchQuery, selectedCategory, priceRange, sortBy],
     queryFn: async () => {
+      console.log('Fetching restaurants with filters:', { searchQuery, selectedCategory, priceRange, sortBy });
+      
       let query = supabase
         .from('restaurants')
-        .select('*');
+        .select(`
+          *,
+          menu_items (
+            id,
+            name,
+            price,
+            category
+          )
+        `);
 
       if (searchQuery) {
         query = query.textSearch('search_vector', searchQuery);
@@ -52,6 +79,7 @@ const Index = () => {
       const { data, error } = await query;
 
       if (error) {
+        console.error('Error fetching restaurants:', error);
         toast({
           title: "Erreur",
           description: "Impossible de charger les restaurants",
@@ -60,20 +88,45 @@ const Index = () => {
         throw error;
       }
 
-      return data as Restaurant[];
+      // Process and filter results based on price range
+      let filteredData = data as Restaurant[];
+      if (priceRange !== 'all') {
+        filteredData = filteredData.filter(restaurant => {
+          const avgPrice = restaurant.menu_items?.reduce((acc, item) => acc + item.price, 0) / (restaurant.menu_items?.length || 1);
+          switch(priceRange) {
+            case 'low': return avgPrice < 5000;
+            case 'medium': return avgPrice >= 5000 && avgPrice <= 15000;
+            case 'high': return avgPrice > 15000;
+            default: return true;
+          }
+        });
+      }
+
+      // Sort results
+      return filteredData.sort((a, b) => {
+        switch(sortBy) {
+          case 'rating':
+            return (b.rating || 0) - (a.rating || 0);
+          case 'preparation_time':
+            return a.estimated_preparation_time - b.estimated_preparation_time;
+          default:
+            return 0;
+        }
+      });
     }
   });
 
   const categories = [
-    'Tout',
-    'Congolais',
-    'Fast Food',
-    'Healthy',
-    'Pizza',
-    'Asiatique'
+    { id: 'Tout', label: 'Tout', icon: ChefHat },
+    { id: 'Congolais', label: 'Congolais', icon: ChefHat },
+    { id: 'Fast Food', label: 'Fast Food', icon: ChefHat },
+    { id: 'Healthy', label: 'Healthy', icon: ChefHat },
+    { id: 'Pizza', label: 'Pizza', icon: ChefHat },
+    { id: 'Asiatique', label: 'Asiatique', icon: ChefHat }
   ];
 
   const handleRestaurantClick = (restaurantId: string) => {
+    console.log('Navigating to restaurant:', restaurantId);
     navigate(`/restaurant/${restaurantId}/menu`);
   };
 
@@ -84,9 +137,62 @@ const Index = () => {
       {/* Food Delivery Section */}
       <div className="bg-gradient-to-br from-gray-50 to-white py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">
-            Livraison de Repas
-          </h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">
+              Livraison de Repas
+            </h2>
+            
+            {/* Filters Button */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filtres
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Filtres</SheetTitle>
+                  <SheetDescription>
+                    Affinez votre recherche de restaurants
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">
+                      Gamme de prix
+                    </label>
+                    <Select value={priceRange} onValueChange={setPriceRange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez une gamme de prix" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les prix</SelectItem>
+                        <SelectItem value="low">€ (Moins de 5000 XAF)</SelectItem>
+                        <SelectItem value="medium">€€ (5000-15000 XAF)</SelectItem>
+                        <SelectItem value="high">€€€ (Plus de 15000 XAF)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">
+                      Trier par
+                    </label>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un critère de tri" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="rating">Note</SelectItem>
+                        <SelectItem value="preparation_time">Temps de préparation</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
           
           {/* Search Bar */}
           <div className="relative max-w-2xl mx-auto mb-8">
@@ -102,14 +208,15 @@ const Index = () => {
 
           {/* Categories */}
           <div className="flex space-x-4 overflow-x-auto pb-4 mb-8 scrollbar-hide">
-            {categories.map((category) => (
+            {categories.map(({ id, label, icon: Icon }) => (
               <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category)}
-                className="whitespace-nowrap"
+                key={id}
+                variant={selectedCategory === id ? "default" : "outline"}
+                onClick={() => setSelectedCategory(id)}
+                className="whitespace-nowrap flex items-center gap-2"
               >
-                {category}
+                <Icon className="w-4 h-4" />
+                {label}
               </Button>
             ))}
           </div>
