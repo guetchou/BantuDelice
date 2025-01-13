@@ -669,6 +669,7 @@ export type Database = {
           created_at: string
           delivery_address: string
           estimated_delivery_time: string | null
+          estimated_preparation_time: number | null
           id: string
           payment_method: string | null
           payment_status: string
@@ -690,6 +691,7 @@ export type Database = {
           created_at?: string
           delivery_address: string
           estimated_delivery_time?: string | null
+          estimated_preparation_time?: number | null
           id?: string
           payment_method?: string | null
           payment_status?: string
@@ -711,6 +713,7 @@ export type Database = {
           created_at?: string
           delivery_address?: string
           estimated_delivery_time?: string | null
+          estimated_preparation_time?: number | null
           id?: string
           payment_method?: string | null
           payment_status?: string
