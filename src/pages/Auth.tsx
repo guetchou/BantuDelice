@@ -28,6 +28,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const phoneRegex = /^(\+242|0)[1-9]\d{8}$/;
 
@@ -291,11 +293,29 @@ const Auth = () => {
               <FormField
                 control={form.control}
                 name="phone"
-                render={({ field }) => (
+                render={({ field: { onChange, value, ...field } }) => (
                   <FormItem>
                     <FormLabel>Téléphone</FormLabel>
                     <FormControl>
-                      <Input placeholder="+242XXXXXXXXX" {...field} />
+                      <PhoneInput
+                        country={'cg'}
+                        preferredCountries={['cg']}
+                        value={value}
+                        onChange={(phone) => {
+                          let formattedPhone = phone;
+                          if (phone.startsWith('242')) {
+                            formattedPhone = '+' + phone;
+                          } else if (phone.startsWith('0')) {
+                            formattedPhone = phone;
+                          } else {
+                            formattedPhone = '+242' + phone;
+                          }
+                          onChange(formattedPhone);
+                        }}
+                        inputClass="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        containerClass="w-full"
+                        {...field}
+                      />
                     </FormControl>
                     <FormDescription>
                       Format: +242XXXXXXXXX ou 0XXXXXXXXX
