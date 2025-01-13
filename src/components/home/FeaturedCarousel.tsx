@@ -11,6 +11,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { MessageCircle, Phone } from "lucide-react";
+import LiveChat from "@/components/chat/LiveChat";
+import AIChat from "@/components/chat/AIChat";
 
 interface FeaturedItem {
   id: string;
@@ -77,44 +80,85 @@ const FeaturedCarousel = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-orange-50 to-orange-100">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          En Vedette
-        </h2>
-        <Carousel className="w-full max-w-5xl mx-auto">
-          <CarouselContent>
-            {featuredItems.map((item) => (
-              <CarouselItem key={item.id} className="md:basis-1/2 lg:basis-1/3 pl-6">
-                <Card 
-                  className="p-4 h-full hover:shadow-lg transition-all duration-300 cursor-pointer" 
-                  onClick={() => handleItemClick(item)}
-                >
-                  {item.image_url && (
-                    <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
-                      <img 
-                        src={item.image_url} 
-                        alt={item.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                  {item.description && (
-                    <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
-                  )}
-                  <Button className="w-full">
-                    {item.type === 'restaurant' ? 'Voir le menu' : 'En savoir plus'}
-                  </Button>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="hidden md:flex" />
-          <CarouselNext className="hidden md:flex" />
-        </Carousel>
-      </div>
-    </section>
+    <div className="space-y-16">
+      <section className="py-20 bg-gradient-to-br from-orange-50 to-orange-100">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">
+            En Vedette
+          </h2>
+          <Carousel className="w-full max-w-7xl mx-auto">
+            <CarouselContent>
+              {featuredItems.map((item) => (
+                <CarouselItem key={item.id} className="md:basis-1/2 lg:basis-1/3 pl-6">
+                  <Card 
+                    className="group p-4 h-full hover:shadow-xl transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm" 
+                    onClick={() => handleItemClick(item)}
+                  >
+                    {item.image_url ? (
+                      <div className="w-full h-48 mb-4 overflow-hidden rounded-lg">
+                        <img 
+                          src={item.image_url} 
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-48 mb-4 overflow-hidden rounded-lg bg-gradient-to-r from-orange-100 to-rose-100" />
+                    )}
+                    <h3 className="text-xl font-semibold mb-2 text-gray-800">{item.title}</h3>
+                    {item.description && (
+                      <p className="text-gray-600 mb-4 line-clamp-2">{item.description}</p>
+                    )}
+                    <Button className="w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white">
+                      {item.type === 'restaurant' ? 'Voir le menu' : 'En savoir plus'}
+                    </Button>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
+        </div>
+      </section>
+
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-2xl font-bold mb-6 text-gray-800">Chat avec un Assistant IA</h3>
+              <AIChat />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-6 text-gray-800">Chat en Direct</h3>
+              <LiveChat />
+            </div>
+          </div>
+          
+          <div className="mt-12 text-center">
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">Besoin d'aide ?</h3>
+            <div className="flex justify-center gap-4">
+              <Button 
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => window.location.href = 'tel:+123456789'}
+              >
+                <Phone className="w-4 h-4" />
+                Appeler le Service Client
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => navigate('/contact')}
+              >
+                <MessageCircle className="w-4 h-4" />
+                Nous Contacter
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 };
 
