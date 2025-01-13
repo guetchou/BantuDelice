@@ -29,7 +29,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 
-const phoneRegex = /^(\+242|00242|0)[1-9]\d{8}$/;
+const phoneRegex = /^(\+242|0)[1-9]\d{8}$/;
 
 const registrationSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -44,7 +44,7 @@ const registrationSchema = z.object({
   phone: z.string().regex(phoneRegex, "Format: +242XXXXXXXXX ou 0XXXXXXXXX"),
   address: z.string().min(10, "L'adresse doit être complète"),
   city: z.string().min(2, "La ville est requise"),
-  postalCode: z.string().regex(/^\d{5}$/, "Code postal invalide"),
+  postalCode: z.string().optional(),
   birthDate: z.string().refine((date) => {
     const birthDate = new Date(date);
     const today = new Date();
