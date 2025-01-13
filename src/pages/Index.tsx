@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, Clock, Star, MapPin } from 'lucide-react';
+import { Search, Star, Clock } from 'lucide-react';
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import EssentialServices from "@/components/home/EssentialServices";
