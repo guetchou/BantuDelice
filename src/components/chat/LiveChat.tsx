@@ -18,7 +18,7 @@ interface Message {
   created_at: string;
   agent_id?: string | null;
   is_bot?: boolean | null;
-  profiles?: Profile | null;
+  profile?: Profile | null;
 }
 
 const LiveChat = () => {
@@ -33,7 +33,7 @@ const LiveChat = () => {
         .from('chat_messages')
         .select(`
           *,
-          profiles:user_id (
+          profile:user_id (
             first_name,
             last_name,
             avatar_url
@@ -56,7 +56,7 @@ const LiveChat = () => {
           created_at: msg.created_at,
           agent_id: msg.agent_id,
           is_bot: msg.is_bot,
-          profiles: msg.profiles && !('error' in msg.profiles) ? msg.profiles : null
+          profile: msg.profile
         }));
         setMessages(typedMessages);
       }
@@ -82,7 +82,7 @@ const LiveChat = () => {
             created_at: payload.new.created_at,
             agent_id: payload.new.agent_id,
             is_bot: payload.new.is_bot,
-            profiles: null // For new messages, we'll need to load the profile separately
+            profile: null // For new messages, we'll need to load the profile separately
           };
           setMessages(current => [...current, newMsg]);
         }
@@ -133,14 +133,14 @@ const LiveChat = () => {
           {messages.map((message) => (
             <div key={message.id} className="flex items-start gap-3">
               <Avatar>
-                <AvatarImage src={message.profiles?.avatar_url || undefined} />
+                <AvatarImage src={message.profile?.avatar_url || undefined} />
                 <AvatarFallback>
-                  {message.profiles?.first_name?.[0] || 'U'}
+                  {message.profile?.first_name?.[0] || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <div className="font-semibold">
-                  {message.profiles?.first_name} {message.profiles?.last_name}
+                  {message.profile?.first_name} {message.profile?.last_name}
                 </div>
                 <p className="text-sm text-gray-600">{message.message}</p>
                 <span className="text-xs text-gray-400">
