@@ -3,11 +3,11 @@ import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Admin from "@/pages/Admin";
 import Dashboard from "@/pages/Dashboard";
-import Profile from "@/pages/Profile";
 import KitchenDashboard from "@/pages/kitchen/Dashboard";
 import AnalyticsDashboard from "@/pages/analytics/Dashboard";
-import NotificationBell from "@/components/NotificationBell";
+import Profile from "@/pages/Profile";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import NotificationBell from "@/components/NotificationBell";
 
 const App = () => {
   return (
