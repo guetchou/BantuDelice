@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 interface LoginFormProps {
   onRegister: () => void;
-  onForgotPassword?: () => void; // Make this optional since it's a new prop
+  onForgotPassword: () => void;
 }
 
 export const LoginForm = ({ onRegister, onForgotPassword }: LoginFormProps) => {
@@ -65,16 +65,14 @@ export const LoginForm = ({ onRegister, onForgotPassword }: LoginFormProps) => {
           Créer un compte
         </Button>
         
-        {onForgotPassword && (
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full text-sm"
-            onClick={onForgotPassword}
-          >
-            Mot de passe oublié ?
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-sm"
+          onClick={onForgotPassword}
+        >
+          Mot de passe oublié ?
+        </Button>
       </div>
     </motion.div>
   );

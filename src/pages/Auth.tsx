@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
 import { logger } from "@/services/logger";
@@ -9,12 +9,16 @@ import { RegistrationForm } from "@/components/auth/RegistrationForm";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   useEffect(() => {
     logger.info("Page d'authentification chargée");
@@ -26,7 +30,8 @@ const Auth = () => {
       if (event === "SIGNED_IN" && session) {
         logger.info("Utilisateur connecté, redirection vers l'accueil");
         toast.success("Connexion réussie !");
-        navigate("/");
+        const from = (location.state as any)?.from?.pathname || "/";
+        navigate(from);
       }
       if (event === "SIGNED_OUT") {
         logger.info("Utilisateur déconnecté");
@@ -51,7 +56,7 @@ const Auth = () => {
       logger.info("Nettoyage des écouteurs d'authentification");
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location]);
 
   const checkSession = async () => {
     try {
@@ -63,7 +68,8 @@ const Auth = () => {
       }
       if (session) {
         logger.info("Session existante trouvée, redirection vers l'accueil");
-        navigate("/");
+        const from = (location.state as any)?.from?.pathname || "/";
+        navigate(from);
       }
     } catch (error) {
       logger.error("Erreur inattendue lors de la vérification de la session:", { error });
@@ -98,6 +104,23 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Instructions de réinitialisation envoyées par email");
+      setIsForgotPassword(false);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        handleError(error);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <AuthContainer 
@@ -114,11 +137,41 @@ const Auth = () => {
   return (
     <AuthContainer 
       title="Buntudelice"
-      subtitle={isRegistering ? "Créez votre compte" : "Connectez-vous pour continuer"}
+      subtitle={
+        isForgotPassword 
+          ? "Réinitialisation du mot de passe"
+          : isRegistering 
+            ? "Créez votre compte" 
+            : "Connectez-vous pour continuer"
+      }
     >
+      {(isRegistering || isForgotPassword) && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-4"
+          onClick={() => {
+            setIsRegistering(false);
+            setIsForgotPassword(false);
+            setError(null);
+          }}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour
+        </Button>
+      )}
+
       <ErrorAlert error={error} />
+      
       <AnimatePresence mode="wait">
-        {isRegistering ? (
+        {isForgotPassword ? (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-300">
+              Entrez votre adresse email pour recevoir les instructions de réinitialisation.
+            </p>
+            {/* Add ForgotPasswordForm component here */}
+          </div>
+        ) : isRegistering ? (
           <RegistrationForm 
             onCancel={() => setIsRegistering(false)}
             onSuccess={() => {
@@ -129,10 +182,7 @@ const Auth = () => {
         ) : (
           <LoginForm 
             onRegister={() => setIsRegistering(true)}
-            onForgotPassword={() => {
-              // Implement password reset logic here
-              toast.info("Fonctionnalité à venir");
-            }}
+            onForgotPassword={() => setIsForgotPassword(true)}
           />
         )}
       </AnimatePresence>
