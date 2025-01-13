@@ -1,28 +1,11 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Clock, Star, MapPin } from 'lucide-react';
 import HeroSection from "@/components/home/HeroSection";
-import FeaturedCarousel from "@/components/home/FeaturedCarousel";
-import EssentialServices from "@/components/home/EssentialServices";
-import AdditionalServices from "@/components/home/AdditionalServices";
-import ProfessionalServices from "@/components/home/ProfessionalServices";
-import SpecializedServices from "@/components/home/SpecializedServices";
-import CulturalServices from "@/components/home/CulturalServices";
-import Testimonials from "@/components/home/Testimonials";
 import Newsletter from "@/components/home/Newsletter";
 import Footer from "@/components/Footer";
 
-const colors = {
-  primary: '#2ECC71',
-  secondary: '#FF9800',
-  accent: '#3498DB',
-  gray: '#718096',
-  black: '#1A1A1A',
-  white: '#FFFFFF',
-};
-
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('Tout');
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const categories = [
     'Tout',
@@ -141,21 +124,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Keep existing services sections */}
-      <div className="space-y-16">
-        <FeaturedCarousel />
-        <EssentialServices />
-        <div className="bg-gray-50">
-          <AdditionalServices />
-          <ProfessionalServices />
-        </div>
-        <SpecializedServices />
-        <div className="bg-gray-50">
-          <CulturalServices />
-        </div>
-        <Testimonials />
-        <Newsletter />
-      </div>
+      <Newsletter />
       <Footer />
     </main>
   );
