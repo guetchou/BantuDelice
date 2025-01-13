@@ -57,10 +57,11 @@ const KitchenDashboard = () => {
         },
         (payload: RealtimePostgresChangesPayload<Order>) => {
           console.log("Order change received:", payload);
-          if (payload.new && "id" in payload.new) {
+          const newOrder = payload.new as Order;
+          if (newOrder && 'id' in newOrder) {
             setActiveOrders((prev) =>
               prev.map((order) =>
-                order.id === payload.new.id ? { ...order, ...payload.new } : order
+                order.id === newOrder.id ? { ...order, ...newOrder } : order
               )
             );
           }
