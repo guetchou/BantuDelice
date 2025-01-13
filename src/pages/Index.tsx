@@ -32,6 +32,13 @@ import Testimonials from "@/components/home/Testimonials";
 import Newsletter from "@/components/home/Newsletter";
 import Footer from "@/components/Footer";
 
+interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+}
+
 interface Restaurant {
   id: string;
   name: string;
@@ -41,6 +48,7 @@ interface Restaurant {
   estimated_preparation_time: number;
   cuisine_type?: string;
   distance?: number;
+  menu_items?: MenuItem[];
 }
 
 const Index = () => {
