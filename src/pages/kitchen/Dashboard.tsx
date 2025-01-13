@@ -141,7 +141,7 @@ const KitchenDashboard = () => {
                     ? "default"
                     : order.status === "accepted"
                     ? "secondary"
-                    : "success"
+                    : "outline"
                 }
               >
                 {order.status}
