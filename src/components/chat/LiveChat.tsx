@@ -33,7 +33,7 @@ const LiveChat = () => {
         .from('chat_messages')
         .select(`
           *,
-          profile:user_id (
+          profile:profiles!chat_messages_user_id_fkey (
             first_name,
             last_name,
             avatar_url
