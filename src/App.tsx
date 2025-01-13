@@ -5,6 +5,7 @@ import Dashboard from "@/pages/Dashboard";
 import KitchenDashboard from "@/pages/kitchen/Dashboard";
 import AnalyticsDashboard from "@/pages/analytics/Dashboard";
 import Profile from "@/pages/Profile";
+import Services from "@/pages/Services";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import NotificationBell from "@/components/NotificationBell";
 import Restaurants from "@/pages/Restaurants";
@@ -46,7 +47,7 @@ const App = () => {
             <div className="min-h-screen bg-background">
               <Navbar />
               <NotificationBell />
-              <main className="container mx-auto px-4 py-8">
+              <main className="container mx-auto px-4 py-8 animate-fade-in">
                 <Outlet />
               </main>
             </div>
@@ -59,6 +60,7 @@ const App = () => {
           <Route path="/analytics" element={<AnalyticsDashboard />} />
           <Route path="/restaurants" element={<Restaurants />} />
           <Route path="/restaurant/:restaurantId/menu" element={<RestaurantMenu />} />
+          <Route path="/services" element={<Services />} />
         </Route>
 
         {/* Catch all route - redirect to home */}

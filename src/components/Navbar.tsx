@@ -1,11 +1,21 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, PieChart, ChevronLeft, ChevronRight, Settings, LogOut } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Users, 
+  PieChart, 
+  ChevronLeft, 
+  ChevronRight, 
+  Settings, 
+  LogOut,
+  Coffee,
+  HeartHandshake
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { BackButton } from "@/components/navigation/BackButton";
 
@@ -96,31 +106,31 @@ const Navbar = () => {
           </Link>
           
           <Link
-            to="/contacts"
+            to="/restaurants"
             className={cn(
               "flex items-center p-3 rounded-lg transition-colors",
               isCollapsed ? "justify-center" : "space-x-3",
-              isActive("/contacts") 
+              isActive("/restaurants") 
                 ? "bg-white/20 text-white" 
                 : "text-gray-300 hover:bg-white/10 hover:text-white"
             )}
           >
-            <Users className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Contacts</span>}
+            <Coffee className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Restaurants</span>}
           </Link>
           
           <Link
-            to="/deals"
+            to="/services"
             className={cn(
               "flex items-center p-3 rounded-lg transition-colors",
               isCollapsed ? "justify-center" : "space-x-3",
-              isActive("/deals") 
+              isActive("/services") 
                 ? "bg-white/20 text-white" 
                 : "text-gray-300 hover:bg-white/10 hover:text-white"
             )}
           >
-            <PieChart className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Commandes</span>}
+            <HeartHandshake className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Services</span>}
           </Link>
 
           {isAdmin && (
