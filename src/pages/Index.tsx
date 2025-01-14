@@ -18,6 +18,11 @@ import HeroSection from "@/components/home/HeroSection";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import RestaurantFilters from "@/components/restaurants/RestaurantFilters";
 import CategoryList from "@/components/restaurants/CategoryList";
+import AdditionalServices from "@/components/home/AdditionalServices";
+import EssentialServices from "@/components/home/EssentialServices";
+import ProfessionalServices from "@/components/home/ProfessionalServices";
+import CulturalServices from "@/components/home/CulturalServices";
+import SpecializedServices from "@/components/home/SpecializedServices";
 
 interface MenuItem {
   id: string;
@@ -216,6 +221,13 @@ const Index = () => {
           ))}
         </div>
       </div>
+
+      {/* Services Sections */}
+      <EssentialServices />
+      <AdditionalServices />
+      <ProfessionalServices />
+      <CulturalServices />
+      <SpecializedServices />
 
       {/* Floating Chat Bubble */}
       <div className="fixed bottom-6 right-6 z-50">
