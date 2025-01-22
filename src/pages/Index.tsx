@@ -43,7 +43,13 @@ interface Restaurant {
   menu_items?: MenuItem[];
 }
 
-const categories = [
+interface Category {
+  id: string;
+  label: string;
+  icon: typeof ChefHat;
+}
+
+const categories: Category[] = [
   { id: 'Tout', label: 'Tout', icon: ChefHat },
   { id: 'Congolais', label: 'Congolais', icon: ChefHat },
   { id: 'Fast Food', label: 'Fast Food', icon: ChefHat },
