@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, MessageCircle, Bot, ChefHat } from 'lucide-react';
+import { Search, ChevronDown, MessageCircle, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
@@ -131,45 +131,47 @@ const Index = () => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              Buntudelice
-            </h1>
-            <div className="relative w-96">
-              <Input
-                type="text"
-                placeholder="Rechercher un plat congolais..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      {/* Header with Glassmorphism */}
+      <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/10 border-b border-white/20">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+                Buntudelice
+              </h1>
+              <div className="relative w-96">
+                <Input
+                  type="text"
+                  placeholder="Rechercher un plat congolais..."
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              </div>
             </div>
+            <nav className="flex items-center gap-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
+                    Menu <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white/10 backdrop-blur-lg border-white/20">
+                  <DropdownMenuItem onClick={() => navigate('/restaurants')} className="text-white hover:bg-white/10">
+                    Restaurants
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/services')} className="text-white hover:bg-white/10">
+                    Services
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/contact')} className="text-white hover:bg-white/10">
+                    Contact
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </nav>
           </div>
-          <nav className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  Menu <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate('/restaurants')}>
-                  Restaurants
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/services')}>
-                  Services
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/contact')}>
-                  Contact
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </nav>
         </div>
       </header>
 
@@ -179,7 +181,7 @@ const Index = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="text-3xl font-bold text-white bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text">
             Cuisine Congolaise Authentique
           </h2>
           <RestaurantFilters
@@ -203,12 +205,12 @@ const Index = () => {
             Array(6).fill(0).map((_, index) => (
               <div 
                 key={index}
-                className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse"
+                className="glass-card animate-pulse"
               >
-                <div className="h-48 bg-gray-200" />
+                <div className="h-48 bg-white/5" />
                 <div className="p-6 space-y-4">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-white/5 rounded w-3/4" />
+                  <div className="h-4 bg-white/5 rounded w-1/2" />
                 </div>
               </div>
             ))
@@ -222,26 +224,32 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Services Sections */}
-      <EssentialServices />
-      <AdditionalServices />
-      <ProfessionalServices />
-      <CulturalServices />
-      <SpecializedServices />
+      {/* Services Sections with Glassmorphism */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-600/10 to-green-600/10 animate-gradient-x"></div>
+        <div className="relative">
+          <EssentialServices />
+          <AdditionalServices />
+          <ProfessionalServices />
+          <CulturalServices />
+          <SpecializedServices />
+        </div>
+      </div>
 
       {/* Floating Chat Bubble */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end space-y-4">
           {showChat && (
-            <div className="w-96 bg-white rounded-lg shadow-xl overflow-hidden">
-              <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-                <h3 className="font-semibold">
+            <div className="w-96 glass-card overflow-hidden">
+              <div className="p-4 border-b border-white/20 flex justify-between items-center">
+                <h3 className="font-semibold text-white">
                   {chatType === 'live' ? 'Chat en Direct' : 'Assistant IA'}
                 </h3>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowChat(false)}
+                  className="text-white hover:bg-white/10"
                 >
                   ×
                 </Button>
@@ -251,7 +259,7 @@ const Index = () => {
           )}
           <div className="flex gap-2">
             <Button
-              className="rounded-full w-12 h-12 p-0 bg-emerald-500 hover:bg-emerald-600"
+              className="rounded-full w-12 h-12 p-0 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 floating-button"
               onClick={() => {
                 setChatType('ai');
                 setShowChat(!showChat);
@@ -260,7 +268,7 @@ const Index = () => {
               <Bot className="w-6 h-6" />
             </Button>
             <Button
-              className="rounded-full w-12 h-12 p-0"
+              className="rounded-full w-12 h-12 p-0 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 floating-button"
               onClick={() => {
                 setChatType('live');
                 setShowChat(!showChat);
