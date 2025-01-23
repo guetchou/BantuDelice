@@ -6,9 +6,10 @@ import AdditionalServices from "@/components/home/AdditionalServices";
 import Testimonials from "@/components/home/Testimonials";
 import { Button } from "@/components/ui/button";
 import { Search, MessageCircle, Phone } from "lucide-react";
-import LiveChat from "@/components/chat/LiveChat";
-import AIChat from "@/components/chat/AIChat";
 import { useNavigation } from '@/contexts/NavigationContext';
+import DeliveryMap from '@/components/DeliveryMap';
+import CartDrawer from '@/components/cart/CartDrawer';
+import ChatBubble from '@/components/chat/ChatBubble';
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,6 +70,14 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Map Section */}
+      <section className="py-16 container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center text-white mb-8">Notre Zone de Livraison</h2>
+        <div className="h-[400px] rounded-lg overflow-hidden shadow-xl">
+          <DeliveryMap latitude={-4.4419} longitude={15.2663} />
+        </div>
+      </section>
+
       {/* Restaurant Carousel */}
       <section className="py-16 container mx-auto px-4">
         <RestaurantCarousel />
@@ -84,43 +93,15 @@ export default function Index() {
         <Testimonials />
       </section>
 
-      {/* Chat Section */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-2xl font-bold mb-6 text-gray-800">Chat avec un Assistant IA</h3>
-              <AIChat />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-6 text-gray-800">Chat en Direct</h3>
-              <LiveChat />
-            </div>
-          </div>
-          
-          <div className="mt-12 text-center">
-            <h3 className="text-2xl font-bold mb-4 text-gray-800">Besoin d'aide ?</h3>
-            <div className="flex justify-center gap-4">
-              <Button 
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={() => window.location.href = 'tel:+123456789'}
-              >
-                <Phone className="w-4 h-4" />
-                Appeler le Service Client
-              </Button>
-              <Button 
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={() => navigateTo('/contact')}
-              >
-                <MessageCircle className="w-4 h-4" />
-                Nous Contacter
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Cart Drawer */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <CartDrawer />
+      </div>
+
+      {/* Chat Bubble */}
+      <div className="fixed bottom-4 left-4 z-50">
+        <ChatBubble />
+      </div>
 
       <Footer />
     </main>
