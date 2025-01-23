@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Search, MessageCircle, Phone } from "lucide-react";
 import LiveChat from "@/components/chat/LiveChat";
 import AIChat from "@/components/chat/AIChat";
+import { useNavigation } from '@/contexts/NavigationContext';
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { navigateTo } = useNavigation();
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -110,7 +112,7 @@ export default function Index() {
               <Button 
                 variant="outline"
                 className="flex items-center gap-2"
-                onClick={() => navigate('/contact')}
+                onClick={() => navigateTo('/contact')}
               >
                 <MessageCircle className="w-4 h-4" />
                 Nous Contacter
