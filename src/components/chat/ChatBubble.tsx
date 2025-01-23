@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Phone, MessageSquare, BrandWhatsapp, BrandTelegram, MessageSquareMore } from "lucide-react";
+import { MessageCircle, Phone, MessageSquare, MessageSquareMore } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -25,12 +25,12 @@ const ChatBubble = () => {
       action: () => setIsOpen(true)
     },
     {
-      icon: BrandWhatsapp,
+      icon: MessageCircle,
       label: "WhatsApp",
       action: () => window.open("https://wa.me/123456789")
     },
     {
-      icon: BrandTelegram,
+      icon: MessageSquare,
       label: "Telegram",
       action: () => window.open("https://t.me/username")
     },
