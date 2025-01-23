@@ -58,23 +58,31 @@
   }
 }
 
-/* New utility classes for advanced visual effects */
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300;
+  @apply bg-clip-text text-transparent;
 }
 
-.card-3d {
-  @apply hover:transform hover:translate-y-[-5px] hover:shadow-xl transition-all duration-300;
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: left center;
+  }
+  50% {
+    background-position: right center;
+  }
 }
 
-.glass-card {
-  @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg;
-}
-
-.floating-button {
-  @apply hover:shadow-lg hover:shadow-indigo-500/25 transition-all duration-300;
-}
-
-.scroll-progress {
-  @apply fixed top-0 left-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500;
+.animate-gradient-x {
+  animation: gradient-x 15s ease infinite;
+  background-size: 200% 200%;
 }
