@@ -2,8 +2,12 @@ import { useState } from 'react';
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import RestaurantCarousel from "@/components/home/RestaurantCarousel";
+import AdditionalServices from "@/components/home/AdditionalServices";
+import Testimonials from "@/components/home/Testimonials";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, MessageCircle, Phone } from "lucide-react";
+import LiveChat from "@/components/chat/LiveChat";
+import AIChat from "@/components/chat/AIChat";
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,6 +70,54 @@ export default function Index() {
       {/* Restaurant Carousel */}
       <section className="py-16 container mx-auto px-4">
         <RestaurantCarousel />
+      </section>
+
+      {/* Additional Services */}
+      <section className="py-16 bg-gradient-to-br from-orange-50 to-orange-100">
+        <AdditionalServices />
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 bg-white">
+        <Testimonials />
+      </section>
+
+      {/* Chat Section */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-2xl font-bold mb-6 text-gray-800">Chat avec un Assistant IA</h3>
+              <AIChat />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-6 text-gray-800">Chat en Direct</h3>
+              <LiveChat />
+            </div>
+          </div>
+          
+          <div className="mt-12 text-center">
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">Besoin d'aide ?</h3>
+            <div className="flex justify-center gap-4">
+              <Button 
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => window.location.href = 'tel:+123456789'}
+              >
+                <Phone className="w-4 h-4" />
+                Appeler le Service Client
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => navigate('/contact')}
+              >
+                <MessageCircle className="w-4 h-4" />
+                Nous Contacter
+              </Button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <Footer />
