@@ -7,8 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { createApi } from 'unsplash-js';
 
 // Initialize the Unsplash client
+const unsplashAccessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+console.log('Unsplash Access Key in FeaturedDishes:', unsplashAccessKey ? 'Present' : 'Missing');
+
 const unsplash = createApi({
-  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || ''
+  accessKey: unsplashAccessKey || ''
 });
 
 interface FeaturedDish {
@@ -43,8 +46,12 @@ const FeaturedDishes = () => {
         throw error;
       }
 
+      if (!unsplashAccessKey) {
+        console.error('Unsplash API key is missing');
+        return data as FeaturedDish[];
+      }
+
       try {
-        console.log('Fetching Unsplash images with key:', import.meta.env.VITE_UNSPLASH_ACCESS_KEY ? 'Present' : 'Missing');
         // Fetch food images from Unsplash with proper error handling
         const foodPhotos = await unsplash.search.getPhotos({
           query: 'african food dish cuisine',
