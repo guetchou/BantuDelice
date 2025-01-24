@@ -5,6 +5,9 @@ import FeaturedDishes from "@/components/home/FeaturedDishes";
 import FeaturedRestaurant from "@/components/home/FeaturedRestaurant";
 import AdditionalServices from "@/components/home/AdditionalServices";
 import ProfessionalServices from "@/components/home/ProfessionalServices";
+import Newsletter from "@/components/home/Newsletter";
+import Testimonials from "@/components/home/Testimonials";
+import SpecializedServices from "@/components/home/SpecializedServices";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigation } from '@/contexts/NavigationContext';
@@ -80,6 +83,11 @@ export default function Index() {
           <DeliveryMap latitude={-4.4419} longitude={15.2663} />
         </div>
       </section>
+
+      {/* New Sections */}
+      <Testimonials />
+      <SpecializedServices />
+      <Newsletter />
 
       {/* Services Sections */}
       <AdditionalServices />

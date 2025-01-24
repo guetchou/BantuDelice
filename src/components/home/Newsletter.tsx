@@ -1,54 +1,41 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const Newsletter = () => {
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate email
-    if (!email || !email.includes('@')) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez entrer une adresse email valide",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Success notification
     toast({
-      title: "Abonnement réussi",
-      description: "Vous recevrez nos offres exclusives par email",
+      title: "Merci de votre inscription!",
+      description: "Vous recevrez bientôt nos dernières actualités.",
     });
-    
-    // Reset form
     setEmail("");
   };
 
   return (
-    <section className="py-20 bg-indigo-600 text-white">
+    <section className="py-16 bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Restez Informé</h2>
-          <p className="text-lg mb-8 text-white/90">
-            Inscrivez-vous à notre newsletter pour recevoir nos offres exclusives
-            et découvrir nos nouveautés en avant-première.
+          <h2 className="text-3xl font-bold mb-4">
+            Restez informé
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Inscrivez-vous à notre newsletter pour recevoir nos dernières actualités et offres spéciales.
           </p>
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
             <Input
               type="email"
-              placeholder="Votre email"
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white"
+              placeholder="Votre adresse email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="flex-1"
               required
             />
-            <Button type="submit" className="bg-white text-indigo-600 hover:bg-gray-100 whitespace-nowrap px-8">
+            <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
               S'inscrire
             </Button>
           </form>
