@@ -6,12 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { createApi } from 'unsplash-js';
 
-// Initialize the Unsplash client with proper headers
+// Initialize the Unsplash client
 const unsplash = createApi({
-  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY,
-  headers: {
-    Authorization: `Client-ID ${import.meta.env.VITE_UNSPLASH_ACCESS_KEY}`
-  }
+  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY
 });
 
 interface FeaturedDish {
