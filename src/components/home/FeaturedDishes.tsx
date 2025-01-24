@@ -8,7 +8,7 @@ import { createApi } from 'unsplash-js';
 
 // Initialize the Unsplash client
 const unsplash = createApi({
-  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY
+  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || ''
 });
 
 interface FeaturedDish {
@@ -44,6 +44,7 @@ const FeaturedDishes = () => {
       }
 
       try {
+        console.log('Fetching Unsplash images with key:', import.meta.env.VITE_UNSPLASH_ACCESS_KEY ? 'Present' : 'Missing');
         // Fetch food images from Unsplash with proper error handling
         const foodPhotos = await unsplash.search.getPhotos({
           query: 'african food dish cuisine',
@@ -52,12 +53,13 @@ const FeaturedDishes = () => {
 
         if (foodPhotos.errors) {
           console.error('Unsplash API errors:', foodPhotos.errors);
-          throw new Error(foodPhotos.errors[0]);
+          // Return dishes without images rather than failing
+          return data as FeaturedDish[];
         }
 
         return data?.map((dish, index) => ({
           ...dish,
-          image_url: foodPhotos.response?.results[index]?.urls.regular
+          image_url: foodPhotos.response?.results[index]?.urls.regular || null
         })) as FeaturedDish[];
       } catch (error) {
         console.error('Error fetching Unsplash images:', error);

@@ -15,7 +15,7 @@ import { createApi } from 'unsplash-js';
 
 // Initialize the Unsplash client
 const unsplash = createApi({
-  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY
+  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || ''
 });
 
 interface FeaturedItem {
@@ -35,6 +35,7 @@ const FeaturedCarousel = () => {
   const { data: featuredItems, isLoading, error } = useQuery({
     queryKey: ['featuredItems'],
     queryFn: async () => {
+      console.log('Fetching featured items');
       const { data, error } = await supabase
         .from('featured_items')
         .select('*')
@@ -50,33 +51,59 @@ const FeaturedCarousel = () => {
         throw error;
       }
 
-      // Fetch random food images from Unsplash
-      const foodPhotos = await unsplash.search.getPhotos({
-        query: 'african food',
-        perPage: 6,
-      });
+      try {
+        console.log('Fetching Unsplash images with key:', import.meta.env.VITE_UNSPLASH_ACCESS_KEY ? 'Present' : 'Missing');
+        // Fetch random food images from Unsplash
+        const foodPhotos = await unsplash.search.getPhotos({
+          query: 'african food',
+          perPage: 6,
+        });
 
-      // Fetch random restaurant images
-      const restaurantPhotos = await unsplash.search.getPhotos({
-        query: 'restaurant interior',
-        perPage: 3,
-      });
+        if (foodPhotos.errors) {
+          console.error('Unsplash API errors:', foodPhotos.errors);
+          return data as FeaturedItem[];
+        }
 
-      // Fetch random service images
-      const servicePhotos = await unsplash.search.getPhotos({
-        query: 'food delivery service',
-        perPage: 3,
-      });
+        // Fetch random restaurant images
+        const restaurantPhotos = await unsplash.search.getPhotos({
+          query: 'restaurant interior',
+          perPage: 3,
+        });
 
-      // Enhance data with Unsplash images
-      return data?.map((item, index) => ({
-        ...item,
-        image_url: item.type === 'dish' 
-          ? foodPhotos.response?.results[index]?.urls.regular
-          : item.type === 'restaurant'
-            ? restaurantPhotos.response?.results[index % 3]?.urls.regular
-            : servicePhotos.response?.results[index % 3]?.urls.regular
-      })) as FeaturedItem[];
+        if (restaurantPhotos.errors) {
+          console.error('Unsplash API errors:', restaurantPhotos.errors);
+          return data as FeaturedItem[];
+        }
+
+        // Fetch random service images
+        const servicePhotos = await unsplash.search.getPhotos({
+          query: 'food delivery service',
+          perPage: 3,
+        });
+
+        if (servicePhotos.errors) {
+          console.error('Unsplash API errors:', servicePhotos.errors);
+          return data as FeaturedItem[];
+        }
+
+        // Enhance data with Unsplash images
+        return data?.map((item, index) => ({
+          ...item,
+          image_url: item.type === 'dish' 
+            ? foodPhotos.response?.results[index]?.urls.regular
+            : item.type === 'restaurant'
+              ? restaurantPhotos.response?.results[index % 3]?.urls.regular
+              : servicePhotos.response?.results[index % 3]?.urls.regular
+        })) as FeaturedItem[];
+      } catch (error) {
+        console.error('Error fetching Unsplash images:', error);
+        toast({
+          title: "Attention",
+          description: "Impossible de charger les images",
+          variant: "destructive",
+        });
+        return data as FeaturedItem[];
+      }
     }
   });
 
