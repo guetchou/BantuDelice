@@ -6,8 +6,12 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { createApi } from 'unsplash-js';
 
+// Initialize the Unsplash client with proper headers
 const unsplash = createApi({
-  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || ''
+  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY,
+  headers: {
+    Authorization: `Client-ID ${import.meta.env.VITE_UNSPLASH_ACCESS_KEY}`
+  }
 });
 
 interface FeaturedDish {
@@ -42,16 +46,32 @@ const FeaturedDishes = () => {
         throw error;
       }
 
-      // Fetch food images from Unsplash
-      const foodPhotos = await unsplash.search.getPhotos({
-        query: 'african food dish cuisine',
-        perPage: 6,
-      });
+      try {
+        // Fetch food images from Unsplash with proper error handling
+        const foodPhotos = await unsplash.search.getPhotos({
+          query: 'african food dish cuisine',
+          perPage: 6,
+        });
 
-      return data?.map((dish, index) => ({
-        ...dish,
-        image_url: foodPhotos.response?.results[index]?.urls.regular
-      })) as FeaturedDish[];
+        if (foodPhotos.errors) {
+          console.error('Unsplash API errors:', foodPhotos.errors);
+          throw new Error(foodPhotos.errors[0]);
+        }
+
+        return data?.map((dish, index) => ({
+          ...dish,
+          image_url: foodPhotos.response?.results[index]?.urls.regular
+        })) as FeaturedDish[];
+      } catch (error) {
+        console.error('Error fetching Unsplash images:', error);
+        toast({
+          title: "Attention",
+          description: "Impossible de charger les images des plats",
+          variant: "destructive",
+        });
+        // Return dishes without images rather than failing completely
+        return data as FeaturedDish[];
+      }
     }
   });
 
