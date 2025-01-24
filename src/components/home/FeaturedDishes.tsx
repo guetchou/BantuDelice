@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createApi } from 'unsplash-js';
 
 const unsplash = createApi({
-  accessKey: process.env.UNSPLASH_ACCESS_KEY || ''
+  accessKey: import.meta.env.VITE_UNSPLASH_ACCESS_KEY || ''
 });
 
 interface FeaturedDish {
