@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import RestaurantCarousel from "@/components/home/RestaurantCarousel";
+import FeaturedDishes from "@/components/home/FeaturedDishes";
+import FeaturedRestaurant from "@/components/home/FeaturedRestaurant";
 import AdditionalServices from "@/components/home/AdditionalServices";
-import Testimonials from "@/components/home/Testimonials";
+import ProfessionalServices from "@/components/home/ProfessionalServices";
 import { Button } from "@/components/ui/button";
-import { Search, MessageCircle, Phone } from "lucide-react";
+import { Search } from "lucide-react";
 import { useNavigation } from '@/contexts/NavigationContext';
 import DeliveryMap from '@/components/DeliveryMap';
 import CartDrawer from '@/components/cart/CartDrawer';
@@ -21,12 +22,10 @@ export default function Index() {
       
       {/* Hero Section */}
       <section className="relative h-[600px] overflow-hidden pt-16">
-        {/* Background with overlay */}
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0')] bg-cover bg-center">
           <div className="absolute inset-0 bg-gradient-to-b from-orange-500/30 to-gray-900/80 backdrop-blur-sm" />
         </div>
 
-        {/* Content */}
         <div className="relative container mx-auto px-4 h-full flex flex-col justify-center">
           <h1 className="text-6xl font-bold text-white mb-6 animate-fade-in">
             Découvrez la Cuisine<br />
@@ -35,7 +34,6 @@ export default function Index() {
             </span>
           </h1>
           
-          {/* Search Bar */}
           <div className="max-w-2xl w-full mx-auto relative animate-fade-in delay-100">
             <div className="relative">
               <input
@@ -51,7 +49,6 @@ export default function Index() {
             </div>
           </div>
 
-          {/* Quick Actions */}
           <div className="flex justify-center gap-4 mt-8 animate-fade-in delay-200">
             <Button 
               size="lg" 
@@ -70,6 +67,12 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Featured Dishes Section */}
+      <FeaturedDishes />
+
+      {/* Featured Restaurant Section */}
+      <FeaturedRestaurant />
+
       {/* Map Section */}
       <section className="py-16 container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center text-white mb-8">Notre Zone de Livraison</h2>
@@ -78,20 +81,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Restaurant Carousel */}
-      <section className="py-16 container mx-auto px-4">
-        <RestaurantCarousel />
-      </section>
-
-      {/* Additional Services */}
-      <section className="py-16 bg-gradient-to-br from-orange-50 to-orange-100">
-        <AdditionalServices />
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-16 bg-white">
-        <Testimonials />
-      </section>
+      {/* Services Sections */}
+      <AdditionalServices />
+      <ProfessionalServices />
 
       {/* Cart Drawer */}
       <div className="fixed bottom-4 right-4 z-50">
