@@ -11,7 +11,11 @@ const unsplashAccessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 console.log('Unsplash Access Key in FeaturedDishes:', unsplashAccessKey ? 'Present' : 'Missing');
 
 const unsplash = createApi({
-  accessKey: unsplashAccessKey || ''
+  accessKey: unsplashAccessKey || '',
+  // Ajout des headers d'authentification explicites
+  headers: {
+    Authorization: `Client-ID ${unsplashAccessKey}`
+  }
 });
 
 interface FeaturedDish {
