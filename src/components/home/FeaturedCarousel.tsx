@@ -11,9 +11,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { MessageCircle, Phone } from "lucide-react";
-import LiveChat from "@/components/chat/LiveChat";
-import AIChat from "@/components/chat/AIChat";
+import { createApi } from 'unsplash-js';
+
+const unsplash = createApi({
+  accessKey: 'YOUR_UNSPLASH_ACCESS_KEY'
+});
 
 interface FeaturedItem {
   id: string;
@@ -46,7 +48,34 @@ const FeaturedCarousel = () => {
         });
         throw error;
       }
-      return data as FeaturedItem[];
+
+      // Fetch random food images from Unsplash
+      const foodPhotos = await unsplash.search.getPhotos({
+        query: 'african food',
+        perPage: 6,
+      });
+
+      // Fetch random restaurant images
+      const restaurantPhotos = await unsplash.search.getPhotos({
+        query: 'restaurant interior',
+        perPage: 3,
+      });
+
+      // Fetch random service images
+      const servicePhotos = await unsplash.search.getPhotos({
+        query: 'food delivery service',
+        perPage: 3,
+      });
+
+      // Enhance data with Unsplash images
+      return data?.map((item, index) => ({
+        ...item,
+        image_url: item.type === 'dish' 
+          ? foodPhotos.response?.results[index]?.urls.regular
+          : item.type === 'restaurant'
+            ? restaurantPhotos.response?.results[index % 3]?.urls.regular
+            : servicePhotos.response?.results[index % 3]?.urls.regular
+      })) as FeaturedItem[];
     }
   });
 
@@ -81,6 +110,7 @@ const FeaturedCarousel = () => {
 
   return (
     <div className="space-y-16">
+      {/* Featured Items Section */}
       <section className="py-20 bg-gradient-to-br from-orange-50 to-orange-100">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">
@@ -119,43 +149,6 @@ const FeaturedCarousel = () => {
             <CarouselPrevious className="hidden md:flex" />
             <CarouselNext className="hidden md:flex" />
           </Carousel>
-        </div>
-      </section>
-
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-2xl font-bold mb-6 text-gray-800">Chat avec un Assistant IA</h3>
-              <AIChat />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-6 text-gray-800">Chat en Direct</h3>
-              <LiveChat />
-            </div>
-          </div>
-          
-          <div className="mt-12 text-center">
-            <h3 className="text-2xl font-bold mb-4 text-gray-800">Besoin d'aide ?</h3>
-            <div className="flex justify-center gap-4">
-              <Button 
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={() => window.location.href = 'tel:+123456789'}
-              >
-                <Phone className="w-4 h-4" />
-                Appeler le Service Client
-              </Button>
-              <Button 
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={() => navigate('/contact')}
-              >
-                <MessageCircle className="w-4 h-4" />
-                Nous Contacter
-              </Button>
-            </div>
-          </div>
         </div>
       </section>
     </div>
