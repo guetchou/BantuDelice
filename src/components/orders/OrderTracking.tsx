@@ -1,70 +1,112 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Package, Truck, CheckCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { MapPin, Clock, Package, Check } from 'lucide-react';
+import DeliveryMap from '@/components/DeliveryMap';
+import { Card } from '@/components/ui/card';
 
-interface OrderTrackingProps {
-  orderId: string;
+interface OrderStatus {
+  status: string;
+  latitude: number;
+  longitude: number;
+  updated_at: string;
 }
 
-const OrderTracking = ({ orderId }: OrderTrackingProps) => {
-  const { data: tracking, isLoading } = useQuery({
-    queryKey: ['orderTracking', orderId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('delivery_tracking')
-        .select('*')
-        .eq('order_id', orderId)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    refetchInterval: 30000 // Rafraîchir toutes les 30 secondes
-  });
+export default function OrderTracking({ orderId }: { orderId: string }) {
+  const [status, setStatus] = useState<OrderStatus | null>(null);
+  const { toast } = useToast();
 
-  if (isLoading) {
-    return <div>Chargement du suivi...</div>;
-  }
+  useEffect(() => {
+    // Initial fetch
+    fetchOrderStatus();
 
-  const steps = [
-    { icon: Clock, label: 'Commande reçue', status: 'completed' },
-    { icon: Package, label: 'En préparation', status: tracking?.status === 'preparing' ? 'current' : tracking?.status === 'delivering' || tracking?.status === 'delivered' ? 'completed' : 'waiting' },
-    { icon: Truck, label: 'En livraison', status: tracking?.status === 'delivering' ? 'current' : tracking?.status === 'delivered' ? 'completed' : 'waiting' },
-    { icon: CheckCircle, label: 'Livrée', status: tracking?.status === 'delivered' ? 'completed' : 'waiting' }
-  ];
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('order-tracking')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'delivery_tracking',
+          filter: `order_id=eq.${orderId}`
+        },
+        (payload) => {
+          console.log('Delivery status updated:', payload);
+          setStatus(payload.new as OrderStatus);
+          
+          toast({
+            title: "Statut de livraison mis à jour",
+            description: `Nouveau statut: ${payload.new.status}`,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orderId]);
+
+  const fetchOrderStatus = async () => {
+    const { data, error } = await supabase
+      .from('delivery_tracking')
+      .select('*')
+      .eq('order_id', orderId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching order status:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger le statut de la commande",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setStatus(data);
+  };
+
+  const getStatusIcon = (currentStatus: string) => {
+    switch (currentStatus) {
+      case 'preparing':
+        return <Clock className="h-6 w-6 text-yellow-500" />;
+      case 'picked_up':
+        return <Package className="h-6 w-6 text-blue-500" />;
+      case 'delivered':
+        return <Check className="h-6 w-6 text-green-500" />;
+      default:
+        return <MapPin className="h-6 w-6 text-gray-500" />;
+    }
+  };
+
+  if (!status) return <div>Chargement...</div>;
 
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-6">Suivi de commande</h3>
-      <div className="relative">
-        {steps.map((step, index) => (
-          <div key={step.label} className="flex items-center mb-8 last:mb-0">
-            <div className={`
-              w-8 h-8 rounded-full flex items-center justify-center
-              ${step.status === 'completed' ? 'bg-green-500 text-white' :
-                step.status === 'current' ? 'bg-blue-500 text-white' :
-                'bg-gray-200 text-gray-400'}
-            `}>
-              <step.icon className="w-5 h-5" />
-            </div>
-            <div className="ml-4 flex-1">
-              <p className="font-medium">{step.label}</p>
-              {step.status === 'current' && tracking?.updated_at && (
-                <p className="text-sm text-muted-foreground">
-                  Mis à jour à {new Date(tracking.updated_at).toLocaleTimeString()}
-                </p>
-              )}
-            </div>
-            {index < steps.length - 1 && (
-              <div className="absolute left-4 ml-[11px] h-full border-l border-gray-200" />
-            )}
+    <Card className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          {getStatusIcon(status.status)}
+          <div>
+            <h3 className="font-semibold">
+              {status.status === 'preparing' && 'En préparation'}
+              {status.status === 'picked_up' && 'En route'}
+              {status.status === 'delivered' && 'Livré'}
+            </h3>
+            <p className="text-sm text-gray-500">
+              Dernière mise à jour: {new Date(status.updated_at).toLocaleTimeString()}
+            </p>
           </div>
-        ))}
+        </div>
+      </div>
+
+      <div className="h-[300px] rounded-lg overflow-hidden">
+        <DeliveryMap 
+          latitude={status.latitude} 
+          longitude={status.longitude}
+        />
       </div>
     </Card>
   );
-};
-
-export default OrderTracking;
+}
