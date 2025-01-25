@@ -7,7 +7,7 @@ import OrderConfirmation from "@/components/restaurant/OrderConfirmation";
 import DeliveryStatus from "@/components/restaurant/DeliveryStatus";
 import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
 import { useRestaurant } from "@/components/restaurant/useRestaurant";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const RestaurantMenu = () => {
   const params = useParams();
