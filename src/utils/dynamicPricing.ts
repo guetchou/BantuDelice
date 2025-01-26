@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 interface PricingFactors {
   basePrice: number;
   demand: number; // 0-100
