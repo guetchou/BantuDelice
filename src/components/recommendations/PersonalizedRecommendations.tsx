@@ -44,7 +44,6 @@ const PersonalizedRecommendations = () => {
 
         return {
           ...item,
-          rating: avgRating,
           ratings: undefined // Remove the ratings array as it's not part of MenuItem type
         } as MenuItem;
       }) || [];
@@ -73,11 +72,6 @@ const PersonalizedRecommendations = () => {
                 alt={item.name}
                 className="w-full h-full object-cover"
               />
-              {item.rating && (
-                <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-sm font-semibold">
-                  {item.rating.toFixed(1)} ★
-                </div>
-              )}
             </div>
             <div className="p-4">
               <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
