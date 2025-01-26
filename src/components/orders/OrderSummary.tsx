@@ -28,7 +28,9 @@ export const OrderSummary = () => {
           total_amount: total,
           status: 'pending',
           payment_status: 'completed',
-          delivery_status: 'pending'
+          delivery_status: 'pending',
+          restaurant_id: state.items[0]?.restaurantId || '',
+          delivery_address: 'À implémenter' // Adresse à implémenter
         })
         .select()
         .single();

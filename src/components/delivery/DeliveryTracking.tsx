@@ -76,7 +76,7 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
           </div>
           <div className="ml-4">
             <p className="font-medium">Commande confirmée</p>
-            <Badge variant={status.status !== 'pending' ? "success" : "secondary"}>
+            <Badge variant={status.status !== 'pending' ? "default" : "secondary"}>
               {status.status !== 'pending' ? 'Complété' : 'En cours'}
             </Badge>
           </div>
@@ -90,7 +90,7 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
           </div>
           <div className="ml-4">
             <p className="font-medium">En préparation</p>
-            <Badge variant={status.status === 'preparing' ? "success" : "secondary"}>
+            <Badge variant={status.status === 'preparing' ? "default" : "secondary"}>
               {status.status === 'preparing' ? 'En cours' : 'En attente'}
             </Badge>
           </div>
@@ -104,7 +104,7 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
           </div>
           <div className="ml-4">
             <p className="font-medium">En livraison</p>
-            <Badge variant={status.status === 'delivering' ? "success" : "secondary"}>
+            <Badge variant={status.status === 'delivering' ? "default" : "secondary"}>
               {status.status === 'delivering' ? 'En cours' : 'En attente'}
             </Badge>
           </div>
@@ -118,7 +118,7 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
           </div>
           <div className="ml-4">
             <p className="font-medium">Livré</p>
-            <Badge variant={status.status === 'delivered' ? "success" : "secondary"}>
+            <Badge variant={status.status === 'delivered' ? "default" : "secondary"}>
               {status.status === 'delivered' ? 'Complété' : 'En attente'}
             </Badge>
           </div>
