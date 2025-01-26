@@ -3,15 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image_url: string;
-  rating: number;
-}
+import { MenuItem } from '@/components/menu/types';
 
 const PersonalizedRecommendations = () => {
   const { toast } = useToast();
@@ -33,14 +25,31 @@ const PersonalizedRecommendations = () => {
         .eq('user_id', user.id)
         .limit(10);
 
-      // Récupérer les plats populaires similaires
-      const { data: recommendations } = await supabase
+      // Récupérer les plats populaires similaires avec leur note moyenne
+      const { data: menuItems } = await supabase
         .from('menu_items')
-        .select('*')
+        .select(`
+          *,
+          ratings(rating)
+        `)
         .order('popularity_score', { ascending: false })
         .limit(5);
 
-      return recommendations as MenuItem[];
+      // Transformer les données pour inclure la note moyenne
+      const recommendations = menuItems?.map(item => {
+        const ratings = item.ratings as { rating: number }[] || [];
+        const avgRating = ratings.length > 0 
+          ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length 
+          : 0;
+
+        return {
+          ...item,
+          rating: avgRating,
+          ratings: undefined // Remove the ratings array as it's not part of MenuItem type
+        } as MenuItem;
+      }) || [];
+
+      return recommendations;
     }
   });
 
