@@ -67,9 +67,9 @@ const AdvancedSearch = ({ onSearch }: AdvancedSearchProps) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les prix</SelectItem>
-            <SelectItem value="low">€ (< 5000 FCFA)</SelectItem>
+            <SelectItem value="low">€ (&lt; 5000 FCFA)</SelectItem>
             <SelectItem value="medium">€€ (5000-15000 FCFA)</SelectItem>
-            <SelectItem value="high">€€€ (> 15000 FCFA)</SelectItem>
+            <SelectItem value="high">€€€ (&gt; 15000 FCFA)</SelectItem>
           </SelectContent>
         </Select>
 
