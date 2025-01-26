@@ -7,6 +7,7 @@ interface CartItem {
   name: string;
   price: number;
   quantity: number;
+  restaurantId: string;
   options?: {
     [key: string]: string | number | boolean;
   };
