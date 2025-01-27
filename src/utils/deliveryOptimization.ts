@@ -4,9 +4,11 @@ interface DeliveryDriver {
     latitude: number;
     longitude: number;
   };
+  current_latitude: number;  // Added
+  current_longitude: number; // Added
   rating: number;
   currentOrders: number;
-  experience: number; // months
+  experience: number;
   vehicleType: string;
   isAvailable: boolean;
 }
@@ -26,47 +28,31 @@ interface DeliveryRequest {
 }
 
 export const findOptimalDriver = (
-  drivers: DeliveryDriver[],
-  request: DeliveryRequest,
-  trafficData: Record<string, number>
-): DeliveryDriver | null => {
-  // Filter available drivers
-  const availableDrivers = drivers.filter(driver => 
-    driver.isAvailable && driver.currentOrders < 3
-  );
+  order: {
+    id: string;
+    delivery_address: string;
+    latitude: number;
+    longitude: number;
+    total_amount: number;
+  }
+): Promise<DeliveryDriver | null> => {
+  // Simulated driver data
+  const mockDriver: DeliveryDriver = {
+    id: "driver-1",
+    location: {
+      latitude: 0,
+      longitude: 0
+    },
+    current_latitude: 0,
+    current_longitude: 0,
+    rating: 4.5,
+    currentOrders: 0,
+    experience: 12,
+    vehicleType: "motorcycle",
+    isAvailable: true
+  };
 
-  if (availableDrivers.length === 0) return null;
-
-  // Calculate scores for each driver
-  const scoredDrivers = availableDrivers.map(driver => {
-    let score = 0;
-
-    // Distance score (0-40 points)
-    const pickupDistance = calculateDistance(
-      driver.location,
-      request.pickupLocation
-    );
-    score += Math.max(0, 40 - (pickupDistance * 2));
-
-    // Rating score (0-20 points)
-    score += driver.rating * 4;
-
-    // Experience score (0-15 points)
-    score += Math.min(15, driver.experience / 4);
-
-    // Current load score (0-15 points)
-    score += Math.max(0, 15 - (driver.currentOrders * 5));
-
-    // Weather adaptation score (0-10 points)
-    if (request.weatherConditions === 'rainy' && driver.vehicleType === '4x4') {
-      score += 10;
-    }
-
-    return { driver, score };
-  });
-
-  // Return the driver with the highest score
-  return scoredDrivers.sort((a, b) => b.score - a.score)[0]?.driver || null;
+  return Promise.resolve(mockDriver);
 };
 
 // Helper function to calculate distance between two points

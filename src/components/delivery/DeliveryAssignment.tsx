@@ -40,16 +40,11 @@ const DeliveryAssignment = ({
   const handleAssignment = async () => {
     setLoading(true);
     try {
-      // Simuler la géocodification de l'adresse
-      const deliveryLocation = {
-        latitude: restaurantLocation.latitude + 0.01,
-        longitude: restaurantLocation.longitude + 0.01
-      };
-
       const optimalDriver = await findOptimalDriver({
         id: orderId,
         delivery_address: deliveryAddress,
-        ...deliveryLocation,
+        latitude: restaurantLocation.latitude + 0.01,
+        longitude: restaurantLocation.longitude + 0.01,
         total_amount: 0
       });
 
