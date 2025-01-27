@@ -55,6 +55,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        neon: {
+          blue: '#00f3ff',
+          purple: '#8a2be2',
+          pink: '#ff1493',
+          green: '#00ff9f',
+        }
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -72,9 +78,38 @@ export default {
             "background-position": "right center",
           },
         },
+        "neon-pulse": {
+          "0%, 100%": {
+            opacity: "1",
+            filter: "brightness(1)",
+          },
+          "50%": {
+            opacity: "0.8",
+            filter: "brightness(1.2)",
+          },
+        },
+        "float": {
+          "0%, 100%": {
+            transform: "translateY(0)",
+          },
+          "50%": {
+            transform: "translateY(-10px)",
+          },
+        },
+        "glow": {
+          "0%, 100%": {
+            boxShadow: "0 0 5px rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.2)",
+          },
+          "50%": {
+            boxShadow: "0 0 20px rgba(0, 243, 255, 0.8), 0 0 40px rgba(0, 243, 255, 0.4)",
+          },
+        },
       },
       animation: {
         "gradient-x": "gradient-x 15s ease infinite",
+        "neon-pulse": "neon-pulse 2s ease-in-out infinite",
+        "float": "float 6s ease-in-out infinite",
+        "glow": "glow 3s ease-in-out infinite",
       },
     },
   },

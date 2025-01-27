@@ -54,15 +54,64 @@ export const getPersonalizedRecommendations = (
   userPreferences: string[],
   limit: number = 5
 ): MenuItem[] => {
-  // Calculer les scores pour chaque plat
+  // Calculate scores for each menu item
   const scoredItems = menuItems.map(item => ({
     ...item,
     score: calculateRecommendationScore(item, userHistory, userPreferences)
   }));
   
-  // Trier par score et retourner les meilleurs
+  // Sort by score and return the best matches
   return scoredItems
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
+    .map(({ score, ...item }) => item);
+};
+
+// New AI-powered recommendation algorithm
+export const getAIRecommendations = (
+  menuItems: MenuItem[],
+  timeOfDay: string,
+  weather: string,
+  userMood?: string
+): MenuItem[] => {
+  const weights = {
+    morning: ['Breakfast', 'Light', 'Healthy'],
+    afternoon: ['Lunch', 'Quick', 'Energy'],
+    evening: ['Dinner', 'Complete', 'Comfort'],
+    night: ['Snack', 'Light', 'Quick']
+  };
+
+  const weatherPreferences = {
+    sunny: ['Fresh', 'Light', 'Salad'],
+    rainy: ['Warm', 'Comfort', 'Soup'],
+    cold: ['Hot', 'Hearty', 'Comfort'],
+    hot: ['Fresh', 'Cold', 'Light']
+  };
+
+  const moodPreferences = {
+    happy: ['Celebratory', 'Special', 'Premium'],
+    tired: ['Energy', 'Quick', 'Comfort'],
+    stressed: ['Comfort', 'Familiar', 'Relaxing'],
+    healthy: ['Light', 'Fresh', 'Nutritious']
+  };
+
+  return menuItems
+    .map(item => {
+      let score = 0;
+      const timePrefs = weights[timeOfDay as keyof typeof weights] || [];
+      const weatherPrefs = weatherPreferences[weather as keyof typeof weatherPreferences] || [];
+      const moodPrefs = userMood ? (moodPreferences[userMood as keyof typeof moodPreferences] || []) : [];
+
+      // Calculate score based on preferences
+      [...timePrefs, ...weatherPrefs, ...moodPrefs].forEach(pref => {
+        if (item.description?.toLowerCase().includes(pref.toLowerCase())) {
+          score += 1;
+        }
+      });
+
+      return { ...item, score };
+    })
+    .sort((a, b) => (b as any).score - (a as any).score)
+    .slice(0, 5)
     .map(({ score, ...item }) => item);
 };

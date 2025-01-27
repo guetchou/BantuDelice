@@ -1,54 +1,100 @@
 interface PricingFactors {
   basePrice: number;
-  demand: number;
-  timeOfDay: number;
-  dayOfWeek: number;
-  weather: number;
-  specialEvents: boolean;
+  demand: number; // 0-1
+  timeOfDay: string;
+  weather: string;
+  specialEvent?: boolean;
+  userLoyalty?: number; // 0-1
 }
 
-export const calculateDynamicPrice = (factors: PricingFactors): number => {
+export const calculateDynamicPrice = ({
+  basePrice,
+  demand,
+  timeOfDay,
+  weather,
+  specialEvent = false,
+  userLoyalty = 0
+}: PricingFactors): number => {
   let multiplier = 1.0;
 
-  // Ajustement basé sur la demande (0-1)
-  multiplier += factors.demand * 0.5;
+  // Demand-based adjustment (0.8-1.5x)
+  multiplier *= 0.8 + (demand * 0.7);
 
-  // Ajustement basé sur l'heure (0-24)
-  const peakHours = [12, 13, 19, 20];
-  if (peakHours.includes(factors.timeOfDay)) {
-    multiplier += 0.2;
+  // Time-based adjustment
+  const timeMultipliers: Record<string, number> = {
+    'early-morning': 0.9,
+    'morning': 1.0,
+    'lunch': 1.2,
+    'afternoon': 0.95,
+    'dinner': 1.3,
+    'late-night': 1.1
+  };
+  multiplier *= timeMultipliers[timeOfDay] || 1;
+
+  // Weather-based adjustment
+  const weatherMultipliers: Record<string, number> = {
+    'rainy': 1.2,
+    'sunny': 1.0,
+    'cloudy': 1.0,
+    'stormy': 1.3
+  };
+  multiplier *= weatherMultipliers[weather] || 1;
+
+  // Special event adjustment
+  if (specialEvent) {
+    multiplier *= 1.25;
   }
 
-  // Ajustement basé sur le jour (0-6, 0 = Dimanche)
-  const weekendDays = [5, 6]; // Vendredi et Samedi
-  if (weekendDays.includes(factors.dayOfWeek)) {
-    multiplier += 0.1;
-  }
+  // Loyalty discount (up to 20% off)
+  const loyaltyDiscount = userLoyalty * 0.2;
+  multiplier *= (1 - loyaltyDiscount);
 
-  // Ajustement basé sur la météo (0-1)
-  multiplier += factors.weather * 0.3;
+  // Calculate final price
+  let finalPrice = Math.round(basePrice * multiplier);
 
-  // Ajustement pour les événements spéciaux
-  if (factors.specialEvents) {
-    multiplier += 0.2;
-  }
+  // Ensure minimum price
+  finalPrice = Math.max(finalPrice, basePrice * 0.8);
 
-  // Calculer le prix final
-  const finalPrice = Math.round(factors.basePrice * multiplier);
+  // Ensure maximum price
+  finalPrice = Math.min(finalPrice, basePrice * 2);
 
-  // Limiter l'augmentation à 2x le prix de base
-  return Math.min(finalPrice, factors.basePrice * 2);
+  return finalPrice;
 };
 
-export const getCurrentPricingFactors = (): PricingFactors => {
-  const now = new Date();
-  
-  return {
-    basePrice: 1000, // Prix de base en FCFA
-    demand: Math.random(), // Simulé pour l'exemple
-    timeOfDay: now.getHours(),
-    dayOfWeek: now.getDay(),
-    weather: Math.random(), // Simulé pour l'exemple
-    specialEvents: false // À implémenter avec une vraie API d'événements
+export const calculateDeliveryFee = (
+  distance: number,
+  weather: string,
+  traffic: number, // 0-1
+  time: string
+): number => {
+  const baseRate = 500; // Base delivery fee in FCFA
+  let multiplier = 1.0;
+
+  // Distance-based calculation (per km)
+  multiplier += (distance * 0.1);
+
+  // Weather impact
+  const weatherMultipliers: Record<string, number> = {
+    'rainy': 1.3,
+    'stormy': 1.5,
+    'sunny': 1.0,
+    'cloudy': 1.0
   };
+  multiplier *= weatherMultipliers[weather] || 1;
+
+  // Traffic impact
+  multiplier *= (1 + (traffic * 0.5));
+
+  // Time-based adjustment
+  const timeMultipliers: Record<string, number> = {
+    'peak': 1.2,
+    'normal': 1.0,
+    'off-peak': 0.9
+  };
+  multiplier *= timeMultipliers[time] || 1;
+
+  const fee = Math.round(baseRate * multiplier);
+
+  // Ensure minimum and maximum fees
+  return Math.min(Math.max(fee, 500), 3000);
 };

@@ -21,6 +21,7 @@ interface MenuItemCustomizationProps {
     id: string;
     name: string;
     price: number;
+    restaurant_id: string;
     customization_options?: {
       [key: string]: string[];
     };
@@ -34,7 +35,6 @@ const MenuItemCustomization = ({ item, open, onClose }: MenuItemCustomizationPro
   const [options, setOptions] = React.useState<Record<string, string>>({});
   const [specialInstructions, setSpecialInstructions] = React.useState('');
 
-  // Reset state when dialog closes
   React.useEffect(() => {
     if (!open) {
       setOptions({});
@@ -42,7 +42,6 @@ const MenuItemCustomization = ({ item, open, onClose }: MenuItemCustomizationPro
     }
   }, [open]);
 
-  // Don't render the dialog if there's no item
   if (!item) {
     return null;
   }
@@ -52,6 +51,7 @@ const MenuItemCustomization = ({ item, open, onClose }: MenuItemCustomizationPro
       id: item.id,
       name: item.name,
       price: item.price,
+      restaurantId: item.restaurant_id,
       options: {
         ...options,
         specialInstructions
@@ -62,21 +62,23 @@ const MenuItemCustomization = ({ item, open, onClose }: MenuItemCustomizationPro
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="glass-effect backdrop-blur-lg border border-white/20">
         <DialogHeader>
-          <DialogTitle>Personnaliser {item.name}</DialogTitle>
+          <DialogTitle className="text-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+            Personnaliser {item.name}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           {item.customization_options && Object.entries(item.customization_options).map(([key, values]) => (
-            <div key={key}>
-              <label className="text-sm font-medium mb-1 block">
+            <div key={key} className="animate-fade-in">
+              <label className="text-sm font-medium mb-1 block text-white">
                 {key}
               </label>
               <Select
                 value={options[key]}
                 onValueChange={(value) => setOptions(prev => ({ ...prev, [key]: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="glass-effect">
                   <SelectValue placeholder={`Choisir ${key.toLowerCase()}`} />
                 </SelectTrigger>
                 <SelectContent>
@@ -89,22 +91,26 @@ const MenuItemCustomization = ({ item, open, onClose }: MenuItemCustomizationPro
               </Select>
             </div>
           ))}
-          <div>
-            <label className="text-sm font-medium mb-1 block">
+          <div className="animate-fade-in">
+            <label className="text-sm font-medium mb-1 block text-white">
               Instructions spéciales
             </label>
             <Textarea
               placeholder="Ex: sans oignon, sauce à part..."
               value={specialInstructions}
               onChange={(e) => setSpecialInstructions(e.target.value)}
+              className="glass-effect"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} className="hover-scale">
             Annuler
           </Button>
-          <Button onClick={handleAddToCart}>
+          <Button 
+            onClick={handleAddToCart}
+            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover-scale"
+          >
             Ajouter au panier
           </Button>
         </div>
