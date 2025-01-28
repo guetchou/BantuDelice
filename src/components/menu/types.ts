@@ -12,4 +12,10 @@ export interface MenuItem {
   cuisine_type?: string;
   popularity_score?: number;
   rating?: number;
+  preparation_time?: number;
+  allergens?: string[];
+  calories?: number;
+  ingredients?: string[];
+  seasonal?: boolean;
+  featured?: boolean;
 }
