@@ -10,6 +10,7 @@ import DeliveryDashboard from "@/pages/delivery/Dashboard";
 import RestaurantDashboard from "@/pages/restaurant/Dashboard";
 import Specialties from "@/pages/Specialties";
 import Restaurants from "@/pages/Restaurants";
+import RestaurantMenu from "@/pages/RestaurantMenu";
 
 const AppRoutes = () => {
   return (
@@ -18,6 +19,7 @@ const AppRoutes = () => {
       <Route path="/auth" element={<Auth />} />
       <Route path="/restaurants" element={<Restaurants />} />
       <Route path="/specialties" element={<Specialties />} />
+      <Route path="/menu/:restaurantId" element={<RestaurantMenu />} />
       <Route
         path="/profile"
         element={
