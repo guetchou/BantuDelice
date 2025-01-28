@@ -1,8 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleExplore = () => {
+    toast({
+      title: "Découverte des spécialités",
+      description: "Chargement de nos meilleures spécialités...",
+    });
+    navigate('/specialties');
+  };
 
   return (
     <section className="relative h-[600px] bg-gradient-to-br from-indigo-600 to-indigo-800 flex items-center overflow-hidden">
@@ -33,6 +43,7 @@ const HeroSection = () => {
               size="lg"
               variant="outline"
               className="text-white border-white hover:bg-white/10 font-semibold px-8"
+              onClick={handleExplore}
             >
               Découvrir nos Spécialités
             </Button>
