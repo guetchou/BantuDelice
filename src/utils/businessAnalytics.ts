@@ -1,134 +1,117 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
 
-export interface OrderMetrics {
-  totalOrders: number;
+interface AnalyticsMetrics {
+  totalRevenue: number;
   averageOrderValue: number;
-  completionRate: number;
-  cancelationRate: number;
+  orderCount: number;
+  popularItems: Array<{
+    id: string;
+    name: string;
+    orderCount: number;
+    revenue: number;
+  }>;
+  customerRetentionRate: number;
+  deliveryPerformance: {
+    averageTime: number;
+    onTimeDeliveryRate: number;
+  };
 }
 
-export interface ServiceMetrics {
-  totalBookings: number;
-  popularTimeSlots: { hour: number; count: number }[];
-  averageRating: number;
-}
-
-export const getOrderMetrics = async (
+export const generateBusinessAnalytics = async (
   startDate: Date,
   endDate: Date
-): Promise<OrderMetrics> => {
-  try {
-    const { data: orders, error } = await supabase
-      .from('orders')
-      .select('*')
-      .gte('created_at', startDate.toISOString())
-      .lte('created_at', endDate.toISOString());
+): Promise<AnalyticsMetrics> => {
+  // Fetch orders within date range
+  const { data: orders, error: ordersError } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      order_items (
+        item_name,
+        quantity,
+        price
+      )
+    `)
+    .gte('created_at', startDate.toISOString())
+    .lte('created_at', endDate.toISOString());
 
-    if (error) throw error;
+  if (ordersError) throw ordersError;
 
-    const totalOrders = orders.length;
-    const completedOrders = orders.filter(o => o.status === 'completed').length;
-    const canceledOrders = orders.filter(o => o.status === 'cancelled').length;
-    const totalValue = orders.reduce((sum, order) => sum + order.total_amount, 0);
+  // Calculate basic metrics
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total_amount, 0);
+  const orderCount = orders.length;
+  const averageOrderValue = totalRevenue / orderCount;
 
-    return {
-      totalOrders,
-      averageOrderValue: totalOrders > 0 ? totalValue / totalOrders : 0,
-      completionRate: totalOrders > 0 ? (completedOrders / totalOrders) * 100 : 0,
-      cancelationRate: totalOrders > 0 ? (canceledOrders / totalOrders) * 100 : 0
-    };
-  } catch (error) {
-    console.error('Error fetching order metrics:', error);
-    throw error;
-  }
-};
+  // Calculate popular items
+  const itemStats = new Map<string, { count: number; revenue: number; name: string }>();
+  orders.forEach(order => {
+    order.order_items.forEach((item: any) => {
+      const existing = itemStats.get(item.id) || { count: 0, revenue: 0, name: item.item_name };
+      itemStats.set(item.id, {
+        count: existing.count + item.quantity,
+        revenue: existing.revenue + (item.price * item.quantity),
+        name: item.item_name
+      });
+    });
+  });
 
-export const getServiceMetrics = async (
-  serviceId: string,
-  period: 'day' | 'week' | 'month'
-): Promise<ServiceMetrics> => {
-  try {
-    const startDate = new Date();
-    if (period === 'week') startDate.setDate(startDate.getDate() - 7);
-    else if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
-    else startDate.setDate(startDate.getDate() - 1);
+  const popularItems = Array.from(itemStats.entries())
+    .map(([id, stats]) => ({
+      id,
+      name: stats.name,
+      orderCount: stats.count,
+      revenue: stats.revenue
+    }))
+    .sort((a, b) => b.orderCount - a.orderCount)
+    .slice(0, 10);
 
-    const { data: bookings, error } = await supabase
-      .from('bookings')
-      .select(`
-        *,
-        ratings (
-          rating
-        )
-      `)
-      .eq('service_provider_id', serviceId)
-      .gte('created_at', startDate.toISOString());
+  // Calculate customer retention
+  const { data: customerOrders } = await supabase
+    .from('orders')
+    .select('user_id, created_at')
+    .gte('created_at', startDate.toISOString())
+    .lte('created_at', endDate.toISOString());
 
-    if (error) throw error;
+  const repeatCustomers = new Set();
+  const uniqueCustomers = new Set();
+  
+  customerOrders?.forEach(order => {
+    if (uniqueCustomers.has(order.user_id)) {
+      repeatCustomers.add(order.user_id);
+    }
+    uniqueCustomers.add(order.user_id);
+  });
 
-    // Calculate popular time slots
-    const timeSlots = bookings.reduce((acc: Record<number, number>, booking) => {
-      const hour = new Date(booking.start_time).getHours();
-      acc[hour] = (acc[hour] || 0) + 1;
-      return acc;
-    }, {});
+  const customerRetentionRate = (repeatCustomers.size / uniqueCustomers.size) * 100;
 
-    const popularTimeSlots = Object.entries(timeSlots)
-      .map(([hour, count]) => ({ hour: parseInt(hour), count }))
-      .sort((a, b) => b.count - a.count);
-
-    // Calculate average rating
-    const ratings = bookings
-      .map(b => b.ratings)
-      .flat()
-      .filter(r => r)
-      .map(r => r.rating);
-    
-    const averageRating = ratings.length > 0
-      ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
-      : 0;
-
-    return {
-      totalBookings: bookings.length,
-      popularTimeSlots,
-      averageRating
-    };
-  } catch (error) {
-    console.error('Error fetching service metrics:', error);
-    throw error;
-  }
-};
-
-// Monitor system health
-export const monitorSystemHealth = async () => {
-  try {
-    const start = Date.now();
-    
-    // Test database connection
-    const { data, error } = await supabase
-      .from('orders')
-      .select('count')
-      .limit(1);
-      
-    const latency = Date.now() - start;
-
-    if (error) throw error;
-
-    console.log('System Health Check:', {
-      status: 'healthy',
-      latency: `${latency}ms`,
-      timestamp: new Date().toISOString()
+  // Calculate delivery performance
+  const deliveryTimes = orders
+    .filter(order => order.actual_delivery_time && order.created_at)
+    .map(order => {
+      const deliveryTime = new Date(order.actual_delivery_time).getTime() - 
+                          new Date(order.created_at).getTime();
+      return deliveryTime / (1000 * 60); // Convert to minutes
     });
 
-    return {
-      healthy: true,
-      latency
-    };
-  } catch (error) {
-    console.error('System health check failed:', error);
-    return {
-      healthy: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
+  const averageDeliveryTime = deliveryTimes.reduce((sum, time) => sum + time, 0) / 
+                             deliveryTimes.length;
+
+  const onTimeDeliveries = orders.filter(order => 
+    order.actual_delivery_time && order.estimated_delivery_time &&
+    new Date(order.actual_delivery_time) <= new Date(order.estimated_delivery_time)
+  ).length;
+
+  const onTimeDeliveryRate = (onTimeDeliveries / orderCount) * 100;
+
+  return {
+    totalRevenue,
+    averageOrderValue,
+    orderCount,
+    popularItems,
+    customerRetentionRate,
+    deliveryPerformance: {
+      averageTime: averageDeliveryTime,
+      onTimeDeliveryRate
+    }
+  };
 };

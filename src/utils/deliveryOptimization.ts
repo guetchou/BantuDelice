@@ -1,129 +1,125 @@
-interface DeliveryDriver {
+interface DeliveryPoint {
+  id: string;
+  latitude: number;
+  longitude: number;
+  priority: number;
+  timeWindow?: {
+    start: Date;
+    end: Date;
+  };
+}
+
+interface Driver {
   id: string;
   location: {
     latitude: number;
     longitude: number;
   };
-  current_latitude: number;  // Added
-  current_longitude: number; // Added
-  rating: number;
+  maxOrders: number;
   currentOrders: number;
-  experience: number;
-  vehicleType: string;
-  isAvailable: boolean;
 }
 
-interface DeliveryRequest {
-  pickupLocation: {
-    latitude: number;
-    longitude: number;
-  };
-  deliveryLocation: {
-    latitude: number;
-    longitude: number;
-  };
-  orderSize: number;
-  isUrgent: boolean;
-  weatherConditions: string;
-}
+export const optimizeDeliveryRoutes = (
+  deliveryPoints: DeliveryPoint[],
+  availableDrivers: Driver[]
+): Map<string, DeliveryPoint[]> => {
+  const routes = new Map<string, DeliveryPoint[]>();
+  
+  // Sort delivery points by priority
+  const sortedPoints = [...deliveryPoints].sort((a, b) => b.priority - a.priority);
+  
+  // Sort drivers by current load
+  const sortedDrivers = [...availableDrivers].sort(
+    (a, b) => (a.currentOrders / a.maxOrders) - (b.currentOrders / b.maxOrders)
+  );
 
-export const findOptimalDriver = (
-  order: {
-    id: string;
-    delivery_address: string;
-    latitude: number;
-    longitude: number;
-    total_amount: number;
+  for (const driver of sortedDrivers) {
+    routes.set(driver.id, []);
   }
-): Promise<DeliveryDriver | null> => {
-  // Simulated driver data
-  const mockDriver: DeliveryDriver = {
-    id: "driver-1",
-    location: {
-      latitude: 0,
-      longitude: 0
-    },
-    current_latitude: 0,
-    current_longitude: 0,
-    rating: 4.5,
-    currentOrders: 0,
-    experience: 12,
-    vehicleType: "motorcycle",
-    isAvailable: true
-  };
 
-  return Promise.resolve(mockDriver);
-};
+  // Assign points to nearest available driver
+  for (const point of sortedPoints) {
+    let bestDriver = null;
+    let shortestDistance = Infinity;
 
-// Helper function to calculate distance between two points
-function calculateDistance(point1: { latitude: number; longitude: number }, 
-                         point2: { latitude: number; longitude: number }): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = toRad(point2.latitude - point1.latitude);
-  const dLon = toRad(point2.longitude - point1.longitude);
-  const lat1 = toRad(point1.latitude);
-  const lat2 = toRad(point2.latitude);
+    for (const driver of sortedDrivers) {
+      if (routes.get(driver.id)!.length >= driver.maxOrders) continue;
 
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
+      const distance = calculateDistance(
+        driver.location.latitude,
+        driver.location.longitude,
+        point.latitude,
+        point.longitude
+      );
 
-function toRad(value: number): number {
-  return value * Math.PI / 180;
-}
-
-// Optimize delivery routes for multiple orders
-export const optimizeDeliveryRoute = (
-  currentLocation: { latitude: number; longitude: number },
-  deliveries: Array<{
-    location: { latitude: number; longitude: number };
-    priority: number;
-    timeWindow?: { start: Date; end: Date };
-  }>
-): Array<number> => {
-  // Implementation of a modified nearest neighbor algorithm with constraints
-  const route: number[] = [];
-  const unvisited = [...deliveries.keys()];
-  let currentPoint = currentLocation;
-
-  while (unvisited.length > 0) {
-    let bestNextIndex = -1;
-    let bestScore = -Infinity;
-
-    unvisited.forEach(index => {
-      const delivery = deliveries[index];
-      let score = 0;
-
-      // Distance score (negative as we want to minimize it)
-      const distance = calculateDistance(currentPoint, delivery.location);
-      score -= distance * 10;
-
-      // Priority score
-      score += delivery.priority * 50;
-
-      // Time window score
-      if (delivery.timeWindow) {
-        const now = new Date();
-        const minutesToDeadline = (delivery.timeWindow.end.getTime() - now.getTime()) / 60000;
-        if (minutesToDeadline < 30) {
-          score += 100; // Urgent delivery
-        }
+      if (distance < shortestDistance) {
+        shortestDistance = distance;
+        bestDriver = driver;
       }
+    }
 
-      if (score > bestScore) {
-        bestScore = score;
-        bestNextIndex = index;
-      }
-    });
-
-    if (bestNextIndex !== -1) {
-      route.push(bestNextIndex);
-      currentPoint = deliveries[bestNextIndex].location;
-      unvisited.splice(unvisited.indexOf(bestNextIndex), 1);
+    if (bestDriver) {
+      routes.get(bestDriver.id)!.push(point);
     }
   }
 
-  return route;
+  // Optimize each driver's route using nearest neighbor
+  for (const [driverId, driverPoints] of routes) {
+    if (driverPoints.length > 1) {
+      routes.set(driverId, optimizeRouteOrder(driverPoints));
+    }
+  }
+
+  return routes;
+};
+
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
+const toRad = (value: number): number => {
+  return value * Math.PI / 180;
+};
+
+const optimizeRouteOrder = (points: DeliveryPoint[]): DeliveryPoint[] => {
+  const optimizedRoute: DeliveryPoint[] = [points[0]];
+  const remaining = points.slice(1);
+
+  while (remaining.length > 0) {
+    const current = optimizedRoute[optimizedRoute.length - 1];
+    let nearestIndex = 0;
+    let nearestDistance = Infinity;
+
+    for (let i = 0; i < remaining.length; i++) {
+      const distance = calculateDistance(
+        current.latitude,
+        current.longitude,
+        remaining[i].latitude,
+        remaining[i].longitude
+      );
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = i;
+      }
+    }
+
+    optimizedRoute.push(remaining[nearestIndex]);
+    remaining.splice(nearestIndex, 1);
+  }
+
+  return optimizedRoute;
 };

@@ -1,100 +1,75 @@
 interface PricingFactors {
   basePrice: number;
-  demand: number; // 0-1
+  demandMultiplier: number;
   timeOfDay: string;
-  weather: string;
-  specialEvent?: boolean;
-  userLoyalty?: number; // 0-1
+  seasonality: number;
+  competitionPrice?: number;
+  stockLevel?: number;
 }
 
-export const calculateDynamicPrice = ({
-  basePrice,
-  demand,
-  timeOfDay,
-  weather,
-  specialEvent = false,
-  userLoyalty = 0
-}: PricingFactors): number => {
-  let multiplier = 1.0;
+export const calculateDynamicPrice = (factors: PricingFactors): number => {
+  let finalPrice = factors.basePrice;
 
-  // Demand-based adjustment (0.8-1.5x)
-  multiplier *= 0.8 + (demand * 0.7);
+  // Demand-based adjustment
+  finalPrice *= factors.demandMultiplier;
 
-  // Time-based adjustment
-  const timeMultipliers: Record<string, number> = {
-    'early-morning': 0.9,
-    'morning': 1.0,
-    'lunch': 1.2,
-    'afternoon': 0.95,
-    'dinner': 1.3,
-    'late-night': 1.1
-  };
-  multiplier *= timeMultipliers[timeOfDay] || 1;
-
-  // Weather-based adjustment
-  const weatherMultipliers: Record<string, number> = {
-    'rainy': 1.2,
-    'sunny': 1.0,
-    'cloudy': 1.0,
-    'stormy': 1.3
-  };
-  multiplier *= weatherMultipliers[weather] || 1;
-
-  // Special event adjustment
-  if (specialEvent) {
-    multiplier *= 1.25;
+  // Time of day pricing
+  switch (factors.timeOfDay) {
+    case 'morning':
+      finalPrice *= 1.1; // Breakfast premium
+      break;
+    case 'lunch':
+      finalPrice *= 1.2; // Lunch rush
+      break;
+    case 'evening':
+      finalPrice *= 1.3; // Dinner premium
+      break;
+    case 'night':
+      finalPrice *= 0.9; // Night discount
+      break;
   }
 
-  // Loyalty discount (up to 20% off)
-  const loyaltyDiscount = userLoyalty * 0.2;
-  multiplier *= (1 - loyaltyDiscount);
+  // Seasonal adjustment
+  finalPrice *= factors.seasonality;
 
-  // Calculate final price
-  let finalPrice = Math.round(basePrice * multiplier);
+  // Competition-based pricing
+  if (factors.competitionPrice) {
+    const competitiveFactor = factors.basePrice / factors.competitionPrice;
+    if (competitiveFactor > 1.2) {
+      finalPrice *= 0.95; // Reduce price if we're too expensive
+    }
+  }
 
-  // Ensure minimum price
-  finalPrice = Math.max(finalPrice, basePrice * 0.8);
+  // Stock-level based pricing
+  if (factors.stockLevel !== undefined) {
+    if (factors.stockLevel < 10) {
+      finalPrice *= 1.1; // Low stock premium
+    } else if (factors.stockLevel > 100) {
+      finalPrice *= 0.9; // High stock discount
+    }
+  }
 
-  // Ensure maximum price
-  finalPrice = Math.min(finalPrice, basePrice * 2);
-
-  return finalPrice;
+  // Round to nearest 100 FCFA
+  return Math.round(finalPrice / 100) * 100;
 };
 
-export const calculateDeliveryFee = (
-  distance: number,
-  weather: string,
-  traffic: number, // 0-1
-  time: string
+export const getDemandMultiplier = (
+  historicalOrders: any[],
+  currentHour: number,
+  dayOfWeek: number
 ): number => {
-  const baseRate = 500; // Base delivery fee in FCFA
-  let multiplier = 1.0;
+  // Analyze historical orders for the same time period
+  const relevantOrders = historicalOrders.filter(order => {
+    const orderDate = new Date(order.created_at);
+    return orderDate.getHours() === currentHour && 
+           orderDate.getDay() === dayOfWeek;
+  });
 
-  // Distance-based calculation (per km)
-  multiplier += (distance * 0.1);
-
-  // Weather impact
-  const weatherMultipliers: Record<string, number> = {
-    'rainy': 1.3,
-    'stormy': 1.5,
-    'sunny': 1.0,
-    'cloudy': 1.0
-  };
-  multiplier *= weatherMultipliers[weather] || 1;
-
-  // Traffic impact
-  multiplier *= (1 + (traffic * 0.5));
-
-  // Time-based adjustment
-  const timeMultipliers: Record<string, number> = {
-    'peak': 1.2,
-    'normal': 1.0,
-    'off-peak': 0.9
-  };
-  multiplier *= timeMultipliers[time] || 1;
-
-  const fee = Math.round(baseRate * multiplier);
-
-  // Ensure minimum and maximum fees
-  return Math.min(Math.max(fee, 500), 3000);
+  // Calculate average orders for this time period
+  const averageOrders = relevantOrders.length / 4; // Past 4 weeks
+  
+  // Define demand levels
+  if (averageOrders > 20) return 1.3; // High demand
+  if (averageOrders > 10) return 1.1; // Medium demand
+  return 0.9; // Low demand
 };

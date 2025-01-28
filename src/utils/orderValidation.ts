@@ -18,8 +18,8 @@ export const validateOrder = async (items: AvailabilityCheck[]): Promise<OrderVa
     // Check item availability in real-time
     const { data: menuItems, error } = await supabase
       .from('menu_items')
-      .select('id, name, available')
-      .in('id', items.map(item => item.id));
+      .select('id, name, available, customization_options')
+      .in('id', items.map(item => item.itemId));
 
     if (error) throw error;
 
