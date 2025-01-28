@@ -1,125 +1,81 @@
-interface DeliveryPoint {
+import { supabase } from "@/integrations/supabase/client";
+
+interface DeliveryDriver {
   id: string;
+  current_latitude: number;
+  current_longitude: number;
+  status: string;
+}
+
+interface OrderLocation {
+  id: string;
+  delivery_address: string;
   latitude: number;
   longitude: number;
-  priority: number;
-  timeWindow?: {
-    start: Date;
-    end: Date;
-  };
+  total_amount: number;
 }
 
-interface Driver {
-  id: string;
-  location: {
-    latitude: number;
-    longitude: number;
-  };
-  maxOrders: number;
-  currentOrders: number;
-}
+export const findOptimalDriver = async (order: OrderLocation): Promise<DeliveryDriver | null> => {
+  try {
+    console.log('Finding optimal driver for order:', order);
 
-export const optimizeDeliveryRoutes = (
-  deliveryPoints: DeliveryPoint[],
-  availableDrivers: Driver[]
-): Map<string, DeliveryPoint[]> => {
-  const routes = new Map<string, DeliveryPoint[]>();
-  
-  // Sort delivery points by priority
-  const sortedPoints = [...deliveryPoints].sort((a, b) => b.priority - a.priority);
-  
-  // Sort drivers by current load
-  const sortedDrivers = [...availableDrivers].sort(
-    (a, b) => (a.currentOrders / a.maxOrders) - (b.currentOrders / b.maxOrders)
-  );
+    const { data: availableDrivers, error } = await supabase
+      .from('delivery_drivers')
+      .select('*')
+      .eq('status', 'available');
 
-  for (const driver of sortedDrivers) {
-    routes.set(driver.id, []);
-  }
+    if (error) {
+      console.error('Error fetching drivers:', error);
+      return null;
+    }
 
-  // Assign points to nearest available driver
-  for (const point of sortedPoints) {
-    let bestDriver = null;
-    let shortestDistance = Infinity;
+    if (!availableDrivers || availableDrivers.length === 0) {
+      console.log('No available drivers found');
+      return null;
+    }
 
-    for (const driver of sortedDrivers) {
-      if (routes.get(driver.id)!.length >= driver.maxOrders) continue;
+    // Simple algorithm: find closest driver based on straight-line distance
+    let closestDriver = availableDrivers[0];
+    let shortestDistance = calculateDistance(
+      order.latitude,
+      order.longitude,
+      closestDriver.current_latitude,
+      closestDriver.current_longitude
+    );
 
+    availableDrivers.forEach(driver => {
       const distance = calculateDistance(
-        driver.location.latitude,
-        driver.location.longitude,
-        point.latitude,
-        point.longitude
+        order.latitude,
+        order.longitude,
+        driver.current_latitude,
+        driver.current_longitude
       );
 
       if (distance < shortestDistance) {
         shortestDistance = distance;
-        bestDriver = driver;
+        closestDriver = driver;
       }
-    }
+    });
 
-    if (bestDriver) {
-      routes.get(bestDriver.id)!.push(point);
-    }
+    return closestDriver;
+  } catch (error) {
+    console.error('Error in findOptimalDriver:', error);
+    return null;
   }
-
-  // Optimize each driver's route using nearest neighbor
-  for (const [driverId, driverPoints] of routes) {
-    if (driverPoints.length > 1) {
-      routes.set(driverId, optimizeRouteOrder(driverPoints));
-    }
-  }
-
-  return routes;
 };
 
-const calculateDistance = (
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number => {
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth's radius in km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
-};
+}
 
-const toRad = (value: number): number => {
-  return value * Math.PI / 180;
-};
-
-const optimizeRouteOrder = (points: DeliveryPoint[]): DeliveryPoint[] => {
-  const optimizedRoute: DeliveryPoint[] = [points[0]];
-  const remaining = points.slice(1);
-
-  while (remaining.length > 0) {
-    const current = optimizedRoute[optimizedRoute.length - 1];
-    let nearestIndex = 0;
-    let nearestDistance = Infinity;
-
-    for (let i = 0; i < remaining.length; i++) {
-      const distance = calculateDistance(
-        current.latitude,
-        current.longitude,
-        remaining[i].latitude,
-        remaining[i].longitude
-      );
-
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = i;
-      }
-    }
-
-    optimizedRoute.push(remaining[nearestIndex]);
-    remaining.splice(nearestIndex, 1);
-  }
-
-  return optimizedRoute;
-};
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180);
+}

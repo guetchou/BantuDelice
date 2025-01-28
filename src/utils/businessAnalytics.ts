@@ -30,7 +30,8 @@ export const generateBusinessAnalytics = async (
         item_name,
         quantity,
         price
-      )
+      ),
+      rating
     `)
     .gte('created_at', startDate.toISOString())
     .lte('created_at', endDate.toISOString());

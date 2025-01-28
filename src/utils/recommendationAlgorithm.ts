@@ -10,6 +10,8 @@ interface MenuItem {
   cuisine_type: string;
   price: number;
   popularity_score: number;
+  description?: string; // Added description property
+  name: string; // Added name property
 }
 
 export const calculateRecommendationScore = (
@@ -106,6 +108,10 @@ export const getAIRecommendations = (
       [...timePrefs, ...weatherPrefs, ...moodPrefs].forEach(pref => {
         if (item.description?.toLowerCase().includes(pref.toLowerCase())) {
           score += 1;
+        }
+        // Also check name if description is not available
+        if (item.name.toLowerCase().includes(pref.toLowerCase())) {
+          score += 0.5;
         }
       });
 
