@@ -1,23 +1,28 @@
 import { useState } from 'react';
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import HeroSection from "@/components/home/HeroSection";
 import FeaturedDishes from "@/components/home/FeaturedDishes";
 import FeaturedRestaurant from "@/components/home/FeaturedRestaurant";
-import AdditionalServices from "@/components/home/AdditionalServices";
-import ProfessionalServices from "@/components/home/ProfessionalServices";
+import EssentialServices from "@/components/home/EssentialServices";
 import Newsletter from "@/components/home/Newsletter";
 import Testimonials from "@/components/home/Testimonials";
-import SpecializedServices from "@/components/home/SpecializedServices";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { useNavigation } from '@/contexts/NavigationContext';
+import { useNavigate } from 'react-router-dom';
 import DeliveryMap from '@/components/DeliveryMap';
 import CartDrawer from '@/components/cart/CartDrawer';
 import ChatBubble from '@/components/chat/ChatBubble';
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { navigateTo } = useNavigation();
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/restaurants?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
@@ -41,14 +46,18 @@ export default function Index() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Rechercher un plat, un service..."
+                placeholder="Rechercher un plat, un restaurant..."
                 className="w-full px-6 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 
                          text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-orange-500
                          transition-all duration-300"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60" />
+              <Search 
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 cursor-pointer" 
+                onClick={handleSearch}
+              />
             </div>
           </div>
 
@@ -56,6 +65,7 @@ export default function Index() {
             <Button 
               size="lg" 
               className="bg-orange-500 hover:bg-orange-600 text-white px-8"
+              onClick={() => navigate('/restaurants')}
             >
               Commander
             </Button>
@@ -63,6 +73,7 @@ export default function Index() {
               size="lg" 
               variant="outline" 
               className="border-white text-white hover:bg-white/10"
+              onClick={() => navigate('/services')}
             >
               Nos Services
             </Button>
@@ -76,6 +87,9 @@ export default function Index() {
       {/* Featured Restaurant Section */}
       <FeaturedRestaurant />
 
+      {/* Essential Services */}
+      <EssentialServices />
+
       {/* Map Section */}
       <section className="py-16 container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center text-white mb-8">Notre Zone de Livraison</h2>
@@ -84,14 +98,11 @@ export default function Index() {
         </div>
       </section>
 
-      {/* New Sections */}
+      {/* Testimonials */}
       <Testimonials />
-      <SpecializedServices />
-      <Newsletter />
 
-      {/* Services Sections */}
-      <AdditionalServices />
-      <ProfessionalServices />
+      {/* Newsletter */}
+      <Newsletter />
 
       {/* Cart Drawer */}
       <div className="fixed bottom-4 right-4 z-50">

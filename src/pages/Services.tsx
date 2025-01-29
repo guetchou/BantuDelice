@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAppNavigation } from "@/utils/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { ChefHat, Truck, Package, Heart } from "lucide-react";
+import { ChefHat, Truck, Package, Heart, Car, Calendar, Fuel } from "lucide-react";
 
 const Services = () => {
   const { navigateWithToast } = useAppNavigation();
@@ -21,22 +21,22 @@ const Services = () => {
       path: "/catering"
     },
     {
-      icon: <Truck className="w-12 h-12 text-primary" />,
-      title: "Livraison Express",
-      description: "Livraison rapide à domicile",
-      path: "/delivery"
+      icon: <Car className="w-12 h-12 text-primary" />,
+      title: "Transport VIP",
+      description: "Service de transport personnalisé",
+      path: "/transport"
     },
     {
-      icon: <Package className="w-12 h-12 text-primary" />,
-      title: "Emballage Spécial",
-      description: "Emballage personnalisé pour vos commandes",
-      path: "/packaging"
+      icon: <Fuel className="w-12 h-12 text-primary" />,
+      title: "Livraison de Gaz",
+      description: "Livraison rapide et sécurisée à domicile",
+      path: "/gas"
     },
     {
-      icon: <Heart className="w-12 h-12 text-primary" />,
-      title: "Service Client",
-      description: "Assistance personnalisée 24/7",
-      path: "/support"
+      icon: <Calendar className="w-12 h-12 text-primary" />,
+      title: "Réservations",
+      description: "Réservez une table dans nos restaurants partenaires",
+      path: "/reservations"
     }
   ];
 

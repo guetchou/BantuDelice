@@ -1,116 +1,109 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import MenuList from "@/components/menu/MenuList";
-import CartDrawer from "@/components/cart/CartDrawer";
-import OrderConfirmation from "@/components/restaurant/OrderConfirmation";
-import DeliveryStatus from "@/components/restaurant/DeliveryStatus";
-import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
-import { useRestaurant } from "@/components/restaurant/useRestaurant";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/contexts/CartContext';
+import MenuList from '@/components/menu/MenuList';
+import CartSummary from '@/components/restaurant/CartSummary';
+import RestaurantHeader from '@/components/restaurant/RestaurantHeader';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
+
+interface Restaurant {
+  id: string;
+  name: string;
+  address: string;
+  cuisine_type: string;
+  estimated_preparation_time: number;
+  image_url?: string;
+}
 
 const RestaurantMenu = () => {
-  const params = useParams();
-  const restaurantId = params.restaurantId;
+  const { restaurantId } = useParams();
   const { toast } = useToast();
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showDeliveryMap, setShowDeliveryMap] = useState(false);
-  const [deliveryStatus, setDeliveryStatus] = useState<string>('');
-  const [orderAmount, setOrderAmount] = useState(0);
+  const { state: cartState, addToCart, removeFromCart, updateQuantity } = useCart();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  const { data: restaurant, isLoading, error } = useRestaurant(restaurantId);
+  const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
+    queryKey: ['restaurant', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('id', restaurantId)
+        .single();
 
-  useEffect(() => {
-    if (!restaurantId) return;
-
-    const channel = supabase
-      .channel('order-status')
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'delivery_tracking',
-        filter: `order_id=eq.${restaurantId}`
-      }, payload => {
-        setDeliveryStatus(payload.new.status);
-        setShowDeliveryMap(true);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [restaurantId]);
-
-  const handlePaymentComplete = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
-
-      const { error } = await supabase
-        .from('orders')
-        .insert({
-          restaurant_id: restaurantId,
-          user_id: session.user.id,
-          status: 'pending',
-          payment_status: 'completed',
-          delivery_address: "Address to be implemented",
-          total_amount: orderAmount
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les informations du restaurant",
+          variant: "destructive",
         });
+        throw error;
+      }
 
-      if (error) throw error;
+      return data as Restaurant;
+    },
+  });
 
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    try {
+      // Implement checkout logic here
       toast({
-        title: "Commande confirmée",
-        description: "Votre commande a été enregistrée avec succès",
+        title: "Commande en cours",
+        description: "Redirection vers le paiement...",
       });
-
-      setShowPaymentModal(false);
+      // Navigate to checkout or show payment modal
     } catch (error) {
-      console.error('Error creating order:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création de la commande",
+        description: "Une erreur est survenue lors de la commande",
         variant: "destructive",
       });
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
-  if (isLoading) {
-    return <div>Chargement...</div>;
+  if (isLoadingRestaurant) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  if (error || !restaurant) {
-    return <div>Restaurant non trouvé</div>;
+  if (!restaurant) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold mb-4">Restaurant non trouvé</h1>
+        <Button onClick={() => window.history.back()}>Retour</Button>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <RestaurantHeader 
-          name={restaurant.name}
-          address={restaurant.address}
-          coordinates={[restaurant.longitude || 0, restaurant.latitude || 0]}
-        />
-        <CartDrawer onOrderAmount={setOrderAmount} />
+    <div className="min-h-screen bg-gray-50">
+      <RestaurantHeader restaurant={restaurant} />
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <MenuList />
+          </div>
+          
+          <div className="lg:sticky lg:top-4">
+            <CartSummary
+              items={cartState.items}
+              onCheckout={handleCheckout}
+              onRemoveItem={removeFromCart}
+              onUpdateQuantity={updateQuantity}
+            />
+          </div>
+        </div>
       </div>
-
-      <MenuList />
-
-      <OrderConfirmation 
-        open={showPaymentModal}
-        onOpenChange={setShowPaymentModal}
-        onPaymentComplete={handlePaymentComplete}
-        amount={orderAmount}
-      />
-
-      <DeliveryStatus 
-        show={showDeliveryMap}
-        status={deliveryStatus}
-        restaurant={{
-          latitude: restaurant.latitude || 0,
-          longitude: restaurant.longitude || 0
-        }}
-      />
     </div>
   );
 };
