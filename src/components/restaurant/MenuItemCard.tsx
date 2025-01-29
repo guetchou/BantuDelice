@@ -2,16 +2,7 @@ import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  category: string | null;
-  available: boolean;
-  image_url: string | null;
-}
+import { MenuItem } from "@/components/menu/types";
 
 interface MenuItemCardProps {
   item: MenuItem;
