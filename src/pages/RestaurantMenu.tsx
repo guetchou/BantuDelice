@@ -1,98 +1,74 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useCart } from '@/contexts/CartContext';
-import MenuList from '@/components/menu/MenuList';
-import CartSummary from '@/components/restaurant/CartSummary';
-import RestaurantHeader from '@/components/restaurant/RestaurantHeader';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
-import OrderConfirmation from '@/components/restaurant/OrderConfirmation';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
+import MenuList from "@/components/menu/MenuList";
+import CartSummary from "@/components/restaurant/CartSummary";
 
-interface Restaurant {
+interface CartItem {
   id: string;
   name: string;
-  address: string;
-  cuisine_type: string;
-  estimated_preparation_time: number;
-  latitude: number;
-  longitude: number;
+  price: number;
+  quantity: number;
 }
 
 const RestaurantMenu = () => {
-  const { restaurantId } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { state: cartState, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const [showPayment, setShowPayment] = useState(false);
+  const queryClient = useQueryClient();
+  const [cart, setCart] = useState<CartItem[]>([]);
 
-  // Check authentication
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Connexion requise",
-          description: "Veuillez vous connecter pour commander",
-          variant: "destructive",
-        });
-        navigate('/auth');
-      }
-    };
-    checkAuth();
-  }, [navigate, toast]);
-
-  const { data: restaurant, isLoading } = useQuery({
-    queryKey: ['restaurant', restaurantId],
+  // Fetch restaurant data
+  const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
+    queryKey: ['restaurant', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
-        .eq('id', restaurantId)
+        .eq('id', id)
         .single();
 
-      if (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les informations du restaurant",
-          variant: "destructive",
-        });
-        throw error;
-      }
-
-      return data as Restaurant;
-    },
+      if (error) throw error;
+      return data;
+    }
   });
 
-  const handleCheckout = async () => {
-    if (!cartState.items.length) {
-      toast({
-        title: "Panier vide",
-        description: "Veuillez ajouter des articles à votre panier",
-        variant: "destructive",
-      });
-      return;
-    }
-    setShowPayment(true);
-  };
+  // Fetch menu items
+  const { data: menuItems, isLoading: isLoadingMenu } = useQuery({
+    queryKey: ['menuItems', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('restaurant_id', id);
 
-  const handlePaymentComplete = async () => {
-    try {
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Create order mutation
+  const createOrder = useMutation({
+    mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Utilisateur non connecté');
+      if (!user) throw new Error('Non authentifié');
 
       // Create order
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          restaurant_id: restaurantId,
-          total_amount: cartState.total,
+          restaurant_id: id,
+          total_amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
           status: 'pending',
-          payment_status: 'completed',
+          payment_status: 'pending',
           delivery_status: 'pending',
+          delivery_address: user.user_metadata.address || 'À définir',
           estimated_preparation_time: restaurant?.estimated_preparation_time || 30
         })
         .select()
@@ -101,7 +77,7 @@ const RestaurantMenu = () => {
       if (orderError) throw orderError;
 
       // Create order items
-      const orderItems = cartState.items.map(item => ({
+      const orderItems = cart.map(item => ({
         order_id: order.id,
         item_name: item.name,
         quantity: item.quantity,
@@ -114,28 +90,85 @@ const RestaurantMenu = () => {
 
       if (itemsError) throw itemsError;
 
+      return order;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast({
-        title: "Commande confirmée",
-        description: "Votre commande a été enregistrée avec succès",
+        title: "Commande créée",
+        description: "Votre commande a été créée avec succès"
       });
-
-      clearCart();
-      setShowPayment(false);
       navigate('/orders');
-    } catch (error) {
-      console.error('Erreur lors de la création de la commande:', error);
+    },
+    onError: (error) => {
+      console.error('Error creating order:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la commande",
-        variant: "destructive",
+        description: "Impossible de créer la commande",
+        variant: "destructive"
       });
     }
+  });
+
+  const handleAddToCart = (item: CartItem) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.id === item.id);
+      if (existing) {
+        return prev.map(i => 
+          i.id === item.id 
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        );
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
   };
 
-  if (isLoading || !restaurant) {
+  const handleRemoveFromCart = (itemId: string) => {
+    setCart(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const handleUpdateQuantity = (itemId: string, quantity: number) => {
+    if (quantity < 1) {
+      handleRemoveFromCart(itemId);
+      return;
+    }
+    setCart(prev => 
+      prev.map(item => 
+        item.id === itemId 
+          ? { ...item, quantity }
+          : item
+      )
+    );
+  };
+
+  const handleCheckout = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Non connecté",
+        description: "Veuillez vous connecter pour commander",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+
+    createOrder.mutate();
+  };
+
+  if (isLoadingRestaurant || isLoadingMenu) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!restaurant || !menuItems) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-center text-gray-500">Restaurant non trouvé</p>
       </div>
     );
   }
@@ -145,28 +178,25 @@ const RestaurantMenu = () => {
       <RestaurantHeader restaurant={restaurant} />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <MenuList />
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <MenuList 
+              items={menuItems} 
+              onAddToCart={handleAddToCart}
+            />
           </div>
           
-          <div className="lg:sticky lg:top-4">
+          <div className="md:col-span-1">
             <CartSummary
-              items={cartState.items}
+              items={cart}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveItem={handleRemoveFromCart}
               onCheckout={handleCheckout}
-              onRemoveItem={removeFromCart}
-              onUpdateQuantity={updateQuantity}
+              isLoading={createOrder.isPending}
             />
           </div>
         </div>
       </div>
-
-      <OrderConfirmation 
-        open={showPayment}
-        onOpenChange={setShowPayment}
-        onPaymentComplete={handlePaymentComplete}
-        amount={cartState.total}
-      />
     </div>
   );
 };
