@@ -4,6 +4,14 @@ import CategoryList from '@/components/restaurants/CategoryList';
 import RestaurantGrid from '@/components/restaurants/RestaurantGrid';
 import RestaurantFilters from '@/components/restaurants/RestaurantFilters';
 import SearchBar from '@/components/home/SearchBar';
+import { ChefHat } from 'lucide-react';
+
+const categories = [
+  { id: 'Tout', label: 'Tout', icon: ChefHat },
+  { id: 'Congolais', label: 'Congolais', icon: ChefHat },
+  { id: 'Africain', label: 'Africain', icon: ChefHat },
+  { id: 'International', label: 'International', icon: ChefHat }
+];
 
 const Restaurants = () => {
   const [searchParams] = useSearchParams();
@@ -19,22 +27,22 @@ const Restaurants = () => {
         
         <div className="mb-6">
           <SearchBar 
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Rechercher un restaurant..."
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
           />
         </div>
 
         <CategoryList
+          categories={categories}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
 
         <RestaurantFilters
           priceRange={priceRange}
+          setPriceRange={setPriceRange}
           sortBy={sortBy}
-          onPriceRangeChange={setPriceRange}
-          onSortByChange={setSortBy}
+          setSortBy={setSortBy}
         />
 
         <RestaurantGrid

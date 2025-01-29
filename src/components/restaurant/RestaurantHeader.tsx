@@ -1,25 +1,31 @@
 import { MapPin } from "lucide-react";
 import DeliveryMap from "@/components/DeliveryMap";
 
-interface RestaurantHeaderProps {
+interface Restaurant {
+  id: string;
   name: string;
   address: string;
-  coordinates: [number, number];
+  latitude: number;
+  longitude: number;
 }
 
-const RestaurantHeader = ({ name, address, coordinates }: RestaurantHeaderProps) => {
+interface RestaurantHeaderProps {
+  restaurant: Restaurant;
+}
+
+const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">{name}</h1>
+        <h1 className="text-3xl font-bold mb-2">{restaurant.name}</h1>
         <div className="flex items-center text-gray-600">
           <MapPin className="w-5 h-5 mr-2" />
-          <span>{address}</span>
+          <span>{restaurant.address}</span>
         </div>
       </div>
       <DeliveryMap 
-        latitude={coordinates[1]}
-        longitude={coordinates[0]}
+        latitude={restaurant.latitude}
+        longitude={restaurant.longitude}
       />
     </div>
   );

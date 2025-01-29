@@ -11,7 +11,7 @@ const SearchBar = ({ searchQuery, setSearchQuery }: SearchBarProps) => {
     <div className="relative w-96">
       <Input
         type="text"
-        placeholder="Rechercher un plat congolais..."
+        placeholder="Rechercher un restaurant..."
         className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
