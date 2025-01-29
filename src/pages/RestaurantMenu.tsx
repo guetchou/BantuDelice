@@ -8,11 +8,9 @@ import { Loader2 } from "lucide-react";
 import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
 import MenuList from "@/components/menu/MenuList";
 import CartSummary from "@/components/restaurant/CartSummary";
+import { MenuItem } from "@/components/menu/types";
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
+interface CartItem extends MenuItem {
   quantity: number;
 }
 
@@ -52,78 +50,7 @@ const RestaurantMenu = () => {
     }
   });
 
-  // Create order mutation
-  const createOrder = useMutation({
-    mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Non authentifié');
-
-      // Get user's profile for delivery address
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('addresses')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.addresses?.[0]) {
-        toast({
-          title: "Erreur",
-          description: "Veuillez ajouter une adresse de livraison dans votre profil",
-          variant: "destructive"
-        });
-        navigate('/profile');
-        return;
-      }
-
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          restaurant_id: id,
-          total_amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-          status: 'pending',
-          payment_status: 'pending',
-          delivery_status: 'pending',
-          estimated_preparation_time: restaurant?.estimated_preparation_time || 30,
-          delivery_address: profile.addresses[0]
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = cart.map(item => ({
-        order_id: order.id,
-        item_name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      toast({
-        title: "Commande créée",
-        description: "Votre commande a été créée avec succès"
-      });
-
-      navigate('/orders');
-    },
-    onError: (error) => {
-      console.error('Error creating order:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer la commande",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const handleAddToCart = (item: CartItem) => {
+  const handleAddToCart = (item: MenuItem) => {
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
@@ -256,7 +183,7 @@ const RestaurantMenu = () => {
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
             <MenuList 
-              items={menuItems} 
+              items={menuItems as MenuItem[]} 
               onAddToCart={handleAddToCart}
             />
           </div>

@@ -18,4 +18,5 @@ export interface MenuItem {
   ingredients?: string[];
   seasonal?: boolean;
   featured?: boolean;
+  quantity?: number; // Added to make it compatible with CartItem
 }
