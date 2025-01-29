@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +9,7 @@ import CartSummary from '@/components/restaurant/CartSummary';
 import RestaurantHeader from '@/components/restaurant/RestaurantHeader';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import OrderConfirmation from '@/components/restaurant/OrderConfirmation';
 
 interface Restaurant {
   id: string;
@@ -16,16 +17,34 @@ interface Restaurant {
   address: string;
   cuisine_type: string;
   estimated_preparation_time: number;
-  image_url?: string;
+  latitude: number;
+  longitude: number;
 }
 
 const RestaurantMenu = () => {
   const { restaurantId } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const { state: cartState, addToCart, removeFromCart, updateQuantity } = useCart();
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const { state: cartState, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
+  const [showPayment, setShowPayment] = useState(false);
 
-  const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Connexion requise",
+          description: "Veuillez vous connecter pour commander",
+          variant: "destructive",
+        });
+        navigate('/auth');
+      }
+    };
+    checkAuth();
+  }, [navigate, toast]);
+
+  const { data: restaurant, isLoading } = useQuery({
     queryKey: ['restaurant', restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -48,38 +67,75 @@ const RestaurantMenu = () => {
   });
 
   const handleCheckout = async () => {
-    setIsCheckingOut(true);
-    try {
-      // Implement checkout logic here
+    if (!cartState.items.length) {
       toast({
-        title: "Commande en cours",
-        description: "Redirection vers le paiement...",
+        title: "Panier vide",
+        description: "Veuillez ajouter des articles à votre panier",
+        variant: "destructive",
       });
-      // Navigate to checkout or show payment modal
+      return;
+    }
+    setShowPayment(true);
+  };
+
+  const handlePaymentComplete = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Utilisateur non connecté');
+
+      // Create order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          restaurant_id: restaurantId,
+          total_amount: cartState.total,
+          status: 'pending',
+          payment_status: 'completed',
+          delivery_status: 'pending',
+          estimated_preparation_time: restaurant?.estimated_preparation_time || 30
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = cartState.items.map(item => ({
+        order_id: order.id,
+        item_name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      toast({
+        title: "Commande confirmée",
+        description: "Votre commande a été enregistrée avec succès",
+      });
+
+      clearCart();
+      setShowPayment(false);
+      navigate('/orders');
     } catch (error) {
+      console.error('Erreur lors de la création de la commande:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la commande",
         variant: "destructive",
       });
-    } finally {
-      setIsCheckingOut(false);
     }
   };
 
-  if (isLoadingRestaurant) {
+  if (isLoading || !restaurant) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!restaurant) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold mb-4">Restaurant non trouvé</h1>
-        <Button onClick={() => window.history.back()}>Retour</Button>
       </div>
     );
   }
@@ -104,6 +160,13 @@ const RestaurantMenu = () => {
           </div>
         </div>
       </div>
+
+      <OrderConfirmation 
+        open={showPayment}
+        onOpenChange={setShowPayment}
+        onPaymentComplete={handlePaymentComplete}
+        amount={cartState.total}
+      />
     </div>
   );
 };
