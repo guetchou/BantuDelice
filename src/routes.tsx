@@ -6,7 +6,7 @@ import Restaurants from "@/pages/Restaurants";
 import RestaurantMenu from "@/pages/RestaurantMenu";
 import Services from "@/pages/Services";
 import Orders from "@/pages/Orders";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {

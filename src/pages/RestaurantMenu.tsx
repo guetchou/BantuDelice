@@ -58,7 +58,23 @@ const RestaurantMenu = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Non authentifié');
 
-      // Create order
+      // Get user's profile for delivery address
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('addresses')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.addresses?.[0]) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez ajouter une adresse de livraison dans votre profil",
+          variant: "destructive"
+        });
+        navigate('/profile');
+        return;
+      }
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -68,8 +84,8 @@ const RestaurantMenu = () => {
           status: 'pending',
           payment_status: 'pending',
           delivery_status: 'pending',
-          delivery_address: user.user_metadata.address || 'À définir',
-          estimated_preparation_time: restaurant?.estimated_preparation_time || 30
+          estimated_preparation_time: restaurant?.estimated_preparation_time || 30,
+          delivery_address: profile.addresses[0]
         })
         .select()
         .single();
@@ -90,14 +106,11 @@ const RestaurantMenu = () => {
 
       if (itemsError) throw itemsError;
 
-      return order;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast({
         title: "Commande créée",
         description: "Votre commande a été créée avec succès"
       });
+
       navigate('/orders');
     },
     onError: (error) => {
@@ -143,18 +156,80 @@ const RestaurantMenu = () => {
   };
 
   const handleCheckout = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Non connecté",
+          description: "Veuillez vous connecter pour commander",
+          variant: "destructive"
+        });
+        navigate('/auth');
+        return;
+      }
+
+      // Get user's profile for delivery address
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('addresses')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.addresses?.[0]) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez ajouter une adresse de livraison dans votre profil",
+          variant: "destructive"
+        });
+        navigate('/profile');
+        return;
+      }
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          restaurant_id: id,
+          total_amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+          status: 'pending',
+          payment_status: 'pending',
+          delivery_status: 'pending',
+          estimated_preparation_time: restaurant?.estimated_preparation_time || 30,
+          delivery_address: profile.addresses[0]
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = cart.map(item => ({
+        order_id: order.id,
+        item_name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
       toast({
-        title: "Non connecté",
-        description: "Veuillez vous connecter pour commander",
+        title: "Commande créée",
+        description: "Votre commande a été créée avec succès"
+      });
+
+      navigate('/orders');
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer la commande",
         variant: "destructive"
       });
-      navigate('/auth');
-      return;
     }
-
-    createOrder.mutate();
   };
 
   if (isLoadingRestaurant || isLoadingMenu) {
@@ -192,7 +267,6 @@ const RestaurantMenu = () => {
               onUpdateQuantity={handleUpdateQuantity}
               onRemoveItem={handleRemoveFromCart}
               onCheckout={handleCheckout}
-              isLoading={createOrder.isPending}
             />
           </div>
         </div>
