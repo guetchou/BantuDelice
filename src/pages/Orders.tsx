@@ -40,7 +40,16 @@ export function Orders() {
 
       if (error) throw error;
 
-      setOrders(data || []);
+      // Transform the data to match our Order interface
+      const transformedOrders = (data || []).map(order => ({
+        id: order.id,
+        created_at: order.created_at,
+        status: order.status,
+        service_name: order.service_provider?.name || 'Unknown Service',
+        total_amount: order.total_amount
+      }));
+
+      setOrders(transformedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
