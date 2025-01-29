@@ -3,7 +3,7 @@ import MenuItemCard from "@/components/restaurant/MenuItemCard";
 
 interface MenuListProps {
   items: MenuItem[];
-  onAddToCart: (item: any) => void;
+  onAddToCart: (item: MenuItem) => void;
 }
 
 const MenuList = ({ items, onAddToCart }: MenuListProps) => {
