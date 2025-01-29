@@ -1,189 +1,116 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { motion } from "framer-motion";
+import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { ChefHat, Truck, Package, Heart, Car, Calendar, Fuel } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import EssentialServices from "@/components/home/EssentialServices";
+import AdditionalServices from "@/components/home/AdditionalServices";
+import CulturalServices from "@/components/home/CulturalServices";
+import ServiceList from "@/components/services/ServiceList";
 
-interface BookingFormData {
-  date: string;
-  time: string;
-  notes: string;
-}
-
-const Services = () => {
-  const [selectedService, setSelectedService] = useState<any>(null);
-  const [isBooking, setIsBooking] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const form = useForm<BookingFormData>();
-
-  const services = [
-    {
-      icon: <ChefHat className="w-12 h-12 text-primary" />,
-      title: "Service Traiteur",
-      description: "Service traiteur professionnel pour vos événements",
-      price: 25000
-    },
-    {
-      icon: <Car className="w-12 h-12 text-primary" />,
-      title: "Transport VIP",
-      description: "Service de transport personnalisé",
-      price: 15000
-    },
-    {
-      icon: <Fuel className="w-12 h-12 text-primary" />,
-      title: "Livraison de Gaz",
-      description: "Livraison rapide et sécurisée à domicile",
-      price: 5000
-    },
-    {
-      icon: <Calendar className="w-12 h-12 text-primary" />,
-      title: "Réservations",
-      description: "Réservez une table dans nos restaurants partenaires",
-      price: 10000
-    }
-  ];
-
-  const handleBookService = async (service: any) => {
-    setSelectedService(service);
-    setIsBooking(true);
-  };
-
-  const onSubmit = async (data: BookingFormData) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Erreur",
-          description: "Vous devez être connecté pour réserver un service",
-          variant: "destructive"
-        });
-        navigate("/auth");
-        return;
-      }
-
-      const { error } = await supabase.from('bookings').insert({
-        user_id: user.id,
-        service_name: selectedService.title,
-        total_amount: selectedService.price,
-        status: 'pending',
-        notes: data.notes,
-        scheduled_date: `${data.date}T${data.time}`,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Réservation confirmée",
-        description: "Votre réservation a été enregistrée avec succès",
-      });
-
-      setIsBooking(false);
-      navigate("/orders");
-    } catch (error) {
-      console.error('Error booking service:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de finaliser la réservation",
-        variant: "destructive"
-      });
-    }
-  };
+export default function Services() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">Nos Services</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {services.map((service, index) => (
-          <Card key={index} className="p-6 hover:shadow-lg transition-all duration-300">
-            <div className="flex flex-col items-center text-center space-y-4">
-              {service.icon}
-              <h3 className="text-xl font-semibold">{service.title}</h3>
-              <p className="text-gray-600">{service.description}</p>
-              <p className="font-semibold">{service.price.toLocaleString('fr-FR')} FCFA</p>
-              <Button 
-                className="w-full"
-                onClick={() => handleBookService(service)}
-              >
-                Réserver
-              </Button>
-            </div>
-          </Card>
-        ))}
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      {/* Hero Section */}
+      <section className="relative py-20 px-4">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1587620962725-abab7fe55159')] bg-cover bg-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        </div>
+        
+        <div className="container mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+              Nos Services Professionnels
+            </h1>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Découvrez notre gamme complète de services conçus pour répondre à tous vos besoins
+            </p>
+          </motion.div>
 
-      <Dialog open={isBooking} onOpenChange={setIsBooking}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Réserver {selectedService?.title}</DialogTitle>
-            <DialogDescription>
-              Choisissez la date et l'heure de votre réservation
-            </DialogDescription>
-          </DialogHeader>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} required />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Heure</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} required />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes spéciales</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} placeholder="Ajoutez des instructions spéciales si nécessaire" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsBooking(false)}>
-                  Annuler
-                </Button>
-                <Button type="submit">
-                  Confirmer la réservation
-                </Button>
+          {/* Search and Filter */}
+          <div className="mt-12 max-w-2xl mx-auto">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Rechercher un service..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 w-full"
+                />
               </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full md:w-[200px] bg-white/10 border-white/20 text-white">
+                  <SelectValue placeholder="Catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les catégories</SelectItem>
+                  <SelectItem value="essential">Services Essentiels</SelectItem>
+                  <SelectItem value="additional">Services Additionnels</SelectItem>
+                  <SelectItem value="cultural">Services Culturels</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Sections */}
+      <div className="container mx-auto px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          {(selectedCategory === "all" || selectedCategory === "essential") && (
+            <div className="mb-16">
+              <h2 className="text-2xl font-semibold mb-8 text-center">Services Essentiels</h2>
+              <EssentialServices />
+            </div>
+          )}
+
+          {(selectedCategory === "all" || selectedCategory === "additional") && (
+            <div className="mb-16">
+              <h2 className="text-2xl font-semibold mb-8 text-center">Services Additionnels</h2>
+              <AdditionalServices />
+            </div>
+          )}
+
+          {(selectedCategory === "all" || selectedCategory === "cultural") && (
+            <div className="mb-16">
+              <h2 className="text-2xl font-semibold mb-8 text-center">Services Culturels</h2>
+              <CulturalServices />
+            </div>
+          )}
+        </motion.div>
+
+        {/* Liste des prestataires */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-16"
+        >
+          <h2 className="text-2xl font-semibold mb-8 text-center">Nos Prestataires de Services</h2>
+          <ServiceList />
+        </motion.div>
+      </div>
     </div>
   );
-};
-
-export default Services;
+}
