@@ -1,88 +1,114 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-const Orders = () => {
+interface Order {
+  id: string;
+  created_at: string;
+  status: string;
+  service_name: string;
+  total_amount: number;
+}
+
+export function Orders() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: async () => {
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Non authentifié');
+      if (!user) return;
 
       const { data, error } = await supabase
-        .from('orders')
-        .select('*, order_items(*)')
+        .from('bookings')
+        .select(`
+          id,
+          created_at,
+          status,
+          service_provider:service_providers(name),
+          total_amount
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les commandes",
-          variant: "destructive"
-        });
-        throw error;
-      }
+      if (error) throw error;
 
-      return data;
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les réservations",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Mes Commandes</h1>
+      <h1 className="text-2xl font-bold mb-6">Mes Réservations</h1>
       
-      <div className="space-y-4">
-        {orders?.map((order) => (
-          <Card key={order.id} className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <p className="font-semibold">Commande #{order.id.slice(0, 8)}</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(order.created_at).toLocaleDateString()}
+      <div className="grid gap-4">
+        {orders.length === 0 ? (
+          <Card className="p-6 text-center text-gray-500">
+            Aucune réservation trouvée
+          </Card>
+        ) : (
+          orders.map((order) => (
+            <Card key={order.id} className="p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold">
+                    {order.service_name}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {new Date(order.created_at).toLocaleDateString('fr-FR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <Badge
+                  variant={order.status === 'completed' ? 'default' : 
+                          order.status === 'pending' ? 'secondary' : 
+                          'destructive'}
+                >
+                  {order.status === 'completed' ? 'Terminé' :
+                   order.status === 'pending' ? 'En attente' : 
+                   'Annulé'}
+                </Badge>
+              </div>
+              <div className="mt-4 text-right">
+                <p className="font-medium">
+                  {order.total_amount.toLocaleString('fr-FR')} FCFA
                 </p>
               </div>
-              <div className="text-right">
-                <p className="font-semibold">{order.total_amount.toLocaleString()} FCFA</p>
-                <span className={`text-sm px-2 py-1 rounded-full ${
-                  order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {order.status === 'completed' ? 'Complétée' :
-                   order.status === 'pending' ? 'En attente' : 'Annulée'}
-                </span>
-              </div>
-            </div>
-
-            <div className="border-t pt-4">
-              <h3 className="font-medium mb-2">Articles commandés</h3>
-              <ul className="space-y-2">
-                {order.order_items?.map((item) => (
-                  <li key={item.id} className="flex justify-between">
-                    <span>{item.item_name} x{item.quantity}</span>
-                    <span>{(item.price * item.quantity).toLocaleString()} FCFA</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );
-};
+}
 
 export default Orders;
