@@ -1,5 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
-import App from "./App";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
@@ -14,7 +13,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <Outlet />,
     children: [
       {
         index: true,
@@ -71,3 +70,7 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+export const AppRoutes = () => {
+  return <RouterProvider router={router} />;
+};

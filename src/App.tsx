@@ -13,8 +13,10 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <CartProvider>
-          <AppRoutes />
-          <Toaster />
+          <NavigationProvider>
+            <AppRoutes />
+            <Toaster />
+          </NavigationProvider>
         </CartProvider>
       </QueryClientProvider>
     </ErrorBoundary>
