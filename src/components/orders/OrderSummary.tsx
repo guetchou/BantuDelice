@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from '@/contexts/CartContext';
 import MobilePayment from '@/components/MobilePayment';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 export const OrderSummary = () => {
   const { state, clearCart } = useCart();
@@ -13,17 +14,19 @@ export const OrderSummary = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validatingStock, setValidatingStock] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const total = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const handlePaymentComplete = async () => {
     try {
+      setError(null);
       setLoading(true);
       console.log('Début du processus de paiement...');
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error('Utilisateur non connecté');
+        throw new Error('Veuillez vous connecter pour finaliser la commande');
       }
 
       // Validation du stock
@@ -33,7 +36,7 @@ export const OrderSummary = () => {
 
       // Créer la commande
       console.log('Création de la commande...');
-      const { data: order, error } = await supabase
+      const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
@@ -47,7 +50,10 @@ export const OrderSummary = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (orderError) {
+        console.error('Erreur lors de la création de la commande:', orderError);
+        throw new Error('Impossible de créer la commande');
+      }
 
       // Créer les éléments de la commande
       console.log('Création des éléments de la commande...');
@@ -62,7 +68,10 @@ export const OrderSummary = () => {
         .from('order_items')
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('Erreur lors de la création des éléments de la commande:', itemsError);
+        throw new Error('Impossible d\'ajouter les articles à la commande');
+      }
 
       toast({
         title: "Commande confirmée",
@@ -73,9 +82,10 @@ export const OrderSummary = () => {
       setShowPayment(false);
     } catch (error) {
       console.error('Erreur lors de la création de la commande:', error);
+      setError(error instanceof Error ? error.message : 'Une erreur est survenue lors de la création de la commande');
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création de la commande",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de la création de la commande",
         variant: "destructive",
       });
     } finally {
@@ -87,6 +97,13 @@ export const OrderSummary = () => {
   return (
     <Card className="p-6">
       <h2 className="text-xl font-bold mb-4">Résumé de la commande</h2>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <div className="space-y-4">
         {state.items.map((item) => (
