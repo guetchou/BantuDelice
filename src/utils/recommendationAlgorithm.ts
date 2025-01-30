@@ -1,123 +1,109 @@
-interface OrderHistory {
-  menu_item_id: string;
-  rating?: number;
-  created_at: string;
+interface UserPreferences {
+  dietaryPreferences: string[];
+  favoriteCategories: string[];
+  priceRange: {
+    min: number;
+    max: number;
+  };
+  previousOrders: string[];
 }
 
-interface MenuItem {
-  id: string;
-  category: string;
-  cuisine_type: string;
-  price: number;
-  popularity_score: number;
-  description?: string; // Added description property
-  name: string; // Added name property
-}
-
-export const calculateRecommendationScore = (
-  menuItem: MenuItem,
-  userHistory: OrderHistory[],
-  userPreferences: string[]
-): number => {
-  let score = 0;
-  
-  // Score de base basé sur la popularité (0-30 points)
-  score += (menuItem.popularity_score / 100) * 30;
-  
-  // Analyse de l'historique des commandes
-  const userOrders = userHistory.filter(order => order.menu_item_id === menuItem.id);
-  if (userOrders.length > 0) {
-    // Fréquence de commande (0-20 points)
-    const orderFrequency = userOrders.length / userHistory.length;
-    score += orderFrequency * 20;
+export const getSmartRecommendations = (
+  menuItems: MenuItem[],
+  userPrefs: UserPreferences,
+  timeOfDay: string
+): MenuItem[] => {
+  // Score calculation based on multiple factors
+  const scoredItems = menuItems.map(item => {
+    let score = 0;
     
-    // Moyenne des notes (0-30 points)
-    const averageRating = userOrders
-      .filter(order => order.rating)
-      .reduce((sum, order) => sum + (order.rating || 0), 0) / userOrders.length;
-    score += (averageRating / 5) * 30;
-  }
-  
-  // Bonus pour les préférences alimentaires (0-20 points)
-  if (userPreferences.length > 0) {
-    const matchingPreferences = userPreferences.filter(pref => 
-      menuItem.category.toLowerCase().includes(pref.toLowerCase()) ||
-      menuItem.cuisine_type.toLowerCase().includes(pref.toLowerCase())
-    );
-    score += (matchingPreferences.length / userPreferences.length) * 20;
-  }
-  
-  return Math.min(100, score);
-};
+    // Time-based recommendations
+    if (timeOfDay === 'morning' && item.category?.toLowerCase().includes('breakfast')) {
+      score += 20;
+    } else if (timeOfDay === 'afternoon' && item.category?.toLowerCase().includes('lunch')) {
+      score += 20;
+    } else if (timeOfDay === 'evening' && item.category?.toLowerCase().includes('dinner')) {
+      score += 20;
+    }
 
-export const getPersonalizedRecommendations = (
-  menuItems: MenuItem[],
-  userHistory: OrderHistory[],
-  userPreferences: string[],
-  limit: number = 5
-): MenuItem[] => {
-  // Calculate scores for each menu item
-  const scoredItems = menuItems.map(item => ({
-    ...item,
-    score: calculateRecommendationScore(item, userHistory, userPreferences)
-  }));
-  
-  // Sort by score and return the best matches
+    // Dietary preferences matching
+    if (userPrefs.dietaryPreferences.some(pref => 
+      item.dietary_preferences?.includes(pref))) {
+      score += 15;
+    }
+
+    // Price range matching
+    if (item.price >= userPrefs.priceRange.min && 
+        item.price <= userPrefs.priceRange.max) {
+      score += 10;
+    }
+
+    // Category preferences
+    if (userPrefs.favoriteCategories.includes(item.category || '')) {
+      score += 15;
+    }
+
+    // Popularity score influence
+    score += (item.popularity_score || 0) * 0.2;
+
+    // Previous orders boost
+    if (userPrefs.previousOrders.includes(item.id)) {
+      score += 5;
+    }
+
+    return { ...item, score };
+  });
+
+  // Sort by score and return top recommendations
   return scoredItems
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
+    .sort((a, b) => (b as any).score - (a as any).score)
+    .slice(0, 6)
     .map(({ score, ...item }) => item);
 };
 
-// New AI-powered recommendation algorithm
-export const getAIRecommendations = (
-  menuItems: MenuItem[],
-  timeOfDay: string,
-  weather: string,
-  userMood?: string
-): MenuItem[] => {
-  const weights = {
-    morning: ['Breakfast', 'Light', 'Healthy'],
-    afternoon: ['Lunch', 'Quick', 'Energy'],
-    evening: ['Dinner', 'Complete', 'Comfort'],
-    night: ['Snack', 'Light', 'Quick']
+export const analyzeUserBehavior = (orders: any[]): UserPreferences => {
+  const preferences: UserPreferences = {
+    dietaryPreferences: [],
+    favoriteCategories: [],
+    priceRange: { min: 0, max: 100000 },
+    previousOrders: []
   };
 
-  const weatherPreferences = {
-    sunny: ['Fresh', 'Light', 'Salad'],
-    rainy: ['Warm', 'Comfort', 'Soup'],
-    cold: ['Hot', 'Hearty', 'Comfort'],
-    hot: ['Fresh', 'Cold', 'Light']
-  };
-
-  const moodPreferences = {
-    happy: ['Celebratory', 'Special', 'Premium'],
-    tired: ['Energy', 'Quick', 'Comfort'],
-    stressed: ['Comfort', 'Familiar', 'Relaxing'],
-    healthy: ['Light', 'Fresh', 'Nutritious']
-  };
-
-  return menuItems
-    .map(item => {
-      let score = 0;
-      const timePrefs = weights[timeOfDay as keyof typeof weights] || [];
-      const weatherPrefs = weatherPreferences[weather as keyof typeof weatherPreferences] || [];
-      const moodPrefs = userMood ? (moodPreferences[userMood as keyof typeof moodPreferences] || []) : [];
-
-      // Calculate score based on preferences
-      [...timePrefs, ...weatherPrefs, ...moodPrefs].forEach(pref => {
-        if (item.description?.toLowerCase().includes(pref.toLowerCase())) {
-          score += 1;
+  // Analyze order history
+  orders.forEach(order => {
+    // Extract dietary preferences
+    if (order.items) {
+      order.items.forEach((item: any) => {
+        if (item.dietary_preferences) {
+          preferences.dietaryPreferences = [
+            ...new Set([...preferences.dietaryPreferences, ...item.dietary_preferences])
+          ];
         }
-        // Also check name if description is not available
-        if (item.name.toLowerCase().includes(pref.toLowerCase())) {
-          score += 0.5;
+        if (item.category) {
+          preferences.favoriteCategories.push(item.category);
         }
+        preferences.previousOrders.push(item.id);
       });
+    }
+  });
 
-      return { ...item, score };
-    })
-    .sort((a, b) => (b as any).score - (a as any).score)
+  // Calculate price range based on order history
+  const prices = orders.map(order => order.total_amount);
+  if (prices.length > 0) {
+    preferences.priceRange.min = Math.min(...prices) * 0.8;
+    preferences.priceRange.max = Math.max(...prices) * 1.2;
+  }
+
+  // Get top categories by frequency
+  const categoryCount = preferences.favoriteCategories.reduce((acc, cat) => {
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  preferences.favoriteCategories = Object.entries(categoryCount)
+    .sort(([,a], [,b]) => b - a)
     .slice(0, 5)
-    .map(({ score, ...item }) => item);
+    .map(([category]) => category);
+
+  return preferences;
 };

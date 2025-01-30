@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/home/HeroSection";
-import FeaturedDishes from "@/components/home/FeaturedDishes";
-import FeaturedRestaurant from "@/components/home/FeaturedRestaurant";
 import EssentialServices from "@/components/home/EssentialServices";
+import AdditionalServices from "@/components/home/AdditionalServices";
+import CulturalServices from "@/components/home/CulturalServices";
 import Newsletter from "@/components/home/Newsletter";
 import Testimonials from "@/components/home/Testimonials";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import DeliveryMap from '@/components/DeliveryMap';
 import CartDrawer from '@/components/cart/CartDrawer';
 import ChatBubble from '@/components/chat/ChatBubble';
+import { useState } from 'react';
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,14 +81,10 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Featured Dishes Section */}
-      <FeaturedDishes />
-
-      {/* Featured Restaurant Section */}
-      <FeaturedRestaurant />
-
-      {/* Essential Services */}
+      {/* Services Sections */}
       <EssentialServices />
+      <AdditionalServices />
+      <CulturalServices />
 
       {/* Map Section */}
       <section className="py-16 container mx-auto px-4">
@@ -109,7 +105,7 @@ export default function Index() {
         <CartDrawer />
       </div>
 
-      {/* Chat Bubble */}
+      {/* Chat Bubble - Moved outside main content */}
       <div className="fixed bottom-4 left-4 z-50">
         <ChatBubble />
       </div>
