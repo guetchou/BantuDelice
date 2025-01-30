@@ -668,6 +668,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          booking_reminders: boolean | null
+          created_at: string | null
+          order_updates: boolean | null
+          promotional_emails: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          booking_reminders?: boolean | null
+          created_at?: string | null
+          order_updates?: boolean | null
+          promotional_emails?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          booking_reminders?: boolean | null
+          created_at?: string | null
+          order_updates?: boolean | null
+          promotional_emails?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -731,6 +758,8 @@ export type Database = {
         Row: {
           accepted_at: string | null
           actual_delivery_time: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
           created_at: string
           delivery_address: string
           delivery_instructions: string | null
@@ -751,6 +780,7 @@ export type Database = {
           restaurant_rating: number | null
           special_requests: Json | null
           status: string
+          stock_validated: boolean | null
           tip_amount: number | null
           total_amount: number
           updated_at: string
@@ -759,6 +789,8 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           actual_delivery_time?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string
           delivery_address: string
           delivery_instructions?: string | null
@@ -779,6 +811,7 @@ export type Database = {
           restaurant_rating?: number | null
           special_requests?: Json | null
           status?: string
+          stock_validated?: boolean | null
           tip_amount?: number | null
           total_amount: number
           updated_at?: string
@@ -787,6 +820,8 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           actual_delivery_time?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string
           delivery_address?: string
           delivery_instructions?: string | null
@@ -807,6 +842,7 @@ export type Database = {
           restaurant_rating?: number | null
           special_requests?: Json | null
           status?: string
+          stock_validated?: boolean | null
           tip_amount?: number | null
           total_amount?: number
           updated_at?: string
@@ -1007,6 +1043,56 @@ export type Database = {
           },
         ]
       }
+      restaurant_analytics: {
+        Row: {
+          average_preparation_time: number | null
+          cancelled_orders: number | null
+          created_at: string | null
+          date: string
+          id: string
+          peak_hours: Json | null
+          popular_items: Json | null
+          restaurant_id: string
+          total_orders: number | null
+          total_revenue: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_preparation_time?: number | null
+          cancelled_orders?: number | null
+          created_at?: string | null
+          date: string
+          id?: string
+          peak_hours?: Json | null
+          popular_items?: Json | null
+          restaurant_id: string
+          total_orders?: number | null
+          total_revenue?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_preparation_time?: number | null
+          cancelled_orders?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          peak_hours?: Json | null
+          popular_items?: Json | null
+          restaurant_id?: string
+          total_orders?: number | null
+          total_revenue?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_analytics_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           address: string
@@ -1114,6 +1200,71 @@ export type Database = {
           srtext?: string | null
         }
         Relationships: []
+      }
+      taxi_rides: {
+        Row: {
+          actual_price: number | null
+          created_at: string | null
+          destination_address: string
+          destination_latitude: number | null
+          destination_longitude: number | null
+          driver_id: string | null
+          estimated_price: number | null
+          id: string
+          payment_status: string | null
+          pickup_address: string
+          pickup_latitude: number | null
+          pickup_longitude: number | null
+          pickup_time: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_price?: number | null
+          created_at?: string | null
+          destination_address: string
+          destination_latitude?: number | null
+          destination_longitude?: number | null
+          driver_id?: string | null
+          estimated_price?: number | null
+          id?: string
+          payment_status?: string | null
+          pickup_address: string
+          pickup_latitude?: number | null
+          pickup_longitude?: number | null
+          pickup_time: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_price?: number | null
+          created_at?: string | null
+          destination_address?: string
+          destination_latitude?: number | null
+          destination_longitude?: number | null
+          driver_id?: string | null
+          estimated_price?: number | null
+          id?: string
+          payment_status?: string | null
+          pickup_address?: string
+          pickup_latitude?: number | null
+          pickup_longitude?: number | null
+          pickup_time?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxi_rides_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_drivers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       time_slots: {
         Row: {
