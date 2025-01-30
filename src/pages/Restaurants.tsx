@@ -4,13 +4,15 @@ import CategoryList from '@/components/restaurants/CategoryList';
 import RestaurantGrid from '@/components/restaurants/RestaurantGrid';
 import RestaurantFilters from '@/components/restaurants/RestaurantFilters';
 import SearchBar from '@/components/home/SearchBar';
-import { ChefHat } from 'lucide-react';
+import { ChefHat, Coffee, Pizza, Soup, UtensilsCrossed } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const categories = [
   { id: 'Tout', label: 'Tout', icon: ChefHat },
-  { id: 'Congolais', label: 'Congolais', icon: ChefHat },
-  { id: 'Africain', label: 'Africain', icon: ChefHat },
-  { id: 'International', label: 'International', icon: ChefHat }
+  { id: 'Congolais', label: 'Congolais', icon: UtensilsCrossed },
+  { id: 'Africain', label: 'Africain', icon: Soup },
+  { id: 'International', label: 'International', icon: Pizza },
+  { id: 'Café', label: 'Café', icon: Coffee }
 ];
 
 const Restaurants = () => {
@@ -21,14 +23,31 @@ const Restaurants = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-8">
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">Restaurants</h1>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-3xl font-bold mb-2 text-white">
+            Restaurants à Brazzaville
+          </h1>
+          <p className="text-gray-400 mb-8">
+            Découvrez les meilleurs restaurants de la ville
+          </p>
+        </motion.div>
         
-        <div className="mb-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
           <SearchBar 
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+          />
+          <RestaurantFilters
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
           />
         </div>
 
@@ -36,13 +55,6 @@ const Restaurants = () => {
           categories={categories}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
-        />
-
-        <RestaurantFilters
-          priceRange={priceRange}
-          setPriceRange={setPriceRange}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
         />
 
         <RestaurantGrid
