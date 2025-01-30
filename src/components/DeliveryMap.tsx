@@ -6,9 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 interface DeliveryMapProps {
   latitude: number;
   longitude: number;
+  orderId?: string; // Made optional since not all usages require it
 }
 
-const DeliveryMap = ({ latitude, longitude }: DeliveryMapProps) => {
+const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
 
