@@ -14,11 +14,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <CartProvider>
-          <RouterProvider router={router}>
-            <NavigationProvider>
-              <Toaster />
-            </NavigationProvider>
-          </RouterProvider>
+          <RouterProvider router={router} />
         </CartProvider>
       </QueryClientProvider>
     </ErrorBoundary>

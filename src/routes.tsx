@@ -9,11 +9,22 @@ import Services from "@/pages/Services";
 import TaxiBookingPage from "@/pages/taxi/Booking";
 import RideStatusPage from "@/pages/taxi/RideStatus";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { NavigationProvider } from "@/contexts/NavigationContext";
+import { Toaster } from "@/components/ui/toaster";
+
+const RootLayout = () => {
+  return (
+    <NavigationProvider>
+      <Outlet />
+      <Toaster />
+    </NavigationProvider>
+  );
+};
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Outlet />,
+    element: <RootLayout />,
     children: [
       {
         index: true,
