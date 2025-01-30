@@ -1,26 +1,38 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useCart } from '@/contexts/CartContext';
 import MobilePayment from '@/components/MobilePayment';
 import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 export const OrderSummary = () => {
   const { state, clearCart } = useCart();
   const { toast } = useToast();
   const [showPayment, setShowPayment] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [validatingStock, setValidatingStock] = useState(false);
 
   const total = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const handlePaymentComplete = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
+      console.log('Début du processus de paiement...');
+
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Utilisateur non connecté');
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+
+      // Validation du stock
+      setValidatingStock(true);
+      console.log('Validation du stock...');
+      // Ici vous pouvez ajouter la logique de validation du stock
 
       // Créer la commande
+      console.log('Création de la commande...');
       const { data: order, error } = await supabase
         .from('orders')
         .insert({
@@ -30,7 +42,7 @@ export const OrderSummary = () => {
           payment_status: 'completed',
           delivery_status: 'pending',
           restaurant_id: state.items[0]?.restaurantId || '',
-          delivery_address: 'À implémenter' // Adresse à implémenter
+          delivery_address: 'À implémenter'
         })
         .select()
         .single();
@@ -38,6 +50,7 @@ export const OrderSummary = () => {
       if (error) throw error;
 
       // Créer les éléments de la commande
+      console.log('Création des éléments de la commande...');
       const orderItems = state.items.map(item => ({
         order_id: order.id,
         item_name: item.name,
@@ -67,6 +80,7 @@ export const OrderSummary = () => {
       });
     } finally {
       setLoading(false);
+      setValidatingStock(false);
     }
   };
 
@@ -90,11 +104,18 @@ export const OrderSummary = () => {
         </div>
 
         <Button 
-          className="w-full"
+          className="w-full flex items-center justify-center gap-2"
           onClick={() => setShowPayment(true)}
-          disabled={loading || state.items.length === 0}
+          disabled={loading || validatingStock || state.items.length === 0}
         >
-          Procéder au paiement
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {validatingStock ? 'Validation du stock...' : 'Traitement...'}
+            </>
+          ) : (
+            'Procéder au paiement'
+          )}
         </Button>
       </div>
 
