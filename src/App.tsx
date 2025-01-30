@@ -3,7 +3,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from '@/contexts/CartContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import { AppRoutes } from '@/routes';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { router } from '@/routes';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -13,10 +14,11 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <CartProvider>
-          <NavigationProvider>
-            <AppRoutes />
-            <Toaster />
-          </NavigationProvider>
+          <RouterProvider router={router}>
+            <NavigationProvider>
+              <Toaster />
+            </NavigationProvider>
+          </RouterProvider>
         </CartProvider>
       </QueryClientProvider>
     </ErrorBoundary>
