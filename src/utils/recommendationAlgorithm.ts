@@ -1,3 +1,5 @@
+import { MenuItem } from '@/components/menu/types';
+
 interface UserPreferences {
   dietaryPreferences: string[];
   favoriteCategories: string[];
