@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
+import MobilePayment from '@/components/MobilePayment';
 
 interface CartDrawerProps {
   onOrderAmount?: (amount: number) => void;
