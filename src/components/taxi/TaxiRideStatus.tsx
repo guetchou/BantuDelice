@@ -32,8 +32,8 @@ const TaxiRideStatus = () => {
       try {
         const { data, error } = await supabase
           .from('taxi_rides')
-          .select('*')
-          .eq('id', rideId)
+          .select()
+          .match({ id: rideId })
           .maybeSingle();
 
         if (error) {
