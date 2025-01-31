@@ -377,6 +377,50 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_levels: {
+        Row: {
+          created_at: string | null
+          current_stock: number
+          id: string
+          last_restock_date: string | null
+          menu_item_id: string | null
+          min_stock_level: number
+          next_restock_date: string | null
+          reserved_stock: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_stock?: number
+          id?: string
+          last_restock_date?: string | null
+          menu_item_id?: string | null
+          min_stock_level?: number
+          next_restock_date?: string | null
+          reserved_stock?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_stock?: number
+          id?: string
+          last_restock_date?: string | null
+          menu_item_id?: string | null
+          min_stock_level?: number
+          next_restock_date?: string | null
+          reserved_stock?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_levels_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: number
@@ -2584,6 +2628,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      reserve_stock: {
+        Args: {
+          p_menu_item_id: string
+          p_quantity: number
+        }
+        Returns: boolean
+      }
       search_restaurants: {
         Args: {
           search_query: string
@@ -4537,6 +4588,16 @@ export type Database = {
           new_srid_in: number
         }
         Returns: string
+      }
+      validate_order_stock: {
+        Args: {
+          items: Json
+        }
+        Returns: {
+          is_valid: boolean
+          message: string
+          invalid_items: Json
+        }[]
       }
     }
     Enums: {

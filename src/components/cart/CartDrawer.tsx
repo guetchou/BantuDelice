@@ -1,20 +1,120 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from '@/integrations/supabase/client';
 
 interface CartDrawerProps {
   onOrderAmount?: (amount: number) => void;
+}
+
+interface StockStatus {
+  [key: string]: {
+    currentStock: number;
+    reservedStock: number;
+  }
 }
 
 const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stockStatus, setStockStatus] = useState<StockStatus>({});
+  const [validatingStock, setValidatingStock] = useState(false);
   const { state, removeFromCart, updateQuantity } = useCart();
   const { toast } = useToast();
+
+  // Écoute des changements de stock en temps réel
+  useEffect(() => {
+    const itemIds = state.items.map(item => item.id);
+    if (itemIds.length === 0) return;
+
+    // Récupération initiale du stock
+    const fetchStockLevels = async () => {
+      const { data, error } = await supabase
+        .from('inventory_levels')
+        .select('menu_item_id, current_stock, reserved_stock')
+        .in('menu_item_id', itemIds);
+
+      if (error) {
+        console.error('Erreur lors de la récupération du stock:', error);
+        return;
+      }
+
+      const stockData: StockStatus = {};
+      data.forEach(item => {
+        stockData[item.menu_item_id] = {
+          currentStock: item.current_stock,
+          reservedStock: item.reserved_stock
+        };
+      });
+      setStockStatus(stockData);
+    };
+
+    fetchStockLevels();
+
+    // Abonnement aux changements de stock en temps réel
+    const channel = supabase
+      .channel('inventory-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'inventory_levels',
+          filter: `menu_item_id=in.(${itemIds.map(id => `'${id}'`).join(',')})`,
+        },
+        (payload) => {
+          console.log('Changement de stock détecté:', payload);
+          setStockStatus(current => ({
+            ...current,
+            [payload.new.menu_item_id]: {
+              currentStock: payload.new.current_stock,
+              reservedStock: payload.new.reserved_stock
+            }
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [state.items]);
+
+  const validateStock = async () => {
+    setValidatingStock(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('validate_order_stock', {
+          items: state.items.map(item => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity
+          }))
+        });
+
+      if (error) throw error;
+
+      if (!data.is_valid) {
+        const invalidItems = data.invalid_items;
+        console.error('Articles en rupture de stock:', invalidItems);
+        throw new Error('Certains articles ne sont plus disponibles en stock');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Erreur de validation du stock:', error);
+      setError(error instanceof Error ? error.message : 'Erreur de validation du stock');
+      return false;
+    } finally {
+      setValidatingStock(false);
+    }
+  };
 
   const handleCheckout = async () => {
     try {
@@ -24,6 +124,12 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
 
       if (state.items.length === 0) {
         throw new Error('Votre panier est vide');
+      }
+
+      // Validation du stock avant la commande
+      const isStockValid = await validateStock();
+      if (!isStockValid) {
+        throw new Error('Problème de stock, veuillez vérifier votre panier');
       }
 
       toast({
@@ -57,11 +163,18 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
     }
   };
 
-  const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
+  const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
     try {
       if (newQuantity < 0) {
         throw new Error('La quantité ne peut pas être négative');
       }
+
+      // Vérification du stock disponible
+      const stockInfo = stockStatus[itemId];
+      if (stockInfo && (stockInfo.currentStock - stockInfo.reservedStock) < newQuantity) {
+        throw new Error('Stock insuffisant pour cette quantité');
+      }
+
       updateQuantity(itemId, newQuantity);
       console.log(`Quantité mise à jour pour l'item ${itemId}: ${newQuantity}`);
     } catch (error) {
@@ -129,42 +242,52 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
           ) : (
             <>
               <div className="space-y-4 max-h-60 overflow-auto">
-                {state.items.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between gap-2">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{item.name}</h4>
-                      <p className="text-sm text-gray-500">{item.price} FCFA</p>
+                {state.items.map((item) => {
+                  const stock = stockStatus[item.id];
+                  const availableStock = stock ? stock.currentStock - stock.reservedStock : null;
+                  
+                  return (
+                    <div key={item.id} className="flex items-center justify-between gap-2">
+                      <div className="flex-1">
+                        <h4 className="font-medium">{item.name}</h4>
+                        <p className="text-sm text-gray-500">{item.price} FCFA</p>
+                        {availableStock !== null && availableStock < item.quantity && (
+                          <p className="text-xs text-red-500">
+                            Stock disponible: {availableStock}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                          disabled={isProcessing}
+                        >
+                          -
+                        </Button>
+                        <span>{item.quantity}</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                          disabled={isProcessing || (availableStock !== null && item.quantity >= availableStock)}
+                        >
+                          +
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => handleRemoveItem(item.id)}
+                          disabled={isProcessing}
+                        >
+                          <AlertCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                        disabled={isProcessing}
-                      >
-                        -
-                      </Button>
-                      <span>{item.quantity}</span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                        disabled={isProcessing}
-                      >
-                        +
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-red-500 hover:text-red-700"
-                        onClick={() => handleRemoveItem(item.id)}
-                        disabled={isProcessing}
-                      >
-                        <AlertCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-4 pt-4 border-t">
@@ -175,12 +298,12 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
                 <Button 
                   className="w-full bg-orange-500 hover:bg-orange-600 flex items-center justify-center gap-2"
                   onClick={handleCheckout}
-                  disabled={isProcessing || state.items.length === 0}
+                  disabled={isProcessing || validatingStock || state.items.length === 0}
                 >
-                  {isProcessing ? (
+                  {isProcessing || validatingStock ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Traitement...
+                      {validatingStock ? 'Vérification du stock...' : 'Traitement...'}
                     </>
                   ) : (
                     'Commander'
