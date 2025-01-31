@@ -9,15 +9,23 @@ import { logger } from '@/services/logger';
 type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'];
 
 const TaxiRideStatus = () => {
-  const params = useParams();
+  const { rideId } = useParams<{ rideId: string }>();
   const [ride, setRide] = useState<TaxiRide | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRide = async () => {
-      if (!params.rideId) {
+      if (!rideId) {
         logger.error('No rideId provided in URL parameters');
         setError('Identifiant de course invalide');
+        return;
+      }
+
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(rideId)) {
+        logger.error('Invalid rideId format:', rideId);
+        setError('Format d\'identifiant invalide');
         return;
       }
 
@@ -25,7 +33,7 @@ const TaxiRideStatus = () => {
         const { data, error } = await supabase
           .from('taxi_rides')
           .select('*')
-          .eq('id', params.rideId)
+          .eq('id', rideId)
           .maybeSingle();
 
         if (error) {
@@ -35,7 +43,7 @@ const TaxiRideStatus = () => {
         }
 
         if (!data) {
-          logger.error('No ride found with id:', params.rideId);
+          logger.error('No ride found with id:', rideId);
           setError('Course non trouvée');
           return;
         }
@@ -58,7 +66,7 @@ const TaxiRideStatus = () => {
           event: '*',
           schema: 'public',
           table: 'taxi_rides',
-          filter: `id=eq.${params.rideId}`
+          filter: `id=eq.${rideId}`
         },
         (payload) => {
           logger.info('Ride update received:', payload);
@@ -70,7 +78,7 @@ const TaxiRideStatus = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [params.rideId]);
+  }, [rideId]);
 
   if (error) {
     return (
