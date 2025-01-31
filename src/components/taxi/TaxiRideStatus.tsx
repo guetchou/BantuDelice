@@ -11,26 +11,40 @@ type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'];
 const TaxiRideStatus = () => {
   const { rideId } = useParams<{ rideId: string }>();
   const [ride, setRide] = useState<TaxiRide | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRide = async () => {
       if (!rideId) {
-        logger.error('No rideId provided');
+        logger.error('No rideId provided in URL parameters');
+        setError('Identifiant de course invalide');
         return;
       }
 
-      const { data, error } = await supabase
-        .from('taxi_rides')
-        .select('*')
-        .eq('id', rideId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('taxi_rides')
+          .select('*')
+          .eq('id', rideId)
+          .maybeSingle();
 
-      if (error) {
-        logger.error('Error fetching ride:', error);
-        return;
+        if (error) {
+          logger.error('Error fetching ride:', error);
+          setError('Erreur lors du chargement de la course');
+          return;
+        }
+
+        if (!data) {
+          logger.error('No ride found with id:', rideId);
+          setError('Course non trouvée');
+          return;
+        }
+
+        setRide(data);
+      } catch (err) {
+        logger.error('Unexpected error:', err);
+        setError('Une erreur inattendue est survenue');
       }
-
-      setRide(data);
     };
 
     fetchRide();
@@ -58,8 +72,20 @@ const TaxiRideStatus = () => {
     };
   }, [rideId]);
 
+  if (error) {
+    return (
+      <Card className="p-6 max-w-2xl mx-auto">
+        <div className="text-red-500">{error}</div>
+      </Card>
+    );
+  }
+
   if (!ride) {
-    return <div>Chargement...</div>;
+    return (
+      <Card className="p-6 max-w-2xl mx-auto">
+        <div>Chargement...</div>
+      </Card>
+    );
   }
 
   return (
