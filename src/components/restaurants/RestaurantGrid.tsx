@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import RestaurantCard from "./RestaurantCard";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import RestaurantCard from "@/components/restaurants/RestaurantCard";
+import { useToast } from "@/hooks/use-toast";
 import { createApi } from 'unsplash-js';
 
+// Initialize the Unsplash client
 const unsplashAccessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 console.log('Unsplash Access Key in RestaurantGrid:', unsplashAccessKey ? 'Present' : 'Missing');
 
@@ -44,6 +44,7 @@ interface RestaurantGridProps {
 
 const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: RestaurantGridProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: restaurants, isLoading } = useQuery({
     queryKey: ['restaurants', searchQuery, selectedCategory, priceRange, sortBy],
@@ -83,8 +84,6 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
       }
 
       let filteredData = data as Restaurant[];
-      
-      // Filter by price range
       if (priceRange !== 'all') {
         filteredData = filteredData.filter(restaurant => {
           const avgPrice = restaurant.menu_items?.reduce((acc, item) => acc + item.price, 0) / (restaurant.menu_items?.length || 1);
@@ -145,10 +144,16 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
         {Array(6).fill(0).map((_, index) => (
-          <Skeleton 
+          <div 
             key={index}
-            className="h-[300px] w-full rounded-xl"
-          />
+            className="glass-card animate-pulse"
+          >
+            <div className="h-48 bg-white/5" />
+            <div className="p-6 space-y-4">
+              <div className="h-4 bg-white/5 rounded w-3/4" />
+              <div className="h-4 bg-white/5 rounded w-1/2" />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -159,10 +164,7 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
       {restaurants?.map((restaurant) => (
         <RestaurantCard
           key={restaurant.id}
-          restaurant={{
-            ...restaurant,
-            address: restaurant.address.replace('Kinshasa', 'Brazzaville')
-          }}
+          restaurant={restaurant}
           onClick={handleRestaurantClick}
         />
       ))}

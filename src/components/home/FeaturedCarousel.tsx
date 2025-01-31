@@ -19,7 +19,7 @@ console.log('Unsplash Access Key in FeaturedCarousel:', unsplashAccessKey ? 'Pre
 
 const unsplash = createApi({
   accessKey: unsplashAccessKey || '',
-  // Ajout des headers d'authentification explicites
+  // Adding explicit authentication headers
   headers: {
     Authorization: `Client-ID ${unsplashAccessKey}`
   }
