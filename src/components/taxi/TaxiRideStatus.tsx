@@ -9,13 +9,13 @@ import { logger } from '@/services/logger';
 type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'];
 
 const TaxiRideStatus = () => {
-  const { rideId } = useParams<{ rideId: string }>();
+  const params = useParams();
   const [ride, setRide] = useState<TaxiRide | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRide = async () => {
-      if (!rideId) {
+      if (!params.rideId) {
         logger.error('No rideId provided in URL parameters');
         setError('Identifiant de course invalide');
         return;
@@ -25,7 +25,7 @@ const TaxiRideStatus = () => {
         const { data, error } = await supabase
           .from('taxi_rides')
           .select('*')
-          .eq('id', rideId)
+          .eq('id', params.rideId)
           .maybeSingle();
 
         if (error) {
@@ -35,7 +35,7 @@ const TaxiRideStatus = () => {
         }
 
         if (!data) {
-          logger.error('No ride found with id:', rideId);
+          logger.error('No ride found with id:', params.rideId);
           setError('Course non trouvée');
           return;
         }
@@ -58,7 +58,7 @@ const TaxiRideStatus = () => {
           event: '*',
           schema: 'public',
           table: 'taxi_rides',
-          filter: `id=eq.${rideId}`
+          filter: `id=eq.${params.rideId}`
         },
         (payload) => {
           logger.info('Ride update received:', payload);
@@ -70,7 +70,7 @@ const TaxiRideStatus = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [rideId]);
+  }, [params.rideId]);
 
   if (error) {
     return (
