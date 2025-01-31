@@ -17,6 +17,12 @@ interface StockStatus {
   }
 }
 
+interface InventoryPayload {
+  menu_item_id: string;
+  current_stock: number;
+  reserved_stock: number;
+}
+
 const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -68,12 +74,13 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
         },
         (payload) => {
           console.log('Changement de stock détecté:', payload);
-          if (payload.new) {
+          const newData = payload.new as InventoryPayload;
+          if (newData && newData.menu_item_id) {
             setStockStatus(current => ({
               ...current,
-              [payload.new.menu_item_id]: {
-                currentStock: payload.new.current_stock,
-                reservedStock: payload.new.reserved_stock
+              [newData.menu_item_id]: {
+                currentStock: newData.current_stock,
+                reservedStock: newData.reserved_stock
               }
             }));
           }
