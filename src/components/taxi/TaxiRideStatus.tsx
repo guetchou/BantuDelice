@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import DeliveryMap from "@/components/DeliveryMap";
 import { Database } from "@/integrations/supabase/types";
+import { logger } from '@/services/logger';
 
 type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'];
 
@@ -13,7 +14,10 @@ const TaxiRideStatus = () => {
 
   useEffect(() => {
     const fetchRide = async () => {
-      if (!rideId) return;
+      if (!rideId) {
+        logger.error('No rideId provided');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('taxi_rides')
@@ -22,7 +26,7 @@ const TaxiRideStatus = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching ride:', error);
+        logger.error('Error fetching ride:', error);
         return;
       }
 
@@ -43,7 +47,7 @@ const TaxiRideStatus = () => {
           filter: `id=eq.${rideId}`
         },
         (payload) => {
-          console.log('Ride update received:', payload);
+          logger.info('Ride update received:', payload);
           setRide(payload.new as TaxiRide);
         }
       )
