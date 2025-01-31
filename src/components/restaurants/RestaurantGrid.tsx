@@ -97,6 +97,11 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
       }
 
       try {
+        if (!unsplashAccessKey) {
+          console.error('Unsplash API key is missing');
+          return filteredData;
+        }
+
         // Fetch restaurant images from Unsplash
         const restaurantPhotos = await unsplash.search.getPhotos({
           query: 'restaurant interior food african cuisine',
@@ -118,6 +123,11 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
 
       } catch (error) {
         console.error('Error fetching restaurant images:', error);
+        toast({
+          title: "Attention",
+          description: "Impossible de charger les images des restaurants",
+          variant: "destructive",
+        });
         return filteredData;
       }
 
