@@ -9,7 +9,7 @@ import { logger } from '@/services/logger';
 type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'];
 
 const TaxiRideStatus = () => {
-  const { rideId } = useParams();
+  const { rideId } = useParams<{ rideId: string }>();
   const [ride, setRide] = useState<TaxiRide | null>(null);
 
   useEffect(() => {
