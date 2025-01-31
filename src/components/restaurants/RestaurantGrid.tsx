@@ -11,6 +11,7 @@ console.log('Unsplash Access Key in RestaurantGrid:', unsplashAccessKey ? 'Prese
 
 const unsplash = createApi({
   accessKey: unsplashAccessKey || '',
+  // Adding explicit authentication headers
   headers: {
     Authorization: `Client-ID ${unsplashAccessKey}`
   }
@@ -102,9 +103,9 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
           return filteredData;
         }
 
-        // Fetch restaurant images from Unsplash
+        // Fetch restaurant images from Unsplash with more specific query
         const restaurantPhotos = await unsplash.search.getPhotos({
-          query: 'restaurant interior food african cuisine',
+          query: 'african restaurant food cuisine',
           perPage: filteredData.length,
           orientation: 'landscape'
         });
