@@ -29,6 +29,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
   const [error, setError] = useState<string | null>(null);
   const [stockStatus, setStockStatus] = useState<StockStatus>({});
   const [validatingStock, setValidatingStock] = useState(false);
+  const [showMobilePayment, setShowMobilePayment] = useState(false);
   const { state, removeFromCart, updateQuantity } = useCart();
   const { toast } = useToast();
 
@@ -141,24 +142,8 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
         throw new Error('Problème de stock, veuillez vérifier votre panier');
       }
 
-      toast({
-        title: "Commande en cours",
-        description: "Traitement de votre commande...",
-      });
+      setShowMobilePayment(true);
 
-      // Simulate a small delay to show loading state
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (onOrderAmount) {
-        onOrderAmount(total);
-      }
-
-      toast({
-        title: "Commande validée",
-        description: "Redirection vers le paiement...",
-      });
-      
-      console.log('Commande validée avec succès');
     } catch (error) {
       console.error('Erreur lors du checkout:', error);
       setError(error instanceof Error ? error.message : 'Une erreur est survenue lors de la commande');
@@ -170,6 +155,23 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    if (onOrderAmount) {
+      onOrderAmount(total);
+    }
+    setShowMobilePayment(false);
+    setIsOpen(false);
+    toast({
+      title: "Commande validée",
+      description: "Votre commande a été validée avec succès",
+    });
+  };
+
+  const handlePaymentError = (error: Error) => {
+    setError(error.message);
+    setShowMobilePayment(false);
   };
 
   const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
@@ -246,79 +248,89 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
             </Alert>
           )}
           
-          {state.items.length === 0 ? (
-            <p className="text-gray-500">Votre panier est vide</p>
+          {showMobilePayment ? (
+            <MobilePayment 
+              amount={total}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+            />
           ) : (
             <>
-              <div className="space-y-4 max-h-60 overflow-auto">
-                {state.items.map((item) => {
-                  const stock = stockStatus[item.id];
-                  const availableStock = stock ? stock.currentStock - stock.reservedStock : null;
-                  
-                  return (
-                    <div key={item.id} className="flex items-center justify-between gap-2">
-                      <div className="flex-1">
-                        <h4 className="font-medium">{item.name}</h4>
-                        <p className="text-sm text-gray-500">{item.price} FCFA</p>
-                        {availableStock !== null && availableStock < item.quantity && (
-                          <p className="text-xs text-red-500">
-                            Stock disponible: {availableStock}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                          disabled={isProcessing}
-                        >
-                          -
-                        </Button>
-                        <span>{item.quantity}</span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                          disabled={isProcessing || (availableStock !== null && item.quantity >= availableStock)}
-                        >
-                          +
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => handleRemoveItem(item.id)}
-                          disabled={isProcessing}
-                        >
-                          <AlertCircle className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {state.items.length === 0 ? (
+                <p className="text-gray-500">Votre panier est vide</p>
+              ) : (
+                <>
+                  <div className="space-y-4 max-h-60 overflow-auto">
+                    {state.items.map((item) => {
+                      const stock = stockStatus[item.id];
+                      const availableStock = stock ? stock.currentStock - stock.reservedStock : null;
+                      
+                      return (
+                        <div key={item.id} className="flex items-center justify-between gap-2">
+                          <div className="flex-1">
+                            <h4 className="font-medium">{item.name}</h4>
+                            <p className="text-sm text-gray-500">{item.price} FCFA</p>
+                            {availableStock !== null && availableStock < item.quantity && (
+                              <p className="text-xs text-red-500">
+                                Stock disponible: {availableStock}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                              disabled={isProcessing}
+                            >
+                              -
+                            </Button>
+                            <span>{item.quantity}</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                              disabled={isProcessing || (availableStock !== null && item.quantity >= availableStock)}
+                            >
+                              +
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleRemoveItem(item.id)}
+                              disabled={isProcessing}
+                            >
+                              <AlertCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-              <div className="mt-4 pt-4 border-t">
-                <div className="flex justify-between mb-4">
-                  <span className="font-semibold">Total:</span>
-                  <span className="font-semibold">{total} FCFA</span>
-                </div>
-                <Button 
-                  className="w-full bg-orange-500 hover:bg-orange-600 flex items-center justify-center gap-2"
-                  onClick={handleCheckout}
-                  disabled={isProcessing || validatingStock || state.items.length === 0}
-                >
-                  {isProcessing || validatingStock ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {validatingStock ? 'Vérification du stock...' : 'Traitement...'}
-                    </>
-                  ) : (
-                    'Commander'
-                  )}
-                </Button>
-              </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between mb-4">
+                      <span className="font-semibold">Total:</span>
+                      <span className="font-semibold">{total} FCFA</span>
+                    </div>
+                    <Button 
+                      className="w-full bg-orange-500 hover:bg-orange-600 flex items-center justify-center gap-2"
+                      onClick={handleCheckout}
+                      disabled={isProcessing || validatingStock || state.items.length === 0}
+                    >
+                      {isProcessing || validatingStock ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {validatingStock ? 'Vérification du stock...' : 'Traitement...'}
+                        </>
+                      ) : (
+                        'Commander'
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
