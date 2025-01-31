@@ -4,6 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import RestaurantCard from "./RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import { createApi } from 'unsplash-js';
+
+const unsplashAccessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+console.log('Unsplash Access Key in RestaurantGrid:', unsplashAccessKey ? 'Present' : 'Missing');
+
+const unsplash = createApi({
+  accessKey: unsplashAccessKey || '',
+  headers: {
+    Authorization: `Client-ID ${unsplashAccessKey}`
+  }
+});
 
 interface MenuItem {
   id: string;
@@ -84,6 +95,31 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
             default: return true;
           }
         });
+      }
+
+      try {
+        // Fetch restaurant images from Unsplash
+        const restaurantPhotos = await unsplash.search.getPhotos({
+          query: 'restaurant interior food african cuisine',
+          perPage: filteredData.length,
+          orientation: 'landscape'
+        });
+
+        if (restaurantPhotos.errors) {
+          console.error('Unsplash API errors:', restaurantPhotos.errors);
+          return filteredData;
+        }
+
+        // Add images to restaurants
+        return filteredData.map((restaurant, index) => ({
+          ...restaurant,
+          image_url: restaurantPhotos.response?.results[index]?.urls.regular || 
+                    'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop'
+        }));
+
+      } catch (error) {
+        console.error('Error fetching restaurant images:', error);
+        return filteredData;
       }
 
       // Sort restaurants

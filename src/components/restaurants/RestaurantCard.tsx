@@ -34,26 +34,26 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
       className="h-full"
     >
       <Card
-        className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer h-full flex flex-col"
+        className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer h-full flex flex-col bg-white"
         onClick={() => onClick(restaurant.id)}
       >
-        <div className="relative">
+        <div className="relative h-48">
           <img
-            src={restaurant.image_url || 'https://images.unsplash.com/photo-1466721591366-2d5fba72006d'}
+            src={restaurant.image_url || 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop'}
             alt={restaurant.name}
-            className="w-full h-48 object-cover"
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
           />
-          {restaurant.distance && (
-            <div className="absolute top-4 right-4 bg-black/75 backdrop-blur-sm px-3 py-1 rounded-full">
-              <span className="text-sm font-semibold text-white">
-                {restaurant.distance} km
-              </span>
-            </div>
-          )}
           {restaurant.cuisine_type && (
             <div className="absolute bottom-4 left-4 bg-black/75 backdrop-blur-sm px-3 py-1 rounded-full">
               <span className="text-sm font-medium text-white">
                 {restaurant.cuisine_type}
+              </span>
+            </div>
+          )}
+          {restaurant.distance && (
+            <div className="absolute top-4 right-4 bg-black/75 backdrop-blur-sm px-3 py-1 rounded-full">
+              <span className="text-sm font-semibold text-white">
+                {restaurant.distance} km
               </span>
             </div>
           )}
