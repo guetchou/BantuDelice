@@ -44,7 +44,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
       }
 
       const stockData: StockStatus = {};
-      data.forEach(item => {
+      data?.forEach(item => {
         stockData[item.menu_item_id] = {
           currentStock: item.current_stock,
           reservedStock: item.reserved_stock
@@ -68,13 +68,15 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
         },
         (payload) => {
           console.log('Changement de stock détecté:', payload);
-          setStockStatus(current => ({
-            ...current,
-            [payload.new.menu_item_id]: {
-              currentStock: payload.new.current_stock,
-              reservedStock: payload.new.reserved_stock
-            }
-          }));
+          if (payload.new) {
+            setStockStatus(current => ({
+              ...current,
+              [payload.new.menu_item_id]: {
+                currentStock: payload.new.current_stock,
+                reservedStock: payload.new.reserved_stock
+              }
+            }));
+          }
         }
       )
       .subscribe();
@@ -100,8 +102,8 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
 
       if (error) throw error;
 
-      if (!data.is_valid) {
-        const invalidItems = data.invalid_items;
+      if (!data[0].is_valid) {
+        const invalidItems = data[0].invalid_items;
         console.error('Articles en rupture de stock:', invalidItems);
         throw new Error('Certains articles ne sont plus disponibles en stock');
       }
