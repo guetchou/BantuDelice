@@ -252,8 +252,8 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
           {showMobilePayment ? (
             <MobilePayment 
               amount={total}
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
+              onPaymentComplete={handlePaymentSuccess}
+              description="Paiement de commande"
             />
           ) : (
             <>
