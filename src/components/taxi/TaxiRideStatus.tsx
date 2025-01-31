@@ -80,6 +80,23 @@ const TaxiRideStatus = () => {
     };
   }, [rideId]);
 
+  const getStatusText = (status: string | null) => {
+    switch (status) {
+      case 'pending':
+        return 'En attente';
+      case 'accepted':
+        return 'Acceptée';
+      case 'in_progress':
+        return 'En cours';
+      case 'completed':
+        return 'Terminée';
+      case 'cancelled':
+        return 'Annulée';
+      default:
+        return 'Statut inconnu';
+    }
+  };
+
   if (error) {
     return (
       <Card className="p-6 max-w-2xl mx-auto">
@@ -99,11 +116,11 @@ const TaxiRideStatus = () => {
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <Card className="p-6 space-y-4">
-        <h2 className="text-2xl font-bold">Statut de votre course</h2>
+        <h2 className="text-2xl font-bold">Suivi de votre course</h2>
         
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <h3 className="font-semibold">Départ</h3>
+            <h3 className="font-semibold">Point de départ</h3>
             <p>{ride.pickup_address}</p>
           </div>
           
@@ -119,7 +136,7 @@ const TaxiRideStatus = () => {
           
           <div>
             <h3 className="font-semibold">Statut</h3>
-            <p className="capitalize">{ride.status}</p>
+            <p>{getStatusText(ride.status)}</p>
           </div>
         </div>
 
