@@ -18,7 +18,7 @@ const Index = () => {
     checkAuth();
   }, []);
 
-  const handleFavorite = async (restaurantId: string) => {
+  const handleFavorite = async (menuItemId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -37,7 +37,7 @@ const Index = () => {
         .upsert([
           {
             user_id: session.user.id,
-            restaurant_id: restaurantId,
+            menu_item_id: menuItemId,
           }
         ]);
 
@@ -109,7 +109,7 @@ const Index = () => {
                         className="w-full h-full object-cover"
                       />
                       <button
-                        onClick={() => handleFavorite(`restaurant-${restaurant}`)}
+                        onClick={() => handleFavorite(`menu-item-${restaurant}`)}
                         className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100"
                       >
                         <Heart className="w-6 h-6 text-red-500" />
