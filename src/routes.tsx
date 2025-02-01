@@ -11,6 +11,14 @@ import RideStatusPage from "@/pages/taxi/RideStatus";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import { Toaster } from "@/components/ui/toaster";
+import Settings from "@/pages/Settings";
+import Notifications from "@/pages/Notifications";
+import Wallet from "@/pages/Wallet";
+import Favorites from "@/pages/Favorites";
+import Help from "@/pages/Help";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Legal from "@/pages/Legal";
 
 const RootLayout = () => {
   return (
@@ -77,6 +85,55 @@ export const router = createBrowserRouter([
             <RideStatusPage />
           </ProtectedRoute>
         ),
+      },
+      // Nouvelles routes
+      {
+        path: "settings",
+        element: (
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "notifications",
+        element: (
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "wallet",
+        element: (
+          <ProtectedRoute>
+            <Wallet />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "favorites",
+        element: (
+          <ProtectedRoute>
+            <Favorites />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "help",
+        element: <Help />,
+      },
+      {
+        path: "about",
+        element: <About />,
+      },
+      {
+        path: "contact",
+        element: <Contact />,
+      },
+      {
+        path: "legal",
+        element: <Legal />,
       },
     ],
   },

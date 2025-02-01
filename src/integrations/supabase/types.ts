@@ -467,30 +467,101 @@ export type Database = {
       }
       loyalty_points: {
         Row: {
+          benefits: Json | null
           created_at: string | null
           id: string
           level: string | null
           points: number | null
+          points_to_next_tier: number | null
+          tier_name: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          benefits?: Json | null
           created_at?: string | null
           id?: string
           level?: string | null
           points?: number | null
+          points_to_next_tier?: number | null
+          tier_name?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          benefits?: Json | null
           created_at?: string | null
           id?: string
           level?: string | null
           points?: number | null
+          points_to_next_tier?: number | null
+          tier_name?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
+      }
+      loyalty_rewards: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          points_cost: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points_cost: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points_cost?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      loyalty_rewards_history: {
+        Row: {
+          id: string
+          points_spent: number
+          redeemed_at: string | null
+          reward_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          points_spent: number
+          redeemed_at?: string | null
+          reward_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          points_spent?: number
+          redeemed_at?: string | null
+          reward_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_rewards_history_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       menu_item_dietary_restrictions: {
         Row: {
