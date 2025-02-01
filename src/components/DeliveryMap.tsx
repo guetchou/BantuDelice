@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface DeliveryMapProps {
   latitude: number;
   longitude: number;
-  orderId?: string; // Made optional since not all usages require it
+  orderId?: string;
 }
 
 const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
@@ -17,9 +17,7 @@ const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
     const initializeMap = async () => {
       try {
         // Get Mapbox token from edge function
-        const { data: { token }, error } = await supabase.functions.invoke('get_mapbox_token', {
-          body: JSON.stringify({}),
-        });
+        const { data: { token }, error } = await supabase.functions.invoke('get_mapbox_token');
 
         if (error) {
           console.error('Error fetching Mapbox token:', error);
