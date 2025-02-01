@@ -40,10 +40,7 @@ const Header = ({ searchQuery, setSearchQuery }: HeaderProps) => {
       <div className="container mx-auto px-6 py-6">
         <div className="flex items-center justify-between gap-8">
           <div className="flex items-center gap-12">
-            <h1 
-              onClick={() => navigate('/')} 
-              className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent cursor-pointer"
-            >
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
               Buntudelice
             </h1>
             <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />

@@ -1,112 +1,116 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import HeroSection from "@/components/home/HeroSection";
+import EssentialServices from "@/components/home/EssentialServices";
+import AdditionalServices from "@/components/home/AdditionalServices";
+import CulturalServices from "@/components/home/CulturalServices";
+import Newsletter from "@/components/home/Newsletter";
+import Testimonials from "@/components/home/Testimonials";
 import { Button } from "@/components/ui/button";
-import { Car, Heart, ShoppingBag } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import PageTransition from '@/components/PageTransition';
-import { supabase } from "@/integrations/supabase/client";
-import HeroSection from '@/components/home/HeroSection';
-import FeaturedCarousel from '@/components/home/FeaturedCarousel';
-import EssentialServices from '@/components/home/EssentialServices';
-import AdditionalServices from '@/components/home/AdditionalServices';
-import CulturalServices from '@/components/home/CulturalServices';
-import Testimonials from '@/components/home/Testimonials';
+import { Search } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 import DeliveryMap from '@/components/DeliveryMap';
-import AIChat from '@/components/chat/AIChat';
 import CartDrawer from '@/components/cart/CartDrawer';
+import ChatBubble from '@/components/chat/ChatBubble';
+import { useState } from 'react';
 
-const Index = () => {
+export default function Index() {
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("Auth session:", session);
-    };
-    checkAuth();
-  }, []);
-
-  const handleFavorite = async (menuItemId: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      toast({
-        title: "Connexion requise",
-        description: "Veuillez vous connecter pour ajouter des favoris",
-        variant: "destructive",
-      });
-      navigate('/auth');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('favorites')
-        .upsert([
-          {
-            user_id: session.user.id,
-            menu_item_id: menuItemId,
-          }
-        ]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "Restaurant ajouté aux favoris",
-      });
-    } catch (error) {
-      console.error('Error adding favorite:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter le restaurant aux favoris",
-        variant: "destructive",
-      });
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/restaurants?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
   return (
-    <PageTransition>
-      <div className="min-h-screen">
-        {/* Hero Section */}
-        <HeroSection />
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <Header />
+      
+      {/* Hero Section */}
+      <section className="relative h-[600px] overflow-hidden pt-16">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0')] bg-cover bg-center">
+          <div className="absolute inset-0 bg-gradient-to-b from-orange-500/30 to-gray-900/80 backdrop-blur-sm" />
+        </div>
 
-        {/* Featured Carousel */}
-        <FeaturedCarousel />
-
-        {/* Essential Services */}
-        <EssentialServices />
-
-        {/* Additional Services */}
-        <AdditionalServices />
-
-        {/* Cultural Services */}
-        <CulturalServices />
-
-        {/* Delivery Map */}
-        <section className="py-16 bg-gradient-to-br from-gray-50 to-gray-100">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Notre Zone de Livraison</h2>
-            <div className="h-[500px] rounded-lg overflow-hidden shadow-xl">
-              <DeliveryMap />
+        <div className="relative container mx-auto px-4 h-full flex flex-col justify-center">
+          <h1 className="text-6xl font-bold text-white mb-6 animate-fade-in">
+            Découvrez la Cuisine<br />
+            <span className="text-gradient bg-gradient-to-r from-orange-400 to-green-400">
+              Congolaise Authentique
+            </span>
+          </h1>
+          
+          <div className="max-w-2xl w-full mx-auto relative animate-fade-in delay-100">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Rechercher un plat, un restaurant..."
+                className="w-full px-6 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 
+                         text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-orange-500
+                         transition-all duration-300"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Search 
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 cursor-pointer" 
+                onClick={handleSearch}
+              />
             </div>
           </div>
-        </section>
 
-        {/* Testimonials */}
-        <Testimonials />
-
-        {/* AI Chat & Cart */}
-        <div className="fixed bottom-6 right-6 flex flex-col gap-4 z-50">
-          <CartDrawer />
-          <div className="relative">
-            <AIChat />
+          <div className="flex justify-center gap-4 mt-8 animate-fade-in delay-200">
+            <Button 
+              size="lg" 
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8"
+              onClick={() => navigate('/restaurants')}
+            >
+              Commander
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white/10"
+              onClick={() => navigate('/services')}
+            >
+              Nos Services
+            </Button>
           </div>
         </div>
-      </div>
-    </PageTransition>
-  );
-};
+      </section>
 
-export default Index;
+      {/* Services Sections */}
+      <EssentialServices />
+      <AdditionalServices />
+      <CulturalServices />
+
+      {/* Map Section */}
+      <section className="py-16 container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center text-white mb-8">Notre Zone de Livraison</h2>
+        <div className="h-[400px] rounded-lg overflow-hidden shadow-xl">
+          <DeliveryMap latitude={-4.4419} longitude={15.2663} />
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <Testimonials />
+
+      {/* Newsletter */}
+      <Newsletter />
+
+      {/* Cart Drawer */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <CartDrawer />
+      </div>
+
+      {/* Chat Bubble - Moved outside main content */}
+      <div className="fixed bottom-4 left-4 z-50">
+        <ChatBubble />
+      </div>
+
+      <Footer />
+    </main>
+  );
+}
