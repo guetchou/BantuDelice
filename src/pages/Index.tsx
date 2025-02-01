@@ -90,7 +90,10 @@ export default function Index() {
       <section className="py-16 container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center text-white mb-8">Notre Zone de Livraison</h2>
         <div className="h-[400px] rounded-lg overflow-hidden shadow-xl">
-          <DeliveryMap latitude={-4.4419} longitude={15.2663} />
+          <DeliveryMap 
+            latitude={-4.4419} 
+            longitude={15.2663}
+          />
         </div>
       </section>
 
