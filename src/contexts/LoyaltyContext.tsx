@@ -42,12 +42,17 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data) {
-        // Ensure benefits is properly converted to string array
+        const parsedBenefits = data.benefits && typeof data.benefits === 'string' 
+          ? JSON.parse(data.benefits)
+          : Array.isArray(data.benefits) 
+            ? data.benefits 
+            : [];
+
         setLoyaltyPoints({
           points: data.points,
           tier_name: data.tier_name,
           points_to_next_tier: data.points_to_next_tier,
-          benefits: Array.isArray(data.benefits) ? data.benefits.map(String) : []
+          benefits: parsedBenefits.map((benefit: any) => String(benefit))
         });
       }
     } catch (err) {
@@ -65,6 +70,27 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchLoyaltyPoints();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'loyalty_points'
+        },
+        (payload) => {
+          console.log('Loyalty points change received:', payload);
+          fetchLoyaltyPoints();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
