@@ -1,98 +1,88 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface LoyaltyPoints {
   points: number;
   tier_name: string;
-  points_to_next_tier: number;
+  points_to_next_tier: number | null;
   benefits: string[];
 }
 
 interface LoyaltyContextType {
-  loyalty: LoyaltyPoints | null;
+  loyaltyPoints: LoyaltyPoints | null;
   isLoading: boolean;
-  error: Error | null;
+  error: string | null;
+  refetchLoyaltyPoints: () => Promise<void>;
 }
 
 const LoyaltyContext = createContext<LoyaltyContextType | undefined>(undefined);
 
-export function LoyaltyProvider({ children }: { children: React.ReactNode }) {
-  const [loyalty, setLoyalty] = useState<LoyaltyPoints | null>(null);
+export function LoyaltyProvider({ children }: { children: ReactNode }) {
+  const [loyaltyPoints, setLoyaltyPoints] = useState<LoyaltyPoints | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchLoyaltyPoints = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data, error } = await supabase
-          .from('loyalty_points')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          const loyaltyData: LoyaltyPoints = {
-            points: data.points,
-            tier_name: data.tier_name,
-            points_to_next_tier: data.points_to_next_tier,
-            benefits: Array.isArray(data.benefits) ? data.benefits.map(String) : []
-          };
-          setLoyalty(loyaltyData);
-        }
-      } catch (error) {
-        console.error('Error fetching loyalty points:', error);
-        setError(error as Error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger vos points de fidélité",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+  const fetchLoyaltyPoints = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setLoyaltyPoints(null);
+        return;
       }
-    };
 
+      const { data, error } = await supabase
+        .from('loyalty_points')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        // Ensure benefits is properly converted to string array
+        setLoyaltyPoints({
+          points: data.points,
+          tier_name: data.tier_name,
+          points_to_next_tier: data.points_to_next_tier,
+          benefits: Array.isArray(data.benefits) ? data.benefits.map(String) : []
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching loyalty points:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast({
+        title: "Error",
+        description: "Failed to fetch loyalty points",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchLoyaltyPoints();
-
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'loyalty_points'
-        },
-        (payload) => {
-          console.log('Loyalty points change received:', payload);
-          fetchLoyaltyPoints();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   return (
-    <LoyaltyContext.Provider value={{ loyalty, isLoading, error }}>
+    <LoyaltyContext.Provider value={{
+      loyaltyPoints,
+      isLoading,
+      error,
+      refetchLoyaltyPoints: fetchLoyaltyPoints
+    }}>
       {children}
     </LoyaltyContext.Provider>
   );
 }
 
-export const useLoyalty = () => {
+export function useLoyalty() {
   const context = useContext(LoyaltyContext);
   if (context === undefined) {
     throw new Error('useLoyalty must be used within a LoyaltyProvider');
   }
   return context;
-};
+}
