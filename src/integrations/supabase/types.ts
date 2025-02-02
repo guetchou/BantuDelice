@@ -812,25 +812,34 @@ export type Database = {
       }
       notifications: {
         Row: {
+          action_type: string | null
           created_at: string
           id: string
+          link: string | null
           message: string
+          metadata: Json | null
           read: boolean | null
           type: string
           user_id: string
         }
         Insert: {
+          action_type?: string | null
           created_at?: string
           id?: string
+          link?: string | null
           message: string
+          metadata?: Json | null
           read?: boolean | null
           type: string
           user_id: string
         }
         Update: {
+          action_type?: string | null
           created_at?: string
           id?: string
+          link?: string | null
           message?: string
+          metadata?: Json | null
           read?: boolean | null
           type?: string
           user_id?: string
@@ -1924,6 +1933,17 @@ export type Database = {
             }
             Returns: string
           }
+      create_notification: {
+        Args: {
+          p_user_id: string
+          p_message: string
+          p_type: string
+          p_link?: string
+          p_action_type?: string
+          p_metadata?: Json
+        }
+        Returns: undefined
+      }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
         Returns: string
