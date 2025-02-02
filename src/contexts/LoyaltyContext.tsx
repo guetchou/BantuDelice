@@ -37,12 +37,15 @@ export function LoyaltyProvider({ children }: { children: React.ReactNode }) {
 
         if (error) throw error;
 
-        setLoyalty(data ? {
-          points: data.points,
-          tier_name: data.tier_name,
-          points_to_next_tier: data.points_to_next_tier,
-          benefits: data.benefits
-        } : null);
+        if (data) {
+          const loyaltyData: LoyaltyPoints = {
+            points: data.points,
+            tier_name: data.tier_name,
+            points_to_next_tier: data.points_to_next_tier,
+            benefits: Array.isArray(data.benefits) ? data.benefits : []
+          };
+          setLoyalty(loyaltyData);
+        }
       } catch (error) {
         console.error('Error fetching loyalty points:', error);
         setError(error as Error);
@@ -58,7 +61,6 @@ export function LoyaltyProvider({ children }: { children: React.ReactNode }) {
 
     fetchLoyaltyPoints();
 
-    // Subscribe to realtime loyalty points updates
     const channel = supabase
       .channel('schema-db-changes')
       .on(

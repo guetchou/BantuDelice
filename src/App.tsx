@@ -4,7 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { LoyaltyProvider } from '@/contexts/LoyaltyContext';
 import ChatSupport from '@/components/chat/ChatSupport';
-import Routes from './routes';
+import { RouterProvider } from "react-router-dom";
+import { router } from './routes';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -22,11 +23,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <NotificationProvider>
         <LoyaltyProvider>
-          <Router>
-            <Routes />
-            <ChatSupport />
-            <Toaster />
-          </Router>
+          <RouterProvider router={router} />
+          <ChatSupport />
+          <Toaster />
         </LoyaltyProvider>
       </NotificationProvider>
     </QueryClientProvider>

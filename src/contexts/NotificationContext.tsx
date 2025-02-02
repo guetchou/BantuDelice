@@ -10,7 +10,7 @@ interface Notification {
   created_at: string;
   link?: string;
   action_type?: string;
-  metadata?: Record<string, any>;
+  metadata: Record<string, any>;
 }
 
 interface NotificationContextType {
@@ -41,8 +41,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
         if (error) throw error;
 
-        setNotifications(data || []);
-        setUnreadCount(data?.filter(n => !n.read).length || 0);
+        const typedNotifications: Notification[] = (data || []).map(n => ({
+          ...n,
+          metadata: typeof n.metadata === 'string' ? JSON.parse(n.metadata) : (n.metadata || {})
+        }));
+
+        setNotifications(typedNotifications);
+        setUnreadCount(typedNotifications.filter(n => !n.read).length);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
@@ -50,7 +55,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     fetchNotifications();
 
-    // Subscribe to realtime notifications
     const channel = supabase
       .channel('schema-db-changes')
       .on(

@@ -138,3 +138,9 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+const Routes = () => {
+  return router;
+};
+
+export default Routes;
