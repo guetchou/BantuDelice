@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { NotificationProvider, useNotifications } from '../NotificationContext';
 
@@ -43,7 +43,7 @@ describe('NotificationContext', () => {
       );
     });
     
-    expect(component.getByText('Notifications: 0')).toBeInTheDocument();
-    expect(component.getByText('Unread: 0')).toBeInTheDocument();
+    expect(screen.getByText('Notifications: 0')).toBeInTheDocument();
+    expect(screen.getByText('Unread: 0')).toBeInTheDocument();
   });
 });
