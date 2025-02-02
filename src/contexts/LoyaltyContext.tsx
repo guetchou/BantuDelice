@@ -42,7 +42,7 @@ export function LoyaltyProvider({ children }: { children: React.ReactNode }) {
             points: data.points,
             tier_name: data.tier_name,
             points_to_next_tier: data.points_to_next_tier,
-            benefits: Array.isArray(data.benefits) ? data.benefits : []
+            benefits: Array.isArray(data.benefits) ? data.benefits.map(String) : []
           };
           setLoyalty(loyaltyData);
         }
