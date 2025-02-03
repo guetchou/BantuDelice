@@ -258,6 +258,51 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_earnings: {
+        Row: {
+          amount: number
+          commission_amount: number
+          driver_id: string | null
+          earned_at: string | null
+          id: string
+          ride_id: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          commission_amount: number
+          driver_id?: string | null
+          earned_at?: string | null
+          id?: string
+          ride_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          commission_amount?: number
+          driver_id?: string | null
+          earned_at?: string | null
+          id?: string
+          ride_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_earnings_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "taxi_rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_payments: {
         Row: {
           amount: number
@@ -1335,14 +1380,18 @@ export type Database = {
           driver_id: string | null
           estimated_price: number | null
           id: string
+          payment_method: string | null
           payment_status: string | null
           pickup_address: string
           pickup_latitude: number | null
           pickup_longitude: number | null
           pickup_time: string
+          rating: number | null
+          rating_comment: string | null
           status: string | null
           updated_at: string | null
           user_id: string
+          vehicle_type: string | null
         }
         Insert: {
           actual_price?: number | null
@@ -1353,14 +1402,18 @@ export type Database = {
           driver_id?: string | null
           estimated_price?: number | null
           id?: string
+          payment_method?: string | null
           payment_status?: string | null
           pickup_address: string
           pickup_latitude?: number | null
           pickup_longitude?: number | null
           pickup_time: string
+          rating?: number | null
+          rating_comment?: string | null
           status?: string | null
           updated_at?: string | null
           user_id: string
+          vehicle_type?: string | null
         }
         Update: {
           actual_price?: number | null
@@ -1371,14 +1424,18 @@ export type Database = {
           driver_id?: string | null
           estimated_price?: number | null
           id?: string
+          payment_method?: string | null
           payment_status?: string | null
           pickup_address?: string
           pickup_latitude?: number | null
           pickup_longitude?: number | null
           pickup_time?: string
+          rating?: number | null
+          rating_comment?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string
+          vehicle_type?: string | null
         }
         Relationships: [
           {

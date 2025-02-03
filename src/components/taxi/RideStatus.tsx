@@ -8,7 +8,19 @@ import { Database } from "@/integrations/supabase/types";
 import { Clock, MapPin, Car, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
 
-type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'];
+type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'] & {
+  driver?: {
+    id: string;
+    current_latitude: number;
+    current_longitude: number;
+    user_id: string;
+    profiles?: {
+      first_name: string;
+      last_name: string;
+      avatar_url: string | null;
+    } | null;
+  } | null;
+};
 
 const RideStatus = () => {
   const { rideId } = useParams<{ rideId: string }>();
@@ -170,7 +182,7 @@ const RideStatus = () => {
         <Card className="p-6 space-y-4">
           <div className="flex justify-between items-start">
             <h2 className="text-2xl font-bold">Suivi de votre course</h2>
-            {getStatusBadge(ride.status)}
+            {getStatusBadge(ride.status || 'pending')}
           </div>
           
           <div className="grid grid-cols-2 gap-4">
