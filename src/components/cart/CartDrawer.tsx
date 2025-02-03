@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Loader2, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Loader2, AlertCircle, X, Plus, Minus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
 import MobilePayment from '@/components/MobilePayment';
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CartDrawerProps {
   onOrderAmount?: (amount: number) => void;
@@ -39,6 +41,8 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
     const itemIds = state.items.map(item => item.id);
     if (itemIds.length === 0) return;
 
+    console.log('Initializing stock monitoring for items:', itemIds);
+
     // Récupération initiale du stock
     const fetchStockLevels = async () => {
       const { data, error } = await supabase
@@ -59,6 +63,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
         };
       });
       setStockStatus(stockData);
+      console.log('Initial stock levels:', stockData);
     };
 
     fetchStockLevels();
@@ -75,7 +80,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
           filter: `menu_item_id=in.(${itemIds.map(id => `'${id}'`).join(',')})`,
         },
         (payload) => {
-          console.log('Changement de stock détecté:', payload);
+          console.log('Stock change detected:', payload);
           const newData = payload.new as InventoryPayload;
           if (newData && newData.menu_item_id) {
             setStockStatus(current => ({
@@ -91,6 +96,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
       .subscribe();
 
     return () => {
+      console.log('Cleaning up stock monitoring subscription');
       supabase.removeChannel(channel);
     };
   }, [state.items]);
@@ -100,6 +106,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
     setError(null);
     
     try {
+      console.log('Validating stock for items:', state.items);
       const { data, error } = await supabase
         .rpc('validate_order_stock', {
           items: state.items.map(item => ({
@@ -117,6 +124,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
         throw new Error('Certains articles ne sont plus disponibles en stock');
       }
 
+      console.log('Stock validation successful');
       return true;
     } catch (error) {
       console.error('Erreur de validation du stock:', error);
@@ -168,11 +176,6 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
       title: "Commande validée",
       description: "Votre commande a été validée avec succès",
     });
-  };
-
-  const handlePaymentError = (error: Error) => {
-    setError(error.message);
-    setShowMobilePayment(false);
   };
 
   const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
@@ -232,15 +235,20 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
           <ShoppingCart className="h-5 w-5" />
         )}
         {state.items.length > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+          <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center">
             {state.items.length}
-          </span>
+          </Badge>
         )}
       </Button>
 
       {isOpen && (
         <div className="absolute bottom-full right-0 mb-2 w-80 bg-white rounded-lg shadow-xl p-4 border border-gray-200">
-          <h3 className="font-semibold mb-4">Votre Panier</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Votre Panier</h3>
+            <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           
           {error && (
             <Alert variant="destructive" className="mb-4">
@@ -258,62 +266,66 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
           ) : (
             <>
               {state.items.length === 0 ? (
-                <p className="text-gray-500">Votre panier est vide</p>
+                <p className="text-gray-500 text-center py-4">Votre panier est vide</p>
               ) : (
                 <>
-                  <div className="space-y-4 max-h-60 overflow-auto">
-                    {state.items.map((item) => {
-                      const stock = stockStatus[item.id];
-                      const availableStock = stock ? stock.currentStock - stock.reservedStock : null;
-                      
-                      return (
-                        <div key={item.id} className="flex items-center justify-between gap-2">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{item.name}</h4>
-                            <p className="text-sm text-gray-500">{item.price} FCFA</p>
-                            {availableStock !== null && availableStock < item.quantity && (
-                              <p className="text-xs text-red-500">
-                                Stock disponible: {availableStock}
-                              </p>
-                            )}
+                  <ScrollArea className="h-[60vh] pr-4">
+                    <div className="space-y-4">
+                      {state.items.map((item) => {
+                        const stock = stockStatus[item.id];
+                        const availableStock = stock ? stock.currentStock - stock.reservedStock : null;
+                        
+                        return (
+                          <div key={item.id} className="flex flex-col gap-2 p-3 border rounded-lg">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-medium">{item.name}</h4>
+                                <p className="text-sm text-gray-500">{item.price.toLocaleString()} FCFA</p>
+                                {availableStock !== null && availableStock < item.quantity && (
+                                  <p className="text-xs text-red-500">
+                                    Stock disponible: {availableStock}
+                                  </p>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-500 hover:text-red-700"
+                                onClick={() => handleRemoveItem(item.id)}
+                                disabled={isProcessing}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                                disabled={isProcessing}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <span className="w-8 text-center">{item.quantity}</span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                                disabled={isProcessing || (availableStock !== null && item.quantity >= availableStock)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                              disabled={isProcessing}
-                            >
-                              -
-                            </Button>
-                            <span>{item.quantity}</span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                              disabled={isProcessing || (availableStock !== null && item.quantity >= availableStock)}
-                            >
-                              +
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-red-500 hover:text-red-700"
-                              onClick={() => handleRemoveItem(item.id)}
-                              disabled={isProcessing}
-                            >
-                              <AlertCircle className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
 
                   <div className="mt-4 pt-4 border-t">
                     <div className="flex justify-between mb-4">
                       <span className="font-semibold">Total:</span>
-                      <span className="font-semibold">{total} FCFA</span>
+                      <span className="font-semibold">{total.toLocaleString()} FCFA</span>
                     </div>
                     <Button 
                       className="w-full bg-orange-500 hover:bg-orange-600 flex items-center justify-center gap-2"
