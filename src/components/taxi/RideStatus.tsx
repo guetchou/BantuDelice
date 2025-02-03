@@ -4,19 +4,38 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import DeliveryMap from "@/components/DeliveryMap";
-import { Database } from "@/integrations/supabase/types";
 import { Clock, MapPin, Car, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
 
-type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'] & {
+type TaxiRide = {
+  id: string;
+  user_id: string;
+  pickup_address: string;
+  destination_address: string;
+  pickup_time: string;
+  status: string;
+  driver_id?: string;
+  created_at: string;
+  updated_at: string;
+  estimated_price?: number;
+  actual_price?: number;
+  payment_status: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  destination_latitude?: number;
+  destination_longitude?: number;
+  vehicle_type: string;
+  payment_method: string;
+  rating?: number;
+  rating_comment?: string;
   driver?: {
     id: string;
     current_latitude: number;
     current_longitude: number;
     user_id: string;
     profiles?: {
-      first_name: string;
-      last_name: string;
+      first_name: string | null;
+      last_name: string | null;
       avatar_url: string | null;
     } | null;
   } | null;
@@ -68,7 +87,7 @@ const RideStatus = () => {
           return;
         }
 
-        setRide(data);
+        setRide(data as TaxiRide);
         
         if (data.driver) {
           setDriverLocation({
