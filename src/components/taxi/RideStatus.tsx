@@ -87,12 +87,25 @@ const RideStatus = () => {
           return;
         }
 
-        setRide(data as TaxiRide);
+        // Type assertion after validation
+        const validatedRide: TaxiRide = {
+          ...data,
+          driver: data.driver ? {
+            ...data.driver,
+            profiles: data.driver.profiles && typeof data.driver.profiles === 'object' ? {
+              first_name: data.driver.profiles.first_name || null,
+              last_name: data.driver.profiles.last_name || null,
+              avatar_url: data.driver.profiles.avatar_url || null
+            } : null
+          } : null
+        };
+
+        setRide(validatedRide);
         
-        if (data.driver) {
+        if (validatedRide.driver) {
           setDriverLocation({
-            lat: data.driver.current_latitude,
-            lng: data.driver.current_longitude
+            lat: validatedRide.driver.current_latitude,
+            lng: validatedRide.driver.current_longitude
           });
         }
       } catch (err) {
@@ -116,7 +129,8 @@ const RideStatus = () => {
         },
         (payload) => {
           console.log('Ride update received:', payload);
-          setRide(payload.new as TaxiRide);
+          const updatedRide = payload.new as TaxiRide;
+          setRide(updatedRide);
         }
       )
       .subscribe();
@@ -201,7 +215,7 @@ const RideStatus = () => {
         <Card className="p-6 space-y-4">
           <div className="flex justify-between items-start">
             <h2 className="text-2xl font-bold">Suivi de votre course</h2>
-            {getStatusBadge(ride.status || 'pending')}
+            {getStatusBadge(ride?.status || 'pending')}
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -210,7 +224,7 @@ const RideStatus = () => {
                 <MapPin className="h-4 w-4" />
                 <span>Départ</span>
               </div>
-              <p className="font-medium">{ride.pickup_address}</p>
+              <p className="font-medium">{ride?.pickup_address}</p>
             </div>
             
             <div>
@@ -218,7 +232,7 @@ const RideStatus = () => {
                 <MapPin className="h-4 w-4" />
                 <span>Destination</span>
               </div>
-              <p className="font-medium">{ride.destination_address}</p>
+              <p className="font-medium">{ride?.destination_address}</p>
             </div>
             
             <div>
@@ -227,7 +241,7 @@ const RideStatus = () => {
                 <span>Heure de prise en charge</span>
               </div>
               <p className="font-medium">
-                {new Date(ride.pickup_time).toLocaleString()}
+                {ride?.pickup_time && new Date(ride.pickup_time).toLocaleString()}
               </p>
             </div>
             
@@ -237,12 +251,12 @@ const RideStatus = () => {
                 <span>Prix estimé</span>
               </div>
               <p className="font-medium">
-                {ride.estimated_price?.toLocaleString()} FCFA
+                {ride?.estimated_price?.toLocaleString()} FCFA
               </p>
             </div>
           </div>
 
-          {ride.driver && (
+          {ride?.driver && (
             <div className="mt-4 p-4 bg-secondary/10 rounded-lg">
               <div className="flex items-center space-x-4">
                 <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center">
@@ -258,7 +272,7 @@ const RideStatus = () => {
             </div>
           )}
 
-          {(ride.pickup_latitude && ride.pickup_longitude) && (
+          {(ride?.pickup_latitude && ride?.pickup_longitude) && (
             <div className="h-64 mt-4">
               <DeliveryMap
                 latitude={driverLocation?.lat || ride.pickup_latitude}
