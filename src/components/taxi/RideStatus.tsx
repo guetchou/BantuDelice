@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -95,11 +94,11 @@ const RideStatus = () => {
           ...data,
           driver: data.driver ? {
             ...data.driver,
-            profiles: data.driver.profiles && typeof data.driver.profiles === 'object' ? {
-              first_name: data.driver.profiles.first_name ?? null,
-              last_name: data.driver.profiles.last_name ?? null,
-              avatar_url: data.driver.profiles.avatar_url ?? null
-            } : null
+            profiles: {
+              first_name: data.driver?.profiles?.first_name ?? null,
+              last_name: data.driver?.profiles?.last_name ?? null,
+              avatar_url: data.driver?.profiles?.avatar_url ?? null
+            }
           } : null
         };
 
