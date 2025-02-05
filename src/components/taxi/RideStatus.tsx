@@ -73,7 +73,7 @@ const RideStatus = () => {
             )
           `)
           .eq('id', rideId)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching ride:', error);
@@ -92,11 +92,11 @@ const RideStatus = () => {
           ...data,
           driver: data.driver ? {
             ...data.driver,
-            profiles: data.driver.profiles && typeof data.driver.profiles === 'object' ? {
-              first_name: data.driver.profiles?.first_name ?? null,
-              last_name: data.driver.profiles?.last_name ?? null,
-              avatar_url: data.driver.profiles?.avatar_url ?? null
-            } : null
+            profiles: data.driver.profiles || {
+              first_name: null,
+              last_name: null,
+              avatar_url: null
+            }
           } : null
         };
 
