@@ -92,10 +92,10 @@ const RideStatus = () => {
           ...data,
           driver: data.driver ? {
             ...data.driver,
-            profiles: data.driver.profiles || {
-              first_name: null,
-              last_name: null,
-              avatar_url: null
+            profiles: {
+              first_name: data.driver.profiles?.first_name || null,
+              last_name: data.driver.profiles?.last_name || null,
+              avatar_url: data.driver.profiles?.avatar_url || null
             }
           } : null
         };
@@ -265,7 +265,7 @@ const RideStatus = () => {
                 <div>
                   <h3 className="font-medium">Votre chauffeur</h3>
                   <p className="text-sm text-muted-foreground">
-                    {ride.driver.profiles?.first_name ?? ''} {ride.driver.profiles?.last_name ?? ''}
+                    {ride.driver.profiles?.first_name || ''} {ride.driver.profiles?.last_name || ''}
                   </p>
                 </div>
               </div>
