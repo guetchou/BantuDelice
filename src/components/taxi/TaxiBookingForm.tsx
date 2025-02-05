@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Navigation, Clock, CreditCard } from "lucide-react";
+import { MapPin, Navigation, Clock, CreditCard, Wallet } from "lucide-react";
 import DeliveryMap from "@/components/DeliveryMap";
 import {
   Select,
@@ -16,6 +16,15 @@ import {
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import MobilePayment from "@/components/MobilePayment";
 
 const TaxiBookingForm = () => {
   const [pickupAddress, setPickupAddress] = useState('');
@@ -26,6 +35,8 @@ const TaxiBookingForm = () => {
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string>('mobile_money');
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -93,10 +104,8 @@ const TaxiBookingForm = () => {
     return deg * (Math.PI / 180);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
+  const handlePaymentComplete = async () => {
+    setShowPaymentDialog(false);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Non authentifié');
@@ -105,7 +114,8 @@ const TaxiBookingForm = () => {
         throw new Error('Coordonnées manquantes');
       }
 
-      const { data, error } = await supabase
+      // Créer la course
+      const { data: ride, error: rideError } = await supabase
         .from('taxi_rides')
         .insert({
           user_id: user.id,
@@ -117,19 +127,37 @@ const TaxiBookingForm = () => {
           destination_latitude: destinationCoords.lat,
           destination_longitude: destinationCoords.lng,
           estimated_price: estimatedPrice,
-          vehicle_type: vehicleType
+          vehicle_type: vehicleType,
+          payment_method: paymentMethod,
+          payment_status: 'completed'
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (rideError) throw rideError;
+
+      // Créer l'enregistrement de paiement
+      const { error: paymentError } = await supabase
+        .from('taxi_payments')
+        .insert({
+          ride_id: ride.id,
+          amount: estimatedPrice || 0,
+          payment_method: paymentMethod,
+          payment_status: 'completed',
+          payment_details: {
+            vehicle_type: vehicleType,
+            payment_type: paymentMethod
+          }
+        });
+
+      if (paymentError) throw paymentError;
 
       toast({
         title: "Réservation confirmée",
         description: "Votre taxi a été réservé avec succès",
       });
 
-      navigate(`/taxi/ride/${data.id}`);
+      navigate(`/taxi/ride/${ride.id}`);
     } catch (error) {
       console.error('Error booking taxi:', error);
       toast({
@@ -140,6 +168,23 @@ const TaxiBookingForm = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    if (!estimatedPrice) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de calculer le prix estimé",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    setShowPaymentDialog(true);
   };
 
   return (
@@ -247,6 +292,27 @@ const TaxiBookingForm = () => {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="payment-method">Mode de paiement</Label>
+            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2">
+              <div className="flex items-center space-x-2 border rounded-lg p-3">
+                <RadioGroupItem value="mobile_money" id="mobile_money" />
+                <Label htmlFor="mobile_money" className="flex-1">Mobile Money</Label>
+              </div>
+              <div className="flex items-center space-x-2 border rounded-lg p-3">
+                <RadioGroupItem value="cash" id="cash" />
+                <Label htmlFor="cash" className="flex-1">Paiement en espèces</Label>
+              </div>
+              <div className="flex items-center space-x-2 border rounded-lg p-3">
+                <RadioGroupItem value="wallet" id="wallet" />
+                <Label htmlFor="wallet" className="flex-1 flex items-center">
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Portefeuille électronique
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           {pickupCoords && destinationCoords && (
             <>
               <div className="h-64 rounded-lg overflow-hidden">
@@ -277,6 +343,39 @@ const TaxiBookingForm = () => {
           </Button>
         </motion.div>
       </Card>
+
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Paiement</DialogTitle>
+          </DialogHeader>
+          {paymentMethod === 'mobile_money' && (
+            <MobilePayment
+              amount={estimatedPrice || 0}
+              onPaymentComplete={handlePaymentComplete}
+              description="Réservation de taxi"
+            />
+          )}
+          {paymentMethod === 'cash' && (
+            <div className="space-y-4">
+              <p>Vous paierez en espèces au chauffeur à la fin de la course.</p>
+              <p className="font-semibold">Montant à payer: {estimatedPrice?.toLocaleString()} FCFA</p>
+              <Button onClick={handlePaymentComplete} className="w-full">
+                Confirmer la réservation
+              </Button>
+            </div>
+          )}
+          {paymentMethod === 'wallet' && (
+            <div className="space-y-4">
+              <p>Paiement via votre portefeuille électronique</p>
+              <p className="font-semibold">Montant: {estimatedPrice?.toLocaleString()} FCFA</p>
+              <Button onClick={handlePaymentComplete} className="w-full">
+                Payer avec mon portefeuille
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </form>
   );
 };

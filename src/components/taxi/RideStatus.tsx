@@ -8,6 +8,7 @@ import { Clock, MapPin, Car, CreditCard, Star, Phone, MessageSquare, Shield } fr
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import RatingDialog from './RatingDialog';
 
 type TaxiRide = {
   id: string;
@@ -49,6 +50,7 @@ const RideStatus = () => {
   const [driverLocation, setDriverLocation] = useState<{lat: number, lng: number} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
 
   useEffect(() => {
     const fetchRide = async () => {
@@ -331,6 +333,22 @@ const RideStatus = () => {
                 orderId={ride.id}
               />
             </div>
+          )}
+          {ride.status === 'completed' && (
+            <Button
+              onClick={() => setShowRatingDialog(true)}
+              className="mt-4 w-full"
+            >
+              Évaluer la course
+            </Button>
+          )}
+
+          {ride.status === 'completed' && (
+            <RatingDialog
+              open={showRatingDialog}
+              onOpenChange={setShowRatingDialog}
+              rideId={ride.id}
+            />
           )}
         </Card>
       </motion.div>
