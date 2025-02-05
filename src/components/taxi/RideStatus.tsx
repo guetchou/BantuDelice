@@ -92,11 +92,11 @@ const RideStatus = () => {
           ...data,
           driver: data.driver ? {
             ...data.driver,
-            profiles: {
-              first_name: data.driver.profiles ? data.driver.profiles.first_name : null,
-              last_name: data.driver.profiles ? data.driver.profiles.last_name : null,
-              avatar_url: data.driver.profiles ? data.driver.profiles.avatar_url : null
-            }
+            profiles: data.driver.profiles && !('error' in data.driver.profiles) ? {
+              first_name: data.driver.profiles.first_name,
+              last_name: data.driver.profiles.last_name,
+              avatar_url: data.driver.profiles.avatar_url
+            } : null
           } : null
         };
 
