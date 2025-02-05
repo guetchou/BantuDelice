@@ -265,7 +265,7 @@ const RideStatus = () => {
                 <div>
                   <h3 className="font-medium">Votre chauffeur</h3>
                   <p className="text-sm text-muted-foreground">
-                    {ride.driver.profiles?.first_name} {ride.driver.profiles?.last_name}
+                    {ride.driver.profiles?.first_name ?? ''} {ride.driver.profiles?.last_name ?? ''}
                   </p>
                 </div>
               </div>
