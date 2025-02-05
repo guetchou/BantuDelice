@@ -1,29 +1,23 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Navigation, Clock, CreditCard, Wallet } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import DeliveryMap from "@/components/DeliveryMap";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
+import LocationSection from './LocationSection';
+import VehicleSection from './VehicleSection';
+import PaymentSection from './PaymentSection';
+import PickupTimeSection from './PickupTimeSection';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { motion } from "framer-motion";
+import { Card } from "@/components/ui/card";
 import MobilePayment from "@/components/MobilePayment";
 
 const TaxiBookingForm = () => {
@@ -66,7 +60,6 @@ const TaxiBookingForm = () => {
           setDestinationAddress(address);
         }
 
-        // Calculate estimated price if both locations are set
         if (pickupCoords && destinationCoords) {
           const distance = calculateDistance(
             pickupCoords.lat,
@@ -89,7 +82,7 @@ const TaxiBookingForm = () => {
   };
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = deg2rad(lat2 - lat1);
     const dLon = deg2rad(lon2 - lon1);
     const a =
@@ -104,6 +97,37 @@ const TaxiBookingForm = () => {
     return deg * (Math.PI / 180);
   };
 
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setPickupCoords({ lat: latitude, lng: longitude });
+          
+          try {
+            const response = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${process.env.MAPBOX_PUBLIC_TOKEN}`
+            );
+            const data = await response.json();
+            if (data.features && data.features[0]) {
+              setPickupAddress(data.features[0].place_name);
+            }
+          } catch (error) {
+            console.error('Error reverse geocoding:', error);
+          }
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          toast({
+            title: "Erreur de localisation",
+            description: "Impossible d'obtenir votre position actuelle",
+            variant: "destructive",
+          });
+        }
+      );
+    }
+  };
+
   const handlePaymentComplete = async () => {
     setShowPaymentDialog(false);
     try {
@@ -114,7 +138,6 @@ const TaxiBookingForm = () => {
         throw new Error('Coordonnées manquantes');
       }
 
-      // Créer la course
       const { data: ride, error: rideError } = await supabase
         .from('taxi_rides')
         .insert({
@@ -136,21 +159,22 @@ const TaxiBookingForm = () => {
 
       if (rideError) throw rideError;
 
-      // Créer l'enregistrement de paiement
-      const { error: paymentError } = await supabase
-        .from('taxi_payments')
-        .insert({
-          ride_id: ride.id,
-          amount: estimatedPrice || 0,
-          payment_method: paymentMethod,
-          payment_status: 'completed',
-          payment_details: {
-            vehicle_type: vehicleType,
-            payment_type: paymentMethod
-          }
-        });
+      if (ride) {
+        const { error: paymentError } = await supabase
+          .from('taxi_payments')
+          .insert({
+            ride_id: ride.id,
+            amount: estimatedPrice || 0,
+            payment_method: paymentMethod,
+            payment_status: 'completed',
+            payment_details: {
+              vehicle_type: vehicleType,
+              payment_type: paymentMethod
+            }
+          });
 
-      if (paymentError) throw paymentError;
+        if (paymentError) throw paymentError;
+      }
 
       toast({
         title: "Réservation confirmée",
@@ -195,123 +219,29 @@ const TaxiBookingForm = () => {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          <div className="space-y-2">
-            <Label htmlFor="pickup">Point de départ</Label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="pickup"
-                  className="pl-10"
-                  placeholder="Adresse de départ"
-                  value={pickupAddress}
-                  onChange={(e) => setPickupAddress(e.target.value)}
-                  onBlur={() => handleLocationSelect(pickupAddress, true)}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                      async (position) => {
-                        const { latitude, longitude } = position.coords;
-                        setPickupCoords({ lat: latitude, lng: longitude });
-                        
-                        try {
-                          const response = await fetch(
-                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${process.env.MAPBOX_PUBLIC_TOKEN}`
-                          );
-                          const data = await response.json();
-                          if (data.features && data.features[0]) {
-                            setPickupAddress(data.features[0].place_name);
-                          }
-                        } catch (error) {
-                          console.error('Error reverse geocoding:', error);
-                        }
-                      },
-                      (error) => {
-                        console.error('Error getting location:', error);
-                        toast({
-                          title: "Erreur de localisation",
-                          description: "Impossible d'obtenir votre position actuelle",
-                          variant: "destructive",
-                        });
-                      }
-                    );
-                  }
-                }}
-              >
-                <Navigation className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <LocationSection 
+            pickupAddress={pickupAddress}
+            setPickupAddress={setPickupAddress}
+            destinationAddress={destinationAddress}
+            setDestinationAddress={setDestinationAddress}
+            onLocationSelect={handleLocationSelect}
+            onUseCurrentLocation={handleUseCurrentLocation}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="destination">Destination</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="destination"
-                className="pl-10"
-                placeholder="Adresse de destination"
-                value={destinationAddress}
-                onChange={(e) => setDestinationAddress(e.target.value)}
-                onBlur={() => handleLocationSelect(destinationAddress, false)}
-              />
-            </div>
-          </div>
+          <VehicleSection 
+            vehicleType={vehicleType}
+            setVehicleType={setVehicleType}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="vehicle-type">Type de véhicule</Label>
-            <Select value={vehicleType} onValueChange={setVehicleType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choisir un type de véhicule" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="standard">Standard (4 places)</SelectItem>
-                <SelectItem value="premium">Premium (4 places)</SelectItem>
-                <SelectItem value="van">Van (7 places)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <PickupTimeSection 
+            pickupTime={pickupTime}
+            setPickupTime={setPickupTime}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="pickup-time">
-              <Clock className="inline-block h-4 w-4 mr-2" />
-              Heure de prise en charge
-            </Label>
-            <Input
-              id="pickup-time"
-              type="datetime-local"
-              value={pickupTime}
-              onChange={(e) => setPickupTime(e.target.value)}
-              min={new Date().toISOString().slice(0, 16)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="payment-method">Mode de paiement</Label>
-            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2">
-              <div className="flex items-center space-x-2 border rounded-lg p-3">
-                <RadioGroupItem value="mobile_money" id="mobile_money" />
-                <Label htmlFor="mobile_money" className="flex-1">Mobile Money</Label>
-              </div>
-              <div className="flex items-center space-x-2 border rounded-lg p-3">
-                <RadioGroupItem value="cash" id="cash" />
-                <Label htmlFor="cash" className="flex-1">Paiement en espèces</Label>
-              </div>
-              <div className="flex items-center space-x-2 border rounded-lg p-3">
-                <RadioGroupItem value="wallet" id="wallet" />
-                <Label htmlFor="wallet" className="flex-1 flex items-center">
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Portefeuille électronique
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
+          <PaymentSection 
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+          />
 
           {pickupCoords && destinationCoords && (
             <>
