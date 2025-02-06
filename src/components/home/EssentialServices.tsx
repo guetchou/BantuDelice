@@ -1,51 +1,30 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Car, Fuel, HeartHandshake, Coffee, Utensils } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { UtensilsCrossed, Truck, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const services = [
   {
-    icon: ShoppingCart,
-    title: "Commande de Repas",
-    description: "Vos plats congolais préférés livrés chauds et dans les meilleurs délais",
-    route: "/restaurants",
-    color: "text-indigo-600"
+    icon: UtensilsCrossed,
+    title: "Restaurants Partenaires",
+    description: "Découvrez une sélection de restaurants de qualité",
+    action: "Explorer",
+    route: "/restaurants"
   },
   {
-    icon: Car,
-    title: "Transport VIP",
-    description: "Service de transport personnalisé avec chauffeurs professionnels",
-    route: "/services/transport",
-    color: "text-emerald-600"
+    icon: Truck,
+    title: "Livraison Rapide",
+    description: "Livraison à domicile en 30 minutes",
+    action: "Commander",
+    route: "/delivery"
   },
   {
-    icon: Fuel,
-    title: "Livraison de Gaz",
-    description: "Approvisionnement rapide et sécurisé à votre porte",
-    route: "/services/gas",
-    color: "text-orange-600"
-  },
-  {
-    icon: Coffee,
-    title: "Service Traiteur",
-    description: "Organisation d'événements et service traiteur professionnel",
-    route: "/services/catering",
-    color: "text-purple-600"
-  },
-  {
-    icon: HeartHandshake,
-    title: "Services à Domicile",
-    description: "Assistance et services personnalisés à votre domicile",
-    route: "/services/home",
-    color: "text-rose-600"
-  },
-  {
-    icon: Utensils,
-    title: "Cours de Cuisine",
-    description: "Apprenez l'art de la cuisine congolaise avec nos chefs",
-    route: "/services/cooking",
-    color: "text-blue-600"
+    icon: Clock,
+    title: "Suivi en Temps Réel",
+    description: "Suivez votre commande en direct",
+    action: "Suivre",
+    route: "/tracking"
   }
 ];
 
@@ -53,17 +32,18 @@ const EssentialServices = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 to-gray-100">
+    <section className="py-20 bg-gradient-to-br from-gray-800 to-gray-900">
       <div className="container mx-auto px-4">
         <motion.h2 
-          className="text-3xl font-bold text-center mb-12"
+          className="text-4xl font-bold text-center mb-12 bg-gradient-to-r from-neon-green via-neon-blue to-neon-purple bg-clip-text text-transparent animate-gradient-x"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          Nos Services Essentiels
+          Services Essentiels
         </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {services.map((service, index) => (
             <motion.div
               key={service.title}
@@ -71,17 +51,17 @@ const EssentialServices = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm">
-                <service.icon className={`w-12 h-12 mx-auto mb-4 ${service.color}`} />
-                <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
-                <p className="text-gray-600 mb-6">
+              <Card className="p-6 text-center glass-effect hover-scale">
+                <service.icon className="w-12 h-12 mx-auto mb-4 text-neon-blue animate-float" />
+                <h3 className="text-xl font-semibold mb-2 text-white">{service.title}</h3>
+                <p className="text-gray-300 mb-6">
                   {service.description}
                 </p>
                 <Button 
                   onClick={() => navigate(service.route)}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800"
+                  className="w-full bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-blue text-white transition-all duration-300"
                 >
-                  Découvrir
+                  {service.action}
                 </Button>
               </Card>
             </motion.div>
