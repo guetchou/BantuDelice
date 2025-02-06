@@ -1370,6 +1370,88 @@ export type Database = {
         }
         Relationships: []
       }
+      taxi_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          payment_details: Json | null
+          payment_method: string | null
+          payment_status: string | null
+          ride_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          payment_details?: Json | null
+          payment_method?: string | null
+          payment_status?: string | null
+          ride_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          payment_details?: Json | null
+          payment_method?: string | null
+          payment_status?: string | null
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxi_payments_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "taxi_rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxi_ratings: {
+        Row: {
+          cleanliness: number | null
+          comment: string | null
+          communication: number | null
+          created_at: string | null
+          driving_quality: number | null
+          id: string
+          punctuality: number | null
+          rating: number
+          ride_id: string
+        }
+        Insert: {
+          cleanliness?: number | null
+          comment?: string | null
+          communication?: number | null
+          created_at?: string | null
+          driving_quality?: number | null
+          id?: string
+          punctuality?: number | null
+          rating: number
+          ride_id: string
+        }
+        Update: {
+          cleanliness?: number | null
+          comment?: string | null
+          communication?: number | null
+          created_at?: string | null
+          driving_quality?: number | null
+          id?: string
+          punctuality?: number | null
+          rating?: number
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxi_ratings_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "taxi_rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taxi_rides: {
         Row: {
           actual_price: number | null
