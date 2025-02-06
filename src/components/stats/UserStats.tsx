@@ -36,8 +36,8 @@ const UserStats = () => {
 
       // Calculer les statistiques
       const totalOrders = orders?.length || 0;
-      const totalSpent = orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
-      const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
+      const totalSpent = orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+      const averageOrderValue = totalOrders > 0 ? Number(totalSpent) / Number(totalOrders) : 0;
 
       // Trouver le restaurant favori
       const restaurantCounts = orders?.reduce((acc, order) => {

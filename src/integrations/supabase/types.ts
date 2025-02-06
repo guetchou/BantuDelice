@@ -1,5 +1,8 @@
 import { Database } from './database.types'
 
+// Export the Database type
+export type { Database }
+
 // Types de base pour les tables
 export type Tables = Database['public']['Tables']
 export type TablesInsert = {
