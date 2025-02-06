@@ -6,6 +6,7 @@ import AdditionalServices from "@/components/home/AdditionalServices";
 import CulturalServices from "@/components/home/CulturalServices";
 import Newsletter from "@/components/home/Newsletter";
 import Testimonials from "@/components/home/Testimonials";
+import TaxiFeature from "@/components/home/TaxiFeature";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
@@ -83,6 +84,7 @@ export default function Index() {
 
       {/* Services Sections */}
       <EssentialServices />
+      <TaxiFeature />
       <AdditionalServices />
       <CulturalServices />
 
@@ -108,7 +110,7 @@ export default function Index() {
         <CartDrawer />
       </div>
 
-      {/* Chat Bubble - Moved outside main content */}
+      {/* Chat Bubble */}
       <div className="fixed bottom-4 left-4 z-50">
         <ChatBubble />
       </div>
