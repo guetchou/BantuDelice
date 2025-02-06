@@ -21,13 +21,11 @@ const UserStats = () => {
         throw new Error('User not authenticated');
       }
 
-      // Récupérer les commandes de l'utilisateur
       const { data: orders } = await supabase
         .from('orders')
         .select('*')
         .eq('user_id', user.id);
 
-      // Récupérer les points de fidélité
       const { data: loyalty } = await supabase
         .from('loyalty_points')
         .select('points')

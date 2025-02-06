@@ -3,18 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Database } from '@/integrations/supabase/database.types';
 
-interface FavoriteItem {
-  id: string;
-  menu_item_id: string;
-  menu_item: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    image_url: string;
-  };
-}
+type FavoriteItem = Database['public']['Tables']['favorites']['Row'];
 
 const FavoritesList = () => {
   const { toast } = useToast();
