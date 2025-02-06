@@ -9,42 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import RatingDialog from './RatingDialog';
+import { TaxiRide } from '@/integrations/supabase/types';
 
-type TaxiRide = {
-  id: string;
-  user_id: string;
-  pickup_address: string;
-  destination_address: string;
-  pickup_time: string;
-  status: string;
-  driver_id?: string;
-  created_at: string;
-  updated_at: string;
-  estimated_price?: number;
-  actual_price?: number;
-  payment_status: string;
-  pickup_latitude?: number;
-  pickup_longitude?: number;
-  destination_latitude?: number;
-  destination_longitude?: number;
-  vehicle_type: string;
-  payment_method: string;
-  rating?: number;
-  rating_comment?: string;
-  driver?: {
-    id: string;
-    current_latitude: number;
-    current_longitude: number;
-    user_id: string;
-    profiles?: {
-      first_name: string | null;
-      last_name: string | null;
-      avatar_url: string | null;
-    } | null;
-  } | null;
-};
-
-const RideStatus = () => {
+export default function RideStatus() {
   const { rideId } = useParams<{ rideId: string }>();
   const [ride, setRide] = useState<TaxiRide | null>(null);
   const [driverLocation, setDriverLocation] = useState<{lat: number, lng: number} | null>(null);
@@ -77,7 +44,7 @@ const RideStatus = () => {
             )
           `)
           .eq('id', rideId)
-          .maybeSingle();
+          .single();
 
         if (error) {
           console.error('Error fetching ride:', error);
@@ -91,25 +58,12 @@ const RideStatus = () => {
           return;
         }
 
-        // Type assertion after validation
-        const validatedRide: TaxiRide = {
-          ...data,
-          driver: data.driver ? {
-            ...data.driver,
-            profiles: {
-              first_name: data.driver?.profiles?.first_name ?? null,
-              last_name: data.driver?.profiles?.last_name ?? null,
-              avatar_url: data.driver?.profiles?.avatar_url ?? null
-            }
-          } : null
-        };
-
-        setRide(validatedRide);
+        setRide(data as TaxiRide);
         
-        if (validatedRide.driver) {
+        if (data.driver) {
           setDriverLocation({
-            lat: validatedRide.driver.current_latitude,
-            lng: validatedRide.driver.current_longitude
+            lat: data.driver.current_latitude,
+            lng: data.driver.current_longitude
           });
         }
       } catch (err) {
@@ -334,6 +288,7 @@ const RideStatus = () => {
               />
             </div>
           )}
+
           {ride.status === 'completed' && (
             <Button
               onClick={() => setShowRatingDialog(true)}
@@ -354,6 +309,4 @@ const RideStatus = () => {
       </motion.div>
     </div>
   );
-};
-
-export default RideStatus;
+}
