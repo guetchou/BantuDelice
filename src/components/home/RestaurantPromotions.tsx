@@ -16,6 +16,7 @@ interface Promotion {
   discount_value: number;
   end_date: string;
   restaurant: {
+    id: string;
     name: string;
     banner_image_url: string;
   };
@@ -31,7 +32,7 @@ const RestaurantPromotions = () => {
         .from('restaurant_promotions')
         .select(`
           *,
-          restaurant:restaurants(name, banner_image_url)
+          restaurant:restaurants(id, name, banner_image_url)
         `)
         .eq('active', true)
         .gt('end_date', new Date().toISOString())
@@ -121,7 +122,7 @@ const RestaurantPromotions = () => {
                 
                 <Button 
                   className="w-full"
-                  onClick={() => navigate(`/restaurant/${promo.restaurant_id}`)}
+                  onClick={() => navigate(`/restaurant/${promo.restaurant.id}`)}
                 >
                   Voir le menu
                 </Button>
