@@ -1262,6 +1262,33 @@ export type Database = {
           },
         ]
       }
+      restaurant_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number | null
+          restaurant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          restaurant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          restaurant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           address: string
