@@ -151,6 +151,105 @@ export type Database = {
           },
         ]
       }
+      cooking_classes: {
+        Row: {
+          chef_id: string | null
+          created_at: string | null
+          cuisine_type: string
+          current_participants: number | null
+          description: string | null
+          difficulty_level: string | null
+          duration: number
+          id: string
+          ingredients: Json | null
+          max_participants: number
+          price: number
+          schedule: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          chef_id?: string | null
+          created_at?: string | null
+          cuisine_type: string
+          current_participants?: number | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration: number
+          id?: string
+          ingredients?: Json | null
+          max_participants: number
+          price: number
+          schedule: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          chef_id?: string | null
+          created_at?: string | null
+          cuisine_type?: string
+          current_participants?: number | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration?: number
+          id?: string
+          ingredients?: Json | null
+          max_participants?: number
+          price?: number
+          schedule?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      cultural_events: {
+        Row: {
+          capacity: number | null
+          category: string
+          created_at: string | null
+          description: string | null
+          event_date: string
+          id: string
+          image_url: string | null
+          location: string
+          price: number
+          registered_count: number | null
+          search_vector: unknown | null
+          status: string
+          title: string
+        }
+        Insert: {
+          capacity?: number | null
+          category: string
+          created_at?: string | null
+          description?: string | null
+          event_date: string
+          id?: string
+          image_url?: string | null
+          location: string
+          price?: number
+          registered_count?: number | null
+          search_vector?: unknown | null
+          status?: string
+          title: string
+        }
+        Update: {
+          capacity?: number | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          event_date?: string
+          id?: string
+          image_url?: string | null
+          location?: string
+          price?: number
+          registered_count?: number | null
+          search_vector?: unknown | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       delivery_drivers: {
         Row: {
           average_rating: number | null
@@ -354,6 +453,41 @@ export type Database = {
           },
         ]
       }
+      event_registrations: {
+        Row: {
+          event_id: string | null
+          id: string
+          registration_date: string | null
+          status: string
+          ticket_code: string | null
+          user_id: string | null
+        }
+        Insert: {
+          event_id?: string | null
+          id?: string
+          registration_date?: string | null
+          status?: string
+          ticket_code?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          event_id?: string | null
+          id?: string
+          registration_date?: string | null
+          status?: string
+          ticket_code?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "cultural_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string | null
@@ -419,6 +553,51 @@ export type Database = {
           title?: string
           type?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      food_artisans: {
+        Row: {
+          business_name: string
+          certification: string[] | null
+          contact_info: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_verified: boolean | null
+          location: string
+          rating: number | null
+          specialty: string
+          user_id: string | null
+        }
+        Insert: {
+          business_name: string
+          certification?: string[] | null
+          contact_info?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_verified?: boolean | null
+          location: string
+          rating?: number | null
+          specialty: string
+          user_id?: string | null
+        }
+        Update: {
+          business_name?: string
+          certification?: string[] | null
+          contact_info?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_verified?: boolean | null
+          location?: string
+          rating?: number | null
+          specialty?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1211,6 +1390,95 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recipe_comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          id: string
+          rating: number | null
+          recipe_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          recipe_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          recipe_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_comments_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_sharing"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_sharing: {
+        Row: {
+          cooking_time: number | null
+          created_at: string | null
+          cuisine_type: string
+          description: string | null
+          difficulty_level: string | null
+          id: string
+          image_url: string | null
+          ingredients: Json
+          instructions: Json
+          is_featured: boolean | null
+          likes_count: number | null
+          preparation_time: number | null
+          search_vector: unknown | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          cooking_time?: number | null
+          created_at?: string | null
+          cuisine_type: string
+          description?: string | null
+          difficulty_level?: string | null
+          id?: string
+          image_url?: string | null
+          ingredients: Json
+          instructions: Json
+          is_featured?: boolean | null
+          likes_count?: number | null
+          preparation_time?: number | null
+          search_vector?: unknown | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          cooking_time?: number | null
+          created_at?: string | null
+          cuisine_type?: string
+          description?: string | null
+          difficulty_level?: string | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          instructions?: Json
+          is_featured?: boolean | null
+          likes_count?: number | null
+          preparation_time?: number | null
+          search_vector?: unknown | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       restaurant_analytics: {
         Row: {

@@ -1,3 +1,4 @@
+
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/home/HeroSection";
@@ -7,6 +8,8 @@ import CulturalServices from "@/components/home/CulturalServices";
 import Newsletter from "@/components/home/Newsletter";
 import Testimonials from "@/components/home/Testimonials";
 import TaxiFeature from "@/components/home/TaxiFeature";
+import CulinaryEvents from "@/components/home/CulinaryEvents";
+import CookingClassesSection from "@/components/home/CookingClassesSection";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
@@ -82,8 +85,16 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Services Sections */}
+      {/* Essential Services */}
       <EssentialServices />
+
+      {/* Culinary Events Section */}
+      <CulinaryEvents />
+
+      {/* Cooking Classes Section */}
+      <CookingClassesSection />
+
+      {/* Additional Services */}
       <TaxiFeature />
       <AdditionalServices />
       <CulturalServices />
