@@ -1,3 +1,4 @@
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -18,5 +19,9 @@ export interface MenuItem {
   ingredients?: string[];
   seasonal?: boolean;
   featured?: boolean;
-  quantity?: number; // Added to make it compatible with CartItem
+  quantity?: number;
+  inventory_levels?: {
+    current_stock: number;
+    reserved_stock: number;
+  }[];
 }

@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          conditions: Json | null
+          created_at: string | null
+          description: string
+          icon_url: string | null
+          id: string
+          name: string
+          points_value: number | null
+        }
+        Insert: {
+          conditions?: Json | null
+          created_at?: string | null
+          description: string
+          icon_url?: string | null
+          id?: string
+          name: string
+          points_value?: number | null
+        }
+        Update: {
+          conditions?: Json | null
+          created_at?: string | null
+          description?: string
+          icon_url?: string | null
+          id?: string
+          name?: string
+          points_value?: number | null
+        }
+        Relationships: []
+      }
       booking_items: {
         Row: {
           booking_id: string | null
@@ -635,6 +665,53 @@ export type Database = {
           },
         ]
       }
+      events_restaurant: {
+        Row: {
+          capacity: number | null
+          created_at: string | null
+          description: string | null
+          event_date: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          restaurant_id: string | null
+          status: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number
+          restaurant_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          restaurant_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_restaurant_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string | null
@@ -792,6 +869,44 @@ export type Database = {
           },
         ]
       }
+      inventory_transactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          inventory_id: string | null
+          performed_by: string | null
+          quantity_change: number
+          reason: string | null
+          transaction_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          inventory_id?: string | null
+          performed_by?: string | null
+          quantity_change: number
+          reason?: string | null
+          transaction_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          inventory_id?: string | null
+          performed_by?: string | null
+          quantity_change?: number
+          reason?: string | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transactions_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: number
@@ -838,33 +953,42 @@ export type Database = {
       }
       loyalty_points: {
         Row: {
+          achievement_points: number | null
           benefits: Json | null
           created_at: string | null
           id: string
           level: string | null
+          lifetime_points: number | null
           points: number | null
+          points_expiry: string | null
           points_to_next_tier: number | null
           tier_name: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          achievement_points?: number | null
           benefits?: Json | null
           created_at?: string | null
           id?: string
           level?: string | null
+          lifetime_points?: number | null
           points?: number | null
+          points_expiry?: string | null
           points_to_next_tier?: number | null
           tier_name?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          achievement_points?: number | null
           benefits?: Json | null
           created_at?: string | null
           id?: string
           level?: string | null
+          lifetime_points?: number | null
           points?: number | null
+          points_expiry?: string | null
           points_to_next_tier?: number | null
           tier_name?: string | null
           updated_at?: string | null
@@ -1126,6 +1250,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_schedules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string
+          id: string
+          is_special: boolean | null
+          menu_items: string[] | null
+          name: string | null
+          restaurant_id: string | null
+          start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          is_special?: boolean | null
+          menu_items?: string[] | null
+          name?: string | null
+          restaurant_id?: string | null
+          start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_special?: boolean | null
+          menu_items?: string[] | null
+          name?: string | null
+          restaurant_id?: string | null
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_schedules_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
@@ -1998,6 +2166,47 @@ export type Database = {
           },
         ]
       }
+      table_reservations: {
+        Row: {
+          created_at: string | null
+          id: string
+          number_of_people: number
+          reservation_date: string
+          restaurant_id: string | null
+          special_requests: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          number_of_people: number
+          reservation_date: string
+          restaurant_id?: string | null
+          special_requests?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          number_of_people?: number
+          reservation_date?: string
+          restaurant_id?: string | null
+          special_requests?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taxi_payments: {
         Row: {
           amount: number
@@ -2279,6 +2488,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string | null
+          earned_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          achievement_id?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          achievement_id?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          dietary_restrictions: string[] | null
+          favorite_cuisines: string[] | null
+          id: string
+          preferred_restaurants: string[] | null
+          price_preference: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dietary_restrictions?: string[] | null
+          favorite_cuisines?: string[] | null
+          id?: string
+          preferred_restaurants?: string[] | null
+          price_preference?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dietary_restrictions?: string[] | null
+          favorite_cuisines?: string[] | null
+          id?: string
+          preferred_restaurants?: string[] | null
+          price_preference?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

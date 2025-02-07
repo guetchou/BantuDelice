@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +9,8 @@ import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
 import MenuList from "@/components/menu/MenuList";
 import CartSummary from "@/components/restaurant/CartSummary";
 import { MenuItem } from "@/components/menu/types";
+import { InventoryManager } from "@/components/inventory/InventoryManager";
+import { LoyaltyStatus } from "@/components/loyalty/LoyaltyStatus";
 
 interface CartItem extends MenuItem {
   quantity: number;
@@ -18,8 +20,26 @@ const RestaurantMenu = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isRestaurantOwner, setIsRestaurantOwner] = useState(false);
+
+  // Vérifier si l'utilisateur est le propriétaire du restaurant
+  useEffect(() => {
+    const checkOwnership = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: restaurant } = await supabase
+        .from('restaurants')
+        .select('user_id')
+        .eq('id', id)
+        .single();
+
+      setIsRestaurantOwner(restaurant?.user_id === user.id);
+    };
+
+    checkOwnership();
+  }, [id]);
 
   // Fetch restaurant data
   const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
@@ -36,21 +56,43 @@ const RestaurantMenu = () => {
     }
   });
 
-  // Fetch menu items
+  // Fetch menu items with stock information
   const { data: menuItems, isLoading: isLoadingMenu } = useQuery({
     queryKey: ['menuItems', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('menu_items')
-        .select('*')
+        .select(`
+          *,
+          inventory_levels(current_stock, reserved_stock)
+        `)
         .eq('restaurant_id', id);
 
       if (error) throw error;
-      return data;
+      return data.map((item: any) => ({
+        ...item,
+        available: item.inventory_levels?.[0]?.current_stock > item.inventory_levels?.[0]?.reserved_stock
+      }));
     }
   });
 
-  const handleAddToCart = (item: MenuItem) => {
+  const handleAddToCart = async (item: MenuItem) => {
+    // Vérifier le stock disponible
+    const { data: stockData } = await supabase
+      .from('inventory_levels')
+      .select('current_stock, reserved_stock')
+      .eq('menu_item_id', item.id)
+      .single();
+
+    if (stockData && (stockData.current_stock - stockData.reserved_stock) <= 0) {
+      toast({
+        title: "Stock insuffisant",
+        description: "Cet article n'est plus disponible pour le moment",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
@@ -61,6 +103,11 @@ const RestaurantMenu = () => {
         );
       }
       return [...prev, { ...item, quantity: 1 }];
+    });
+
+    toast({
+      title: "Ajouté au panier",
+      description: `${item.name} a été ajouté à votre panier`,
     });
   };
 
@@ -180,6 +227,11 @@ const RestaurantMenu = () => {
       <RestaurantHeader restaurant={restaurant} />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Section de fidélité */}
+        <div className="mb-8">
+          <LoyaltyStatus />
+        </div>
+
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
             <MenuList 
@@ -197,6 +249,13 @@ const RestaurantMenu = () => {
             />
           </div>
         </div>
+
+        {/* Section de gestion d'inventaire pour les propriétaires */}
+        {isRestaurantOwner && (
+          <div className="mt-8">
+            <InventoryManager restaurantId={id} />
+          </div>
+        )}
       </div>
     </div>
   );
