@@ -37,6 +37,13 @@ export const LoyaltyStatus = () => {
     }
   };
 
+  // Parse benefits if it's a string, otherwise use as is
+  const benefitsList = typeof loyalty.benefits === 'string' 
+    ? JSON.parse(loyalty.benefits)
+    : Array.isArray(loyalty.benefits) 
+      ? loyalty.benefits 
+      : [];
+
   return (
     <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100">
       <div className="flex items-center gap-4 mb-4">
@@ -66,7 +73,7 @@ export const LoyaltyStatus = () => {
       <div className="mt-4">
         <h4 className="font-semibold mb-2">Avantages actuels :</h4>
         <ul className="list-disc list-inside text-sm space-y-1">
-          {(loyalty.benefits || []).map((benefit: string, index: number) => (
+          {benefitsList.map((benefit: string, index: number) => (
             <li key={index} className="text-gray-600">{benefit}</li>
           ))}
         </ul>

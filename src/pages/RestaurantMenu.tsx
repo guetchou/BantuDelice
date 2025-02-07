@@ -27,7 +27,7 @@ const RestaurantMenu = () => {
   useEffect(() => {
     const checkOwnership = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user || !id) return;
 
       const { data: restaurant } = await supabase
         .from('restaurants')
@@ -45,21 +45,26 @@ const RestaurantMenu = () => {
   const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
     queryKey: ['restaurant', id],
     queryFn: async () => {
+      if (!id) throw new Error('Restaurant ID is required');
+      
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
         .eq('id', id)
         .single();
-
+      
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!id
   });
 
   // Fetch menu items with stock information
   const { data: menuItems, isLoading: isLoadingMenu } = useQuery({
     queryKey: ['menuItems', id],
     queryFn: async () => {
+      if (!id) throw new Error('Restaurant ID is required');
+
       const { data, error } = await supabase
         .from('menu_items')
         .select(`
@@ -73,7 +78,8 @@ const RestaurantMenu = () => {
         ...item,
         available: item.inventory_levels?.[0]?.current_stock > item.inventory_levels?.[0]?.reserved_stock
       }));
-    }
+    },
+    enabled: !!id
   });
 
   const handleAddToCart = async (item: MenuItem) => {
@@ -251,7 +257,7 @@ const RestaurantMenu = () => {
         </div>
 
         {/* Section de gestion d'inventaire pour les propriétaires */}
-        {isRestaurantOwner && (
+        {isRestaurantOwner && id && (
           <div className="mt-8">
             <InventoryManager restaurantId={id} />
           </div>
