@@ -292,6 +292,48 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_preferences: {
+        Row: {
+          allergies: string[] | null
+          created_at: string | null
+          default_address: string | null
+          dietary_restrictions: string[] | null
+          favorite_delivery_times: Json | null
+          id: string
+          no_contact_delivery: boolean | null
+          preferred_payment_method: string | null
+          special_instructions: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          allergies?: string[] | null
+          created_at?: string | null
+          default_address?: string | null
+          dietary_restrictions?: string[] | null
+          favorite_delivery_times?: Json | null
+          id?: string
+          no_contact_delivery?: boolean | null
+          preferred_payment_method?: string | null
+          special_instructions?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          allergies?: string[] | null
+          created_at?: string | null
+          default_address?: string | null
+          dietary_restrictions?: string[] | null
+          favorite_delivery_times?: Json | null
+          id?: string
+          no_contact_delivery?: boolean | null
+          preferred_payment_method?: string | null
+          special_instructions?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       delivery_tracking: {
         Row: {
           delivered_at: string | null
@@ -332,6 +374,111 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_zones: {
+        Row: {
+          active: boolean | null
+          base_delivery_fee: number | null
+          created_at: string | null
+          description: string | null
+          estimated_time_range: Json | null
+          id: string
+          minimum_order: number | null
+          name: string
+          polygon: unknown | null
+        }
+        Insert: {
+          active?: boolean | null
+          base_delivery_fee?: number | null
+          created_at?: string | null
+          description?: string | null
+          estimated_time_range?: Json | null
+          id?: string
+          minimum_order?: number | null
+          name: string
+          polygon?: unknown | null
+        }
+        Update: {
+          active?: boolean | null
+          base_delivery_fee?: number | null
+          created_at?: string | null
+          description?: string | null
+          estimated_time_range?: Json | null
+          id?: string
+          minimum_order?: number | null
+          name?: string
+          polygon?: unknown | null
+        }
+        Relationships: []
+      }
+      detailed_restaurant_reviews: {
+        Row: {
+          created_at: string | null
+          delivery_rating: number | null
+          food_quality_rating: number | null
+          helpful_count: number | null
+          id: string
+          order_id: string | null
+          overall_rating: number | null
+          photos: string[] | null
+          restaurant_id: string | null
+          review_text: string | null
+          service_rating: number | null
+          updated_at: string | null
+          user_id: string | null
+          value_rating: number | null
+          verified_purchase: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_rating?: number | null
+          food_quality_rating?: number | null
+          helpful_count?: number | null
+          id?: string
+          order_id?: string | null
+          overall_rating?: number | null
+          photos?: string[] | null
+          restaurant_id?: string | null
+          review_text?: string | null
+          service_rating?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          value_rating?: number | null
+          verified_purchase?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_rating?: number | null
+          food_quality_rating?: number | null
+          helpful_count?: number | null
+          id?: string
+          order_id?: string | null
+          overall_rating?: number | null
+          photos?: string[] | null
+          restaurant_id?: string | null
+          review_text?: string | null
+          service_rating?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          value_rating?: number | null
+          verified_purchase?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detailed_restaurant_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detailed_restaurant_reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -1102,6 +1249,47 @@ export type Database = {
           },
         ]
       }
+      order_tracking_details: {
+        Row: {
+          estimated_completion_time: string | null
+          handled_by: string | null
+          id: string
+          location_data: Json | null
+          notes: string | null
+          order_id: string | null
+          status: string
+          timestamp: string | null
+        }
+        Insert: {
+          estimated_completion_time?: string | null
+          handled_by?: string | null
+          id?: string
+          location_data?: Json | null
+          notes?: string | null
+          order_id?: string | null
+          status: string
+          timestamp?: string | null
+        }
+        Update: {
+          estimated_completion_time?: string | null
+          handled_by?: string | null
+          id?: string
+          location_data?: Json | null
+          notes?: string | null
+          order_id?: string | null
+          status?: string
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_tracking_details_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           accepted_at: string | null
@@ -1530,6 +1718,59 @@ export type Database = {
           },
         ]
       }
+      restaurant_promotions: {
+        Row: {
+          active: boolean | null
+          conditions: string[] | null
+          created_at: string | null
+          description: string | null
+          discount_type: string | null
+          discount_value: number | null
+          end_date: string | null
+          id: string
+          min_order_amount: number | null
+          restaurant_id: string | null
+          start_date: string | null
+          title: string
+        }
+        Insert: {
+          active?: boolean | null
+          conditions?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
+          end_date?: string | null
+          id?: string
+          min_order_amount?: number | null
+          restaurant_id?: string | null
+          start_date?: string | null
+          title: string
+        }
+        Update: {
+          active?: boolean | null
+          conditions?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
+          end_date?: string | null
+          id?: string
+          min_order_amount?: number | null
+          restaurant_id?: string | null
+          start_date?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_promotions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_reviews: {
         Row: {
           comment: string | null
@@ -1560,38 +1801,71 @@ export type Database = {
       restaurants: {
         Row: {
           address: string
+          average_rating: number | null
+          banner_image_url: string | null
           created_at: string
           cuisine_type: string | null
+          delivery_fee: number | null
+          delivery_zones: Json | null
           estimated_preparation_time: number | null
+          featured: boolean | null
           id: string
           latitude: number | null
+          logo_url: string | null
           longitude: number | null
+          min_order_amount: number | null
           name: string
+          opening_hours: Json | null
           search_vector: unknown | null
+          specialties: string[] | null
+          status: string | null
+          total_ratings: number | null
           user_id: string | null
         }
         Insert: {
           address: string
+          average_rating?: number | null
+          banner_image_url?: string | null
           created_at?: string
           cuisine_type?: string | null
+          delivery_fee?: number | null
+          delivery_zones?: Json | null
           estimated_preparation_time?: number | null
+          featured?: boolean | null
           id?: string
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
+          min_order_amount?: number | null
           name: string
+          opening_hours?: Json | null
           search_vector?: unknown | null
+          specialties?: string[] | null
+          status?: string | null
+          total_ratings?: number | null
           user_id?: string | null
         }
         Update: {
           address?: string
+          average_rating?: number | null
+          banner_image_url?: string | null
           created_at?: string
           cuisine_type?: string | null
+          delivery_fee?: number | null
+          delivery_zones?: Json | null
           estimated_preparation_time?: number | null
+          featured?: boolean | null
           id?: string
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
+          min_order_amount?: number | null
           name?: string
+          opening_hours?: Json | null
           search_vector?: unknown | null
+          specialties?: string[] | null
+          status?: string | null
+          total_ratings?: number | null
           user_id?: string | null
         }
         Relationships: []
@@ -1664,6 +1938,65 @@ export type Database = {
           srtext?: string | null
         }
         Relationships: []
+      }
+      special_menus: {
+        Row: {
+          active: boolean | null
+          advance_notice_hours: number | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          items: Json | null
+          menu_type: string | null
+          minimum_people: number | null
+          name: string
+          price_per_person: number | null
+          requires_advance_notice: boolean | null
+          restaurant_id: string | null
+          start_date: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          advance_notice_hours?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          items?: Json | null
+          menu_type?: string | null
+          minimum_people?: number | null
+          name: string
+          price_per_person?: number | null
+          requires_advance_notice?: boolean | null
+          restaurant_id?: string | null
+          start_date?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          advance_notice_hours?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          items?: Json | null
+          menu_type?: string | null
+          minimum_people?: number | null
+          name?: string
+          price_per_person?: number | null
+          requires_advance_notice?: boolean | null
+          restaurant_id?: string | null
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_menus_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       taxi_payments: {
         Row: {
@@ -2367,6 +2700,13 @@ export type Database = {
             }
             Returns: string
           }
+      check_restaurant_availability: {
+        Args: {
+          restaurant_id: string
+          check_time?: string
+        }
+        Returns: boolean
+      }
       create_notification: {
         Args: {
           p_user_id: string
@@ -3166,14 +3506,25 @@ export type Database = {
         }
         Returns: {
           address: string
+          average_rating: number | null
+          banner_image_url: string | null
           created_at: string
           cuisine_type: string | null
+          delivery_fee: number | null
+          delivery_zones: Json | null
           estimated_preparation_time: number | null
+          featured: boolean | null
           id: string
           latitude: number | null
+          logo_url: string | null
           longitude: number | null
+          min_order_amount: number | null
           name: string
+          opening_hours: Json | null
           search_vector: unknown | null
+          specialties: string[] | null
+          status: string | null
+          total_ratings: number | null
           user_id: string | null
         }[]
       }

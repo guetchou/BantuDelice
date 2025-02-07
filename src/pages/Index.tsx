@@ -10,6 +10,7 @@ import Testimonials from "@/components/home/Testimonials";
 import TaxiFeature from "@/components/home/TaxiFeature";
 import CulinaryEvents from "@/components/home/CulinaryEvents";
 import CookingClassesSection from "@/components/home/CookingClassesSection";
+import RestaurantPromotions from "@/components/home/RestaurantPromotions";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
@@ -88,10 +89,13 @@ export default function Index() {
       {/* Essential Services */}
       <EssentialServices />
 
-      {/* Culinary Events Section */}
+      {/* Restaurant Promotions */}
+      <RestaurantPromotions />
+
+      {/* Culinary Events */}
       <CulinaryEvents />
 
-      {/* Cooking Classes Section */}
+      {/* Cooking Classes */}
       <CookingClassesSection />
 
       {/* Additional Services */}
