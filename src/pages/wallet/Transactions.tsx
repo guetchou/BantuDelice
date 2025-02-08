@@ -2,15 +2,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
-
-interface Transaction {
-  id: string;
-  type: string;
-  amount: number;
-  status: string;
-  description: string;
-  created_at: string;
-}
+import { Transaction } from "@/types/wallet";
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
