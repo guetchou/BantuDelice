@@ -373,6 +373,59 @@ export interface Database {
           estimated_completion_time?: string | null
         }
       }
+      user_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          created_at: string;
+          updated_at: string;
+          dietary_restrictions: string[];
+          favorite_cuisines: string[];
+          preferred_restaurants: string[];
+          price_preference: number;
+          dark_mode: boolean;
+          notifications: boolean;
+          language: string;
+          email_notifications: boolean;
+          push_notifications: boolean;
+          order_updates: boolean;
+          promotional_emails: boolean;
+        }
+        Insert: {
+          id?: string;
+          user_id: string;
+          created_at?: string;
+          updated_at?: string;
+          dietary_restrictions?: string[];
+          favorite_cuisines?: string[];
+          preferred_restaurants?: string[];
+          price_preference?: number;
+          dark_mode?: boolean;
+          notifications?: boolean;
+          language?: string;
+          email_notifications?: boolean;
+          push_notifications?: boolean;
+          order_updates?: boolean;
+          promotional_emails?: boolean;
+        }
+        Update: {
+          id?: string;
+          user_id?: string;
+          created_at?: string;
+          updated_at?: string;
+          dietary_restrictions?: string[];
+          favorite_cuisines?: string[];
+          preferred_restaurants?: string[];
+          price_preference?: number;
+          dark_mode?: boolean;
+          notifications?: boolean;
+          language?: string;
+          email_notifications?: boolean;
+          push_notifications?: boolean;
+          order_updates?: boolean;
+          promotional_emails?: boolean;
+        }
+      }
     }
   }
 }

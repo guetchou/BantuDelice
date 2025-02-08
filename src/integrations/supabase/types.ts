@@ -2521,31 +2521,52 @@ export type Database = {
       user_preferences: {
         Row: {
           created_at: string | null
+          dark_mode: boolean | null
           dietary_restrictions: string[] | null
+          email_notifications: boolean | null
           favorite_cuisines: string[] | null
           id: string
+          language: string | null
+          notifications: boolean | null
+          order_updates: boolean | null
           preferred_restaurants: string[] | null
           price_preference: number | null
+          promotional_emails: boolean | null
+          push_notifications: boolean | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string | null
+          dark_mode?: boolean | null
           dietary_restrictions?: string[] | null
+          email_notifications?: boolean | null
           favorite_cuisines?: string[] | null
           id?: string
+          language?: string | null
+          notifications?: boolean | null
+          order_updates?: boolean | null
           preferred_restaurants?: string[] | null
           price_preference?: number | null
+          promotional_emails?: boolean | null
+          push_notifications?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string | null
+          dark_mode?: boolean | null
           dietary_restrictions?: string[] | null
+          email_notifications?: boolean | null
           favorite_cuisines?: string[] | null
           id?: string
+          language?: string | null
+          notifications?: boolean | null
+          order_updates?: boolean | null
           preferred_restaurants?: string[] | null
           price_preference?: number | null
+          promotional_emails?: boolean | null
+          push_notifications?: boolean | null
           updated_at?: string | null
           user_id?: string | null
         }
