@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Settings as SettingsIcon, Bell, Shield, User, Moon, Sun, Palette, Globe, Phone } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -26,20 +25,25 @@ export default function Settings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: preferences } = await supabase
+      const { data: preferences, error } = await supabase
         .from('user_preferences')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading preferences:', error);
+        return;
+      }
 
       if (preferences) {
-        setDarkMode(preferences.dark_mode || false);
-        setNotifications(preferences.notifications || true);
-        setLanguage(preferences.language || "fr");
-        setEmailNotifications(preferences.email_notifications || true);
-        setPushNotifications(preferences.push_notifications || true);
-        setOrderUpdates(preferences.order_updates || true);
-        setPromotionalEmails(preferences.promotional_emails || true);
+        setDarkMode(preferences.dark_mode ?? false);
+        setNotifications(preferences.notifications ?? true);
+        setLanguage(preferences.language ?? "fr");
+        setEmailNotifications(preferences.email_notifications ?? true);
+        setPushNotifications(preferences.push_notifications ?? true);
+        setOrderUpdates(preferences.order_updates ?? true);
+        setPromotionalEmails(preferences.promotional_emails ?? true);
       }
     };
 

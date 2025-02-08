@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -33,7 +34,7 @@ const RestaurantMenu = () => {
         .from('restaurants')
         .select('user_id')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       setIsRestaurantOwner(restaurant?.user_id === user.id);
     };
@@ -51,9 +52,10 @@ const RestaurantMenu = () => {
         .from('restaurants')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) throw new Error('Restaurant not found');
       return data;
     },
     enabled: !!id
@@ -241,7 +243,7 @@ const RestaurantMenu = () => {
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
             <MenuList 
-              items={menuItems as MenuItem[]} 
+              items={menuItems} 
               onAddToCart={handleAddToCart}
             />
           </div>
