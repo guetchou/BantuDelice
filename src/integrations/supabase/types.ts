@@ -2038,6 +2038,39 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          images: string[] | null
+          rating: number
+          restaurant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          rating: number
+          restaurant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          rating?: number
+          restaurant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_providers: {
         Row: {
           address: string | null
@@ -2165,6 +2198,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      support_tickets: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          priority: string | null
+          status: string | null
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          priority?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       table_reservations: {
         Row: {
@@ -2569,6 +2635,39 @@ export type Database = {
           push_notifications?: boolean | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone_number: string | null
+          preferences: Json | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone_number?: string | null
+          preferences?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone_number?: string | null
+          preferences?: Json | null
+          updated_at?: string
         }
         Relationships: []
       }
