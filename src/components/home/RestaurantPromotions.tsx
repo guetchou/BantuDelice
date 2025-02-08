@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -7,14 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { formatDistance } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Tag, Clock, Percent } from "lucide-react";
+import { RestaurantPromotion } from "@/types/restaurantPromotion";
 
-interface Promotion {
-  id: string;
-  title: string;
-  description: string;
-  discount_type: string;
-  discount_value: number;
-  end_date: string;
+interface PromotionWithRestaurant extends RestaurantPromotion {
   restaurant: {
     id: string;
     name: string;
@@ -40,7 +34,7 @@ const RestaurantPromotions = () => {
         .limit(3);
 
       if (error) throw error;
-      return data as Promotion[];
+      return data as PromotionWithRestaurant[];
     }
   });
 
