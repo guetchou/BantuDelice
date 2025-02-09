@@ -1,6 +1,8 @@
+
 import { Card } from "@/components/ui/card";
-import { Star, Clock, MapPin } from "lucide-react";
+import { Star, Clock, MapPin, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 interface MenuItem {
   id: string;
@@ -19,6 +21,7 @@ interface Restaurant {
   cuisine_type?: string;
   distance?: number;
   menu_items?: MenuItem[];
+  trending?: boolean;
 }
 
 interface RestaurantCardProps {
@@ -34,7 +37,7 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
       className="h-full"
     >
       <Card
-        className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer h-full flex flex-col bg-white"
+        className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer h-full flex flex-col bg-white/5 backdrop-blur-lg border-gray-800"
         onClick={() => onClick(restaurant.id)}
       >
         <div className="relative h-48">
@@ -50,21 +53,20 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
               </span>
             </div>
           )}
-          {restaurant.distance && (
-            <div className="absolute top-4 right-4 bg-black/75 backdrop-blur-sm px-3 py-1 rounded-full">
-              <span className="text-sm font-semibold text-white">
-                {restaurant.distance} km
-              </span>
-            </div>
+          {restaurant.trending && (
+            <Badge className="absolute top-4 right-4 bg-orange-500">
+              <TrendingUp className="w-4 h-4 mr-1" />
+              Tendance
+            </Badge>
           )}
         </div>
         
         <div className="p-6 flex flex-col flex-grow">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <h3 className="text-xl font-bold text-white mb-2">
             {restaurant.name}
           </h3>
           
-          <div className="flex items-center text-sm text-gray-600 mb-4 gap-4">
+          <div className="flex items-center text-sm text-gray-300 mb-4 gap-4">
             {restaurant.rating && (
               <div className="flex items-center">
                 <Star className="w-5 h-5 text-yellow-400" />
@@ -77,7 +79,7 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
             </div>
           </div>
           
-          <div className="flex items-center text-sm text-gray-500 mt-auto">
+          <div className="flex items-center text-sm text-gray-400 mt-auto">
             <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
             <span className="truncate">{restaurant.address}</span>
           </div>
