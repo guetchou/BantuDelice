@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -56,7 +55,12 @@ const RestaurantMenu = () => {
       
       if (error) throw error;
       if (!data) throw new Error('Restaurant not found');
-      return data;
+      
+      // Parse opening_hours JSON string into the correct type
+      return {
+        ...data,
+        opening_hours: data.opening_hours ? JSON.parse(data.opening_hours as string) : null
+      };
     },
     enabled: !!id
   });

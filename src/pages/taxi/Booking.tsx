@@ -110,6 +110,7 @@ const TaxiBookingPage = () => {
         pickup_time: new Date(pickupTime).toISOString(),
         vehicle_type: vehicleType,
         payment_method: paymentMethod,
+        payment_status: 'pending', // Ajout du champ manquant
       });
 
       if (booking) {
