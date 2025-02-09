@@ -30,7 +30,7 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
     if (!restaurant.opening_hours) return true;
     
     const now = new Date();
-    const day = now.toLocaleLowerCase().slice(0, 3);
+    const day = now.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
     const hours = restaurant.opening_hours[day];
     
     if (!hours) return true;
@@ -78,7 +78,7 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
                 </div>
               )}
               <Badge 
-                variant={isCurrentlyOpen() ? "success" : "destructive"}
+                variant={isCurrentlyOpen() ? "secondary" : "destructive"}
                 className="capitalize"
               >
                 {isCurrentlyOpen() ? "Ouvert" : "Fermé"}
