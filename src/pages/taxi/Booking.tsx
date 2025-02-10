@@ -7,18 +7,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useTaxiBooking } from "@/hooks/useTaxiBooking";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import LocationSection from "@/components/taxi/LocationSection";
 import PickupTimeSection from "@/components/taxi/PickupTimeSection";
 import VehicleSection from "@/components/taxi/VehicleSection";
 import PaymentSection from "@/components/taxi/PaymentSection";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
 
 const TaxiBookingPage = () => {
   const navigate = useNavigate();
@@ -36,8 +30,11 @@ const TaxiBookingPage = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
+            const { data: { token }, error: tokenError } = await supabase.functions.invoke('get_mapbox_token');
+            if (tokenError) throw new Error('Could not get Mapbox token');
+
             const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}`
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${token}`
             );
             const data = await response.json();
             if (data.features?.[0]) {
@@ -64,9 +61,14 @@ const TaxiBookingPage = () => {
   };
 
   const onLocationSelect = async (address: string, isPickup: boolean) => {
+    if (!address) return;
+    
     try {
+      const { data: { token }, error: tokenError } = await supabase.functions.invoke('get_mapbox_token');
+      if (tokenError) throw new Error('Could not get Mapbox token');
+
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${token}`
       );
       const data = await response.json();
       if (data.features?.[0]) {
@@ -79,6 +81,11 @@ const TaxiBookingPage = () => {
       }
     } catch (error) {
       console.error('Error validating address:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de valider l'adresse",
+        variant: "destructive",
+      });
     }
   };
 
@@ -110,7 +117,7 @@ const TaxiBookingPage = () => {
         pickup_time: new Date(pickupTime).toISOString(),
         vehicle_type: vehicleType,
         payment_method: paymentMethod,
-        payment_status: 'pending', // Ajout du champ manquant
+        payment_status: 'pending',
       });
 
       if (booking) {
