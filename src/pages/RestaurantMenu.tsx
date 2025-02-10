@@ -163,7 +163,7 @@ const RestaurantMenu = () => {
     setCart(prev => 
       prev.map(item => 
         item.id === itemId 
-          ? { ...i: item, quantity }
+          ? { ...item, quantity }
           : item
       )
     );
