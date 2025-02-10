@@ -1988,6 +1988,7 @@ export type Database = {
           specialties: string[] | null
           status: string | null
           total_ratings: number | null
+          trending: boolean | null
           user_id: string | null
         }
         Insert: {
@@ -2011,6 +2012,7 @@ export type Database = {
           specialties?: string[] | null
           status?: string | null
           total_ratings?: number | null
+          trending?: boolean | null
           user_id?: string | null
         }
         Update: {
@@ -2034,6 +2036,7 @@ export type Database = {
           specialties?: string[] | null
           status?: string | null
           total_ratings?: number | null
+          trending?: boolean | null
           user_id?: string | null
         }
         Relationships: []
@@ -3916,6 +3919,7 @@ export type Database = {
           specialties: string[] | null
           status: string | null
           total_ratings: number | null
+          trending: boolean | null
           user_id: string | null
         }[]
       }
