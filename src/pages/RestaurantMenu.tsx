@@ -1,20 +1,51 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Utensils, Clock, AlertTriangle, Info, Star, Leaf, Heart } from "lucide-react";
 import RestaurantHeader from "@/components/restaurant/RestaurantHeader";
 import MenuList from "@/components/menu/MenuList";
 import CartSummary from "@/components/restaurant/CartSummary";
 import { MenuItem } from "@/components/menu/types";
 import { InventoryManager } from "@/components/inventory/InventoryManager";
 import { LoyaltyStatus } from "@/components/loyalty/LoyaltyStatus";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface CartItem extends MenuItem {
   quantity: number;
 }
+
+const CATEGORIES = [
+  { id: "all", label: "Tout" },
+  { id: "entrees", label: "Entrées" },
+  { id: "plats", label: "Plats principaux" },
+  { id: "desserts", label: "Desserts" },
+  { id: "boissons", label: "Boissons" }
+];
 
 const RestaurantMenu = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,8 +53,9 @@ const RestaurantMenu = () => {
   const { toast } = useToast();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isRestaurantOwner, setIsRestaurantOwner] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showNutritionalInfo, setShowNutritionalInfo] = useState(false);
 
-  // Vérifier si l'utilisateur est le propriétaire du restaurant
   useEffect(() => {
     const checkOwnership = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -41,7 +73,6 @@ const RestaurantMenu = () => {
     checkOwnership();
   }, [id]);
 
-  // Fetch restaurant data
   const { data: restaurant, isLoading: isLoadingRestaurant } = useQuery({
     queryKey: ['restaurant', id],
     queryFn: async () => {
@@ -56,7 +87,6 @@ const RestaurantMenu = () => {
       if (error) throw error;
       if (!data) throw new Error('Restaurant not found');
       
-      // Parse opening_hours JSON string into the correct type
       return {
         ...data,
         opening_hours: data.opening_hours ? JSON.parse(data.opening_hours as string) : null
@@ -65,7 +95,6 @@ const RestaurantMenu = () => {
     enabled: !!id
   });
 
-  // Fetch menu items with stock information
   const { data: menuItems, isLoading: isLoadingMenu } = useQuery({
     queryKey: ['menuItems', id],
     queryFn: async () => {
@@ -89,7 +118,6 @@ const RestaurantMenu = () => {
   });
 
   const handleAddToCart = async (item: MenuItem) => {
-    // Vérifier le stock disponible
     const { data: stockData } = await supabase
       .from('inventory_levels')
       .select('current_stock, reserved_stock')
@@ -135,7 +163,7 @@ const RestaurantMenu = () => {
     setCart(prev => 
       prev.map(item => 
         item.id === itemId 
-          ? { ...item, quantity }
+          ? { ...i: item, quantity }
           : item
       )
     );
@@ -154,7 +182,6 @@ const RestaurantMenu = () => {
         return;
       }
 
-      // Get user's profile for delivery address
       const { data: profile } = await supabase
         .from('profiles')
         .select('addresses')
@@ -188,7 +215,6 @@ const RestaurantMenu = () => {
 
       if (orderError) throw orderError;
 
-      // Create order items
       const orderItems = cart.map(item => ({
         order_id: order.id,
         item_name: item.name,
@@ -218,6 +244,10 @@ const RestaurantMenu = () => {
     }
   };
 
+  const filteredMenuItems = menuItems?.filter(item => 
+    selectedCategory === "all" || item.category === selectedCategory
+  );
+
   if (isLoadingRestaurant || isLoadingMenu) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -235,38 +265,147 @@ const RestaurantMenu = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <RestaurantHeader restaurant={restaurant} />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <RestaurantHeader restaurant={restaurant} />
+      </motion.div>
       
       <div className="container mx-auto px-4 py-8">
-        {/* Section de fidélité */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-8"
+        >
           <LoyaltyStatus />
-        </div>
+        </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <MenuList 
-              items={menuItems} 
-              onAddToCart={handleAddToCart}
-            />
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="lg:w-3/4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-white rounded-lg shadow-lg p-6 mb-6"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <Utensils className="h-6 w-6 text-orange-500" />
+                  <h2 className="text-2xl font-bold">Notre Menu</h2>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowNutritionalInfo(!showNutritionalInfo)}
+                      >
+                        <Info className="h-4 w-4 mr-2" />
+                        Info nutritionnelles
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Afficher/masquer les informations nutritionnelles</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="mb-6">
+                  {CATEGORIES.map((category) => (
+                    <TabsTrigger
+                      key={category.id}
+                      value={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                    >
+                      {category.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                <TabsContent value="all" className="mt-0">
+                  <AnimatePresence mode="wait">
+                    <MenuList 
+                      items={filteredMenuItems || []}
+                      onAddToCart={handleAddToCart}
+                      showNutritionalInfo={showNutritionalInfo}
+                    />
+                  </AnimatePresence>
+                </TabsContent>
+
+                {CATEGORIES.slice(1).map((category) => (
+                  <TabsContent key={category.id} value={category.id} className="mt-0">
+                    <AnimatePresence mode="wait">
+                      <MenuList 
+                        items={filteredMenuItems || []}
+                        onAddToCart={handleAddToCart}
+                        showNutritionalInfo={showNutritionalInfo}
+                      />
+                    </AnimatePresence>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </motion.div>
           </div>
           
-          <div className="md:col-span-1">
-            <CartSummary
-              items={cart}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemoveItem={handleRemoveFromCart}
-              onCheckout={handleCheckout}
-            />
-          </div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="lg:w-1/4"
+          >
+            <div className="sticky top-4">
+              <CartSummary
+                items={cart}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveFromCart}
+                onCheckout={handleCheckout}
+              />
+
+              {restaurant.average_rating && (
+                <div className="mt-4 bg-white rounded-lg shadow-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">Note moyenne</h3>
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                      <span className="ml-1">{restaurant.average_rating.toFixed(1)}/5</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {restaurant.specialties && restaurant.specialties.length > 0 && (
+                <div className="mt-4 bg-white rounded-lg shadow-lg p-4">
+                  <h3 className="font-semibold mb-2">Nos spécialités</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {restaurant.specialties.map((specialty: string) => (
+                      <Badge key={specialty} variant="secondary">
+                        <Leaf className="h-3 w-3 mr-1" />
+                        {specialty}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
 
-        {/* Section de gestion d'inventaire pour les propriétaires */}
         {isRestaurantOwner && id && (
-          <div className="mt-8">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="mt-8"
+          >
             <InventoryManager restaurantId={id} />
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
