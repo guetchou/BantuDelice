@@ -42,3 +42,16 @@ export interface MenuItem {
   is_halal?: boolean;
   is_kosher?: boolean;
 }
+
+export interface MenuListProps {
+  items: MenuItem[];
+  onAddToCart: (item: MenuItem) => void;
+  isLoading?: boolean;
+  showNutritionalInfo?: boolean;
+}
+
+export interface MenuItemCardProps {
+  item: MenuItem;
+  onAddToCart: (item: MenuItem) => void;
+  showNutritionalInfo?: boolean;
+}

@@ -1,15 +1,8 @@
 
-import { MenuItem } from "./types";
+import { MenuItem, MenuListProps } from "./types";
 import MenuItemCard from "@/components/restaurant/MenuItemCard";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface MenuListProps {
-  items: MenuItem[];
-  onAddToCart: (item: MenuItem) => void;
-  isLoading?: boolean;
-  showNutritionalInfo?: boolean;
-}
 
 const container = {
   hidden: { opacity: 0 },
@@ -21,7 +14,7 @@ const container = {
   }
 };
 
-const item = {
+const itemAnimation = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 }
 };
@@ -59,7 +52,7 @@ const MenuList = ({ items, onAddToCart, isLoading, showNutritionalInfo }: MenuLi
       {items.map((item) => (
         <motion.div
           key={item.id}
-          variants={item}
+          variants={itemAnimation}
           layoutId={item.id}
         >
           <MenuItemCard

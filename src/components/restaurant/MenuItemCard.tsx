@@ -4,23 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip } from "@/components/ui/tooltip";
-import { MenuItem } from "@/components/menu/types";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MenuItemCardProps } from "@/components/menu/types";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-interface MenuItemCardProps {
-  item: MenuItem;
-  onAddToCart: (item: MenuItem) => void;
-}
-
-const MenuItemCard = ({ item, onAddToCart }: MenuItemCardProps) => {
+const MenuItemCard = ({ item, onAddToCart, showNutritionalInfo }: MenuItemCardProps) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -77,38 +65,44 @@ const MenuItemCard = ({ item, onAddToCart }: MenuItemCardProps) => {
                 <DialogTitle>{item.name}</DialogTitle>
                 <DialogDescription>{item.description}</DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                {item.ingredients && (
+              {showNutritionalInfo && item.nutritional_info && (
+                <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold mb-2">Ingrédients</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {item.ingredients.map((ingredient) => (
-                        <Badge key={ingredient} variant="outline">
-                          {ingredient}
-                        </Badge>
-                      ))}
+                    <h4 className="font-semibold mb-2">Information nutritionnelle</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>Calories: {item.nutritional_info.calories}</div>
+                      <div>Protéines: {item.nutritional_info.protein}g</div>
+                      <div>Glucides: {item.nutritional_info.carbs}g</div>
+                      <div>Lipides: {item.nutritional_info.fat}g</div>
+                      <div>Fibres: {item.nutritional_info.fiber}g</div>
                     </div>
                   </div>
-                )}
-                {item.allergens && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Allergènes</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {item.allergens.map((allergen) => (
-                        <Badge key={allergen} variant="destructive">
-                          {allergen}
-                        </Badge>
-                      ))}
-                    </div>
+                </div>
+              )}
+              {item.ingredients && (
+                <div>
+                  <h4 className="font-semibold mb-2">Ingrédients</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {item.ingredients.map((ingredient) => (
+                      <Badge key={ingredient} variant="outline">
+                        {ingredient}
+                      </Badge>
+                    ))}
                   </div>
-                )}
-                {item.calories && (
-                  <div>
-                    <h4 className="font-semibold">Information nutritionnelle</h4>
-                    <p>{item.calories} calories</p>
+                </div>
+              )}
+              {item.allergens && item.allergens.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Allergènes</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {item.allergens.map((allergen) => (
+                      <Badge key={allergen} variant="destructive">
+                        {allergen}
+                      </Badge>
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </div>
@@ -130,12 +124,19 @@ const MenuItemCard = ({ item, onAddToCart }: MenuItemCardProps) => {
 
         <div className="flex flex-wrap gap-2">
           {item.dietary_preferences?.map((pref) => (
-            <Tooltip key={pref}>
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Leaf className="h-3 w-3" />
-                {pref}
-              </Badge>
-            </Tooltip>
+            <TooltipProvider key={pref}>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Leaf className="h-3 w-3" />
+                    {pref}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Préférence alimentaire: {pref}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ))}
         </div>
 
@@ -146,9 +147,10 @@ const MenuItemCard = ({ item, onAddToCart }: MenuItemCardProps) => {
           <Button 
             onClick={() => onAddToCart(item)}
             className="bg-orange-500 hover:bg-orange-600"
+            disabled={!item.available}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
-            Ajouter
+            {item.available ? "Ajouter" : "Indisponible"}
           </Button>
         </div>
       </div>
