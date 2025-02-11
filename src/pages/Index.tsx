@@ -20,6 +20,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+interface OpeningHours {
+  [key: string]: {
+    open: string;
+    close: string;
+  };
+}
+
 interface FeaturedRestaurant {
   id: string;
   name: string;
@@ -28,12 +35,7 @@ interface FeaturedRestaurant {
   rating?: number;  
   estimated_preparation_time?: number;
   is_open?: boolean;
-  opening_hours?: {
-    [key: string]: {
-      open: string;
-      close: string;
-    };
-  };
+  opening_hours?: OpeningHours;
 }
 
 export default function Index() {
@@ -65,7 +67,7 @@ export default function Index() {
 
       return (data || []).map(restaurant => ({
         ...restaurant,
-        is_open: checkRestaurantOpen(restaurant.opening_hours)
+        is_open: restaurant.opening_hours ? checkRestaurantOpen(restaurant.opening_hours as OpeningHours) : false
       })) as FeaturedRestaurant[];
     },
     meta: {
@@ -85,7 +87,7 @@ export default function Index() {
     }
   };
 
-  const checkRestaurantOpen = (openingHours: FeaturedRestaurant['opening_hours']): boolean => {
+  const checkRestaurantOpen = (openingHours: OpeningHours): boolean => {
     if (!openingHours) return false;
     
     const now = new Date();
