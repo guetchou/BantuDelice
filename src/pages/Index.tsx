@@ -249,7 +249,7 @@ export default function Index() {
                   <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 h-full">
                     <div className="relative h-48 overflow-hidden rounded-t-lg">
                       <img
-                        src={restaurant.banner_image_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1'}
+                        src={restaurant.banner_image_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836'}
                         alt={restaurant.name}
                         className="w-full h-full object-cover"
                       />
