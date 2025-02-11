@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import DeliveryMap from '@/components/DeliveryMap';
 import CartDrawer from '@/components/cart/CartDrawer';
 import ChatBubble from '@/components/chat/ChatBubble';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -23,11 +23,17 @@ import { toast } from "@/hooks/use-toast";
 interface FeaturedRestaurant {
   id: string;
   name: string;
-  image_url?: string;
+  banner_image_url?: string;
   cuisine_type?: string;
   rating?: number;  
   estimated_preparation_time?: number;
   is_open?: boolean;
+  opening_hours?: {
+    [key: string]: {
+      open: string;
+      close: string;
+    };
+  };
 }
 
 export default function Index() {
@@ -44,7 +50,7 @@ export default function Index() {
         .select(`
           id,
           name,
-          image_url,
+          banner_image_url,
           cuisine_type,
           rating,
           estimated_preparation_time,
@@ -54,20 +60,16 @@ export default function Index() {
         .limit(3);
       
       if (error) {
-        throw new Error(error.message);
+        throw error;
       }
 
-      return data?.map(restaurant => ({
+      return (data || []).map(restaurant => ({
         ...restaurant,
         is_open: checkRestaurantOpen(restaurant.opening_hours)
       })) as FeaturedRestaurant[];
     },
-    onError: (err) => {
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les restaurants mis en avant",
-        variant: "destructive",
-      });
+    meta: {
+      errorMessage: "Impossible de charger les restaurants mis en avant"
     }
   });
 
@@ -83,11 +85,11 @@ export default function Index() {
     }
   };
 
-  const checkRestaurantOpen = (openingHours: any): boolean => {
+  const checkRestaurantOpen = (openingHours: FeaturedRestaurant['opening_hours']): boolean => {
     if (!openingHours) return false;
     
     const now = new Date();
-    const day = now.toLocaleDateString('en-US', { weekday: 'lowercase' });
+    const day = now.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
     const currentTime = now.getHours() * 100 + now.getMinutes();
 
     const todayHours = openingHours[day];
@@ -230,6 +232,10 @@ export default function Index() {
                     className="bg-gray-800/50 rounded-lg h-96 animate-pulse"
                   />
                 ))
+              ) : error ? (
+                <div className="col-span-3 text-center text-red-500">
+                  Une erreur est survenue lors du chargement des restaurants
+                </div>
               ) : featuredRestaurants?.map((restaurant, index) => (
                 <motion.div
                   key={restaurant.id}
@@ -243,7 +249,7 @@ export default function Index() {
                   <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 h-full">
                     <div className="relative h-48 overflow-hidden rounded-t-lg">
                       <img
-                        src={restaurant.image_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1'}
+                        src={restaurant.banner_image_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1'}
                         alt={restaurant.name}
                         className="w-full h-full object-cover"
                       />
