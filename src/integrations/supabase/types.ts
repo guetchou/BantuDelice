@@ -1984,6 +1984,7 @@ export type Database = {
           min_order_amount: number | null
           name: string
           opening_hours: Json | null
+          rating: number | null
           search_vector: unknown | null
           specialties: string[] | null
           status: string | null
@@ -2008,6 +2009,7 @@ export type Database = {
           min_order_amount?: number | null
           name: string
           opening_hours?: Json | null
+          rating?: number | null
           search_vector?: unknown | null
           specialties?: string[] | null
           status?: string | null
@@ -2032,6 +2034,7 @@ export type Database = {
           min_order_amount?: number | null
           name?: string
           opening_hours?: Json | null
+          rating?: number | null
           search_vector?: unknown | null
           specialties?: string[] | null
           status?: string | null
@@ -3915,6 +3918,7 @@ export type Database = {
           min_order_amount: number | null
           name: string
           opening_hours: Json | null
+          rating: number | null
           search_vector: unknown | null
           specialties: string[] | null
           status: string | null
