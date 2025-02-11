@@ -1,4 +1,3 @@
-
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import DeliveryMap from '@/components/DeliveryMap';
 import CartDrawer from '@/components/cart/CartDrawer';
 import ChatBubble from '@/components/chat/ChatBubble';
 import { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { 
   Card,
@@ -19,14 +18,16 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface FeaturedRestaurant {
   id: string;
   name: string;
   image_url?: string;
   cuisine_type?: string;
-  rating?: number;
+  rating?: number;  
   estimated_preparation_time?: number;
+  is_open?: boolean;
 }
 
 export default function Index() {
@@ -35,24 +36,67 @@ export default function Index() {
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
-  const { data: featuredRestaurants } = useQuery({
+  const { data: featuredRestaurants, isLoading, error } = useQuery({
     queryKey: ['featuredRestaurants'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('*')
+        .select(`
+          id,
+          name,
+          image_url,
+          cuisine_type,
+          rating,
+          estimated_preparation_time,
+          opening_hours
+        `)
         .eq('featured', true)
         .limit(3);
       
-      if (error) throw error;
-      return data as FeaturedRestaurant[];
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data?.map(restaurant => ({
+        ...restaurant,
+        is_open: checkRestaurantOpen(restaurant.opening_hours)
+      })) as FeaturedRestaurant[];
+    },
+    onError: (err) => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les restaurants mis en avant",
+        variant: "destructive",
+      });
     }
   });
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
       navigate(`/restaurants?search=${encodeURIComponent(searchQuery)}`);
+    } else {
+      toast({
+        title: "Recherche invalide",
+        description: "Veuillez entrer un terme de recherche",
+        variant: "destructive",
+      });
     }
+  };
+
+  const checkRestaurantOpen = (openingHours: any): boolean => {
+    if (!openingHours) return false;
+    
+    const now = new Date();
+    const day = now.toLocaleDateString('en-US', { weekday: 'lowercase' });
+    const currentTime = now.getHours() * 100 + now.getMinutes();
+
+    const todayHours = openingHours[day];
+    if (!todayHours) return false;
+
+    const openTime = parseInt(todayHours.open.replace(':', ''));
+    const closeTime = parseInt(todayHours.close.replace(':', ''));
+
+    return currentTime >= openTime && currentTime <= closeTime;
   };
 
   return (
@@ -87,14 +131,14 @@ export default function Index() {
               Découvrez la cuisine africaine authentique
             </Badge>
             
-            <h1 className="text-7xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
               Savourez l'Afrique<br />
               <span className="text-gradient bg-gradient-to-r from-orange-400 to-yellow-400">
                 à votre porte
               </span>
             </h1>
             
-            <p className="text-xl text-white/90 mb-8 leading-relaxed max-w-2xl">
+            <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed max-w-2xl">
               Une expérience culinaire unique avec les meilleurs restaurants africains. 
               Découvrez des saveurs authentiques, livrées rapidement chez vous.
             </p>
@@ -175,51 +219,68 @@ export default function Index() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredRestaurants?.map((restaurant, index) => (
-              <motion.div
-                key={restaurant.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
-                className="cursor-pointer"
-                onClick={() => navigate(`/restaurants/${restaurant.id}/menu`)}
-              >
-                <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 transition-all duration-300">
-                  <div className="relative h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={restaurant.image_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1'}
-                      alt={restaurant.name}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                    />
-                    {restaurant.cuisine_type && (
-                      <Badge className="absolute top-4 left-4 bg-orange-500">
-                        {restaurant.cuisine_type}
-                      </Badge>
-                    )}
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-white">{restaurant.name}</CardTitle>
-                    <CardDescription className="text-gray-400">
-                      <div className="flex items-center gap-4 mt-2">
-                        {restaurant.rating && (
-                          <div className="flex items-center text-yellow-500">
-                            <Star className="w-4 h-4 fill-current mr-1" />
-                            <span>{restaurant.rating}/5</span>
-                          </div>
+            <AnimatePresence>
+              {isLoading ? (
+                Array(3).fill(0).map((_, index) => (
+                  <motion.div
+                    key={`skeleton-${index}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="bg-gray-800/50 rounded-lg h-96 animate-pulse"
+                  />
+                ))
+              ) : featuredRestaurants?.map((restaurant, index) => (
+                <motion.div
+                  key={restaurant.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2 }}
+                  className="cursor-pointer transform hover:scale-105 transition-all duration-300"
+                  onClick={() => navigate(`/restaurants/${restaurant.id}/menu`)}
+                >
+                  <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 h-full">
+                    <div className="relative h-48 overflow-hidden rounded-t-lg">
+                      <img
+                        src={restaurant.image_url || 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1'}
+                        alt={restaurant.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        {restaurant.cuisine_type && (
+                          <Badge className="bg-orange-500">
+                            {restaurant.cuisine_type}
+                          </Badge>
                         )}
-                        {restaurant.estimated_preparation_time && (
-                          <div className="flex items-center text-gray-400">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>{restaurant.estimated_preparation_time} min</span>
-                          </div>
-                        )}
+                        <Badge className={restaurant.is_open ? "bg-green-500" : "bg-red-500"}>
+                          {restaurant.is_open ? "Ouvert" : "Fermé"}
+                        </Badge>
                       </div>
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </motion.div>
-            ))}
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="text-white text-xl">{restaurant.name}</CardTitle>
+                      <CardDescription className="text-gray-400">
+                        <div className="flex items-center gap-4 mt-2">
+                          {restaurant.rating && (
+                            <div className="flex items-center text-yellow-500">
+                              <Star className="w-4 h-4 fill-current mr-1" />
+                              <span>{restaurant.rating.toFixed(1)}/5</span>
+                            </div>
+                          )}
+                          {restaurant.estimated_preparation_time && (
+                            <div className="flex items-center text-gray-400">
+                              <Clock className="w-4 h-4 mr-1" />
+                              <span>{restaurant.estimated_preparation_time} min</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
       </section>
