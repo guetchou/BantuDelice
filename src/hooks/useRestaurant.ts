@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -85,6 +86,18 @@ export const useRestaurant = (restaurantId: string | undefined) => {
           }))
         : [];
 
+      // Valider et convertir payment_methods
+      const paymentMethods = (data.payment_methods || [])
+        .filter((method): method is PaymentMethod => 
+          ['cash', 'credit_card', 'debit_card', 'mobile_money', 'bank_transfer'].includes(method)
+        );
+
+      // Valider et convertir services
+      const services = (data.services || [])
+        .filter((service): service is RestaurantService => 
+          ['dine_in', 'takeaway', 'delivery', 'catering', 'private_events'].includes(service)
+        );
+
       // Transformer les données pour correspondre au type Restaurant
       const transformedData: Restaurant = {
         id: data.id,
@@ -98,8 +111,8 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         location: data.location ? {
           type: "Point",
           coordinates: [
-            data.location.coordinates?.[0] || 0,
-            data.location.coordinates?.[1] || 0
+            (data.location as any)?.coordinates?.[0] || 0,
+            (data.location as any)?.coordinates?.[1] || 0
           ]
         } : undefined,
         phone: data.phone || undefined,
@@ -111,15 +124,15 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         minimum_order: data.minimum_order || undefined,
         delivery_fee: data.delivery_fee || undefined,
         tax_rate: data.tax_rate || undefined,
-        payment_methods: data.payment_methods || [],
-        services: data.services || [],
-        status: data.status as RestaurantStatus || 'active',
+        payment_methods: paymentMethods,
+        services: services,
+        status: (data.status as RestaurantStatus) || 'active',
         business_hours: businessHours,
-        special_hours: data.special_hours || undefined,
-        holidays: data.holidays || [],
-        tags: data.tags || [],
-        features: data.features || [],
-        certifications: data.certifications || [],
+        special_hours: data.special_hours as BusinessHours | undefined,
+        holidays: (data.holidays || []) as string[],
+        tags: (data.tags || []) as string[],
+        features: (data.features || []) as string[],
+        certifications: (data.certifications || []) as string[],
         average_prep_time: data.average_prep_time || undefined,
         menu_categories: menuCategories,
         order_count: data.order_count || 0,
@@ -127,10 +140,10 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         average_ticket: data.average_ticket || undefined,
         rating: data.rating || undefined,
         review_count: data.review_count || 0,
-        ambiance: data.ambiance || [],
+        ambiance: (data.ambiance || []) as string[],
         dress_code: data.dress_code || undefined,
-        parking_options: data.parking_options || [],
-        accessibility_features: data.accessibility_features || [],
+        parking_options: (data.parking_options || []) as string[],
+        accessibility_features: (data.accessibility_features || []) as string[],
         created_at: data.created_at,
         updated_at: data.updated_at || data.created_at
       };
@@ -244,9 +257,17 @@ export const useRestaurant = (restaurantId: string | undefined) => {
 
   const updateRestaurant = useMutation({
     mutationFn: async (updates: Partial<Restaurant>) => {
+      // Valider les données avant l'envoi
       const updateData = Object.entries(updates).reduce((acc, [key, value]) => {
-        if (key === 'business_hours' || key === 'social_media' || key === 'menu_categories') {
+        // Convertir en JSON string les objets complexes
+        if (key === 'business_hours' || key === 'social_media' || key === 'menu_categories' || key === 'location') {
           acc[key] = JSON.stringify(value);
+        } else if (Array.isArray(value)) {
+          // S'assurer que les tableaux sont valides
+          acc[key] = value.filter(item => item !== null && item !== undefined);
+        } else if (value === undefined) {
+          // Ignorer les valeurs undefined
+          return acc;
         } else {
           acc[key] = value;
         }
