@@ -1886,6 +1886,103 @@ export type Database = {
           },
         ]
       }
+      restaurant_events: {
+        Row: {
+          booking_required: boolean | null
+          capacity: number | null
+          created_at: string
+          description: string | null
+          end_date: string
+          event_name: string
+          event_type: string | null
+          id: string
+          price_per_person: number | null
+          restaurant_id: string | null
+          start_date: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_required?: boolean | null
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          end_date: string
+          event_name: string
+          event_type?: string | null
+          id?: string
+          price_per_person?: number | null
+          restaurant_id?: string | null
+          start_date: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_required?: boolean | null
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          event_name?: string
+          event_type?: string | null
+          id?: string
+          price_per_person?: number | null
+          restaurant_id?: string | null
+          start_date?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_peak_hours: {
+        Row: {
+          created_at: string
+          day_of_week: string
+          end_time: string
+          id: string
+          peak_level: number | null
+          restaurant_id: string | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: string
+          end_time: string
+          id?: string
+          peak_level?: number | null
+          restaurant_id?: string | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: string
+          end_time?: string
+          id?: string
+          peak_level?: number | null
+          restaurant_id?: string | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_peak_hours_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_promotions: {
         Row: {
           active: boolean | null
@@ -1968,79 +2065,163 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          accessibility_features: string[] | null
           address: string
+          ambiance: string[] | null
+          average_prep_time: number | null
           average_rating: number | null
+          average_ticket: number | null
           banner_image_url: string | null
+          business_hours: Json | null
+          capacity: number | null
+          certification: string[] | null
           created_at: string
           cuisine_type: string | null
           delivery_fee: number | null
+          delivery_radius: number | null
           delivery_zones: Json | null
+          description: string | null
+          dress_code: string | null
+          email: string | null
           estimated_preparation_time: number | null
           featured: boolean | null
+          features: string[] | null
+          holidays: Json | null
           id: string
           latitude: number | null
+          location: unknown | null
           logo_url: string | null
           longitude: number | null
+          menu_categories: Json | null
           min_order_amount: number | null
+          minimum_order: number | null
           name: string
           opening_hours: Json | null
+          order_count: number | null
+          parking_options: string[] | null
+          payment_methods: string[] | null
+          phone: string | null
           rating: number | null
+          review_count: number | null
           search_vector: unknown | null
+          services: string[] | null
+          social_media: Json | null
+          special_hours: Json | null
           specialties: string[] | null
           status: string | null
+          tags: string[] | null
+          tax_rate: number | null
           total_ratings: number | null
+          total_revenue: number | null
           trending: boolean | null
           user_id: string | null
+          website: string | null
         }
         Insert: {
+          accessibility_features?: string[] | null
           address: string
+          ambiance?: string[] | null
+          average_prep_time?: number | null
           average_rating?: number | null
+          average_ticket?: number | null
           banner_image_url?: string | null
+          business_hours?: Json | null
+          capacity?: number | null
+          certification?: string[] | null
           created_at?: string
           cuisine_type?: string | null
           delivery_fee?: number | null
+          delivery_radius?: number | null
           delivery_zones?: Json | null
+          description?: string | null
+          dress_code?: string | null
+          email?: string | null
           estimated_preparation_time?: number | null
           featured?: boolean | null
+          features?: string[] | null
+          holidays?: Json | null
           id?: string
           latitude?: number | null
+          location?: unknown | null
           logo_url?: string | null
           longitude?: number | null
+          menu_categories?: Json | null
           min_order_amount?: number | null
+          minimum_order?: number | null
           name: string
           opening_hours?: Json | null
+          order_count?: number | null
+          parking_options?: string[] | null
+          payment_methods?: string[] | null
+          phone?: string | null
           rating?: number | null
+          review_count?: number | null
           search_vector?: unknown | null
+          services?: string[] | null
+          social_media?: Json | null
+          special_hours?: Json | null
           specialties?: string[] | null
           status?: string | null
+          tags?: string[] | null
+          tax_rate?: number | null
           total_ratings?: number | null
+          total_revenue?: number | null
           trending?: boolean | null
           user_id?: string | null
+          website?: string | null
         }
         Update: {
+          accessibility_features?: string[] | null
           address?: string
+          ambiance?: string[] | null
+          average_prep_time?: number | null
           average_rating?: number | null
+          average_ticket?: number | null
           banner_image_url?: string | null
+          business_hours?: Json | null
+          capacity?: number | null
+          certification?: string[] | null
           created_at?: string
           cuisine_type?: string | null
           delivery_fee?: number | null
+          delivery_radius?: number | null
           delivery_zones?: Json | null
+          description?: string | null
+          dress_code?: string | null
+          email?: string | null
           estimated_preparation_time?: number | null
           featured?: boolean | null
+          features?: string[] | null
+          holidays?: Json | null
           id?: string
           latitude?: number | null
+          location?: unknown | null
           logo_url?: string | null
           longitude?: number | null
+          menu_categories?: Json | null
           min_order_amount?: number | null
+          minimum_order?: number | null
           name?: string
           opening_hours?: Json | null
+          order_count?: number | null
+          parking_options?: string[] | null
+          payment_methods?: string[] | null
+          phone?: string | null
           rating?: number | null
+          review_count?: number | null
           search_vector?: unknown | null
+          services?: string[] | null
+          social_media?: Json | null
+          special_hours?: Json | null
           specialties?: string[] | null
           status?: string | null
+          tags?: string[] | null
+          tax_rate?: number | null
           total_ratings?: number | null
+          total_revenue?: number | null
           trending?: boolean | null
           user_id?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -3902,29 +4083,57 @@ export type Database = {
           search_query: string
         }
         Returns: {
+          accessibility_features: string[] | null
           address: string
+          ambiance: string[] | null
+          average_prep_time: number | null
           average_rating: number | null
+          average_ticket: number | null
           banner_image_url: string | null
+          business_hours: Json | null
+          capacity: number | null
+          certification: string[] | null
           created_at: string
           cuisine_type: string | null
           delivery_fee: number | null
+          delivery_radius: number | null
           delivery_zones: Json | null
+          description: string | null
+          dress_code: string | null
+          email: string | null
           estimated_preparation_time: number | null
           featured: boolean | null
+          features: string[] | null
+          holidays: Json | null
           id: string
           latitude: number | null
+          location: unknown | null
           logo_url: string | null
           longitude: number | null
+          menu_categories: Json | null
           min_order_amount: number | null
+          minimum_order: number | null
           name: string
           opening_hours: Json | null
+          order_count: number | null
+          parking_options: string[] | null
+          payment_methods: string[] | null
+          phone: string | null
           rating: number | null
+          review_count: number | null
           search_vector: unknown | null
+          services: string[] | null
+          social_media: Json | null
+          special_hours: Json | null
           specialties: string[] | null
           status: string | null
+          tags: string[] | null
+          tax_rate: number | null
           total_ratings: number | null
+          total_revenue: number | null
           trending: boolean | null
           user_id: string | null
+          website: string | null
         }[]
       }
       spheroid_in: {
