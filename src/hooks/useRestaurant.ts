@@ -101,20 +101,52 @@ export const useRestaurant = (restaurantId: string | undefined) => {
 
       // Transformer les données pour correspondre au type Restaurant
       const transformedData: Restaurant = {
-        ...data,
-        certifications: data.certification || [],
-        updated_at: data.created_at,
+        id: data.id,
+        user_id: data.user_id,
+        name: data.name,
+        description: data.description || undefined,
+        banner_image_url: data.banner_image_url || undefined,
+        logo_url: data.logo_url || undefined,
+        cuisine_type: data.cuisine_type || undefined,
+        address: data.address,
+        location: data.location ? {
+          type: "Point",
+          coordinates: [
+            data.location.coordinates?.[0] || 0,
+            data.location.coordinates?.[1] || 0
+          ]
+        } : undefined,
+        phone: data.phone || undefined,
+        email: data.email || undefined,
+        website: data.website || undefined,
+        social_media: socialMedia,
+        capacity: data.capacity || undefined,
+        delivery_radius: data.delivery_radius || undefined,
+        minimum_order: data.minimum_order || undefined,
+        delivery_fee: data.delivery_fee || undefined,
+        tax_rate: data.tax_rate || undefined,
+        payment_methods: data.payment_methods || [],
+        services: data.services || [],
+        status: data.status as RestaurantStatus || 'active',
         business_hours: businessHours,
-        status,
-        payment_methods: paymentMethods,
-        services,
+        special_hours: data.special_hours || undefined,
+        holidays: data.holidays || [],
         tags: data.tags || [],
         features: data.features || [],
+        certifications: data.certifications || [],
+        average_prep_time: data.average_prep_time || undefined,
         menu_categories: menuCategories,
-        social_media: socialMedia,
         order_count: data.order_count || 0,
         total_revenue: data.total_revenue || 0,
-        review_count: data.review_count || 0
+        average_ticket: data.average_ticket || undefined,
+        rating: data.rating || undefined,
+        review_count: data.review_count || 0,
+        ambiance: data.ambiance || [],
+        dress_code: data.dress_code || undefined,
+        parking_options: data.parking_options || [],
+        accessibility_features: data.accessibility_features || [],
+        created_at: data.created_at,
+        updated_at: data.updated_at || data.created_at
       };
 
       return transformedData;
@@ -226,18 +258,14 @@ export const useRestaurant = (restaurantId: string | undefined) => {
 
   const updateRestaurant = useMutation({
     mutationFn: async (updates: Partial<Restaurant>) => {
-      // Convertir les objets complexes en JSON pour la base de données
-      const updateData = {
-        ...(Object.keys(updates).reduce((acc, key) => {
-          const value = updates[key as keyof Restaurant];
-          if (key === 'business_hours' || key === 'social_media' || key === 'menu_categories') {
-            acc[key] = JSON.stringify(value);
-          } else {
-            acc[key] = value;
-          }
-          return acc;
-        }, {} as Record<string, any>))
-      };
+      const updateData = Object.entries(updates).reduce((acc, [key, value]) => {
+        if (key === 'business_hours' || key === 'social_media' || key === 'menu_categories') {
+          acc[key] = JSON.stringify(value);
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
 
       const { data, error } = await supabase
         .from('restaurants')
