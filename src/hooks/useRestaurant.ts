@@ -12,7 +12,8 @@ import type {
   PaymentMethod,
   RestaurantService,
   MenuCategory,
-  SocialMedia
+  SocialMedia,
+  BusinessHours
 } from "@/types/restaurant";
 
 export const useRestaurant = (restaurantId: string | undefined) => {
@@ -65,21 +66,45 @@ export const useRestaurant = (restaurantId: string | undefined) => {
           }))
         : [];
 
-      // Convertir social_media
+      // Parser et convertir social_media
+      let socialMediaData = {};
+      try {
+        socialMediaData = typeof data.social_media === 'string' 
+          ? JSON.parse(data.social_media) 
+          : data.social_media || {};
+      } catch (e) {
+        console.error('Error parsing social_media:', e);
+      }
+
       const socialMedia: SocialMedia = {
-        facebook: data.social_media?.facebook || undefined,
-        instagram: data.social_media?.instagram || undefined,
-        twitter: data.social_media?.twitter || undefined,
-        linkedin: data.social_media?.linkedin || undefined,
-        youtube: data.social_media?.youtube || undefined
+        facebook: (socialMediaData as any)?.facebook || undefined,
+        instagram: (socialMediaData as any)?.instagram || undefined,
+        twitter: (socialMediaData as any)?.twitter || undefined,
+        linkedin: (socialMediaData as any)?.linkedin || undefined,
+        youtube: (socialMediaData as any)?.youtube || undefined
       };
+
+      // Parser et convertir business_hours
+      let businessHours: BusinessHours = { regular: {} };
+      try {
+        const parsedHours = typeof data.business_hours === 'string'
+          ? JSON.parse(data.business_hours)
+          : data.business_hours || { regular: {} };
+        
+        businessHours = {
+          regular: parsedHours.regular || {},
+          special: parsedHours.special || []
+        };
+      } catch (e) {
+        console.error('Error parsing business_hours:', e);
+      }
 
       // Transformer les données pour correspondre au type Restaurant
       const transformedData: Restaurant = {
         ...data,
         certifications: data.certification || [],
         updated_at: data.created_at,
-        business_hours: data.business_hours || { regular: {} },
+        business_hours: businessHours,
         status,
         payment_methods: paymentMethods,
         services,
@@ -107,17 +132,29 @@ export const useRestaurant = (restaurantId: string | undefined) => {
 
       if (error) throw error;
 
-      return (data || []).map(zone => ({
-        id: zone.id,
-        restaurant_id: restaurantId,
-        zone_name: zone.name,
-        delivery_fee: zone.base_delivery_fee,
-        minimum_order: zone.minimum_order,
-        estimated_time: zone.estimated_time_range?.average || undefined,
-        area: zone.polygon,
-        created_at: zone.created_at,
-        updated_at: zone.created_at
-      })) as DeliveryZone[];
+      return (data || []).map(zone => {
+        let estimatedTime;
+        try {
+          const timeRange = typeof zone.estimated_time_range === 'string'
+            ? JSON.parse(zone.estimated_time_range)
+            : zone.estimated_time_range;
+          estimatedTime = timeRange?.average;
+        } catch (e) {
+          console.error('Error parsing estimated_time_range:', e);
+        }
+
+        return {
+          id: zone.id,
+          restaurant_id: restaurantId,
+          zone_name: zone.name,
+          delivery_fee: zone.base_delivery_fee,
+          minimum_order: zone.minimum_order,
+          estimated_time: estimatedTime,
+          area: zone.polygon,
+          created_at: zone.created_at,
+          updated_at: zone.created_at
+        };
+      }) as DeliveryZone[];
     },
     enabled: !!restaurantId
   });
@@ -189,12 +226,17 @@ export const useRestaurant = (restaurantId: string | undefined) => {
 
   const updateRestaurant = useMutation({
     mutationFn: async (updates: Partial<Restaurant>) => {
-      // Préparer les données pour la mise à jour
+      // Convertir les objets complexes en JSON pour la base de données
       const updateData = {
-        ...updates,
-        business_hours: updates.business_hours ? JSON.stringify(updates.business_hours) : undefined,
-        menu_categories: updates.menu_categories ? JSON.stringify(updates.menu_categories) : undefined,
-        social_media: updates.social_media ? JSON.stringify(updates.social_media) : undefined
+        ...(Object.keys(updates).reduce((acc, key) => {
+          const value = updates[key as keyof Restaurant];
+          if (key === 'business_hours' || key === 'social_media' || key === 'menu_categories') {
+            acc[key] = JSON.stringify(value);
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {} as Record<string, any>))
       };
 
       const { data, error } = await supabase
