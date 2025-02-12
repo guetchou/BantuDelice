@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -30,7 +29,7 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         .from('restaurants')
         .select('*')
         .eq('id', restaurantId)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching restaurant:', error);
@@ -41,30 +40,6 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         console.error('Restaurant not found');
         throw new Error('Restaurant not found');
       }
-
-      // Vérifier et convertir le statut
-      const status: RestaurantStatus = data.status as RestaurantStatus || 'active';
-
-      // Convertir les payment_methods
-      const paymentMethods: PaymentMethod[] = (data.payment_methods || []).filter((method): method is PaymentMethod => 
-        ['cash', 'credit_card', 'debit_card', 'mobile_money', 'bank_transfer'].includes(method)
-      );
-
-      // Convertir les services
-      const services: RestaurantService[] = (data.services || []).filter((service): service is RestaurantService =>
-        ['dine_in', 'takeaway', 'delivery', 'catering', 'private_events'].includes(service)
-      );
-
-      // Convertir les menu_categories
-      const menuCategories: MenuCategory[] = Array.isArray(data.menu_categories) 
-        ? data.menu_categories.map((cat: any) => ({
-            id: cat.id || '',
-            name: cat.name || '',
-            description: cat.description,
-            image_url: cat.image_url,
-            order: cat.order || 0
-          }))
-        : [];
 
       // Parser et convertir social_media
       let socialMediaData = {};
@@ -98,6 +73,17 @@ export const useRestaurant = (restaurantId: string | undefined) => {
       } catch (e) {
         console.error('Error parsing business_hours:', e);
       }
+
+      // Convertir les menu_categories
+      const menuCategories: MenuCategory[] = Array.isArray(data.menu_categories) 
+        ? data.menu_categories.map((cat: any) => ({
+            id: cat.id || '',
+            name: cat.name || '',
+            description: cat.description,
+            image_url: cat.image_url,
+            order: cat.order || 0
+          }))
+        : [];
 
       // Transformer les données pour correspondre au type Restaurant
       const transformedData: Restaurant = {
