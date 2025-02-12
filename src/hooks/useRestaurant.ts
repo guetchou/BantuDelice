@@ -30,7 +30,22 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         throw new Error('Restaurant not found');
       }
 
-      return data as Restaurant;
+      // Transformer les données pour correspondre au type Restaurant
+      const transformedData: Restaurant = {
+        ...data,
+        certifications: data.certification || [],
+        updated_at: data.created_at, // Utiliser created_at comme fallback pour updated_at
+        business_hours: data.business_hours ? JSON.parse(JSON.stringify(data.business_hours)) : { regular: {} },
+        status: data.status || 'active',
+        payment_methods: data.payment_methods || [],
+        services: data.services || [],
+        tags: data.tags || [],
+        features: data.features || [],
+        menu_categories: data.menu_categories || [],
+        social_media: data.social_media || {},
+      };
+
+      return transformedData;
     },
     enabled: !!restaurantId
   });
@@ -44,7 +59,17 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         .eq('restaurant_id', restaurantId);
 
       if (error) throw error;
-      return data as DeliveryZone[];
+
+      // Transformer les données pour correspondre au type DeliveryZone
+      return (data || []).map(zone => ({
+        ...zone,
+        restaurant_id: restaurantId,
+        zone_name: zone.name,
+        area: zone.polygon,
+        updated_at: zone.created_at,
+        estimated_time: zone.estimated_time_range ? 
+          JSON.parse(JSON.stringify(zone.estimated_time_range)).average : undefined
+      })) as DeliveryZone[];
     },
     enabled: !!restaurantId
   });
@@ -71,11 +96,21 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         .from('restaurant_promotions')
         .select('*')
         .eq('restaurant_id', restaurantId)
-        .eq('status', 'active')
+        .eq('active', true)
         .gte('end_date', new Date().toISOString());
 
       if (error) throw error;
-      return data as RestaurantPromotion[];
+
+      // Transformer les données pour correspondre au type RestaurantPromotion
+      return (data || []).map(promo => ({
+        ...promo,
+        usage_count: 0,
+        customer_type: ['all'],
+        status: promo.active ? 'active' : 'inactive',
+        updated_at: promo.created_at,
+        applicable_items: [],
+        excluded_items: []
+      })) as RestaurantPromotion[];
     },
     enabled: !!restaurantId
   });
@@ -96,9 +131,15 @@ export const useRestaurant = (restaurantId: string | undefined) => {
 
   const updateRestaurant = useMutation({
     mutationFn: async (updates: Partial<Restaurant>) => {
+      const updateData = {
+        ...updates,
+        business_hours: updates.business_hours ? 
+          JSON.stringify(updates.business_hours) : undefined
+      };
+
       const { data, error } = await supabase
         .from('restaurants')
-        .update(updates)
+        .update(updateData)
         .eq('id', restaurantId)
         .select()
         .single();
