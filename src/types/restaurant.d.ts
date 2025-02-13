@@ -1,4 +1,3 @@
-
 import { Database } from "@/integrations/supabase/database.types";
 
 export interface OpeningHours {
@@ -158,6 +157,41 @@ export interface RestaurantPromotion {
   excluded_items?: string[];
   customer_type: string[];
   status: 'active' | 'inactive' | 'expired';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Table {
+  id: string;
+  restaurant_id: string;
+  table_number: string;
+  capacity: number;
+  location?: string;
+  status: 'available' | 'occupied' | 'reserved' | 'maintenance';
+  minimum_guests: number;
+  maximum_guests?: number;
+  is_accessible: boolean;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Reservation {
+  id: string;
+  restaurant_id: string;
+  table_id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  party_size: number;
+  reservation_date: string;
+  estimated_duration_minutes: number;
+  status: 'pending' | 'confirmed' | 'seated' | 'completed' | 'cancelled' | 'no_show';
+  arrival_time?: string;
+  departure_time?: string;
+  special_requests?: string;
+  dietary_restrictions?: string[];
+  occasion?: string;
   created_at: string;
   updated_at: string;
 }

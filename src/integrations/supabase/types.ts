@@ -2036,6 +2036,81 @@ export type Database = {
           },
         ]
       }
+      restaurant_reservations: {
+        Row: {
+          arrival_time: string | null
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          departure_time: string | null
+          dietary_restrictions: string[] | null
+          estimated_duration_minutes: number | null
+          id: string
+          occasion: string | null
+          party_size: number
+          reservation_date: string
+          restaurant_id: string
+          special_requests: string | null
+          status: string
+          table_id: string
+          updated_at: string
+        }
+        Insert: {
+          arrival_time?: string | null
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          departure_time?: string | null
+          dietary_restrictions?: string[] | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          occasion?: string | null
+          party_size: number
+          reservation_date: string
+          restaurant_id: string
+          special_requests?: string | null
+          status?: string
+          table_id: string
+          updated_at?: string
+        }
+        Update: {
+          arrival_time?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          departure_time?: string | null
+          dietary_restrictions?: string[] | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          occasion?: string | null
+          party_size?: number
+          reservation_date?: string
+          restaurant_id?: string
+          special_requests?: string | null
+          status?: string
+          table_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_reservations_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_reviews: {
         Row: {
           comment: string | null
@@ -2062,6 +2137,59 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      restaurant_tables: {
+        Row: {
+          capacity: number
+          created_at: string
+          id: string
+          is_accessible: boolean | null
+          location: string | null
+          maximum_guests: number | null
+          minimum_guests: number | null
+          notes: string | null
+          restaurant_id: string
+          status: string
+          table_number: string
+          updated_at: string
+        }
+        Insert: {
+          capacity: number
+          created_at?: string
+          id?: string
+          is_accessible?: boolean | null
+          location?: string | null
+          maximum_guests?: number | null
+          minimum_guests?: number | null
+          notes?: string | null
+          restaurant_id: string
+          status?: string
+          table_number: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          id?: string
+          is_accessible?: boolean | null
+          location?: string | null
+          maximum_guests?: number | null
+          minimum_guests?: number | null
+          notes?: string | null
+          restaurant_id?: string
+          status?: string
+          table_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tables_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restaurants: {
         Row: {
