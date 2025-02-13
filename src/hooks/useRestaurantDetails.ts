@@ -12,6 +12,11 @@ import type {
   BusinessHours
 } from "@/types/restaurant";
 
+interface LocationData {
+  type: string;
+  coordinates: [number, number];
+}
+
 export const useRestaurantDetails = (restaurantId: string | undefined) => {
   const queryClient = useQueryClient();
 
@@ -50,14 +55,16 @@ export const useRestaurantDetails = (restaurantId: string | undefined) => {
       // Parser business_hours
       let businessHours: BusinessHours = { regular: {} };
       try {
-        const parsedHours = typeof data.business_hours === 'string'
+        const parsedHoursData = typeof data.business_hours === 'string'
           ? JSON.parse(data.business_hours)
           : data.business_hours || { regular: {} };
-        
-        businessHours = {
-          regular: parsedHours.regular || {},
-          special: parsedHours.special
+
+        const parsedHours: BusinessHours = {
+          regular: parsedHoursData.regular || {},
+          special: parsedHoursData.special
         };
+        
+        businessHours = parsedHours;
       } catch (e) {
         console.error('Error parsing business_hours:', e);
       }
@@ -73,6 +80,16 @@ export const useRestaurantDetails = (restaurantId: string | undefined) => {
           }))
         : [];
 
+      // Parser location
+      let locationData: { type: 'Point'; coordinates: [number, number] } | undefined;
+      if (data.location) {
+        const location = data.location as LocationData;
+        locationData = {
+          type: 'Point',
+          coordinates: location.coordinates
+        };
+      }
+
       const transformedData: Restaurant = {
         id: data.id,
         user_id: data.user_id,
@@ -82,10 +99,7 @@ export const useRestaurantDetails = (restaurantId: string | undefined) => {
         logo_url: data.logo_url,
         cuisine_type: data.cuisine_type,
         address: data.address,
-        location: data.location ? {
-          type: "Point",
-          coordinates: [data.location.coordinates[0], data.location.coordinates[1]]
-        } : undefined,
+        location: locationData,
         phone: data.phone,
         email: data.email,
         website: data.website,
@@ -100,10 +114,10 @@ export const useRestaurantDetails = (restaurantId: string | undefined) => {
         status: (data.status as RestaurantStatus) || 'active',
         business_hours: businessHours,
         special_hours: data.special_hours as BusinessHours | undefined,
-        holidays: data.holidays || [],
-        tags: data.tags || [],
-        features: data.features || [],
-        certifications: data.certification || [],
+        holidays: Array.isArray(data.holidays) ? data.holidays : [],
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        features: Array.isArray(data.features) ? data.features : [],
+        certifications: Array.isArray(data.certification) ? data.certification : [],
         average_prep_time: data.average_prep_time,
         menu_categories: menuCategories,
         order_count: data.order_count || 0,
@@ -111,10 +125,10 @@ export const useRestaurantDetails = (restaurantId: string | undefined) => {
         average_ticket: data.average_ticket,
         rating: data.rating,
         review_count: data.review_count || 0,
-        ambiance: data.ambiance || [],
+        ambiance: Array.isArray(data.ambiance) ? data.ambiance : [],
         dress_code: data.dress_code,
-        parking_options: data.parking_options || [],
-        accessibility_features: data.accessibility_features || [],
+        parking_options: Array.isArray(data.parking_options) ? data.parking_options : [],
+        accessibility_features: Array.isArray(data.accessibility_features) ? data.accessibility_features : [],
         created_at: data.created_at,
         updated_at: data.created_at
       };
