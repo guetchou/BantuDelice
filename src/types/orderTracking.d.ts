@@ -11,4 +11,3 @@ export interface LocationData {
   accuracy?: number;
   timestamp: string;
 }
-

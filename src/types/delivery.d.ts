@@ -9,4 +9,3 @@ export interface DeliveryTimes {
   weekday: string[];
   weekend: string[];
 }
-

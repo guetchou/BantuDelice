@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,15 +6,15 @@ import { MapPin, Package, Bike, CheckCircle } from 'lucide-react';
 import DeliveryMap from '@/components/DeliveryMap';
 import { supabase } from '@/integrations/supabase/client';
 
-interface DeliveryTrackingProps {
-  orderId: string;
-}
-
 interface DeliveryStatus {
   status: string;
   latitude: number;
   longitude: number;
   updated_at: string;
+}
+
+interface DeliveryTrackingProps {
+  orderId: string;
 }
 
 const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
