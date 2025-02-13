@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -13,7 +12,9 @@ import type {
   RestaurantService,
   MenuCategory,
   SocialMedia,
-  BusinessHours
+  BusinessHours,
+  Table,
+  Reservation
 } from "@/types/restaurant";
 
 export const useRestaurant = (restaurantId: string | undefined) => {
@@ -151,6 +152,163 @@ export const useRestaurant = (restaurantId: string | undefined) => {
       return transformedData;
     },
     enabled: !!restaurantId
+  });
+
+  // Ajout de la gestion des tables
+  const { data: tables } = useQuery({
+    queryKey: ['restaurant', restaurantId, 'tables'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('restaurant_tables')
+        .select('*')
+        .eq('restaurant_id', restaurantId);
+
+      if (error) throw error;
+      return data as Table[];
+    },
+    enabled: !!restaurantId
+  });
+
+  // Gestion des réservations
+  const { data: reservations } = useQuery({
+    queryKey: ['restaurant', restaurantId, 'reservations'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('restaurant_reservations')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .gte('reservation_date', new Date().toISOString());
+
+      if (error) throw error;
+      return data as Reservation[];
+    },
+    enabled: !!restaurantId
+  });
+
+  // Calcul de la disponibilité des tables
+  const checkTableAvailability = async (date: Date, partySize: number): Promise<{available: boolean; suggestedTables: Table[]}> => {
+    // Récupérer les réservations pour cette date
+    const { data: existingReservations } = await supabase
+      .from('restaurant_reservations')
+      .select('*')
+      .eq('restaurant_id', restaurantId)
+      .gte('reservation_date', date.toISOString())
+      .lt('reservation_date', new Date(date.getTime() + 2 * 60 * 60 * 1000).toISOString());
+
+    // Filtrer les tables disponibles
+    const availableTables = tables?.filter(table => {
+      // Vérifier si la table peut accueillir le groupe
+      if (table.capacity < partySize) return false;
+
+      // Vérifier si la table n'est pas déjà réservée
+      const isReserved = existingReservations?.some(
+        reservation => reservation.table_id === table.id
+      );
+
+      return !isReserved;
+    }) || [];
+
+    return {
+      available: availableTables.length > 0,
+      suggestedTables: availableTables.sort((a, b) => a.capacity - b.capacity)
+    };
+  };
+
+  // Création d'une réservation
+  const createReservation = useMutation({
+    mutationFn: async ({ 
+      tableId, 
+      date, 
+      partySize, 
+      customerName, 
+      customerEmail, 
+      customerPhone,
+      specialRequests 
+    }: {
+      tableId: string;
+      date: Date;
+      partySize: number;
+      customerName: string;
+      customerEmail: string;
+      customerPhone: string;
+      specialRequests?: string;
+    }) => {
+      // Vérifier la disponibilité une dernière fois
+      const { available } = await checkTableAvailability(date, partySize);
+      if (!available) {
+        throw new Error('Cette table n\'est plus disponible');
+      }
+
+      const { data, error } = await supabase
+        .from('restaurant_reservations')
+        .insert({
+          restaurant_id: restaurantId,
+          table_id: tableId,
+          reservation_date: date.toISOString(),
+          party_size: partySize,
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: customerPhone,
+          special_requests: specialRequests,
+          status: 'confirmed'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId, 'reservations'] });
+      toast({
+        title: "Réservation confirmée",
+        description: "Votre réservation a été enregistrée avec succès",
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating reservation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer la réservation",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mise à jour d'une réservation
+  const updateReservation = useMutation({
+    mutationFn: async ({ 
+      reservationId,
+      updates 
+    }: {
+      reservationId: string;
+      updates: Partial<Reservation>;
+    }) => {
+      const { data, error } = await supabase
+        .from('restaurant_reservations')
+        .update(updates)
+        .eq('id', reservationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restaurant', restaurantId, 'reservations'] });
+      toast({
+        title: "Réservation mise à jour",
+        description: "Les modifications ont été enregistrées avec succès",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating reservation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la réservation",
+        variant: "destructive",
+      });
+    }
   });
 
   const { data: deliveryZones } = useQuery({
@@ -312,6 +470,8 @@ export const useRestaurant = (restaurantId: string | undefined) => {
 
   return {
     restaurant,
+    tables,
+    reservations,
     deliveryZones,
     events,
     promotions,
@@ -319,6 +479,9 @@ export const useRestaurant = (restaurantId: string | undefined) => {
     isLoading,
     error,
     updateRestaurant,
-    checkAvailability
+    checkAvailability,
+    checkTableAvailability,
+    createReservation,
+    updateReservation
   };
 };
