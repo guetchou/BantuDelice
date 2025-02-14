@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from 'lucide-react';
+import { Loader2, Phone, CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
@@ -13,13 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface MobilePaymentProps {
+export interface MobilePaymentProps {
   amount: number;
+  description?: string;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
 }
 
-const MobilePayment = ({ amount, onSuccess, onError }: MobilePaymentProps) => {
+const MobilePayment = ({ amount, description, onSuccess, onError }: MobilePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [operator, setOperator] = useState('');
@@ -52,6 +53,7 @@ const MobilePayment = ({ amount, onSuccess, onError }: MobilePaymentProps) => {
           amount,
           payment_method_id: operator === 'mtn' ? 'mobile_mtn' : 'mobile_airtel',
           status: 'pending',
+          description,
           metadata: {
             phone_number: phoneNumber,
             operator
@@ -94,46 +96,69 @@ const MobilePayment = ({ amount, onSuccess, onError }: MobilePaymentProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <Select
-        value={operator}
-        onValueChange={setOperator}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Sélectionnez un opérateur" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="mtn">MTN Mobile Money</SelectItem>
-          <SelectItem value="airtel">Airtel Money</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <Input
-        type="tel"
-        placeholder="Numéro de téléphone (9 chiffres)"
-        value={phoneNumber}
-        onChange={(e) => setPhoneNumber(e.target.value)}
-        maxLength={9}
-      />
-
-      <div className="text-sm text-gray-500 mb-4">
-        Montant à payer: {amount} FCFA
+    <div className="space-y-6">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold mb-2">Paiement Mobile</h3>
+        <p className="text-sm text-muted-foreground">
+          {description || 'Veuillez choisir votre opérateur et entrer votre numéro de téléphone'}
+        </p>
       </div>
 
-      <Button
-        className="w-full"
-        onClick={handlePayment}
-        disabled={isProcessing}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Traitement en cours...
-          </>
-        ) : (
-          'Payer maintenant'
-        )}
-      </Button>
+      <div className="space-y-4">
+        <Select
+          value={operator}
+          onValueChange={setOperator}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Sélectionnez un opérateur" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mtn">
+              <div className="flex items-center">
+                <Phone className="w-4 h-4 mr-2" />
+                MTN Mobile Money
+              </div>
+            </SelectItem>
+            <SelectItem value="airtel">
+              <div className="flex items-center">
+                <CreditCard className="w-4 h-4 mr-2" />
+                Airtel Money
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Input
+          type="tel"
+          placeholder="Numéro de téléphone (9 chiffres)"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          maxLength={9}
+          className="w-full"
+        />
+
+        <div className="bg-muted/50 p-4 rounded-lg">
+          <div className="flex justify-between text-sm">
+            <span>Montant à payer:</span>
+            <span className="font-semibold">{amount.toLocaleString()} FCFA</span>
+          </div>
+        </div>
+
+        <Button
+          className="w-full"
+          onClick={handlePayment}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Traitement en cours...
+            </>
+          ) : (
+            'Payer maintenant'
+          )}
+        </Button>
+      </div>
     </div>
   );
 };

@@ -12,6 +12,13 @@ export interface MenuItem {
   popularity_score?: number;
   dietary_preferences?: string[];
   cuisine_type?: string;
+  nutritional_info?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    allergens?: string[];
+  };
 }
 
 export interface CustomizationOption {
