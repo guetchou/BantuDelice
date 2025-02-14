@@ -14,6 +14,18 @@ export interface Order {
   actual_preparation_time?: number;
   special_instructions?: string;
   loyalty_points_earned?: number;
+  accepted_at?: string;
+  prepared_at?: string;
+  cancelled_at?: string;
+  delivery_time_preference?: string;
+  delivery_instructions?: string;
+  cancellation_reason?: string;
+  actual_delivery_time?: string;
+  restaurant_rating?: number;
+  restaurant_comment?: string;
+  payment_method?: string;
+  payment_reference?: string;
+  tip_amount?: number;
 }
 
 export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'prepared' | 'delivering' | 'delivered' | 'cancelled';

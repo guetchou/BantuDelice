@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MobilePayment from "@/components/MobilePayment";
 
@@ -15,7 +16,11 @@ const OrderConfirmation = ({ open, onOpenChange, onPaymentComplete, amount }: Or
         <DialogHeader>
           <DialogTitle>Paiement mobile</DialogTitle>
         </DialogHeader>
-        <MobilePayment amount={amount} onPaymentComplete={onPaymentComplete} />
+        <MobilePayment 
+          amount={amount} 
+          onSuccess={onPaymentComplete}
+          description="Paiement de commande"
+        />
       </DialogContent>
     </Dialog>
   );

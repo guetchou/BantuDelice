@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,9 +52,8 @@ const NotificationBell = () => {
 
     fetchNotifications();
 
-    // Subscribe to real-time notifications
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('notifications-changes')
       .on(
         'postgres_changes',
         {
@@ -62,7 +62,7 @@ const NotificationBell = () => {
           table: 'notifications'
         },
         (payload) => {
-          console.log('Notification change received:', payload);
+          console.log('Nouvelle notification reçue:', payload);
           fetchNotifications();
         }
       )

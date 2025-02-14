@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +17,16 @@ export interface MobilePaymentProps {
   description?: string;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  onPaymentComplete?: () => void;
 }
 
-const MobilePayment = ({ amount, description, onSuccess, onError }: MobilePaymentProps) => {
+const MobilePayment = ({ 
+  amount, 
+  description, 
+  onSuccess, 
+  onError,
+  onPaymentComplete 
+}: MobilePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [operator, setOperator] = useState('');
@@ -81,6 +87,7 @@ const MobilePayment = ({ amount, description, onSuccess, onError }: MobilePaymen
       });
 
       onSuccess?.();
+      onPaymentComplete?.();
 
     } catch (error) {
       console.error('Erreur de paiement:', error);

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -38,11 +37,19 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
+      // Conversion explicite des statuts pour TypeScript
+      const typedOrders = allOrders.map(order => ({
+        ...order,
+        status: order.status as OrderStatus,
+        payment_status: order.payment_status as PaymentStatus,
+        delivery_status: order.delivery_status as DeliveryStatus
+      }));
+
       // Filtrer les commandes actives et passées
-      const active = allOrders.filter(order => 
+      const active = typedOrders.filter(order => 
         !['delivered', 'cancelled'].includes(order.status)
       );
-      const past = allOrders.filter(order => 
+      const past = typedOrders.filter(order => 
         ['delivered', 'cancelled'].includes(order.status)
       );
 
