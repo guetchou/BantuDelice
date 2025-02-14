@@ -1,121 +1,138 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MobilePaymentProps {
   amount: number;
-  onPaymentComplete: () => void;
-  driverId?: string;
-  orderId?: string;
-  description?: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
 }
 
-const MobilePayment: React.FC<MobilePaymentProps> = ({ 
-  amount, 
-  onPaymentComplete,
-  driverId,
-  orderId,
-  description 
-}) => {
+const MobilePayment = ({ amount, onSuccess, onError }: MobilePaymentProps) => {
+  const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [provider, setProvider] = useState('mtn');
-  const [loading, setLoading] = useState(false);
+  const [operator, setOperator] = useState('');
+  const { toast } = useToast();
 
   const handlePayment = async () => {
-    setLoading(true);
     try {
-      // Simuler un paiement pour la démonstration
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Si c'est un paiement de livreur, créer l'enregistrement
-      if (driverId) {
-        const { error } = await supabase
-          .from('driver_payments')
-          .insert({
-            driver_id: driverId,
-            amount,
-            payment_method: provider,
-            description,
-            order_id: orderId,
-            status: 'completed',
-            paid_at: new Date().toISOString()
-          });
+      setIsProcessing(true);
 
-        if (error) throw error;
+      // Validation
+      if (!phoneNumber || !operator) {
+        throw new Error('Veuillez remplir tous les champs');
       }
-      
-      toast({
-        title: "Paiement initié",
-        description: "Veuillez confirmer le paiement sur votre téléphone",
-      });
-      
-      // Simuler la confirmation du paiement
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
+      if (!/^[0-9]{9}$/.test(phoneNumber)) {
+        throw new Error('Numéro de téléphone invalide');
+      }
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+
+      // Create payment record
+      const { data: payment, error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          user_id: user.id,
+          amount,
+          payment_method_id: operator === 'mtn' ? 'mobile_mtn' : 'mobile_airtel',
+          status: 'pending',
+          metadata: {
+            phone_number: phoneNumber,
+            operator
+          }
+        })
+        .select()
+        .single();
+
+      if (paymentError) throw paymentError;
+
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Update payment status
+      const { error: updateError } = await supabase
+        .from('payments')
+        .update({ status: 'completed' })
+        .eq('id', payment.id);
+
+      if (updateError) throw updateError;
+
       toast({
         title: "Paiement réussi",
-        description: "Votre paiement a été confirmé",
+        description: "Votre paiement a été traité avec succès",
       });
-      
-      onPaymentComplete();
+
+      onSuccess?.();
+
     } catch (error) {
-      console.error("Erreur de paiement:", error);
+      console.error('Erreur de paiement:', error);
       toast({
         title: "Erreur de paiement",
-        description: "Une erreur est survenue lors du paiement",
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive",
       });
+      onError?.(error instanceof Error ? error : new Error('Unknown error'));
     } finally {
-      setLoading(false);
+      setIsProcessing(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <Label>Choisissez votre opérateur</Label>
-        <RadioGroup
-          defaultValue={provider}
-          onValueChange={setProvider}
-          className="grid grid-cols-2 gap-4"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="mtn" id="mtn" />
-            <Label htmlFor="mtn">MTN Mobile Money</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="airtel" id="airtel" />
-            <Label htmlFor="airtel">Airtel Money</Label>
-          </div>
-        </RadioGroup>
-      </div>
+    <div className="space-y-4">
+      <Select
+        value={operator}
+        onValueChange={setOperator}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Sélectionnez un opérateur" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="mtn">MTN Mobile Money</SelectItem>
+          <SelectItem value="airtel">Airtel Money</SelectItem>
+        </SelectContent>
+      </Select>
 
-      <div className="space-y-2">
-        <Label htmlFor="phone">Numéro de téléphone</Label>
-        <Input
-          id="phone"
-          type="tel"
-          placeholder="Ex: +243..."
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-        />
-      </div>
+      <Input
+        type="tel"
+        placeholder="Numéro de téléphone (9 chiffres)"
+        value={phoneNumber}
+        onChange={(e) => setPhoneNumber(e.target.value)}
+        maxLength={9}
+      />
 
-      <div className="space-y-2">
-        <Label>Montant à payer</Label>
-        <div className="text-2xl font-bold">{amount.toLocaleString()} FCFA</div>
+      <div className="text-sm text-gray-500 mb-4">
+        Montant à payer: {amount} FCFA
       </div>
 
       <Button
         className="w-full"
         onClick={handlePayment}
-        disabled={!phoneNumber || loading}
+        disabled={isProcessing}
       >
-        {loading ? "Traitement en cours..." : "Payer maintenant"}
+        {isProcessing ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Traitement en cours...
+          </>
+        ) : (
+          'Payer maintenant'
+        )}
       </Button>
     </div>
   );

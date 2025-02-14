@@ -10,4 +10,3 @@ export type PaymentMethodInsert = Database['public']['Tables']['payment_methods'
 export type PaymentMethodUpdate = Database['public']['Tables']['payment_methods']['Update'];
 
 export type PaymentStatus = 'pending' | 'completed' | 'failed';
-

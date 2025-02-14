@@ -35,10 +35,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-interface CartItem extends MenuItem {
-  quantity: number;
-}
-
 const CATEGORIES = [
   { id: "all", label: "Tout" },
   { id: "entrees", label: "Entrées" },

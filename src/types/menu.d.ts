@@ -2,22 +2,26 @@
 export interface MenuItem {
   id: string;
   name: string;
-  description: string | null;
+  description?: string;
   price: number;
-  category: string | null;
-  image_url?: string | null;
-  restaurant_id?: string;
+  category: string;
+  image_url?: string;
   available: boolean;
-  customization_options: Record<string, any>;
+  restaurant_id: string;
+  customization_options?: CustomizationOption[];
+  popularity_score?: number;
   dietary_preferences?: string[];
   cuisine_type?: string;
-  popularity_score?: number;
-  rating?: number;
-  preparation_time?: number;
-  allergens?: string[];
-  calories?: number;
-  ingredients?: string[];
-  seasonal?: boolean;
-  featured?: boolean;
-  quantity?: number; // Added to make it compatible with CartItem
+}
+
+export interface CustomizationOption {
+  id: string;
+  name: string;
+  type: 'single' | 'multiple';
+  required: boolean;
+  options: {
+    id: string;
+    name: string;
+    price: number;
+  }[];
 }
