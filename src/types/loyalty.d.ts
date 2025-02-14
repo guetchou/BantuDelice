@@ -20,4 +20,3 @@ export interface LoyaltyBenefit {
   value: string | number;
   description: string;
 }
-
