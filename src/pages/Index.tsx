@@ -77,7 +77,9 @@ export default function Index() {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate(`/restaurants?search=${encodeURIComponent(searchQuery)}`);
+      const encodedQuery = encodeURIComponent(searchQuery.trim());
+      const searchPath = `/restaurants?search=${encodedQuery}`;
+      navigate(searchPath);
     } else {
       toast({
         title: "Recherche invalide",
