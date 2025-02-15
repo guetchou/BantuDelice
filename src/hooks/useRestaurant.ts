@@ -1,40 +1,47 @@
 
-import { useRestaurantDetails } from "./useRestaurantDetails";
-import { useRestaurantTables } from "./useRestaurantTables";
-import { useRestaurantReservations } from "./useRestaurantReservations";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-export const useRestaurant = (restaurantId: string | undefined) => {
-  const { 
-    restaurant, 
-    isLoading: isLoadingDetails, 
-    error: detailsError,
-    updateRestaurant 
-  } = useRestaurantDetails(restaurantId);
-
-  const {
-    tables,
-    isLoading: isLoadingTables,
-    error: tablesError
-  } = useRestaurantTables(restaurantId);
-
-  const {
-    reservations,
-    isLoading: isLoadingReservations,
-    error: reservationsError,
-    checkTableAvailability,
-    createReservation,
-    updateReservation
-  } = useRestaurantReservations(restaurantId);
-
-  return {
-    restaurant,
-    tables,
-    reservations,
-    isLoading: isLoadingDetails || isLoadingTables || isLoadingReservations,
-    error: detailsError || tablesError || reservationsError,
-    updateRestaurant,
-    checkTableAvailability,
-    createReservation,
-    updateReservation
+interface Restaurant {
+  id: string;
+  name: string;
+  description: string;
+  address: string;
+  business_hours: {
+    [key: string]: {
+      open: string;
+      close: string;
+    };
   };
+  special_days?: string[];
+  banner_image_url?: string;
+  logo_url?: string;
+  cuisine_type: string;
+  average_rating: number;
+  total_ratings: number;
+  contact_phone: string;
+  contact_email: string;
+  is_open: boolean;
+  minimum_order: number;
+  delivery_fee: number;
+  estimated_delivery_time: number;
+}
+
+export const useRestaurant = (restaurantId: string) => {
+  return useQuery<Restaurant>({
+    queryKey: ['restaurant', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('id', restaurantId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    meta: {
+      errorMessage: "Impossible de charger les détails du restaurant"
+    }
+  });
 };

@@ -1,35 +1,32 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
-import { Order } from '@/types/order';
+import type { Order, OrderStatus, PaymentStatus, DeliveryStatus } from '@/types/order';
 
 interface OrderContextType {
-  activeOrders: Order[];
-  pastOrders: Order[];
+  orders: Order[];
   isLoading: boolean;
   error: string | null;
-  reloadOrders: () => Promise<void>;
+  refetchOrders: () => Promise<void>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export function OrderProvider({ children }: { children: ReactNode }) {
-  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
-  const [pastOrders, setPastOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const fetchOrders = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
-        setActiveOrders([]);
-        setPastOrders([]);
+        setOrders([]);
         return;
       }
 
-      const { data: allOrders, error } = await supabase
+      let { data, error } = await supabase
         .from('orders')
         .select('*')
         .eq('user_id', user.id)
@@ -37,32 +34,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      // Conversion explicite des statuts pour TypeScript
-      const typedOrders = allOrders.map(order => ({
-        ...order,
-        status: order.status as OrderStatus,
-        payment_status: order.payment_status as PaymentStatus,
-        delivery_status: order.delivery_status as DeliveryStatus
-      }));
-
-      // Filtrer les commandes actives et passées
-      const active = typedOrders.filter(order => 
-        !['delivered', 'cancelled'].includes(order.status)
-      );
-      const past = typedOrders.filter(order => 
-        ['delivered', 'cancelled'].includes(order.status)
-      );
-
-      setActiveOrders(active);
-      setPastOrders(past);
+      setOrders(data || []);
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger vos commandes",
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
@@ -71,9 +46,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchOrders();
 
-    // Abonnement aux mises à jour en temps réel
+    // Set up real-time subscription
     const channel = supabase
-      .channel('orders-changes')
+      .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
@@ -95,11 +70,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   return (
     <OrderContext.Provider value={{
-      activeOrders,
-      pastOrders,
+      orders,
       isLoading,
       error,
-      reloadOrders: fetchOrders
+      refetchOrders: fetchOrders
     }}>
       {children}
     </OrderContext.Provider>

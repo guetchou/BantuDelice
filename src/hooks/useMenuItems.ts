@@ -1,10 +1,22 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { CartItem } from '@/types/cart';
+
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image_url?: string;
+  category: string;
+  is_available: boolean;
+  restaurant_id: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useMenuItems = (restaurantId: string) => {
-  return useQuery({
+  return useQuery<MenuItem[]>({
     queryKey: ['menuItems', restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase

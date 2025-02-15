@@ -16,30 +16,44 @@ interface BusinessHours {
   }[];
 }
 
+interface RestaurantDetails {
+  id: string;
+  name: string;
+  description: string;
+  address: string;
+  business_hours: BusinessHours;
+  special_days: string[];
+  banner_image_url?: string;
+  logo_url?: string;
+  cuisine_type: string;
+  average_rating: number;
+  total_ratings: number;
+  contact_phone: string;
+  contact_email: string;
+  is_open: boolean;
+  minimum_order: number;
+  delivery_fee: number;
+  estimated_delivery_time: number;
+}
+
 export const useRestaurantDetails = (restaurantId: string) => {
-  const fetchRestaurantDetails = async () => {
-    const { data, error } = await supabase
-      .from('restaurants')
-      .select('*')
-      .eq('id', restaurantId)
-      .single();
+  return useQuery<RestaurantDetails>({
+    queryKey: ['restaurantDetails', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('id', restaurantId)
+        .single();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // Ensure business_hours is properly typed
-    const businessHours = data?.business_hours as unknown as BusinessHours;
-    const specialDays = data?.special_days as unknown as string[];
-
-    return {
-      ...data,
-      business_hours: businessHours,
-      special_days: specialDays
-    };
-  };
-
-  return useQuery({
-    queryKey: ['restaurant', restaurantId],
-    queryFn: fetchRestaurantDetails,
+      return {
+        ...data,
+        business_hours: data.business_hours as BusinessHours,
+        special_days: data.special_days || []
+      };
+    },
     meta: {
       errorMessage: "Impossible de charger les détails du restaurant"
     }
