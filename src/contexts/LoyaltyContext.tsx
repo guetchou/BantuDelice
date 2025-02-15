@@ -36,7 +36,7 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
 
       let { data, error } = await supabase
         .from('loyalty_points')
-        .select('*')
+        .select('points, tier_name, points_to_next_tier, benefits')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -55,7 +55,7 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
               benefits: ['Accès aux récompenses de base']
             }
           ])
-          .select()
+          .select('points, tier_name, points_to_next_tier, benefits')
           .single();
 
         if (insertError) throw insertError;
