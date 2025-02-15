@@ -34,13 +34,33 @@ export function LoyaltyProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('loyalty_points')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      // Si aucune entrée n'existe, on en crée une
+      if (!data) {
+        const { data: newLoyaltyPoints, error: insertError } = await supabase
+          .from('loyalty_points')
+          .insert([
+            { 
+              user_id: user.id,
+              points: 0,
+              tier_name: 'Bronze',
+              points_to_next_tier: 1000,
+              benefits: ['Accès aux récompenses de base']
+            }
+          ])
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        data = newLoyaltyPoints;
+      }
 
       if (data) {
         const parsedBenefits = data.benefits && typeof data.benefits === 'string' 
