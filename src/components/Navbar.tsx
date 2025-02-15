@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -8,7 +9,8 @@ import {
   Settings, 
   LogOut,
   Coffee,
-  HeartHandshake
+  HeartHandshake,
+  ShoppingBag
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { BackButton } from "@/components/navigation/BackButton";
+import NotificationBell from "@/components/NotificationBell";
+import { LoyaltyStatus } from "@/components/loyalty/LoyaltyStatus";
+import { useOrders } from "@/contexts/OrderContext";
 
 const Navbar = () => {
   const { isCollapsed, setIsCollapsed } = useSidebar();
@@ -25,6 +30,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { activeOrders } = useOrders();
   
   const isActive = (path: string) => location.pathname === path;
 
@@ -63,7 +69,7 @@ const Navbar = () => {
       "fixed left-0 top-0 h-full flex transition-all duration-300 z-50",
       isCollapsed ? "w-[60px]" : "w-full sm:w-64"
     )}>
-      <nav className="w-full glass-effect backdrop-blur-xl p-4 relative">
+      <nav className="w-full glass-effect backdrop-blur-xl p-4 relative flex flex-col">
         <div className={cn(
           "mb-8 flex items-center",
           isCollapsed ? "justify-center" : "justify-between"
@@ -90,7 +96,7 @@ const Navbar = () => {
           </Button>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1">
           <Link
             to="/"
             className={cn(
@@ -120,17 +126,26 @@ const Navbar = () => {
           </Link>
           
           <Link
-            to="/services"
+            to="/orders"
             className={cn(
               "flex items-center p-3 rounded-lg transition-colors",
               isCollapsed ? "justify-center" : "space-x-3",
-              isActive("/services") 
+              isActive("/orders") 
                 ? "bg-white/20 text-white" 
                 : "text-gray-300 hover:bg-white/10 hover:text-white"
             )}
           >
-            <HeartHandshake className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Services</span>}
+            <ShoppingBag className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && (
+              <div className="flex items-center justify-between flex-1">
+                <span>Mes commandes</span>
+                {activeOrders.length > 0 && (
+                  <span className="bg-emerald-500 text-white text-xs rounded-full px-2 py-1">
+                    {activeOrders.length}
+                  </span>
+                )}
+              </div>
+            )}
           </Link>
 
           {isAdmin && (
@@ -148,18 +163,21 @@ const Navbar = () => {
               {!isCollapsed && <span>Administration</span>}
             </Link>
           )}
+        </div>
 
-          <button
-            onClick={handleLogout}
-            className={cn(
-              "flex items-center p-3 rounded-lg transition-colors w-full",
-              isCollapsed ? "justify-center" : "space-x-3",
-              "text-gray-300 hover:bg-white/10 hover:text-white mt-auto"
-            )}
-          >
-            <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span>Déconnexion</span>}
-          </button>
+        {/* Zone du bas avec notifications et fidélité */}
+        <div className="mt-auto pt-4 space-y-4">
+          {!isCollapsed && <LoyaltyStatus />}
+          
+          <div className="flex items-center justify-between">
+            <NotificationBell />
+            <button
+              onClick={handleLogout}
+              className="text-gray-300 hover:text-white p-2 rounded-lg hover:bg-white/10"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </nav>
       <Separator orientation="vertical" className="h-full opacity-20" />

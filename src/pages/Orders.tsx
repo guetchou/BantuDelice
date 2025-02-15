@@ -1,123 +1,153 @@
-import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
-interface Order {
-  id: string;
-  created_at: string;
-  status: string;
-  service_name: string;
-  total_amount: number;
-}
+import { useEffect } from 'react';
+import { useOrders } from '@/contexts/OrderContext';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
-export function Orders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+const Orders = () => {
+  usePageTitle({ title: "Mes commandes" });
+  const { activeOrders, pastOrders, isLoading } = useOrders();
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          id,
-          created_at,
-          status,
-          service_provider:service_providers(name),
-          total_amount
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform the data to match our Order interface
-      const transformedOrders = (data || []).map(order => ({
-        id: order.id,
-        created_at: order.created_at,
-        status: order.status,
-        service_name: order.service_provider?.name || 'Unknown Service',
-        total_amount: order.total_amount
-      }));
-
-      setOrders(transformedOrders);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les réservations",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-500';
+      case 'accepted':
+        return 'bg-blue-500';
+      case 'preparing':
+        return 'bg-indigo-500';
+      case 'prepared':
+        return 'bg-purple-500';
+      case 'delivering':
+        return 'bg-orange-500';
+      case 'delivered':
+        return 'bg-green-500';
+      case 'cancelled':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const formatStatus = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+      pending: 'En attente',
+      accepted: 'Acceptée',
+      preparing: 'En préparation',
+      prepared: 'Prête',
+      delivering: 'En livraison',
+      delivered: 'Livrée',
+      cancelled: 'Annulée'
+    };
+    return statusMap[status] || status;
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Mes Réservations</h1>
-      
-      <div className="grid gap-4">
-        {orders.length === 0 ? (
-          <Card className="p-6 text-center text-gray-500">
-            Aucune réservation trouvée
-          </Card>
-        ) : (
-          orders.map((order) => (
-            <Card key={order.id} className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold">
-                    {order.service_name}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {new Date(order.created_at).toLocaleDateString('fr-FR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+    <div className="container mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-8">Mes commandes</h1>
+
+      {activeOrders.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold mb-4">Commandes actives</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {activeOrders.map((order) => (
+              <Card key={order.id} className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-semibold">Commande #{order.id.slice(0, 8)}</h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(order.created_at).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: 'long',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <Badge className={getStatusColor(order.status)}>
+                    {formatStatus(order.status)}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    <span className="font-medium">Montant:</span>{' '}
+                    {(order.total_amount / 100).toFixed(2)}€
+                  </p>
+                  {order.estimated_preparation_time && (
+                    <p className="text-sm">
+                      <span className="font-medium">Temps estimé:</span>{' '}
+                      {order.estimated_preparation_time} min
+                    </p>
+                  )}
+                  <p className="text-sm">
+                    <span className="font-medium">Livraison:</span>{' '}
+                    {order.delivery_address}
                   </p>
                 </div>
-                <Badge
-                  variant={order.status === 'completed' ? 'default' : 
-                          order.status === 'pending' ? 'secondary' : 
-                          'destructive'}
-                >
-                  {order.status === 'completed' ? 'Terminé' :
-                   order.status === 'pending' ? 'En attente' : 
-                   'Annulé'}
-                </Badge>
-              </div>
-              <div className="mt-4 text-right">
-                <p className="font-medium">
-                  {order.total_amount.toLocaleString('fr-FR')} FCFA
-                </p>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {pastOrders.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Historique des commandes</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {pastOrders.map((order) => (
+              <Card key={order.id} className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-semibold">Commande #{order.id.slice(0, 8)}</h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(order.created_at).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: 'long',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <Badge variant="outline">
+                    {formatStatus(order.status)}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    <span className="font-medium">Montant:</span>{' '}
+                    {(order.total_amount / 100).toFixed(2)}€
+                  </p>
+                  {order.loyalty_points_earned && (
+                    <p className="text-sm text-green-600">
+                      +{order.loyalty_points_earned} points gagnés
+                    </p>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeOrders.length === 0 && pastOrders.length === 0 && (
+        <div className="text-center text-gray-500 mt-12">
+          <p>Vous n'avez pas encore de commandes</p>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default Orders;

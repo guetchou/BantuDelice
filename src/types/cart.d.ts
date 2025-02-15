@@ -11,3 +11,9 @@ export interface CartItem {
     price: number;
   }[];
 }
+
+export interface Cart {
+  items: CartItem[];
+  total: number;
+  restaurant_id?: string;
+}
