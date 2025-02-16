@@ -19,6 +19,7 @@ export interface MenuItem {
   rating?: number;
   preparation_time?: number;
   available: boolean;
+  ingredients?: string[];
   allergens?: string[];
   nutritional_info?: {
     calories: number;

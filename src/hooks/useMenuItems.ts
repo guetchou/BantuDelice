@@ -18,7 +18,11 @@ export const useMenuItems = (restaurantId: string) => {
       return (data || []).map(item => ({
         ...item,
         is_available: item.available,
-        updated_at: item.created_at, // Fallback if updated_at is not available
+        updated_at: item.updated_at || item.created_at,
+        ingredients: item.ingredients || [],
+        rating: item.rating || 0,
+        popularity_score: item.popularity_score || 0,
+        preparation_time: item.preparation_time || 0
       })) as MenuItem[];
     },
     meta: {

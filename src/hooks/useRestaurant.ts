@@ -15,16 +15,20 @@ export const useRestaurant = (restaurantId: string) => {
 
       if (error) throw error;
 
-      // Cast the response to match the Restaurant type
-      const restaurant: Restaurant = {
+      return {
         ...data,
-        contact_phone: data.phone || '',
-        contact_email: data.email || '',
-        is_open: data.status === 'open',
-        estimated_delivery_time: data.average_prep_time || 30
-      };
-
-      return restaurant;
+        latitude: data.latitude || 0,
+        longitude: data.longitude || 0,
+        status: data.status || 'closed',
+        phone: data.phone || '',
+        email: data.email || '',
+        average_prep_time: data.average_prep_time || 30,
+        total_ratings: data.total_ratings || 0,
+        minimum_order: data.minimum_order || 0,
+        delivery_fee: data.delivery_fee || 0,
+        business_hours: data.business_hours,
+        special_days: data.special_days || []
+      } as Restaurant;
     },
     meta: {
       errorMessage: "Impossible de charger les détails du restaurant"
