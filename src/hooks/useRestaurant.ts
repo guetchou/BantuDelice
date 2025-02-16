@@ -15,6 +15,18 @@ export const useRestaurant = (restaurantId: string) => {
 
       if (error) throw error;
 
+      const businessHours = typeof data.business_hours === 'object' ? data.business_hours : {
+        regular: {
+          monday: { open: '08:00', close: '22:00' },
+          tuesday: { open: '08:00', close: '22:00' },
+          wednesday: { open: '08:00', close: '22:00' },
+          thursday: { open: '08:00', close: '22:00' },
+          friday: { open: '08:00', close: '22:00' },
+          saturday: { open: '08:00', close: '22:00' },
+          sunday: { open: '08:00', close: '22:00' }
+        }
+      };
+
       return {
         ...data,
         latitude: data.latitude || 0,
@@ -26,7 +38,7 @@ export const useRestaurant = (restaurantId: string) => {
         total_ratings: data.total_ratings || 0,
         minimum_order: data.minimum_order || 0,
         delivery_fee: data.delivery_fee || 0,
-        business_hours: data.business_hours,
+        business_hours: businessHours,
         special_days: data.special_days || []
       } as Restaurant;
     },

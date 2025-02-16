@@ -1,4 +1,3 @@
-
 import { ShoppingCart, Star, Info, Clock, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,13 +7,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { MenuItemCardProps } from "@/components/menu/types";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-const MenuItemCard = ({ item, onAddToCart, showNutritionalInfo }: MenuItemCardProps) => {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XAF',
-      minimumFractionDigits: 0
-    }).format(price);
+const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: MenuItemCardProps) => {
+  const handleAddToCart = () => {
+    onAddToCart({
+      ...item,
+      quantity: 1,
+      options: []
+    });
   };
 
   return (
@@ -142,10 +141,10 @@ const MenuItemCard = ({ item, onAddToCart, showNutritionalInfo }: MenuItemCardPr
 
         <div className="flex items-center justify-between pt-2">
           <span className="font-bold text-lg">
-            {formatPrice(item.price)}
+            {item.price.toLocaleString('fr-FR', { style: 'currency', currency: 'XAF' })}
           </span>
           <Button 
-            onClick={() => onAddToCart(item)}
+            onClick={handleAddToCart}
             className="bg-orange-500 hover:bg-orange-600"
             disabled={!item.available}
           >

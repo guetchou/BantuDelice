@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { MenuItem } from '@/components/menu/types';
+import type { MenuItem } from '@/types/menu';
 
 export const useMenuItems = (restaurantId: string) => {
   return useQuery<MenuItem[]>({
@@ -18,11 +18,11 @@ export const useMenuItems = (restaurantId: string) => {
       return (data || []).map(item => ({
         ...item,
         is_available: item.available,
-        updated_at: item.updated_at || item.created_at,
-        ingredients: item.ingredients || [],
-        rating: item.rating || 0,
-        popularity_score: item.popularity_score || 0,
-        preparation_time: item.preparation_time || 0
+        created_at: item.created_at,
+        updated_at: item.created_at,
+        ingredients: [],
+        rating: 0,
+        preparation_time: 30
       })) as MenuItem[];
     },
     meta: {

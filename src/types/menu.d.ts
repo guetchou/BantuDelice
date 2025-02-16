@@ -8,27 +8,21 @@ export interface MenuItem {
   image_url?: string;
   available: boolean;
   restaurant_id: string;
-  customization_options?: CustomizationOption[];
+  created_at: string;
+  updated_at?: string;
+  customization_options?: Record<string, any>;
   popularity_score?: number;
+  rating?: number;
+  preparation_time?: number;
+  is_available?: boolean;
   dietary_preferences?: string[];
   cuisine_type?: string;
+  ingredients?: string[];
   nutritional_info?: {
     calories?: number;
     protein?: number;
     carbs?: number;
     fat?: number;
-    allergens?: string[];
+    fiber?: number;
   };
-}
-
-export interface CustomizationOption {
-  id: string;
-  name: string;
-  type: 'single' | 'multiple';
-  required: boolean;
-  options: {
-    id: string;
-    name: string;
-    price: number;
-  }[];
 }

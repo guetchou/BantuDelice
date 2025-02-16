@@ -1,33 +1,13 @@
 
-import type { CartItem } from '@/types/cart';
+import type { MenuItem } from '@/types/menu';
 
-export interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image_url?: string;
-  category: string;
-  is_available: boolean;
-  restaurant_id: string;
-  created_at: string;
-  updated_at: string;
-  customization_options?: Record<string, any>;
-  dietary_preferences?: string[];
-  cuisine_type?: string;
-  popularity_score?: number;
-  rating?: number;
-  preparation_time?: number;
-  available: boolean;
-  ingredients?: string[];
-  allergens?: string[];
-  nutritional_info?: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-    fiber: number;
-  };
+export interface CartItem extends Omit<MenuItem, 'customization_options'> {
+  quantity: number;
+  options?: Array<{
+    name: string;
+    value: string;
+    price: number;
+  }>;
 }
 
 export interface MenuListProps {

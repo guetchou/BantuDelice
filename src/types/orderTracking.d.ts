@@ -1,13 +1,10 @@
 
-import { Database } from "@/integrations/supabase/database.types";
-
-export type OrderTrackingDetails = Database['public']['Tables']['order_tracking_details']['Row'];
-export type OrderTrackingDetailsInsert = Database['public']['Tables']['order_tracking_details']['Insert'];
-export type OrderTrackingDetailsUpdate = Database['public']['Tables']['order_tracking_details']['Update'];
-
-export interface LocationData {
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-  timestamp: string;
+export interface OrderTrackingDetails {
+  id: string;
+  order_id: string;
+  status: 'preparing' | 'ready' | 'picked_up' | 'delivering' | 'delivered';
+  estimated_delivery_time?: string;
+  current_location?: [number, number];
+  updated_at: string;
+  notes?: string;
 }
