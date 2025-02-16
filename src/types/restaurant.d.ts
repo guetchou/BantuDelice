@@ -36,3 +36,22 @@ export interface BusinessHours {
     };
   }[];
 }
+
+export interface Table {
+  id: string;
+  restaurant_id: string;
+  table_number: string;
+  capacity: number;
+  status: 'available' | 'occupied' | 'reserved';
+}
+
+export interface Reservation {
+  id: string;
+  restaurant_id: string;
+  table_id: string;
+  customer_id: string;
+  reservation_date: Date;
+  party_size: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  special_requests?: string;
+}

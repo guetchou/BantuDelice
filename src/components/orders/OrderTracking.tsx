@@ -5,16 +5,14 @@ import { useToast } from "@/hooks/use-toast";
 import { MapPin, Clock, Package, Check } from 'lucide-react';
 import DeliveryMap from '@/components/DeliveryMap';
 import { Card } from '@/components/ui/card';
+import type { OrderTrackingDetails } from '@/types/orderTracking';
 
-interface OrderStatus {
-  status: string;
-  latitude: number;
-  longitude: number;
-  updated_at: string;
+interface OrderTrackingProps {
+  orderId: string;
 }
 
-export default function OrderTracking({ orderId }: { orderId: string }) {
-  const [status, setStatus] = useState<OrderStatus | null>(null);
+export default function OrderTracking({ orderId }: OrderTrackingProps) {
+  const [status, setStatus] = useState<OrderTrackingDetails | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -27,17 +25,17 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
-          table: 'delivery_tracking',
+          table: 'order_tracking_details',
           filter: `order_id=eq.${orderId}`
         },
         (payload) => {
-          console.log('Delivery status updated:', payload);
-          setStatus(payload.new as OrderStatus);
+          console.log('Order tracking updated:', payload);
+          setStatus(payload.new as OrderTrackingDetails);
           
           toast({
-            title: "Statut de livraison mis à jour",
+            title: "Statut de commande mis à jour",
             description: `Nouveau statut: ${payload.new.status}`,
           });
         }
@@ -47,11 +45,11 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orderId]);
+  }, [orderId, toast]);
 
   const fetchOrderStatus = async () => {
     const { data, error } = await supabase
-      .from('delivery_tracking')
+      .from('order_tracking_details')
       .select('*')
       .eq('order_id', orderId)
       .single();
@@ -82,7 +80,7 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
     }
   };
 
-  if (!status) return <div>Chargement...</div>;
+  if (!status) return <div>Chargement du statut...</div>;
 
   return (
     <Card className="p-6 space-y-6">
@@ -98,16 +96,23 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
             <p className="text-sm text-gray-500">
               Dernière mise à jour: {new Date(status.updated_at).toLocaleTimeString()}
             </p>
+            {status.estimated_delivery_time && (
+              <p className="text-sm text-gray-500">
+                Livraison estimée: {new Date(status.estimated_delivery_time).toLocaleTimeString()}
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="h-[300px] rounded-lg overflow-hidden">
-        <DeliveryMap 
-          latitude={status.latitude} 
-          longitude={status.longitude}
-        />
-      </div>
+      {status.current_location && (
+        <div className="h-[300px] rounded-lg overflow-hidden">
+          <DeliveryMap 
+            latitude={Number(status.current_location[0])} 
+            longitude={Number(status.current_location[1])}
+          />
+        </div>
+      )}
     </Card>
   );
 }

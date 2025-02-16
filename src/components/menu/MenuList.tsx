@@ -58,6 +58,8 @@ const MenuList = ({ items, onAddToCart, isLoading, showNutritionalInfo }: MenuLi
           <MenuItemCard
             item={item}
             onAddToCart={onAddToCart}
+            onRemoveFromCart={() => {}}
+            quantity={0}
             showNutritionalInfo={showNutritionalInfo}
           />
         </motion.div>
