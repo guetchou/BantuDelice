@@ -3,9 +3,9 @@ import { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useMenuItems } from '@/hooks/useMenuItems';
-import { MenuItemCard } from '@/components/restaurant/MenuItemCard';
-import { CartSummary } from '@/components/restaurant/CartSummary';
-import { RestaurantHeader } from '@/components/restaurant/RestaurantHeader';
+import MenuItemCard from '@/components/restaurant/MenuItemCard';
+import CartSummary from '@/components/restaurant/CartSummary';
+import RestaurantHeader from '@/components/restaurant/RestaurantHeader';
 import type { CartItem } from '@/types/cart';
 import { useCart } from '@/hooks/useCart';
 
@@ -54,7 +54,7 @@ export default function RestaurantMenu() {
           </div>
           
           <div className="md:col-span-1">
-            <CartSummary />
+            <CartSummary items={cart.items} onCheckout={() => {}} />
           </div>
         </div>
       </div>
