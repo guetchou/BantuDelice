@@ -1,10 +1,12 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Order, OrderStatus, PaymentStatus, DeliveryStatus } from '@/types/order';
+import type { Order, OrderStatus } from '@/types/order';
 
 interface OrderContextType {
   orders: Order[];
+  activeOrders: Order[];
+  pastOrders: Order[];
   isLoading: boolean;
   error: string | null;
   refetchOrders: () => Promise<void>;
@@ -26,15 +28,22 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      let { data, error } = await supabase
+      let { data, error: supabaseError } = await supabase
         .from('orders')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (supabaseError) throw supabaseError;
 
-      setOrders(data || []);
+      const typedOrders = (data || []).map(order => ({
+        ...order,
+        status: order.status as OrderStatus,
+        payment_status: order.payment_status as Order['payment_status'],
+        delivery_status: order.delivery_status as Order['delivery_status']
+      }));
+
+      setOrders(typedOrders);
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -43,10 +52,17 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const activeOrders = orders.filter(order => 
+    ['pending', 'accepted', 'preparing', 'prepared', 'delivering'].includes(order.status)
+  );
+
+  const pastOrders = orders.filter(order => 
+    ['delivered', 'cancelled'].includes(order.status)
+  );
+
   useEffect(() => {
     fetchOrders();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -71,6 +87,8 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   return (
     <OrderContext.Provider value={{
       orders,
+      activeOrders,
+      pastOrders,
       isLoading,
       error,
       refetchOrders: fetchOrders

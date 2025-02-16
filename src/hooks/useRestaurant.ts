@@ -1,31 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Restaurant {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  business_hours: {
-    [key: string]: {
-      open: string;
-      close: string;
-    };
-  };
-  special_days?: string[];
-  banner_image_url?: string;
-  logo_url?: string;
-  cuisine_type: string;
-  average_rating: number;
-  total_ratings: number;
-  contact_phone: string;
-  contact_email: string;
-  is_open: boolean;
-  minimum_order: number;
-  delivery_fee: number;
-  estimated_delivery_time: number;
-}
+import type { Restaurant } from '@/types/restaurant';
 
 export const useRestaurant = (restaurantId: string) => {
   return useQuery<Restaurant>({
@@ -38,7 +14,17 @@ export const useRestaurant = (restaurantId: string) => {
         .single();
 
       if (error) throw error;
-      return data;
+
+      // Cast the response to match the Restaurant type
+      const restaurant: Restaurant = {
+        ...data,
+        contact_phone: data.phone || '',
+        contact_email: data.email || '',
+        is_open: data.status === 'open',
+        estimated_delivery_time: data.average_prep_time || 30
+      };
+
+      return restaurant;
     },
     meta: {
       errorMessage: "Impossible de charger les détails du restaurant"

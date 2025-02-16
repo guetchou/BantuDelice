@@ -1,18 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  restaurantId: string;
-  options?: {
-    [key: string]: string | number | boolean;
-  };
-  specialInstructions?: string;
-}
+import { CartItem } from '@/types/cart';
 
 interface CartState {
   items: CartItem[];
@@ -23,18 +12,20 @@ type CartAction =
   | { type: 'ADD_ITEM'; payload: CartItem }
   | { type: 'REMOVE_ITEM'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
-  | { type: 'UPDATE_OPTIONS'; payload: { id: string; options: CartItem['options'] } }
+  | { type: 'UPDATE_OPTIONS'; payload: { id: string; options: CartItem['customization_options'] } }
   | { type: 'CLEAR_CART' };
 
-const CartContext = createContext<{
+interface CartContextType {
   state: CartState;
   dispatch: React.Dispatch<CartAction>;
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
-  updateOptions: (id: string, options: CartItem['options']) => void;
+  updateOptions: (id: string, options: CartItem['customization_options']) => void;
   clearCart: () => void;
-} | null>(null);
+}
+
+export const CartContext = createContext<CartContextType | null>(null);
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {

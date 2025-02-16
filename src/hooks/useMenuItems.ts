@@ -1,19 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image_url?: string;
-  category: string;
-  is_available: boolean;
-  restaurant_id: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { MenuItem } from '@/components/menu/types';
 
 export const useMenuItems = (restaurantId: string) => {
   return useQuery<MenuItem[]>({
@@ -23,10 +11,15 @@ export const useMenuItems = (restaurantId: string) => {
         .from('menu_items')
         .select('*')
         .eq('restaurant_id', restaurantId)
-        .eq('is_available', true);
+        .eq('available', true);
 
       if (error) throw error;
-      return data || [];
+
+      return (data || []).map(item => ({
+        ...item,
+        is_available: item.available,
+        updated_at: item.created_at, // Fallback if updated_at is not available
+      })) as MenuItem[];
     },
     meta: {
       errorMessage: "Impossible de charger le menu"
