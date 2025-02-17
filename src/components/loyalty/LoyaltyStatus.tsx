@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Award, Crown, Gift } from 'lucide-react';
@@ -19,47 +18,60 @@ export default function LoyaltyStatus() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  const parseBenefits = (benefits: any): string[] => {
+    if (Array.isArray(benefits)) return benefits;
+    if (typeof benefits === 'string') {
+      try {
+        const parsed = JSON.parse(benefits);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
   useEffect(() => {
+    const fetchLoyaltyStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setIsLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('loyalty_points')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setStatus({
+            points: data.points,
+            lifetime_points: data.lifetime_points,
+            tier_name: data.tier_name,
+            points_to_next_tier: data.points_to_next_tier,
+            benefits: parseBenefits(data.benefits)
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching loyalty status:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger votre statut de fidélité",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchLoyaltyStatus();
   }, []);
-
-  const fetchLoyaltyStatus = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('loyalty_points')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setStatus({
-          points: data.points,
-          lifetime_points: data.lifetime_points,
-          tier_name: data.tier_name,
-          points_to_next_tier: data.points_to_next_tier,
-          benefits: Array.isArray(data.benefits) ? data.benefits : JSON.parse(data.benefits)
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching loyalty status:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger votre statut de fidélité",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (isLoading) {
     return <div>Chargement...</div>;

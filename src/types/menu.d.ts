@@ -14,7 +14,6 @@ export interface MenuItem {
   popularity_score?: number;
   rating?: number;
   preparation_time?: number;
-  is_available?: boolean;
   dietary_preferences?: string[];
   cuisine_type?: string;
   ingredients?: string[];
@@ -25,4 +24,11 @@ export interface MenuItem {
     fat?: number;
     fiber?: number;
   };
+  allergens?: string[];
+  is_available?: boolean;
+}
+
+export interface MenuSection {
+  title: string;
+  items: MenuItem[];
 }

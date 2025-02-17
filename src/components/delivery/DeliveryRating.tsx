@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +21,7 @@ export default function DeliveryRating({ orderId, restaurantId, onRatingSubmitte
     delivery: 0,
     value: 0
   });
-  const [review, setReview] = useState('');
+  const [reviewText, setReviewText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -44,7 +43,7 @@ export default function DeliveryRating({ orderId, restaurantId, onRatingSubmitte
         return;
       }
 
-      const review: Partial<DetailedRestaurantReview> = {
+      const reviewData: Partial<DetailedRestaurantReview> = {
         restaurant_id: restaurantId,
         user_id: user.id,
         order_id: orderId,
@@ -53,13 +52,13 @@ export default function DeliveryRating({ orderId, restaurantId, onRatingSubmitte
         service_rating: ratings.service,
         delivery_rating: ratings.delivery,
         value_rating: ratings.value,
-        review_text: review || null,
+        review_text: reviewText || null,
         verified_purchase: true
       };
 
       const { error } = await supabase
         .from('detailed_restaurant_reviews')
-        .insert([review]);
+        .insert([reviewData]);
 
       if (error) throw error;
 
@@ -155,8 +154,8 @@ export default function DeliveryRating({ orderId, restaurantId, onRatingSubmitte
           </label>
           <Textarea
             id="review"
-            value={review}
-            onChange={(e) => setReview(e.target.value)}
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
             placeholder="Partagez votre expérience..."
             className="h-32"
           />
