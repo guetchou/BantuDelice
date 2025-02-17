@@ -1,11 +1,35 @@
 
-import { Database } from "@/integrations/supabase/database.types";
+export interface DeliveryDriver {
+  id: string;
+  user_id: string;
+  status: 'available' | 'busy' | 'offline';
+  current_latitude: number;
+  current_longitude: number;
+  last_location_update: string;
+  current_order_id?: string;
+  total_deliveries: number;
+  average_rating: number;
+  created_at: string;
+  updated_at: string;
+}
 
-export type DeliveryPreferences = Database['public']['Tables']['delivery_preferences']['Row'];
-export type DeliveryPreferencesInsert = Database['public']['Tables']['delivery_preferences']['Insert'];
-export type DeliveryPreferencesUpdate = Database['public']['Tables']['delivery_preferences']['Update'];
+export interface DeliveryZone {
+  id: string;
+  name: string;
+  coordinates: any; // Type géométrique
+  active: boolean;
+  base_delivery_fee: number;
+  estimated_delivery_time: number;
+  created_at: string;
+  updated_at: string;
+}
 
-export interface DeliveryTimes {
-  weekday: string[];
-  weekend: string[];
+export interface DeliveryMessage {
+  id: string;
+  order_id: string;
+  sender_type: 'driver' | 'customer';
+  sender_id: string;
+  message: string;
+  read: boolean;
+  created_at: string;
 }

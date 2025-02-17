@@ -322,6 +322,44 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          order_id: string | null
+          read: boolean | null
+          sender_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          order_id?: string | null
+          read?: boolean | null
+          sender_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          order_id?: string | null
+          read?: boolean | null
+          sender_id?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_preferences: {
         Row: {
           allergies: string[] | null
@@ -3312,6 +3350,12 @@ export type Database = {
             }
             Returns: string
           }
+      assign_delivery_driver: {
+        Args: {
+          order_id: string
+        }
+        Returns: string
+      }
       box:
         | {
             Args: {

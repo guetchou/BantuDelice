@@ -1,4 +1,3 @@
-
 export interface Database {
   public: {
     Tables: {
@@ -302,6 +301,108 @@ export interface Database {
           push_notifications?: boolean;
           order_updates?: boolean;
           promotional_emails?: boolean;
+        }
+      }
+      delivery_drivers: {
+        Row: {
+          id: string
+          user_id: string
+          status: 'available' | 'busy' | 'offline'
+          current_latitude: number
+          current_longitude: number
+          last_location_update: string
+          current_order_id?: string
+          total_deliveries: number
+          average_rating: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          status?: 'available' | 'busy' | 'offline'
+          current_latitude?: number
+          current_longitude?: number
+          last_location_update?: string
+          current_order_id?: string
+          total_deliveries?: number
+          average_rating?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          status?: 'available' | 'busy' | 'offline'
+          current_latitude?: number
+          current_longitude?: number
+          last_location_update?: string
+          current_order_id?: string
+          total_deliveries?: number
+          average_rating?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      delivery_messages: {
+        Row: {
+          id: string
+          order_id: string
+          sender_type: 'driver' | 'customer'
+          sender_id: string
+          message: string
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          sender_type: 'driver' | 'customer'
+          sender_id: string
+          message: string
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          sender_type?: 'driver' | 'customer'
+          sender_id?: string
+          message?: string
+          read?: boolean
+          created_at?: string
+        }
+      }
+      delivery_zones: {
+        Row: {
+          id: string
+          name: string
+          coordinates: any
+          active: boolean
+          base_delivery_fee: number
+          estimated_delivery_time: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          coordinates: any
+          active?: boolean
+          base_delivery_fee: number
+          estimated_delivery_time: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          coordinates?: any
+          active?: boolean
+          base_delivery_fee?: number
+          estimated_delivery_time?: number
+          created_at?: string
+          updated_at?: string
         }
       }
     }
