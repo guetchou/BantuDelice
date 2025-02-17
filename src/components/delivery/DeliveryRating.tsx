@@ -1,95 +1,175 @@
+
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
 import { Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Card } from "@/components/ui/card";
+import type { DetailedRestaurantReview } from '@/types/restaurantReview';
 
-interface DeliveryRatingProps {
+interface RatingProps {
   orderId: string;
+  restaurantId: string;
+  onRatingSubmitted?: () => void;
 }
 
-const DeliveryRating = ({ orderId }: DeliveryRatingProps) => {
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function DeliveryRating({ orderId, restaurantId, onRatingSubmitted }: RatingProps) {
+  const [ratings, setRatings] = useState({
+    overall: 0,
+    food_quality: 0,
+    service: 0,
+    delivery: 0,
+    value: 0
+  });
+  const [review, setReview] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = async () => {
-    if (rating === 0) {
-      toast({
-        title: "Note requise",
-        description: "Veuillez attribuer une note à la livraison",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleRatingChange = (type: keyof typeof ratings, value: number) => {
+    setRatings(prev => ({ ...prev, [type]: value }));
+  };
 
-    setLoading(true);
+  const submitRating = async () => {
     try {
+      setIsSubmitting(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour laisser un avis",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const review: Partial<DetailedRestaurantReview> = {
+        restaurant_id: restaurantId,
+        user_id: user.id,
+        order_id: orderId,
+        overall_rating: ratings.overall,
+        food_quality_rating: ratings.food_quality,
+        service_rating: ratings.service,
+        delivery_rating: ratings.delivery,
+        value_rating: ratings.value,
+        review_text: review || null,
+        verified_purchase: true
+      };
+
       const { error } = await supabase
-        .from('orders')
-        .update({
-          rating,
-          rating_comment: comment
-        })
-        .eq('id', orderId);
+        .from('detailed_restaurant_reviews')
+        .insert([review]);
 
       if (error) throw error;
 
       toast({
-        title: "Merci pour votre évaluation",
-        description: "Votre avis nous aide à améliorer notre service",
+        title: "Merci !",
+        description: "Votre avis a été enregistré avec succès",
       });
+
+      if (onRatingSubmitted) {
+        onRatingSubmitted();
+      }
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement de l\'évaluation:', error);
+      console.error('Error submitting review:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement de votre évaluation",
+        description: "Une erreur est survenue lors de l'enregistrement de votre avis",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const RatingStars = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          className="focus:outline-none"
+        >
+          <Star
+            className={`h-6 w-6 ${
+              star <= value ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <Card className="p-6">
-      <h2 className="text-xl font-bold mb-4">Évaluer la livraison</h2>
+      <h3 className="text-lg font-semibold mb-6">Évaluez votre expérience</h3>
 
-      <div className="flex justify-center mb-6">
-        {[1, 2, 3, 4, 5].map((value) => (
-          <button
-            key={value}
-            onClick={() => setRating(value)}
-            className="p-1"
-          >
-            <Star
-              className={`w-8 h-8 ${
-                value <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-              }`}
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span>Note globale</span>
+            <RatingStars
+              value={ratings.overall}
+              onChange={(value) => handleRatingChange('overall', value)}
             />
-          </button>
-        ))}
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span>Qualité de la nourriture</span>
+            <RatingStars
+              value={ratings.food_quality}
+              onChange={(value) => handleRatingChange('food_quality', value)}
+            />
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span>Service</span>
+            <RatingStars
+              value={ratings.service}
+              onChange={(value) => handleRatingChange('service', value)}
+            />
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span>Livraison</span>
+            <RatingStars
+              value={ratings.delivery}
+              onChange={(value) => handleRatingChange('delivery', value)}
+            />
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span>Rapport qualité/prix</span>
+            <RatingStars
+              value={ratings.value}
+              onChange={(value) => handleRatingChange('value', value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="review" className="block text-sm font-medium">
+            Commentaire (optionnel)
+          </label>
+          <Textarea
+            id="review"
+            value={review}
+            onChange={(e) => setReview(e.target.value)}
+            placeholder="Partagez votre expérience..."
+            className="h-32"
+          />
+        </div>
+
+        <Button
+          onClick={submitRating}
+          disabled={isSubmitting || !ratings.overall}
+          className="w-full"
+        >
+          {isSubmitting ? 'Envoi en cours...' : 'Envoyer mon avis'}
+        </Button>
       </div>
-
-      <Textarea
-        placeholder="Commentaire (optionnel)"
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        className="mb-4"
-      />
-
-      <Button
-        className="w-full"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? "Envoi en cours..." : "Envoyer l'évaluation"}
-      </Button>
     </Card>
   );
-};
-
-export default DeliveryRating;
+}
