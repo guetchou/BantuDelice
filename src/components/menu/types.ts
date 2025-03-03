@@ -1,18 +1,13 @@
 
-export interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image_url?: string;
-  available: boolean;
-  restaurant_id: string;
-  dietary_preferences?: string[];
-  customization_options: Record<string, any>;
-  popularity_score?: number;
-  cuisine_type?: string;
-  created_at: string;
+import { MenuItem } from "@/types/menu";
+import { CartItem } from "@/types/cart";
+
+export interface MenuItemCardProps {
+  item: MenuItem;
+  onAddToCart: (item: CartItem) => void;
+  onRemoveFromCart?: (itemId: string) => void;
+  quantity?: number;
+  showNutritionalInfo?: boolean;
 }
 
 export interface MenuCategory {

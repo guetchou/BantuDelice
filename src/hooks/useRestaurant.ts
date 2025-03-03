@@ -15,18 +15,24 @@ export const useRestaurant = (restaurantId: string) => {
 
       if (error) throw error;
 
-      const businessHours = typeof data.business_hours === 'object' ? data.business_hours : {
-        regular: {
-          monday: { open: '08:00', close: '22:00' },
-          tuesday: { open: '08:00', close: '22:00' },
-          wednesday: { open: '08:00', close: '22:00' },
-          thursday: { open: '08:00', close: '22:00' },
-          friday: { open: '08:00', close: '22:00' },
-          saturday: { open: '08:00', close: '22:00' },
-          sunday: { open: '08:00', close: '22:00' }
-        }
-      };
+      // Parse business hours or use default
+      const businessHours = data.business_hours ? 
+        (typeof data.business_hours === 'string' ? 
+          JSON.parse(data.business_hours) : 
+          data.business_hours) : 
+        {
+          regular: {
+            monday: { open: '08:00', close: '22:00' },
+            tuesday: { open: '08:00', close: '22:00' },
+            wednesday: { open: '08:00', close: '22:00' },
+            thursday: { open: '08:00', close: '22:00' },
+            friday: { open: '08:00', close: '22:00' },
+            saturday: { open: '08:00', close: '22:00' },
+            sunday: { open: '08:00', close: '22:00' }
+          }
+        };
 
+      // Ensure all required fields are present
       return {
         ...data,
         latitude: data.latitude || 0,

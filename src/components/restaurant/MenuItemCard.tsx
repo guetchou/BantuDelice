@@ -1,3 +1,4 @@
+
 import { ShoppingCart, Star, Info, Clock, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,18 +7,25 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MenuItemCardProps } from "@/components/menu/types";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CartItem } from "@/types/cart";
 
 const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: MenuItemCardProps) => {
   const handleAddToCart = () => {
     onAddToCart({
-      ...item,
+      id: item.id,
+      name: item.name,
+      price: item.price,
       quantity: 1,
+      image_url: item.image_url,
+      description: item.description,
+      category: item.category,
+      customization_options: item.customization_options || {},
       options: []
-    });
+    } as CartItem);
   };
 
   return (
-    <Card className="overflow-hidden group hover:shadow-xl transition-all duration-300">
+    <Card className="overflow-hidden group hover:shadow-xl transition-all duration-300 bg-white/5 backdrop-blur-sm border-gray-800">
       <div className="relative">
         {item.image_url ? (
           <AspectRatio ratio={16 / 9}>
@@ -48,14 +56,14 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
       <div className="p-4 space-y-4">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="font-semibold text-lg">{item.name}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <h3 className="font-semibold text-lg text-white">{item.name}</h3>
+            <p className="text-sm text-gray-300 line-clamp-2">
               {item.description}
             </p>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-gray-300">
                 <Info className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -108,7 +116,7 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
 
         <div className="flex items-center gap-4 text-sm">
           {item.preparation_time && (
-            <div className="flex items-center gap-1 text-muted-foreground">
+            <div className="flex items-center gap-1 text-gray-400">
               <Clock className="h-4 w-4" />
               <span>{item.preparation_time} min</span>
             </div>
@@ -126,7 +134,7 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
             <TooltipProvider key={pref}>
               <Tooltip>
                 <TooltipTrigger>
-                  <Badge variant="outline" className="flex items-center gap-1">
+                  <Badge variant="outline" className="flex items-center gap-1 text-gray-300">
                     <Leaf className="h-3 w-3" />
                     {pref}
                   </Badge>
@@ -140,8 +148,8 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          <span className="font-bold text-lg">
-            {item.price.toLocaleString('fr-FR', { style: 'currency', currency: 'XAF' })}
+          <span className="font-bold text-lg text-white">
+            {item.price.toLocaleString('fr-FR')} XAF
           </span>
           <Button 
             onClick={handleAddToCart}
