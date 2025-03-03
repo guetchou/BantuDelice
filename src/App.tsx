@@ -1,5 +1,6 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './components/ThemeProvider';
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from './components/ui/toaster';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -19,6 +20,7 @@ import PaymentMethods from './pages/wallet/PaymentMethods';
 import Taxi from './pages/Taxi';
 import TaxiRide from './pages/TaxiRide';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import Index from './pages/Index';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,7 +39,8 @@ function App() {
           <OrderProvider>
             <Router>
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/order-demo" element={<OrderDemo />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/restaurants" element={<Restaurants />} />
