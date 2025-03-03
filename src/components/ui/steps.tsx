@@ -1,65 +1,106 @@
 
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { cn } from "@/lib/utils"
+import { LucideIcon } from "lucide-react"
 
-interface StepsProps extends React.HTMLAttributes<HTMLDivElement> {
-  activeStep: number;
-  children: React.ReactNode;
+export interface StepsProps extends React.HTMLAttributes<HTMLDivElement> {
+  activeStep: number
 }
 
-export function Steps({ activeStep = 0, children, className, ...props }: StepsProps) {
-  const steps = React.Children.toArray(children);
-  
-  return (
-    <div className={cn("flex flex-col", className)} {...props}>
-      <div className="relative flex items-center justify-between w-full">
-        {steps.map((step, index) => (
-          <React.Fragment key={index}>
-            <div className="relative flex flex-col items-center">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full border-2 flex items-center justify-center relative z-10 transition-all duration-300",
-                  index <= activeStep 
-                    ? "border-primary bg-primary text-primary-foreground" 
-                    : "border-gray-300 bg-gray-100 text-gray-500"
-                )}
-              >
-                {React.isValidElement(step) && step.props.icon ? (
-                  <step.props.icon className="h-4 w-4" />
-                ) : (
-                  index + 1
-                )}
-              </div>
-              <div className="text-xs mt-2 text-center">
-                {React.isValidElement(step) ? step.props.children : step}
-              </div>
-            </div>
-            
-            {/* Line connecting steps */}
-            {index < steps.length - 1 && (
-              <div className="flex-1 mx-1">
-                <div
-                  className={cn(
-                    "h-0.5 w-full", 
-                    index < activeStep 
-                      ? "bg-primary" 
-                      : "bg-gray-300"
-                  )}
-                />
-              </div>
-            )}
-          </React.Fragment>
-        ))}
+export interface StepProps extends React.HTMLAttributes<HTMLDivElement> {
+  icon?: LucideIcon
+  completed?: boolean
+  active?: boolean
+}
+
+const Steps = React.forwardRef<HTMLDivElement, StepsProps>(
+  ({ className, activeStep = 0, children, ...props }, ref) => {
+    const childrenArray = React.Children.toArray(children)
+    const steps = childrenArray.map((step, index) => {
+      if (React.isValidElement(step)) {
+        return React.cloneElement(step, {
+          completed: index < activeStep,
+          active: index === activeStep,
+        })
+      }
+      return step
+    })
+
+    return (
+      <div
+        ref={ref}
+        className={cn("flex w-full", className)}
+        {...props}
+      >
+        {steps}
       </div>
-    </div>
-  );
-}
+    )
+  }
+)
+Steps.displayName = "Steps"
 
-interface StepProps {
-  children: React.ReactNode;
-  icon?: React.ComponentType<{ className?: string }>;
-}
+const Step = React.forwardRef<HTMLDivElement, StepProps>(
+  ({ className, icon: Icon, completed, active, children, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "relative flex flex-1 flex-col items-center justify-center gap-1 text-center",
+          active && "text-primary",
+          completed && "text-primary",
+          className
+        )}
+        {...props}
+      >
+        <div className="flex items-center justify-center">
+          {completed ? (
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+          ) : active ? (
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary text-primary">
+              {Icon && <Icon className="h-5 w-5" />}
+            </div>
+          ) : (
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-muted text-muted-foreground">
+              {Icon && <Icon className="h-5 w-5" />}
+            </div>
+          )}
+        </div>
+        <div
+          className={cn(
+            "absolute left-0 right-0 -top-6 text-xs",
+            active ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          {children}
+        </div>
+        <div
+          className={cn(
+            "absolute top-0 left-1/2 h-px w-full -translate-y-1/2",
+            completed ? "bg-primary" : "bg-muted-foreground"
+          )}
+          style={{
+            transform: "translateX(50%)",
+          }}
+        />
+      </div>
+    )
+  }
+)
+Step.displayName = "Step"
 
-export function Step({ children, icon }: StepProps) {
-  return <>{children}</>;
-}
+export { Steps, Step }

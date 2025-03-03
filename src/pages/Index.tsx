@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, UtensilsCrossed, Car, Wallet, Pizza } from "lucide-react";
+import { ArrowRight, UtensilsCrossed, Car, Wallet, Package } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Index() {
@@ -26,7 +26,7 @@ export default function Index() {
     {
       title: "Commandes",
       description: "Suivez vos commandes en temps réel",
-      icon: Pizza,
+      icon: Package,
       action: () => navigate("/orders"),
       color: "bg-gradient-to-br from-green-400 to-green-600"
     },
@@ -52,7 +52,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-12">
+    <div className="min-h-screen py-12">
       <div className="container mx-auto px-4">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}

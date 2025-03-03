@@ -1,14 +1,17 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Building2,
   UserRound, 
-  BriefcaseBusiness,
   ShoppingCart,
   Bell,
   Menu,
-  X
+  X,
+  Home,
+  Wallet,
+  Car,
+  Package
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -20,33 +23,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
 
-const categories = [
-  {
-    name: 'Services Professionnels',
-    icon: BriefcaseBusiness,
-    items: ['Conseil', 'Formation', 'Développement']
-  },
-  {
-    name: 'Entreprises',
-    icon: Building2,
-    items: ['PME', 'Grandes Entreprises', 'Startups']
-  },
-];
-
-export default function Header() {
+const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { state: cartState } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const cartItemCount = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  const menuItems = [
+    { name: 'Accueil', icon: Home, path: '/' },
+    { name: 'Restaurants', icon: Building2, path: '/restaurants' },
+    { name: 'Taxi', icon: Car, path: '/taxi' },
+    { name: 'Commandes', icon: Package, path: '/orders' },
+    { name: 'Wallet', icon: Wallet, path: '/wallet' },
+  ];
 
   return (
     <motion.header 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-gray-900 to-gray-800 shadow-xl"
+      className="sticky top-0 left-0 right-0 z-50 bg-gradient-to-r from-gray-900 to-gray-800 shadow-xl"
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
@@ -55,41 +53,26 @@ export default function Header() {
             className="flex items-center space-x-2 text-2xl font-bold text-white hover:text-gray-200 transition-colors"
           >
             <Building2 className="w-8 h-8" />
-            <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-              BuntuDélice
+            <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+              EazyCongo
             </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center space-x-8">
-            {categories.map((category) => (
-              <DropdownMenu key={category.name}>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="flex items-center space-x-2 text-white hover:bg-white/10 transition-colors"
-                  >
-                    <category.icon className="w-4 h-4" />
-                    <span>{category.name}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  className="bg-white/90 backdrop-blur-md border border-gray-200 shadow-xl"
-                  align="center"
-                >
-                  {category.items.map((item) => (
-                    <DropdownMenuItem 
-                      key={item}
-                      className="hover:bg-gray-100 cursor-pointer font-medium"
-                    >
-                      {item}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+          <nav className="hidden lg:flex items-center space-x-6">
+            {menuItems.map((item) => (
+              <Button 
+                key={item.name}
+                variant="ghost" 
+                className="flex items-center space-x-2 text-white hover:bg-white/10 transition-colors"
+                onClick={() => navigate(item.path)}
+              >
+                <item.icon className="w-4 h-4" />
+                <span>{item.name}</span>
+              </Button>
             ))}
           </nav>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <Button 
               variant="ghost" 
               className="relative text-white hover:bg-white/10"
@@ -100,7 +83,7 @@ export default function Header() {
             >
               <ShoppingCart className="w-5 h-5" />
               {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {cartItemCount}
                 </span>
               )}
@@ -111,7 +94,7 @@ export default function Header() {
               className="relative text-white hover:bg-white/10"
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 3
               </span>
             </Button>
@@ -136,7 +119,7 @@ export default function Header() {
                   <Link to="/orders" className="w-full">Mes Commandes</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="font-medium">
-                  <Link to="/settings" className="w-full">Paramètres</Link>
+                  <Link to="/wallet" className="w-full">Mon Wallet</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-red-600 font-medium">
                   Déconnexion
@@ -164,25 +147,20 @@ export default function Header() {
             className="lg:hidden bg-gray-800 border-t border-gray-700"
           >
             <div className="container mx-auto px-4 py-4">
-              <nav className="space-y-4">
-                {categories.map((category) => (
-                  <div key={category.name} className="space-y-2">
-                    <div className="flex items-center space-x-2 text-white font-medium">
-                      <category.icon className="w-4 h-4" />
-                      <span>{category.name}</span>
-                    </div>
-                    <div className="space-y-2 pl-6">
-                      {category.items.map((item) => (
-                        <Button
-                          key={item}
-                          variant="ghost"
-                          className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10"
-                        >
-                          {item}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+              <nav className="space-y-2">
+                {menuItems.map((item) => (
+                  <Button
+                    key={item.name}
+                    variant="ghost"
+                    className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/10"
+                    onClick={() => {
+                      navigate(item.path);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <item.icon className="w-4 h-4 mr-2" />
+                    {item.name}
+                  </Button>
                 ))}
               </nav>
             </div>
@@ -191,4 +169,6 @@ export default function Header() {
       </AnimatePresence>
     </motion.header>
   );
-}
+};
+
+export default Header;
