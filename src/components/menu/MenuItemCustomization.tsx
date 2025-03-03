@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -51,7 +52,7 @@ const MenuItemCustomization = ({ item, open, onClose }: MenuItemCustomizationPro
       id: item.id,
       name: item.name,
       price: item.price,
-      restaurantId: item.restaurant_id,
+      restaurant_id: item.restaurant_id,
       options: {
         ...options,
         specialInstructions

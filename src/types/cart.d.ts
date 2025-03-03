@@ -4,18 +4,16 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  image_url?: string;
   restaurant_id: string;
-  customization_options?: {
+  options?: Record<string, any>;
+  customization_options?: Array<{
     name: string;
     value: string;
     price: number;
-  }[];
-  options?: Record<string, any>;
+  }>;
 }
 
-export interface Cart {
+export interface CartState {
   items: CartItem[];
   total: number;
-  restaurant_id?: string;
 }

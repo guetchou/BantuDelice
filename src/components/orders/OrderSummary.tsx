@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,7 +45,7 @@ export const OrderSummary = () => {
           status: 'pending',
           payment_status: 'completed',
           delivery_status: 'pending',
-          restaurant_id: state.items[0]?.restaurantId || '',
+          restaurant_id: state.items[0]?.restaurant_id || '',
           delivery_address: 'À implémenter'
         })
         .select()
