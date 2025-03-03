@@ -17,7 +17,7 @@ const Steps = React.forwardRef<HTMLDivElement, StepsProps>(
   ({ className, activeStep = 0, children, ...props }, ref) => {
     const childrenArray = React.Children.toArray(children)
     const steps = childrenArray.map((step, index) => {
-      if (React.isValidElement(step)) {
+      if (React.isValidElement<StepProps>(step)) {
         return React.cloneElement(step, {
           completed: index < activeStep,
           active: index === activeStep,

@@ -1,26 +1,28 @@
 
-import type { MenuItem } from '@/types/menu';
-
-export interface CartItem extends Omit<MenuItem, 'customization_options'> {
-  quantity: number;
-  options?: Array<{
-    name: string;
-    value: string;
-    price: number;
-  }>;
+export interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image_url?: string;
+  available: boolean;
+  restaurant_id: string;
+  dietary_preferences?: string[];
+  customization_options: Record<string, any>;
+  popularity_score?: number;
+  cuisine_type?: string;
+  created_at: string;
 }
 
-export interface MenuListProps {
+export interface MenuCategory {
+  name: string;
   items: MenuItem[];
-  onAddToCart: (item: CartItem) => void;
-  isLoading?: boolean;
-  showNutritionalInfo?: boolean;
 }
 
-export interface MenuItemCardProps {
-  item: MenuItem;
-  onAddToCart: (item: CartItem) => void;
-  onRemoveFromCart: (itemId: string) => void;
-  quantity: number;
-  showNutritionalInfo?: boolean;
+export interface MenuFilter {
+  category?: string;
+  dietary?: string[];
+  priceRange?: [number, number];
+  searchQuery?: string;
 }

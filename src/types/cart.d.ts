@@ -4,16 +4,17 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  restaurant_id: string;
-  options?: Record<string, any>;
-  customization_options?: Array<{
-    name: string;
-    value: string;
-    price: number;
-  }>;
+  image_url?: string;
+  description?: string;
+  category?: string;
+  customization_options: Record<string, any>;
+  options?: { name: string; value: string; price: number }[];
 }
 
-export interface CartState {
-  items: CartItem[];
+export interface CartSummary {
+  subtotal: number;
+  tax: number;
+  deliveryFee: number;
   total: number;
+  items: CartItem[];
 }

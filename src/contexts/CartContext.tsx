@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -76,7 +77,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         items: state.items.map(item =>
           item.id === action.payload.id
-            ? { ...item, options: action.payload.options }
+            ? { ...item, customization_options: action.payload.options }
             : item
         )
       };
@@ -132,7 +133,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
   };
 
-  const updateOptions = (id: string, options: CartItem['options']) => {
+  const updateOptions = (id: string, options: CartItem['customization_options']) => {
     dispatch({ type: 'UPDATE_OPTIONS', payload: { id, options } });
   };
 
