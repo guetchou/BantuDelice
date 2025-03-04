@@ -1,51 +1,49 @@
+
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
-const schema = z.object({
-  email: z.string().email("Email invalide"),
+const formSchema = z.object({
+  email: z.string().email("Veuillez entrer une adresse email valide"),
 });
 
-type ForgotPasswordForm = z.infer<typeof schema>;
+type ForgotPasswordFormValues = z.infer<typeof formSchema>;
 
 interface ForgotPasswordFormProps {
   onSubmit: (email: string) => Promise<void>;
-  onCancel: () => void;
 }
 
-export const ForgotPasswordForm = ({ onSubmit, onCancel }: ForgotPasswordFormProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const form = useForm<ForgotPasswordForm>({
-    resolver: zodResolver(schema),
+export const ForgotPasswordForm = ({ onSubmit }: ForgotPasswordFormProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+    },
   });
 
-  const handleSubmit = async (data: ForgotPasswordForm) => {
-    setIsLoading(true);
+  const handleSubmit = async (values: ForgotPasswordFormValues) => {
     try {
-      await onSubmit(data.email);
+      setIsSubmitting(true);
+      await onSubmit(values.email);
+    } catch (error) {
+      console.error("Erreur lors de la réinitialisation du mot de passe:", error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
     >
       <Form {...form}>
@@ -57,38 +55,27 @@ export const ForgotPasswordForm = ({ onSubmit, onCancel }: ForgotPasswordFormPro
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="votre@email.com"
-                    {...field}
+                  <Input 
+                    placeholder="votre@email.com" 
+                    {...field} 
+                    autoComplete="email"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <div className="space-y-2">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? "Envoi en cours..." : "Envoyer les instructions"}
-            </Button>
-            
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Annuler
-            </Button>
-          </div>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Envoi en cours..." : "Envoyer les instructions"}
+          </Button>
         </form>
       </Form>
     </motion.div>
   );
 };
+
+export default ForgotPasswordForm;

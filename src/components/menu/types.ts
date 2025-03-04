@@ -2,6 +2,8 @@
 import { MenuItem } from "@/types/menu";
 import { CartItem } from "@/types/cart";
 
+export type { MenuItem };  // Export MenuItem type explicitly
+
 export interface MenuItemCardProps {
   item: MenuItem;
   onAddToCart: (item: CartItem) => void;

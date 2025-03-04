@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { logger } from "@/services/logger";
 import { AuthContainer } from "@/components/auth/AuthContainer";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegistrationForm } from "@/components/auth/RegistrationForm";
+import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
 import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -169,7 +171,7 @@ const Auth = () => {
             <p className="text-sm text-gray-300">
               Entrez votre adresse email pour recevoir les instructions de réinitialisation.
             </p>
-            {/* Add ForgotPasswordForm component here */}
+            <ForgotPasswordForm onSubmit={handleForgotPassword} />
           </div>
         ) : isRegistering ? (
           <RegistrationForm 
