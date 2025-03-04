@@ -1,103 +1,120 @@
-
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import DeliveryMap from '@/components/DeliveryMap';
-import DeliveryChat from './DeliveryChat';
-import type { DeliveryDriver } from '@/types/delivery';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-interface DriverTrackingProps {
-  orderId: string;
-  driverId: string;
+// Fix: Missing Leaflet's default marker icon
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+interface DeliveryDriver {
+  user_id: string;
+  name: string;
+  phone: string;
+  current_location: number[];
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export default function DeliveryDriverTracking({ orderId, driverId }: DriverTrackingProps) {
-  const [driverLocation, setDriverLocation] = useState<DeliveryDriver | null>(null);
-  const { toast } = useToast();
+const DeliveryDriverTracking = () => {
+  const { driverId } = useParams<{ driverId: string }>();
+  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
+  const [position, setPosition] = useState<[number, number]>([48.8566, 2.3522]); // Default to Paris coordinates
 
   useEffect(() => {
-    fetchDriverLocation();
-    subscribeToLocationUpdates();
-  }, [driverId]);
-
-  const fetchDriverLocation = async () => {
-    const { data, error } = await supabase
-      .from('delivery_drivers')
-      .select('*')
-      .eq('user_id', driverId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching driver location:', error);
-      return;
-    }
-
-    setDriverLocation(data);
-  };
-
-  const subscribeToLocationUpdates = () => {
-    const channel = supabase
-      .channel('driver-location')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'delivery_drivers',
-          filter: `user_id=eq.${driverId}`
-        },
-        (payload) => {
-          setDriverLocation(payload.new as DeliveryDriver);
-          toast({
-            title: "Position mise à jour",
-            description: "La position du livreur a été mise à jour",
+    const fetchDriverData = async () => {
+      if (!driverId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('delivery_drivers')
+          .select('*')
+          .eq('user_id', driverId)
+          .single();
+          
+        if (error) throw error;
+        
+        if (data) {
+          setDriver({
+            ...data,
+            updated_at: data.updated_at || data.created_at || new Date().toISOString()
           });
         }
-      )
+      } catch (error) {
+        console.error('Error fetching driver data:', error);
+      }
+    };
+    
+    fetchDriverData();
+
+    const channel = supabase.channel('delivery_driver_location');
+
+    channel
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'delivery_drivers',
+        filter: `user_id=eq.${driverId}`
+      },
+      (payload) => {
+        console.log('Change received!', payload);
+        const updatedDriver = payload.new as DeliveryDriver;
+        setDriver(updatedDriver);
+        if (updatedDriver.current_location) {
+          setPosition([updatedDriver.current_location[0], updatedDriver.current_location[1]]);
+        }
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  };
+  }, [driverId]);
 
-  if (!driverLocation) {
-    return <div>Chargement de la position du livreur...</div>;
+  useEffect(() => {
+    if (driver && driver.current_location) {
+      setPosition([driver.current_location[0], driver.current_location[1]]);
+    }
+  }, [driver]);
+
+  if (!driver) {
+    return <div>Chargement des informations du livreur...</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Suivi du livreur</h3>
-        
-        <div className="h-[300px] mb-6">
-          <DeliveryMap
-            latitude={driverLocation.current_latitude}
-            longitude={driverLocation.current_longitude}
+    <div className="container mx-auto mt-8">
+      <h1 className="text-2xl font-bold mb-4">Suivi du livreur</h1>
+      <div className="mb-4">
+        <p>Nom: {driver.name}</p>
+        <p>Téléphone: {driver.phone}</p>
+        <p>Disponibilité: {driver.is_available ? 'Oui' : 'Non'}</p>
+        <p>Dernière mise à jour: {new Date(driver.updated_at).toLocaleTimeString()}</p>
+      </div>
+      <div style={{ height: '500px', width: '100%' }} className="rounded-lg overflow-hidden">
+        <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-sm text-gray-500">
-            Dernière mise à jour : {' '}
-            {new Date(driverLocation.last_location_update).toLocaleString()}
-          </p>
-          <p className="text-sm">
-            <span className="font-medium">Évaluation moyenne :</span>{' '}
-            {driverLocation.average_rating.toFixed(1)} / 5
-          </p>
-          <p className="text-sm">
-            <span className="font-medium">Livraisons effectuées :</span>{' '}
-            {driverLocation.total_deliveries}
-          </p>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Chat avec le livreur</h3>
-        <DeliveryChat orderId={orderId} userType="customer" />
-      </Card>
+          <Marker position={position}>
+            <Popup>
+              {driver.name} est ici.
+            </Popup>
+          </Marker>
+        </MapContainer>
+      </div>
     </div>
   );
-}
+};
+
+export default DeliveryDriverTracking;

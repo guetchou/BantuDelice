@@ -8,7 +8,7 @@ export interface CartItem {
   description?: string;
   category?: string;
   customization_options: Record<string, any>;
-  options?: { name: string; value: string; price: number }[];
+  options?: { name: string; value: string; price: number; }[];
 }
 
 export interface CartSummary {

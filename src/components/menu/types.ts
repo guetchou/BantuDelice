@@ -23,3 +23,11 @@ export interface MenuFilter {
   priceRange?: [number, number];
   searchQuery?: string;
 }
+
+export interface MenuListProps {
+  items: MenuItem[];
+  onAddToCart: (item: CartItem) => void;
+  onRemoveFromCart?: (itemId: string) => void;
+  getQuantity?: (itemId: string) => number;
+  filter?: MenuFilter;
+}

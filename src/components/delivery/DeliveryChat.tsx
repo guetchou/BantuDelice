@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Send } from 'lucide-react';
@@ -20,24 +19,33 @@ export default function DeliveryChat({ orderId, userType }: DeliveryChatProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    const fetchMessages = async () => {
+      if (!orderId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('delivery_messages')
+          .select('*')
+          .eq('order_id', orderId)
+          .order('created_at');
+        
+        if (error) throw error;
+        
+        if (data) {
+          const typedData = data.map(msg => ({
+            ...msg,
+            sender_type: msg.sender_type as "driver" | "customer"
+          }));
+          setMessages(typedData);
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    };
+    
     fetchMessages();
     subscribeToMessages();
   }, [orderId]);
-
-  const fetchMessages = async () => {
-    const { data, error } = await supabase
-      .from('delivery_messages')
-      .select('*')
-      .eq('order_id', orderId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching messages:', error);
-      return;
-    }
-
-    setMessages(data);
-  };
 
   const subscribeToMessages = () => {
     const channel = supabase
