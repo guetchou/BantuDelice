@@ -18,12 +18,20 @@ export const useMenuItems = (restaurantId: string) => {
         ...item,
         available: item.available !== false, // Default to available if not specified
         created_at: item.created_at || new Date().toISOString(),
-        updated_at: item.created_at || new Date().toISOString(),
+        updated_at: item.updated_at || new Date().toISOString(),
         ingredients: item.ingredients || [],
         rating: item.rating || 4.5,
         preparation_time: item.preparation_time || 30,
         dietary_preferences: item.dietary_preferences || [],
-        customization_options: item.customization_options || {}
+        customization_options: item.customization_options || {},
+        nutritional_info: item.nutritional_info || {
+          calories: null,
+          protein: null,
+          carbs: null,
+          fat: null,
+          fiber: null
+        },
+        allergens: item.allergens || []
       })) as MenuItem[];
     },
     meta: {

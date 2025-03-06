@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { OrderTrackingDetails } from "@/types/orderTracking";
@@ -32,7 +33,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
           setTrackingData({
             ...data,
             updated_at: data.updated_at || data.timestamp || new Date().toISOString(),
-            status: data.status || 'preparing'
+            status: (data.status || 'preparing') as OrderTrackingDetails['status']
           });
         }
       } catch (error) {

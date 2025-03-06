@@ -7,6 +7,7 @@ export interface CartItem {
   image_url?: string;
   description?: string;
   category?: string;
+  restaurant_id: string; // Added restaurant_id
   customization_options: Record<string, any>;
   options?: { name: string; value: string; price: number; }[];
 }

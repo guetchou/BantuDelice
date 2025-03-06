@@ -30,4 +30,6 @@ export interface MenuListProps {
   onRemoveFromCart?: (itemId: string) => void;
   getQuantity?: (itemId: string) => number;
   filter?: MenuFilter;
+  isLoading?: boolean;
+  showNutritionalInfo?: boolean;
 }
