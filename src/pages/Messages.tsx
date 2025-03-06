@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Phone, Video, Mic, Image, Paperclip, MoreVertical, Search } from "lucide-react";
+import { Send, Phone, Video, Mic, Image as ImageIcon, Paperclip, MoreVertical, Search, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { format } from 'date-fns';
@@ -212,7 +212,7 @@ export default function Messages() {
                 <TabsTrigger value="all" className="flex-1 text-white data-[state=active]:bg-teal-500/20">Tous</TabsTrigger>
                 <TabsTrigger value="drivers" className="flex-1 text-white data-[state=active]:bg-teal-500/20">Chauffeurs</TabsTrigger>
                 <TabsTrigger value="restaurants" className="flex-1 text-white data-[state=active]:bg-teal-500/20">Restaurants</TabsTrigger>
-              </Tabs>
+              </TabsList>
               <TabsContent value="all" className="m-0">
                 <div className="overflow-y-auto h-[calc(100vh-300px)]">
                   {filteredContacts.map(contact => (
@@ -392,7 +392,7 @@ export default function Messages() {
                       <Paperclip className="h-5 w-5" />
                     </Button>
                     <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-black/20">
-                      <Image className="h-5 w-5" />
+                      <ImageIcon className="h-5 w-5" />
                     </Button>
                     <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-black/20">
                       <Mic className="h-5 w-5" />

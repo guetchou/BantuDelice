@@ -170,7 +170,7 @@ export default function Explorer() {
               <TabsTrigger value="attraction" className="flex-1 text-white data-[state=active]:bg-teal-500/20">
                 Attractions
               </TabsTrigger>
-            </Tabs>
+            </TabsList>
           </Tabs>
         </div>
 
