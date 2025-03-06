@@ -24,6 +24,9 @@ import Wallet from './pages/Wallet';
 import PaymentMethods from './pages/wallet/PaymentMethods';
 import Orders from './pages/Orders';
 import OrderDetails from './pages/OrderDetails';
+import Covoiturage from './pages/Covoiturage';
+import Messages from './pages/Messages';
+import Explorer from './pages/Explorer';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,6 +61,9 @@ function App() {
                     <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
                     <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
                     <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+                    <Route path="/covoiturage" element={<Covoiturage />} />
+                    <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+                    <Route path="/explorer" element={<Explorer />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
