@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/ThemeProvider";
 import { Toaster } from './components/ui/toaster';
@@ -7,6 +8,22 @@ import { CartProvider } from './contexts/CartContext';
 import { OrderProvider } from './contexts/OrderContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import AdminDashboard from './pages/Admin';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+
+// Import all the page components
+import Index from './pages/Index';
+import Home from './pages/Home';
+import OrderDemo from './pages/OrderDemo';
+import Auth from './pages/Auth';
+import Restaurants from './pages/Restaurants';
+import RestaurantMenu from './pages/RestaurantMenu';
+import Taxi from './pages/Taxi';
+import TaxiRide from './pages/TaxiRide';
+import Wallet from './pages/Wallet';
+import PaymentMethods from './pages/wallet/PaymentMethods';
+import Orders from './pages/Orders';
+import OrderDetails from './pages/OrderDetails';
 
 const queryClient = new QueryClient({
   defaultOptions: {

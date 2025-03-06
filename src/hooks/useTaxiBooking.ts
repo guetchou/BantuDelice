@@ -1,12 +1,13 @@
+
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { TaxiRide } from "@/types/taxi";
 
 export function useTaxiBooking() {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
+  // Create a new taxi booking
   const createBooking = async (bookingData: Omit<TaxiRide, 'id' | 'user_id' | 'status'>) => {
     try {
       setIsLoading(true);
@@ -30,17 +31,14 @@ export function useTaxiBooking() {
 
       if (error) throw error;
 
-      toast({
-        title: "Réservation confirmée",
+      toast.success("Réservation confirmée", {
         description: "Votre taxi a été réservé avec succès",
       });
 
       return data;
     } catch (error: any) {
-      toast({
-        title: "Erreur",
+      toast.error("Erreur de réservation", {
         description: error.message || "Une erreur est survenue lors de la réservation",
-        variant: "destructive",
       });
       return null;
     } finally {
@@ -48,6 +46,7 @@ export function useTaxiBooking() {
     }
   };
 
+  // Cancel a booking
   const cancelBooking = async (rideId: string) => {
     try {
       setIsLoading(true);
@@ -59,19 +58,65 @@ export function useTaxiBooking() {
 
       if (error) throw error;
 
-      toast({
-        title: "Réservation annulée",
+      toast.success("Réservation annulée", {
         description: "Votre réservation a été annulée avec succès",
       });
 
       return true;
     } catch (error: any) {
-      toast({
-        title: "Erreur",
+      toast.error("Erreur d'annulation", {
         description: error.message || "Une erreur est survenue lors de l'annulation",
-        variant: "destructive",
       });
       return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Get user's rides
+  const getUserRides = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+
+      const { data, error } = await supabase
+        .from('taxi_rides')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('pickup_time', { ascending: false });
+
+      if (error) throw error;
+
+      return data;
+    } catch (error: any) {
+      console.error('Error fetching user rides:', error);
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Get ride details
+  const getRideDetails = async (rideId: string) => {
+    try {
+      setIsLoading(true);
+
+      const { data, error } = await supabase
+        .from('taxi_rides')
+        .select('*')
+        .eq('id', rideId)
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (error: any) {
+      console.error('Error fetching ride details:', error);
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +125,8 @@ export function useTaxiBooking() {
   return {
     isLoading,
     createBooking,
-    cancelBooking
+    cancelBooking,
+    getUserRides,
+    getRideDetails
   };
 }
