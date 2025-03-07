@@ -16,11 +16,30 @@ export const useRestaurant = (restaurantId: string) => {
       if (error) throw error;
 
       // Parse business hours or use default
-      const businessHours: BusinessHours = data.business_hours ? 
-        (typeof data.business_hours === 'string' ? 
-          JSON.parse(data.business_hours) : 
-          data.business_hours as BusinessHours) : 
-        {
+      let businessHours: BusinessHours;
+      try {
+        if (data.business_hours) {
+          if (typeof data.business_hours === 'string') {
+            businessHours = JSON.parse(data.business_hours);
+          } else {
+            businessHours = data.business_hours as BusinessHours;
+          }
+        } else {
+          businessHours = {
+            regular: {
+              monday: { open: '08:00', close: '22:00' },
+              tuesday: { open: '08:00', close: '22:00' },
+              wednesday: { open: '08:00', close: '22:00' },
+              thursday: { open: '08:00', close: '22:00' },
+              friday: { open: '08:00', close: '22:00' },
+              saturday: { open: '08:00', close: '22:00' },
+              sunday: { open: '08:00', close: '22:00' }
+            }
+          };
+        }
+      } catch (e) {
+        console.error("Error parsing business hours:", e);
+        businessHours = {
           regular: {
             monday: { open: '08:00', close: '22:00' },
             tuesday: { open: '08:00', close: '22:00' },
@@ -31,6 +50,7 @@ export const useRestaurant = (restaurantId: string) => {
             sunday: { open: '08:00', close: '22:00' }
           }
         };
+      }
 
       // Ensure all required fields are present
       const restaurant: Restaurant = {

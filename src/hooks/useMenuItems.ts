@@ -54,7 +54,7 @@ export const useMenuItems = (restaurantId: string) => {
             fiber: null
           },
           allergens: item.allergens || [],
-          popularity_score: item.popularity_score
+          popularity_score: item.popularity_score || 0
         };
         
         return menuItem;
