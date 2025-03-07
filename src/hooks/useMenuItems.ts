@@ -15,21 +15,14 @@ export const useMenuItems = (restaurantId: string) => {
       if (error) throw error;
 
       return (data || []).map(item => {
-        // Parse customization options if needed
-        let customizationOptions = {};
-        if (item.customization_options) {
-          if (typeof item.customization_options === 'string') {
-            try {
-              customizationOptions = JSON.parse(item.customization_options);
-            } catch (e) {
-              console.error('Error parsing customization options:', e);
-            }
-          } else {
-            customizationOptions = item.customization_options;
-          }
-        }
+        // Parse customization options
+        const customizationOptions = item.customization_options ? 
+          (typeof item.customization_options === 'string' ? 
+            JSON.parse(item.customization_options) : 
+            item.customization_options) : 
+          {};
 
-        // Create a properly typed MenuItem with default values for missing fields
+        // Create properly typed MenuItem with all required fields
         const menuItem: MenuItem = {
           id: item.id,
           name: item.name,
@@ -38,9 +31,8 @@ export const useMenuItems = (restaurantId: string) => {
           image_url: item.image_url || "",
           category: item.category,
           restaurant_id: item.restaurant_id,
-          available: item.available !== false, // Default to available if not specified
+          available: item.available !== false,
           created_at: item.created_at,
-          // Add missing properties with default values
           updated_at: item.updated_at || new Date().toISOString(),
           ingredients: item.ingredients || [],
           rating: item.rating || 4.5,
@@ -54,7 +46,8 @@ export const useMenuItems = (restaurantId: string) => {
             fat: null,
             fiber: null
           },
-          allergens: item.allergens || []
+          allergens: item.allergens || [],
+          popularity_score: item.popularity_score
         };
         
         return menuItem;

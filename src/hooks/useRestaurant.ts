@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Restaurant } from '@/types/restaurant';
+import type { Restaurant, BusinessHours } from '@/types/restaurant';
 
 export const useRestaurant = (restaurantId: string) => {
   return useQuery<Restaurant>({
@@ -16,7 +16,7 @@ export const useRestaurant = (restaurantId: string) => {
       if (error) throw error;
 
       // Parse business hours or use default
-      const businessHours = data.business_hours ? 
+      const businessHours: BusinessHours = data.business_hours ? 
         (typeof data.business_hours === 'string' ? 
           JSON.parse(data.business_hours) : 
           data.business_hours) : 
@@ -45,7 +45,11 @@ export const useRestaurant = (restaurantId: string) => {
         minimum_order: data.minimum_order || 0,
         delivery_fee: data.delivery_fee || 0,
         business_hours: businessHours,
-        special_days: data.special_days || []
+        special_days: data.special_days || [],
+        cuisine_type: data.cuisine_type || '',
+        banner_image_url: data.banner_image_url || '',
+        logo_url: data.logo_url || '',
+        description: data.description || ''
       };
 
       return restaurant;
