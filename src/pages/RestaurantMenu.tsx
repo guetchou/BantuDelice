@@ -141,8 +141,10 @@ export default function RestaurantMenu() {
                         if (quantity <= 0) {
                           removeFromCart(itemId);
                         } else {
+                          // Créer un nouvel objet sans quantity puis l'ajouter manuellement
+                          const { quantity: _, ...itemWithoutQuantity } = item;
                           addToCart({
-                            ...item,
+                            ...itemWithoutQuantity,
                             quantity
                           });
                         }

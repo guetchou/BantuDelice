@@ -15,6 +15,20 @@ export const useMenuItems = (restaurantId: string) => {
       if (error) throw error;
 
       return (data || []).map(item => {
+        // Parse customization options if needed
+        let customizationOptions = {};
+        if (item.customization_options) {
+          if (typeof item.customization_options === 'string') {
+            try {
+              customizationOptions = JSON.parse(item.customization_options);
+            } catch (e) {
+              console.error('Error parsing customization options:', e);
+            }
+          } else {
+            customizationOptions = item.customization_options;
+          }
+        }
+
         // Create a properly typed MenuItem with default values for missing fields
         const menuItem: MenuItem = {
           id: item.id,
@@ -27,24 +41,20 @@ export const useMenuItems = (restaurantId: string) => {
           available: item.available !== false, // Default to available if not specified
           created_at: item.created_at,
           // Add missing properties with default values
-          updated_at: new Date().toISOString(),
-          ingredients: [],
-          rating: 4.5,
-          preparation_time: 30,
+          updated_at: item.updated_at || new Date().toISOString(),
+          ingredients: item.ingredients || [],
+          rating: item.rating || 4.5,
+          preparation_time: item.preparation_time || 30,
           dietary_preferences: item.dietary_preferences || [],
-          customization_options: item.customization_options ? 
-            (typeof item.customization_options === 'string' ? 
-              JSON.parse(item.customization_options) : 
-              item.customization_options) : 
-            {},
-          nutritional_info: {
+          customization_options: customizationOptions,
+          nutritional_info: item.nutritional_info || {
             calories: null,
             protein: null,
             carbs: null,
             fat: null,
             fiber: null
           },
-          allergens: []
+          allergens: item.allergens || []
         };
         
         return menuItem;

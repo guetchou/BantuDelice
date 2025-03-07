@@ -37,7 +37,7 @@ export const useRestaurant = (restaurantId: string) => {
         ...data,
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
-        status: data.status || 'closed',
+        status: (data.status as "open" | "closed" | "busy") || 'closed',
         phone: data.phone || '',
         email: data.email || '',
         average_prep_time: data.average_prep_time || 30,
