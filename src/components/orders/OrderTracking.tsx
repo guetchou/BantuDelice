@@ -20,7 +20,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
           .from('order_tracking_details')
           .select('*')
           .eq('order_id', orderId)
-          .order('updated_at', { ascending: false })
+          .order('timestamp', { ascending: false })
           .limit(1)
           .single();
 
@@ -32,7 +32,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
         if (data) {
           setTrackingData({
             ...data,
-            updated_at: data.updated_at || data.timestamp || new Date().toISOString(),
+            updated_at: data.timestamp || new Date().toISOString(),
             status: (data.status || 'preparing') as OrderTrackingDetails['status']
           });
         }

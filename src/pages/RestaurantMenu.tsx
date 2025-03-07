@@ -141,7 +141,10 @@ export default function RestaurantMenu() {
                         if (quantity <= 0) {
                           removeFromCart(itemId);
                         } else {
-                          addToCart({...item, quantity});
+                          addToCart({
+                            ...item,
+                            quantity
+                          });
                         }
                       }
                     }}

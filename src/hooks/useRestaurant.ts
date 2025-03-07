@@ -33,7 +33,7 @@ export const useRestaurant = (restaurantId: string) => {
         };
 
       // Ensure all required fields are present
-      return {
+      const restaurant: Restaurant = {
         ...data,
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
@@ -46,7 +46,9 @@ export const useRestaurant = (restaurantId: string) => {
         delivery_fee: data.delivery_fee || 0,
         business_hours: businessHours,
         special_days: data.special_days || []
-      } as Restaurant;
+      };
+
+      return restaurant;
     },
     meta: {
       errorMessage: "Impossible de charger les détails du restaurant"
