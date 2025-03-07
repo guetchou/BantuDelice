@@ -116,10 +116,17 @@ export default function RestaurantMenu() {
                       <MenuItemCard 
                         key={item.id}
                         item={item}
-                        onAddToCart={(itemToAdd) => handleAddToCart({
-                          ...itemToAdd,
+                        onAddToCart={() => handleAddToCart({
+                          id: item.id,
+                          name: item.name,
+                          price: item.price,
                           restaurant_id: restaurantId,
-                          customization_options: item.customization_options || {}
+                          image_url: item.image_url,
+                          category: item.category,
+                          description: item.description,
+                          available: item.available,
+                          customization_options: item.customization_options || {},
+                          quantity: 1
                         })}
                         onRemoveFromCart={handleRemoveFromCart}
                         quantity={cart.items.find(cartItem => cartItem.id === item.id)?.quantity || 0}
@@ -145,9 +152,8 @@ export default function RestaurantMenu() {
                         if (quantity <= 0) {
                           removeFromCart(itemId);
                         } else {
-                          const { quantity: _, ...itemWithoutQuantity } = item;
                           addToCart({
-                            ...itemWithoutQuantity,
+                            ...item,
                             quantity
                           });
                         }

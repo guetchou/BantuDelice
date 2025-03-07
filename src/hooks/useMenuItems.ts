@@ -41,10 +41,10 @@ export const useMenuItems = (restaurantId: string) => {
           available: item.available !== false,
           created_at: item.created_at,
           updated_at: item.updated_at || new Date().toISOString(),
-          ingredients: item.ingredients || [],
+          ingredients: Array.isArray(item.ingredients) ? item.ingredients : [],
           rating: item.rating || 4.5,
           preparation_time: item.preparation_time || 30,
-          dietary_preferences: item.dietary_preferences || [],
+          dietary_preferences: Array.isArray(item.dietary_preferences) ? item.dietary_preferences : [],
           customization_options: customizationOptions,
           nutritional_info: item.nutritional_info || {
             calories: null,
@@ -53,7 +53,7 @@ export const useMenuItems = (restaurantId: string) => {
             fat: null,
             fiber: null
           },
-          allergens: item.allergens || [],
+          allergens: Array.isArray(item.allergens) ? item.allergens : [],
           popularity_score: item.popularity_score || 0
         };
         

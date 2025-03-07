@@ -22,7 +22,8 @@ export const useRestaurant = (restaurantId: string) => {
           if (typeof data.business_hours === 'string') {
             businessHours = JSON.parse(data.business_hours);
           } else {
-            businessHours = data.business_hours as BusinessHours;
+            // Safely cast to BusinessHours with type assertion
+            businessHours = data.business_hours as unknown as BusinessHours;
           }
         } else {
           businessHours = {

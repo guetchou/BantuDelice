@@ -33,7 +33,10 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
         }
 
         if (data) {
-          const estimatedDeliveryTime = data.estimated_delivery_time || data.estimated_completion_time;
+          // Handle potential undefined estimated delivery time
+          const estimatedDeliveryTime = data.estimated_delivery_time || 
+                                        data.estimated_completion_time || 
+                                        new Date(Date.now() + 30 * 60000).toISOString(); // Default: 30 minutes from now
           
           setTrackingData({
             id: data.id,
@@ -42,9 +45,9 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
             timestamp: data.timestamp,
             updated_at: data.timestamp,
             estimated_delivery_time: estimatedDeliveryTime,
-            location_data: data.location_data,
-            notes: data.notes,
-            handled_by: data.handled_by
+            location_data: data.location_data || null,
+            notes: data.notes || '',
+            handled_by: data.handled_by || ''
           });
         }
       } catch (error) {
