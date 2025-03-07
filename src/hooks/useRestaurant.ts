@@ -19,7 +19,7 @@ export const useRestaurant = (restaurantId: string) => {
       const businessHours: BusinessHours = data.business_hours ? 
         (typeof data.business_hours === 'string' ? 
           JSON.parse(data.business_hours) : 
-          data.business_hours) : 
+          data.business_hours as BusinessHours) : 
         {
           regular: {
             monday: { open: '08:00', close: '22:00' },

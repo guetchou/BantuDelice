@@ -33,13 +33,15 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
         }
 
         if (data) {
+          const estimatedDeliveryTime = data.estimated_delivery_time || data.estimated_completion_time;
+          
           setTrackingData({
             id: data.id,
             order_id: data.order_id,
             status: data.status as OrderTrackingDetails['status'],
             timestamp: data.timestamp,
             updated_at: data.timestamp,
-            estimated_delivery_time: data.estimated_delivery_time,
+            estimated_delivery_time: estimatedDeliveryTime,
             location_data: data.location_data,
             notes: data.notes,
             handled_by: data.handled_by

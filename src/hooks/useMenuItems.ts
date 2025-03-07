@@ -16,11 +16,18 @@ export const useMenuItems = (restaurantId: string) => {
 
       return (data || []).map(item => {
         // Parse customization options
-        const customizationOptions = item.customization_options ? 
-          (typeof item.customization_options === 'string' ? 
-            JSON.parse(item.customization_options) : 
-            item.customization_options) : 
-          {};
+        let customizationOptions = {};
+        try {
+          if (item.customization_options) {
+            if (typeof item.customization_options === 'string') {
+              customizationOptions = JSON.parse(item.customization_options);
+            } else {
+              customizationOptions = item.customization_options;
+            }
+          }
+        } catch (e) {
+          console.error("Error parsing customization options:", e);
+        }
 
         // Create properly typed MenuItem with all required fields
         const menuItem: MenuItem = {

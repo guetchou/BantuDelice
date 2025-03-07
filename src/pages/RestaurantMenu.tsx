@@ -116,7 +116,11 @@ export default function RestaurantMenu() {
                       <MenuItemCard 
                         key={item.id}
                         item={item}
-                        onAddToCart={handleAddToCart}
+                        onAddToCart={(itemToAdd) => handleAddToCart({
+                          ...itemToAdd,
+                          restaurant_id: restaurantId,
+                          customization_options: item.customization_options || {}
+                        })}
                         onRemoveFromCart={handleRemoveFromCart}
                         quantity={cart.items.find(cartItem => cartItem.id === item.id)?.quantity || 0}
                         showNutritionalInfo={true}
@@ -141,7 +145,6 @@ export default function RestaurantMenu() {
                         if (quantity <= 0) {
                           removeFromCart(itemId);
                         } else {
-                          // Créer un nouvel objet sans quantity puis l'ajouter manuellement
                           const { quantity: _, ...itemWithoutQuantity } = item;
                           addToCart({
                             ...itemWithoutQuantity,
