@@ -38,7 +38,6 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
           const thirtyMinutesLater = new Date(now.getTime() + 30 * 60000);
           
           const estimatedDeliveryTime = 
-            data.estimated_delivery_time || 
             data.estimated_completion_time || 
             thirtyMinutesLater.toISOString();
           

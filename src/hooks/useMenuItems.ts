@@ -40,21 +40,21 @@ export const useMenuItems = (restaurantId: string) => {
           restaurant_id: item.restaurant_id,
           available: item.available !== false,
           created_at: item.created_at,
-          updated_at: item.created_at,
-          ingredients: item.ingredients || [],
-          rating: item.rating || 4.5,
-          preparation_time: item.preparation_time || 30,
-          dietary_preferences: item.dietary_preferences || [],
+          updated_at: item.updated_at || item.created_at,
+          ingredients: Array.isArray(item.dietary_preferences) ? item.dietary_preferences : [],
+          rating: 4.5,
+          preparation_time: item.average_prep_time || 30,
+          dietary_preferences: Array.isArray(item.dietary_preferences) ? item.dietary_preferences : [],
           customization_options: customizationOptions,
           nutritional_info: {
-            calories: item.nutritional_info?.calories || null,
-            protein: item.nutritional_info?.protein || null,
-            carbs: item.nutritional_info?.carbs || null,
-            fat: item.nutritional_info?.fat || null,
-            fiber: item.nutritional_info?.fiber || null
+            calories: null,
+            protein: null,
+            carbs: null,
+            fat: null,
+            fiber: null
           },
-          allergens: item.allergens || [],
-          popularity_score: item.popularity_score || 0
+          allergens: [],
+          popularity_score: 0
         };
       });
     },
