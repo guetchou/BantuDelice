@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { MenuItem } from '@/components/menu/types';
+import type { MenuItem } from '@/types/menu';
 
 export const useMenuItems = (restaurantId: string) => {
   return useQuery<MenuItem[]>({
@@ -12,9 +12,13 @@ export const useMenuItems = (restaurantId: string) => {
         .select('*')
         .eq('restaurant_id', restaurantId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching menu items:", error);
+        throw error;
+      }
 
       return (data || []).map(item => {
+        // Parse customization options
         let customizationOptions = {};
         try {
           if (item.customization_options) {
@@ -32,25 +36,25 @@ export const useMenuItems = (restaurantId: string) => {
           description: item.description || "",
           price: item.price,
           image_url: item.image_url || "",
-          category: item.category,
+          category: item.category || "General",
           restaurant_id: item.restaurant_id,
           available: item.available !== false,
           created_at: item.created_at,
           updated_at: item.created_at,
-          ingredients: [],
-          rating: 4.5,
-          preparation_time: 30,
-          dietary_preferences: [],
+          ingredients: item.ingredients || [],
+          rating: item.rating || 4.5,
+          preparation_time: item.preparation_time || 30,
+          dietary_preferences: item.dietary_preferences || [],
           customization_options: customizationOptions,
           nutritional_info: {
-            calories: null,
-            protein: null,
-            carbs: null,
-            fat: null,
-            fiber: null
+            calories: item.nutritional_info?.calories || null,
+            protein: item.nutritional_info?.protein || null,
+            carbs: item.nutritional_info?.carbs || null,
+            fat: item.nutritional_info?.fat || null,
+            fiber: item.nutritional_info?.fiber || null
           },
-          allergens: [],
-          popularity_score: 0
+          allergens: item.allergens || [],
+          popularity_score: item.popularity_score || 0
         };
       });
     },

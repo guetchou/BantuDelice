@@ -11,17 +11,19 @@ import { CartItem } from "@/types/cart";
 
 const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: MenuItemCardProps) => {
   const handleAddToCart = () => {
-    onAddToCart({
+    const cartItem: CartItem = {
       id: item.id,
       name: item.name,
       price: item.price,
+      restaurant_id: item.restaurant_id,
       quantity: 1,
       image_url: item.image_url,
       description: item.description,
       category: item.category,
-      customization_options: item.customization_options || {},
-      options: []
-    } as CartItem);
+      customization_options: item.customization_options || {}
+    };
+    
+    onAddToCart(cartItem);
   };
 
   return (
@@ -90,8 +92,8 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
                 <div>
                   <h4 className="font-semibold mb-2">Ingrédients</h4>
                   <div className="flex flex-wrap gap-2">
-                    {item.ingredients.map((ingredient) => (
-                      <Badge key={ingredient} variant="outline">
+                    {item.ingredients.map((ingredient, index) => (
+                      <Badge key={index} variant="outline">
                         {ingredient}
                       </Badge>
                     ))}
@@ -102,8 +104,8 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
                 <div>
                   <h4 className="font-semibold mb-2">Allergènes</h4>
                   <div className="flex flex-wrap gap-2">
-                    {item.allergens.map((allergen) => (
-                      <Badge key={allergen} variant="destructive">
+                    {item.allergens.map((allergen, index) => (
+                      <Badge key={index} variant="destructive">
                         {allergen}
                       </Badge>
                     ))}
@@ -130,8 +132,8 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {item.dietary_preferences?.map((pref) => (
-            <TooltipProvider key={pref}>
+          {item.dietary_preferences?.map((pref, index) => (
+            <TooltipProvider key={index}>
               <Tooltip>
                 <TooltipTrigger>
                   <Badge variant="outline" className="flex items-center gap-1 text-gray-300">

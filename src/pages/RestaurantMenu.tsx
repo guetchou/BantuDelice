@@ -1,3 +1,4 @@
+
 import { useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRestaurant } from '@/hooks/useRestaurant';
@@ -18,7 +19,10 @@ export default function RestaurantMenu() {
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   
-  if (!restaurantId) throw new Error('Restaurant ID is required');
+  if (!restaurantId) {
+    navigate('/restaurants');
+    return null;
+  }
 
   const { data: restaurant, isLoading: isLoadingRestaurant } = useRestaurant(restaurantId);
   const { data: menuItems, isLoading: isLoadingMenu } = useMenuItems(restaurantId);
@@ -34,8 +38,9 @@ export default function RestaurantMenu() {
       image_url: item.image_url,
       category: item.category,
       description: item.description,
-      customization_options: {}
+      customization_options: item.customization_options || {}
     });
+    
     toast({
       title: "Ajouté au panier",
       description: `${item.name} a été ajouté à votre commande`,
@@ -133,7 +138,7 @@ export default function RestaurantMenu() {
                           image_url: item.image_url,
                           category: item.category,
                           description: item.description,
-                          customization_options: {}
+                          customization_options: item.customization_options || {}
                         })}
                         onRemoveFromCart={handleRemoveFromCart}
                         quantity={cart.items.find(cartItem => cartItem.id === item.id)?.quantity || 0}

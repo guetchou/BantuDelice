@@ -13,7 +13,14 @@ export const useRestaurant = (restaurantId: string) => {
         .eq('id', restaurantId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching restaurant:", error);
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error("Restaurant not found");
+      }
 
       // Parse business hours or use default
       let businessHours: BusinessHours;
@@ -55,13 +62,16 @@ export const useRestaurant = (restaurantId: string) => {
 
       // Ensure all required fields are present
       const restaurant: Restaurant = {
-        ...data,
+        id: data.id,
+        name: data.name || 'Unknown Restaurant',
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
         status: (data.status as "open" | "closed" | "busy") || 'closed',
+        address: data.address || '',
         phone: data.phone || '',
         email: data.email || '',
         average_prep_time: data.average_prep_time || 30,
+        average_rating: data.average_rating || 0,
         total_ratings: data.total_ratings || 0,
         minimum_order: data.minimum_order || 0,
         delivery_fee: data.delivery_fee || 0,

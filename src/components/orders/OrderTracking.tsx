@@ -33,15 +33,19 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
         }
 
         if (data) {
-          // Handle potential undefined estimated delivery time
-          const estimatedDeliveryTime = data.estimated_delivery_time || 
-                                        data.estimated_completion_time || 
-                                        new Date(Date.now() + 30 * 60000).toISOString(); // Default: 30 minutes from now
+          // Create a default estimated delivery time if not provided
+          const now = new Date();
+          const thirtyMinutesLater = new Date(now.getTime() + 30 * 60000);
+          
+          const estimatedDeliveryTime = 
+            data.estimated_delivery_time || 
+            data.estimated_completion_time || 
+            thirtyMinutesLater.toISOString();
           
           setTrackingData({
             id: data.id,
             order_id: data.order_id,
-            status: data.status as OrderTrackingDetails['status'],
+            status: (data.status as OrderTrackingDetails['status']) || 'preparing',
             timestamp: data.timestamp,
             updated_at: data.timestamp,
             estimated_delivery_time: estimatedDeliveryTime,
