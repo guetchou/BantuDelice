@@ -4,38 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import { useToast } from "@/hooks/use-toast";
-import { createApi } from 'unsplash-js';
-
-// Initialize the Unsplash client
-const unsplashAccessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
-console.log('Unsplash Access Key in RestaurantGrid:', unsplashAccessKey ? 'Present' : 'Missing');
-
-const unsplash = createApi({
-  accessKey: unsplashAccessKey || '',
-  // Adding explicit authentication headers
-  headers: {
-    Authorization: `Client-ID ${unsplashAccessKey}`
-  }
-});
-
-interface MenuItem {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-}
-
-interface Restaurant {
-  id: string;
-  name: string;
-  address: string;
-  image_url?: string;
-  rating?: number;
-  estimated_preparation_time: number;
-  cuisine_type?: string;
-  distance?: number;
-  menu_items?: MenuItem[];
-}
+import type { Restaurant } from '@/types/restaurant';
 
 interface RestaurantGridProps {
   searchQuery: string;
@@ -56,15 +25,7 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
       try {
         let query = supabase
           .from('restaurants')
-          .select(`
-            *,
-            menu_items (
-              id,
-              name,
-              price,
-              category
-            )
-          `);
+          .select('*');
 
         if (searchQuery) {
           query = query.textSearch('search_vector', searchQuery);
@@ -74,7 +35,7 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
           query = query.eq('cuisine_type', selectedCategory);
         }
 
-        const { data, error } = await query;
+        const { data: restaurantsData, error } = await query;
 
         if (error) {
           console.error('Error fetching restaurants:', error);
@@ -86,10 +47,12 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
           throw error;
         }
 
-        let filteredData = data as Restaurant[];
+        let filteredData = restaurantsData as Restaurant[];
+        
+        // Filter by price range
         if (priceRange !== 'all') {
           filteredData = filteredData.filter(restaurant => {
-            const avgPrice = restaurant.menu_items?.reduce((acc, item) => acc + item.price, 0) / (restaurant.menu_items?.length || 1);
+            const avgPrice = restaurant.minimum_order;
             switch(priceRange) {
               case 'low': return avgPrice < 5000;
               case 'medium': return avgPrice >= 5000 && avgPrice <= 15000;
@@ -99,42 +62,13 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
           });
         }
 
-        // Add default fallback image if needed
-        filteredData = filteredData.map(restaurant => ({
-          ...restaurant,
-          image_url: restaurant.image_url || 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop'
-        }));
-
-        try {
-          if (unsplashAccessKey) {
-            // Fetch restaurant images from Unsplash with more specific query
-            const restaurantPhotos = await unsplash.search.getPhotos({
-              query: 'african restaurant food cuisine',
-              perPage: filteredData.length,
-              orientation: 'landscape'
-            });
-
-            if (restaurantPhotos.response?.results) {
-              // Add images to restaurants
-              filteredData = filteredData.map((restaurant, index) => ({
-                ...restaurant,
-                image_url: restaurantPhotos.response?.results[index]?.urls.regular || 
-                         restaurant.image_url
-              }));
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching restaurant images:', error);
-          // Continue with existing data, don't block the main functionality
-        }
-
         // Sort restaurants
         return filteredData.sort((a, b) => {
           switch(sortBy) {
             case 'rating':
               return (b.rating || 0) - (a.rating || 0);
             case 'preparation_time':
-              return (a.estimated_preparation_time || 30) - (b.estimated_preparation_time || 30);
+              return (a.average_prep_time || 30) - (b.average_prep_time || 30);
             default:
               return 0;
           }
@@ -189,7 +123,7 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
         <RestaurantCard
           key={restaurant.id}
           restaurant={restaurant}
-          onClick={handleRestaurantClick}
+          onClick={() => handleRestaurantClick(restaurant.id)}
         />
       ))}
     </div>

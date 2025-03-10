@@ -26,12 +26,9 @@ export const useRestaurant = (restaurantId: string) => {
       let businessHours: BusinessHours;
       try {
         if (data.business_hours) {
-          if (typeof data.business_hours === 'string') {
-            businessHours = JSON.parse(data.business_hours);
-          } else {
-            // Safely cast to BusinessHours with type assertion
-            businessHours = data.business_hours as unknown as BusinessHours;
-          }
+          businessHours = typeof data.business_hours === 'string' 
+            ? JSON.parse(data.business_hours)
+            : data.business_hours as BusinessHours;
         } else {
           businessHours = {
             regular: {
@@ -60,7 +57,7 @@ export const useRestaurant = (restaurantId: string) => {
         };
       }
 
-      // Ensure all required fields are present
+      // Transform the database response into our Restaurant type
       const restaurant: Restaurant = {
         id: data.id,
         name: data.name || 'Unknown Restaurant',
@@ -76,10 +73,11 @@ export const useRestaurant = (restaurantId: string) => {
         minimum_order: data.minimum_order || 0,
         delivery_fee: data.delivery_fee || 0,
         business_hours: businessHours,
-        special_days: data.special_days ? data.special_days : [],
+        special_days: data.special_days || [],
         cuisine_type: data.cuisine_type || '',
         banner_image_url: data.banner_image_url || '',
-        logo_url: data.logo_url || ''
+        logo_url: data.logo_url || '',
+        rating: data.rating || 0
       };
 
       return restaurant;

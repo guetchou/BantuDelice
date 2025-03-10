@@ -3,26 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Star, Clock, MapPin, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-
-interface MenuItem {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-}
-
-interface Restaurant {
-  id: string;
-  name: string;
-  address: string;
-  image_url?: string;
-  rating?: number;
-  estimated_preparation_time: number;
-  cuisine_type?: string;
-  distance?: number;
-  menu_items?: MenuItem[];
-  trending?: boolean;
-}
+import type { Restaurant } from '@/types/restaurant';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -42,7 +23,7 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
       >
         <div className="relative h-48">
           <img
-            src={restaurant.image_url || 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop'}
+            src={restaurant.banner_image_url || 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop'}
             alt={restaurant.name}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
           />
@@ -75,7 +56,7 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
             )}
             <div className="flex items-center">
               <Clock className="w-4 h-4" />
-              <span className="ml-1">{restaurant.estimated_preparation_time} min</span>
+              <span className="ml-1">{restaurant.average_prep_time} min</span>
             </div>
           </div>
           
