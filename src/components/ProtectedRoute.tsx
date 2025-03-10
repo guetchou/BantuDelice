@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/hooks/useUser';
 
 interface ProtectedRouteProps {

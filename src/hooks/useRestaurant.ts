@@ -64,23 +64,22 @@ export const useRestaurant = (restaurantId: string) => {
       const restaurant: Restaurant = {
         id: data.id,
         name: data.name || 'Unknown Restaurant',
+        description: data.description || '',
+        address: data.address || '',
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
         status: (data.status as "open" | "closed" | "busy") || 'closed',
-        address: data.address || '',
         phone: data.phone || '',
         email: data.email || '',
         average_prep_time: data.average_prep_time || 30,
-        average_rating: data.average_rating || 0,
         total_ratings: data.total_ratings || 0,
         minimum_order: data.minimum_order || 0,
         delivery_fee: data.delivery_fee || 0,
         business_hours: businessHours,
-        special_days: data.special_days || [],
+        special_days: data.special_days ? data.special_days : [],
         cuisine_type: data.cuisine_type || '',
         banner_image_url: data.banner_image_url || '',
-        logo_url: data.logo_url || '',
-        description: data.description || ''
+        logo_url: data.logo_url || ''
       };
 
       return restaurant;

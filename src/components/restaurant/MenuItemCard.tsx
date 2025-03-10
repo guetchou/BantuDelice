@@ -5,11 +5,11 @@ import { Card } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MenuItemCardProps } from "@/components/menu/types";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CartItem } from "@/types/cart";
+import { MenuItemCardProps } from "@/components/menu/types";
 
-const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: MenuItemCardProps) => {
+const MenuItemCard = ({ item, onAddToCart, onRemoveFromCart, quantity = 0, showNutritionalInfo = false }: MenuItemCardProps) => {
   const handleAddToCart = () => {
     const cartItem: CartItem = {
       id: item.id,
@@ -79,16 +79,26 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
                   <div>
                     <h4 className="font-semibold mb-2">Information nutritionnelle</h4>
                     <div className="grid grid-cols-2 gap-2">
-                      <div>Calories: {item.nutritional_info.calories}</div>
-                      <div>Protéines: {item.nutritional_info.protein}g</div>
-                      <div>Glucides: {item.nutritional_info.carbs}g</div>
-                      <div>Lipides: {item.nutritional_info.fat}g</div>
-                      <div>Fibres: {item.nutritional_info.fiber}g</div>
+                      {item.nutritional_info.calories && (
+                        <div>Calories: {item.nutritional_info.calories}</div>
+                      )}
+                      {item.nutritional_info.protein && (
+                        <div>Protéines: {item.nutritional_info.protein}g</div>
+                      )}
+                      {item.nutritional_info.carbs && (
+                        <div>Glucides: {item.nutritional_info.carbs}g</div>
+                      )}
+                      {item.nutritional_info.fat && (
+                        <div>Lipides: {item.nutritional_info.fat}g</div>
+                      )}
+                      {item.nutritional_info.fiber && (
+                        <div>Fibres: {item.nutritional_info.fiber}g</div>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
-              {item.ingredients && (
+              {item.ingredients && item.ingredients.length > 0 && (
                 <div>
                   <h4 className="font-semibold mb-2">Ingrédients</h4>
                   <div className="flex flex-wrap gap-2">
@@ -153,14 +163,35 @@ const MenuItemCard = ({ item, onAddToCart, quantity, showNutritionalInfo }: Menu
           <span className="font-bold text-lg text-white">
             {item.price.toLocaleString('fr-FR')} XAF
           </span>
-          <Button 
-            onClick={handleAddToCart}
-            className="bg-orange-500 hover:bg-orange-600"
-            disabled={!item.available}
-          >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            {item.available ? "Ajouter" : "Indisponible"}
-          </Button>
+          
+          {quantity > 0 ? (
+            <div className="flex items-center space-x-2">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => onRemoveFromCart && onRemoveFromCart(item.id)}
+              >
+                -
+              </Button>
+              <span className="text-white">{quantity}</span>
+              <Button 
+                size="sm" 
+                className="bg-orange-500 hover:bg-orange-600"
+                onClick={handleAddToCart}
+              >
+                +
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={handleAddToCart}
+              className="bg-orange-500 hover:bg-orange-600"
+              disabled={!item.available}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              {item.available ? "Ajouter" : "Indisponible"}
+            </Button>
+          )}
         </div>
       </div>
     </Card>

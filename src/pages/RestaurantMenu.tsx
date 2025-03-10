@@ -19,13 +19,14 @@ export default function RestaurantMenu() {
   const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   
+  // Redirect if restaurantId is missing
   if (!restaurantId) {
     navigate('/restaurants');
     return null;
   }
 
-  const { data: restaurant, isLoading: isLoadingRestaurant } = useRestaurant(restaurantId);
-  const { data: menuItems, isLoading: isLoadingMenu } = useMenuItems(restaurantId);
+  const { data: restaurant, isLoading: isLoadingRestaurant, error: restaurantError } = useRestaurant(restaurantId);
+  const { data: menuItems, isLoading: isLoadingMenu, error: menuError } = useMenuItems(restaurantId);
   const { addToCart, removeFromCart, cart } = useCart();
 
   const handleAddToCart = useCallback((item: CartItem) => {
@@ -52,7 +53,7 @@ export default function RestaurantMenu() {
   }, [removeFromCart]);
 
   const getCategories = useCallback(() => {
-    if (!menuItems) return [];
+    if (!menuItems || menuItems.length === 0) return ["all"];
     
     const categories = Array.from(new Set(menuItems.map(item => item.category)));
     return ["all", ...categories];
@@ -64,6 +65,24 @@ export default function RestaurantMenu() {
     if (activeCategory === "all") return menuItems;
     return menuItems.filter(item => item.category === activeCategory);
   }, [menuItems, activeCategory]);
+
+  // Error handling
+  if (restaurantError || menuError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center text-white">
+        <div className="text-center p-8 max-w-md">
+          <p className="text-xl mb-4">Désolé, une erreur s'est produite lors du chargement des données</p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => navigate('/restaurants')}
+          >
+            Retour aux restaurants
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoadingRestaurant || isLoadingMenu) {
     return (
@@ -124,28 +143,34 @@ export default function RestaurantMenu() {
             <TabsContent value={activeCategory} className="mt-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {getFilteredItems().map((item) => (
-                      <MenuItemCard 
-                        key={item.id}
-                        item={item}
-                        onAddToCart={() => handleAddToCart({
-                          id: item.id,
-                          name: item.name,
-                          price: item.price,
-                          restaurant_id: restaurantId,
-                          quantity: 1,
-                          image_url: item.image_url,
-                          category: item.category,
-                          description: item.description,
-                          customization_options: item.customization_options || {}
-                        })}
-                        onRemoveFromCart={handleRemoveFromCart}
-                        quantity={cart.items.find(cartItem => cartItem.id === item.id)?.quantity || 0}
-                        showNutritionalInfo={true}
-                      />
-                    ))}
-                  </div>
+                  {getFilteredItems().length === 0 ? (
+                    <div className="text-center p-8 bg-white/5 backdrop-blur-lg rounded-lg">
+                      <p className="text-white">Aucun élément dans cette catégorie</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {getFilteredItems().map((item) => (
+                        <MenuItemCard 
+                          key={item.id}
+                          item={item}
+                          onAddToCart={() => handleAddToCart({
+                            id: item.id,
+                            name: item.name,
+                            price: item.price,
+                            restaurant_id: restaurantId,
+                            quantity: 1,
+                            image_url: item.image_url,
+                            category: item.category,
+                            description: item.description,
+                            customization_options: item.customization_options || {}
+                          })}
+                          onRemoveFromCart={handleRemoveFromCart}
+                          quantity={cart.items.find(cartItem => cartItem.id === item.id)?.quantity || 0}
+                          showNutritionalInfo={true}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="md:col-span-1 md:sticky md:top-4 self-start">
