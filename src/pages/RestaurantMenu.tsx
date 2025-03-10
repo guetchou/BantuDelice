@@ -1,6 +1,5 @@
-
 import { useCallback, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useMenuItems } from '@/hooks/useMenuItems';
 import MenuItemCard from '@/components/restaurant/MenuItemCard';
@@ -12,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export default function RestaurantMenu() {
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -27,12 +25,22 @@ export default function RestaurantMenu() {
   const { addToCart, removeFromCart, cart } = useCart();
 
   const handleAddToCart = useCallback((item: CartItem) => {
-    addToCart(item);
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      restaurant_id: restaurantId,
+      quantity: 1,
+      image_url: item.image_url,
+      category: item.category,
+      description: item.description,
+      customization_options: {}
+    });
     toast({
       title: "Ajouté au panier",
       description: `${item.name} a été ajouté à votre commande`,
     });
-  }, [addToCart, toast]);
+  }, [addToCart, restaurantId, toast]);
 
   const handleRemoveFromCart = useCallback((itemId: string) => {
     removeFromCart(itemId);
@@ -92,7 +100,7 @@ export default function RestaurantMenu() {
           Retour aux restaurants
         </Button>
 
-        <RestaurantHeader restaurant={restaurant} />
+        {restaurant && <RestaurantHeader restaurant={restaurant} />}
         
         <div className="mt-8">
           <Tabs defaultValue="all" value={activeCategory} onValueChange={setActiveCategory}>
@@ -121,12 +129,11 @@ export default function RestaurantMenu() {
                           name: item.name,
                           price: item.price,
                           restaurant_id: restaurantId,
+                          quantity: 1,
                           image_url: item.image_url,
                           category: item.category,
                           description: item.description,
-                          available: item.available,
-                          customization_options: item.customization_options || {},
-                          quantity: 1
+                          customization_options: {}
                         })}
                         onRemoveFromCart={handleRemoveFromCart}
                         quantity={cart.items.find(cartItem => cartItem.id === item.id)?.quantity || 0}
