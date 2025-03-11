@@ -1,4 +1,3 @@
-
 export interface Restaurant {
   id: string;
   name: string;
@@ -65,4 +64,24 @@ export interface MenuItem {
   };
   allergens?: string[];
   popularity_score?: number;
+}
+
+export interface RestaurantFilters {
+  cuisine_type?: string[];
+  price_range?: 'low' | 'medium' | 'high';
+  rating?: number;
+  distance?: number;
+  isOpen?: boolean;
+  hasDelivery?: boolean;
+  hasPickup?: boolean;
+}
+
+export interface RestaurantSortOption {
+  label: string;
+  value: 'rating' | 'distance' | 'price' | 'preparation_time';
+}
+
+export interface RestaurantViewMode {
+  type: 'grid' | 'map';
+  gridColumns?: 1 | 2 | 3 | 4;
 }

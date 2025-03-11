@@ -1,5 +1,9 @@
+
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
@@ -15,20 +19,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { RestaurantFilters } from "@/types/restaurant";
+
+const CUISINE_TYPES = [
+  "Tout",
+  "Congolais",
+  "Africain",
+  "International",
+  "Fast Food",
+  "Café",
+  "Végétarien"
+];
 
 interface RestaurantFiltersProps {
-  priceRange: string;
-  setPriceRange: (value: string) => void;
-  sortBy: string;
-  setSortBy: (value: string) => void;
+  filters: RestaurantFilters;
+  onChange: (filters: RestaurantFilters) => void;
 }
 
-const RestaurantFilters = ({
-  priceRange,
-  setPriceRange,
-  sortBy,
-  setSortBy
-}: RestaurantFiltersProps) => {
+export default function RestaurantFilters({
+  filters,
+  onChange
+}: RestaurantFiltersProps) {
+  const updateFilter = (key: keyof RestaurantFilters, value: any) => {
+    onChange({
+      ...filters,
+      [key]: value
+    });
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -44,12 +62,33 @@ const RestaurantFilters = ({
             Affinez votre recherche de restaurants
           </SheetDescription>
         </SheetHeader>
-        <div className="space-y-4 mt-4">
-          <div>
-            <label className="text-sm font-medium mb-1 block">
-              Gamme de prix
-            </label>
-            <Select value={priceRange} onValueChange={setPriceRange}>
+
+        <div className="space-y-6 mt-6">
+          <div className="space-y-4">
+            <Label>Type de cuisine</Label>
+            <Select 
+              value={filters.cuisine_type?.[0] || "Tout"}
+              onValueChange={(value) => updateFilter('cuisine_type', value === "Tout" ? undefined : [value])}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un type de cuisine" />
+              </SelectTrigger>
+              <SelectContent>
+                {CUISINE_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-4">
+            <Label>Gamme de prix</Label>
+            <Select 
+              value={filters.price_range || "all"}
+              onValueChange={(value) => updateFilter('price_range', value === "all" ? undefined : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une gamme de prix" />
               </SelectTrigger>
@@ -61,25 +100,60 @@ const RestaurantFilters = ({
               </SelectContent>
             </Select>
           </div>
-          
-          <div>
-            <label className="text-sm font-medium mb-1 block">
-              Trier par
-            </label>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez un critère de tri" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rating">Note</SelectItem>
-                <SelectItem value="preparation_time">Temps de préparation</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <div className="space-y-4">
+            <Label>Distance maximum (km)</Label>
+            <Slider
+              value={[filters.distance || 10]}
+              onValueChange={([value]) => updateFilter('distance', value)}
+              min={1}
+              max={20}
+              step={1}
+            />
+            <div className="text-sm text-gray-500 text-center">
+              {filters.distance || 10} km
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label>Note minimum</Label>
+            <Slider
+              value={[filters.rating || 0]}
+              onValueChange={([value]) => updateFilter('rating', value)}
+              min={0}
+              max={5}
+              step={0.5}
+            />
+            <div className="text-sm text-gray-500 text-center">
+              {filters.rating || 0} étoiles
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label>Uniquement restaurants ouverts</Label>
+            <Switch
+              checked={filters.isOpen}
+              onCheckedChange={(checked) => updateFilter('isOpen', checked)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label>Propose la livraison</Label>
+            <Switch
+              checked={filters.hasDelivery}
+              onCheckedChange={(checked) => updateFilter('hasDelivery', checked)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label>À emporter disponible</Label>
+            <Switch
+              checked={filters.hasPickup}
+              onCheckedChange={(checked) => updateFilter('hasPickup', checked)}
+            />
           </div>
         </div>
       </SheetContent>
     </Sheet>
   );
-};
-
-export default RestaurantFilters;
+}

@@ -1,60 +1,96 @@
 
-import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import CategoryList from '@/components/restaurants/CategoryList';
-import RestaurantGrid from '@/components/restaurants/RestaurantGrid';
-import RestaurantFilters from '@/components/restaurants/RestaurantFilters';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { ViewGrid, Map, Filter } from 'lucide-react';
 import SearchBar from '@/components/home/SearchBar';
-import { ChefHat, Coffee, Pizza, Soup, UtensilsCrossed, TrendingUp, Star, Clock, Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
+import RestaurantGrid from '@/components/restaurants/RestaurantGrid';
+import RestaurantMap from '@/components/restaurants/RestaurantMap';
+import RestaurantFilters from '@/components/restaurants/RestaurantFilters';
+import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { motion } from 'framer-motion';
+import type { Restaurant, RestaurantFilters as Filters, RestaurantViewMode } from '@/types/restaurant';
 
-const categories = [
-  { id: 'Tout', label: 'Tout', icon: ChefHat },
-  { id: 'Congolais', label: 'Congolais', icon: UtensilsCrossed },
-  { id: 'Africain', label: 'Africain', icon: Soup },
-  { id: 'International', label: 'International', icon: Pizza },
-  { id: 'Café', label: 'Café', icon: Coffee }
+const sortOptions = [
+  { label: 'Popularité', value: 'rating' },
+  { label: 'Distance', value: 'distance' },
+  { label: 'Prix minimum', value: 'price' },
+  { label: 'Temps de préparation', value: 'preparation_time' }
 ];
 
-const highlights = [
-  {
-    title: "Restaurants Populaires",
-    description: "Découvrez les restaurants les mieux notés",
-    icon: Star,
-    color: "text-yellow-500"
-  },
-  {
-    title: "Tendances",
-    description: "Les restaurants qui font le buzz",
-    icon: TrendingUp,
-    color: "text-blue-500"
-  },
-  {
-    title: "Livraison Rapide",
-    description: "Moins de 30 minutes",
-    icon: Clock,
-    color: "text-green-500"
-  },
-  {
-    title: "Favoris",
-    description: "Vos restaurants préférés",
-    icon: Heart,
-    color: "text-red-500"
-  }
-];
-
-const Restaurants = () => {
+export default function Restaurants() {
   const [searchParams] = useSearchParams();
-  const [selectedCategory, setSelectedCategory] = useState('Tout');
-  const [priceRange, setPriceRange] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [viewMode, setViewMode] = useState<RestaurantViewMode>({ type: 'grid', gridColumns: 3 });
+  const [filters, setFilters] = useState<Filters>({});
+  const [sortBy, setSortBy] = useState('rating');
+
+  // Fetch restaurants with search and filters
+  const { data: restaurants = [], isLoading } = useQuery({
+    queryKey: ['restaurants', searchQuery, filters, sortBy],
+    queryFn: async () => {
+      let query = supabase
+        .from('restaurants')
+        .select('*');
+
+      // Apply text search
+      if (searchQuery) {
+        query = query.textSearch('search_vector', searchQuery);
+      }
+
+      // Apply filters
+      if (filters.cuisine_type?.length) {
+        query = query.in('cuisine_type', filters.cuisine_type);
+      }
+      if (filters.price_range) {
+        query = query.eq('price_range', filters.price_range);
+      }
+      if (filters.rating) {
+        query = query.gte('rating', filters.rating);
+      }
+      if (filters.isOpen) {
+        // We'll need a more complex query here to check opening hours
+        // This is just a placeholder
+        query = query.eq('status', 'open');
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching restaurants:', error);
+        return [];
+      }
+
+      // Convert to Restaurant type and sort
+      return (data as Restaurant[]).sort((a, b) => {
+        switch (sortBy) {
+          case 'rating':
+            return (b.rating || 0) - (a.rating || 0);
+          case 'distance':
+            return (a.distance || 0) - (b.distance || 0);
+          case 'price':
+            return (a.minimum_order || 0) - (b.minimum_order || 0);
+          case 'preparation_time':
+            return (a.average_prep_time || 0) - (b.average_prep_time || 0);
+          default:
+            return 0;
+        }
+      });
+    }
+  });
+
+  const handleRestaurantClick = (restaurantId: string) => {
+    navigate(`/restaurants/${restaurantId}/menu`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-8">
@@ -73,68 +109,66 @@ const Restaurants = () => {
           </p>
         </motion.div>
 
-        {/* Highlights Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {highlights.map((highlight, index) => (
-            <motion.div
-              key={highlight.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <Card className="bg-white/5 backdrop-blur-lg border-gray-800 hover:bg-white/10 transition-all duration-300">
-                <CardHeader className="flex flex-row items-center space-x-4">
-                  <highlight.icon className={`w-8 h-8 ${highlight.color}`} />
-                  <div>
-                    <CardTitle className="text-white">{highlight.title}</CardTitle>
-                    <p className="text-sm text-gray-400">{highlight.description}</p>
-                  </div>
-                </CardHeader>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-        
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <SearchBar 
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-          />
-          <RestaurantFilters
-            priceRange={priceRange}
-            setPriceRange={setPriceRange}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-          />
+          <div className="flex-1">
+            <SearchBar 
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <RestaurantFilters
+              filters={filters}
+              onChange={setFilters}
+            />
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Trier par" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex rounded-md shadow-sm">
+              <Button
+                variant={viewMode.type === 'grid' ? 'default' : 'outline'}
+                className="rounded-l-md rounded-r-none"
+                onClick={() => setViewMode({ type: 'grid', gridColumns: 3 })}
+              >
+                <ViewGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode.type === 'map' ? 'default' : 'outline'}
+                className="rounded-l-none rounded-r-md"
+                onClick={() => setViewMode({ type: 'map' })}
+              >
+                <Map className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <CategoryList
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-          />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
+        {viewMode.type === 'grid' ? (
           <RestaurantGrid
-            searchQuery={searchQuery}
-            selectedCategory={selectedCategory}
-            priceRange={priceRange}
-            sortBy={sortBy}
+            restaurants={restaurants}
+            isLoading={isLoading}
+            onRestaurantClick={handleRestaurantClick}
+            columns={viewMode.gridColumns}
           />
-        </motion.div>
+        ) : (
+          <RestaurantMap
+            restaurants={restaurants}
+            onRestaurantClick={handleRestaurantClick}
+          />
+        )}
       </div>
     </div>
   );
-};
-
-export default Restaurants;
+}

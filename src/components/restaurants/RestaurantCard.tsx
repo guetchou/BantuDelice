@@ -1,8 +1,8 @@
 
 import { Card } from "@/components/ui/card";
-import { Star, Clock, MapPin, TrendingUp } from "lucide-react";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { Star, Clock, MapPin, TrendingUp, Bike, ShoppingBag } from "lucide-react";
 import type { Restaurant } from '@/types/restaurant';
 
 interface RestaurantCardProps {
@@ -10,7 +10,24 @@ interface RestaurantCardProps {
   onClick: (restaurantId: string) => void;
 }
 
-const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
+export default function RestaurantCard({ restaurant, onClick }: RestaurantCardProps) {
+  const isOpen = () => {
+    if (!restaurant.business_hours?.regular) return false;
+    const now = new Date();
+    const day = now.toLocaleDateString('en-US', { weekday: 'monday' }).toLowerCase();
+    const hours = restaurant.business_hours.regular[day];
+    if (!hours) return false;
+
+    const currentTime = now.getHours() * 100 + now.getMinutes();
+    const [openHour, openMin] = hours.open.split(':').map(Number);
+    const [closeHour, closeMin] = hours.close.split(':').map(Number);
+    
+    const openTime = openHour * 100 + openMin;
+    const closeTime = closeHour * 100 + closeMin;
+    
+    return currentTime >= openTime && currentTime <= closeTime;
+  };
+
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -23,20 +40,29 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
       >
         <div className="relative h-48">
           <img
-            src={restaurant.banner_image_url || 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop'}
+            src={restaurant.banner_image_url || '/placeholder-restaurant.jpg'}
             alt={restaurant.name}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-            onError={(e) => {
-              e.currentTarget.src = 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop';
-            }}
           />
-          {restaurant.cuisine_type && (
-            <div className="absolute bottom-4 left-4 bg-black/75 backdrop-blur-sm px-3 py-1 rounded-full">
-              <span className="text-sm font-medium text-white">
+          <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black/75 to-transparent" />
+          
+          <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+            {restaurant.cuisine_type && (
+              <Badge variant="secondary" className="bg-black/75 backdrop-blur-sm">
                 {restaurant.cuisine_type}
-              </span>
-            </div>
-          )}
+              </Badge>
+            )}
+            {isOpen() ? (
+              <Badge variant="secondary" className="bg-green-500">
+                Ouvert
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-red-500">
+                Fermé
+              </Badge>
+            )}
+          </div>
+
           {restaurant.trending && (
             <Badge className="absolute top-4 right-4 bg-orange-500">
               <TrendingUp className="w-4 h-4 mr-1" />
@@ -50,11 +76,16 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
             {restaurant.name}
           </h3>
           
-          <div className="flex items-center text-sm text-gray-300 mb-4 gap-4">
+          <p className="text-sm text-gray-300 mb-4 line-clamp-2">
+            {restaurant.description}
+          </p>
+
+          <div className="flex items-center gap-4 text-sm text-gray-300 mb-4">
             {restaurant.rating && (
               <div className="flex items-center">
                 <Star className="w-5 h-5 text-yellow-400" />
-                <span className="ml-1 font-medium">{restaurant.rating}</span>
+                <span className="ml-1 font-medium">{restaurant.rating.toFixed(1)}</span>
+                <span className="ml-1 text-gray-400">({restaurant.total_ratings})</span>
               </div>
             )}
             <div className="flex items-center">
@@ -63,14 +94,31 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
             </div>
           </div>
           
-          <div className="flex items-center text-sm text-gray-400 mt-auto">
-            <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-            <span className="truncate">{restaurant.address}</span>
+          <div className="mt-auto space-y-2">
+            <div className="flex items-center text-sm text-gray-400">
+              <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+              <span className="truncate">{restaurant.address}</span>
+            </div>
+
+            <div className="flex items-center gap-3 text-sm text-gray-400">
+              {restaurant.delivery_fee !== null && (
+                <div className="flex items-center">
+                  <Bike className="w-4 h-4 mr-1" />
+                  <span>
+                    {restaurant.delivery_fee === 0 ? 'Livraison gratuite' : `${restaurant.delivery_fee.toLocaleString()} XAF`}
+                  </span>
+                </div>
+              )}
+              {restaurant.minimum_order > 0 && (
+                <div className="flex items-center">
+                  <ShoppingBag className="w-4 h-4 mr-1" />
+                  <span>Min. {restaurant.minimum_order.toLocaleString()} XAF</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Card>
     </motion.div>
   );
-};
-
-export default RestaurantCard;
+}
