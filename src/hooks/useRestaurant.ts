@@ -28,7 +28,7 @@ export const useRestaurant = (restaurantId: string) => {
         if (data.business_hours) {
           businessHours = typeof data.business_hours === 'string' 
             ? JSON.parse(data.business_hours)
-            : data.business_hours as BusinessHours;
+            : data.business_hours as unknown as BusinessHours;
         } else {
           businessHours = {
             regular: {
@@ -73,11 +73,12 @@ export const useRestaurant = (restaurantId: string) => {
         minimum_order: data.minimum_order || 0,
         delivery_fee: data.delivery_fee || 0,
         business_hours: businessHours,
-        special_days: data.special_days || [],
+        special_days: data.special_days as string[] || [],
         cuisine_type: data.cuisine_type || '',
         banner_image_url: data.banner_image_url || '',
         logo_url: data.logo_url || '',
-        rating: data.rating || 0
+        rating: data.rating || 0,
+        trending: data.trending || false
       };
 
       return restaurant;

@@ -1,5 +1,5 @@
 
-import { MapPin, Clock, Star, Phone, Globe, AlertTriangle } from "lucide-react";
+import { MapPin, Clock, Star, Phone, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import DeliveryMap from "@/components/DeliveryMap";
 import { motion } from "framer-motion";
@@ -41,6 +41,9 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
           src={restaurant.banner_image_url || "https://images.unsplash.com/photo-1514933651103-005eec06c04b"}
           alt={restaurant.name}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = "https://images.unsplash.com/photo-1514933651103-005eec06c04b";
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">

@@ -26,6 +26,9 @@ const RestaurantCard = ({ restaurant, onClick }: RestaurantCardProps) => {
             src={restaurant.banner_image_url || 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop'}
             alt={restaurant.name}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop';
+            }}
           />
           {restaurant.cuisine_type && (
             <div className="absolute bottom-4 left-4 bg-black/75 backdrop-blur-sm px-3 py-1 rounded-full">

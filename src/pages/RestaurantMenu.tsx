@@ -29,18 +29,15 @@ export default function RestaurantMenu() {
   const { data: menuItems, isLoading: isLoadingMenu, error: menuError } = useMenuItems(restaurantId);
   const { addToCart, removeFromCart, cart } = useCart();
 
-  const handleAddToCart = useCallback((item: CartItem) => {
-    addToCart({
-      id: item.id,
-      name: item.name,
-      price: item.price,
+  const handleAddToCart = useCallback((item: Omit<CartItem, "quantity">) => {
+    // Ensure we're creating a valid CartItem
+    const cartItem: CartItem = {
+      ...item,
       restaurant_id: restaurantId,
-      quantity: 1,
-      image_url: item.image_url,
-      category: item.category,
-      description: item.description,
-      customization_options: item.customization_options || {}
-    });
+      quantity: 1
+    };
+    
+    addToCart(cartItem);
     
     toast({
       title: "Ajouté au panier",
@@ -158,7 +155,6 @@ export default function RestaurantMenu() {
                             name: item.name,
                             price: item.price,
                             restaurant_id: restaurantId,
-                            quantity: 1,
                             image_url: item.image_url,
                             category: item.category,
                             description: item.description,
@@ -189,10 +185,11 @@ export default function RestaurantMenu() {
                         if (quantity <= 0) {
                           removeFromCart(itemId);
                         } else {
+                          // Add type assertion to handle the CartItem format
                           addToCart({
                             ...item,
                             quantity
-                          });
+                          } as CartItem);
                         }
                       }
                     }}

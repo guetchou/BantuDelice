@@ -47,9 +47,62 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
           throw error;
         }
 
-        let filteredData = restaurantsData as Restaurant[];
+        // Convertir les données en objets Restaurant correctement typés
+        const typedRestaurants: Restaurant[] = (restaurantsData || []).map(restaurant => {
+          // Manipuler les business_hours pour assurer la conformité au type BusinessHours
+          let businessHours = {
+            regular: {
+              monday: { open: '08:00', close: '22:00' },
+              tuesday: { open: '08:00', close: '22:00' },
+              wednesday: { open: '08:00', close: '22:00' },
+              thursday: { open: '08:00', close: '22:00' },
+              friday: { open: '08:00', close: '22:00' },
+              saturday: { open: '08:00', close: '22:00' },
+              sunday: { open: '08:00', close: '22:00' }
+            }
+          };
+
+          try {
+            if (restaurant.business_hours) {
+              const parsedHours = typeof restaurant.business_hours === 'string'
+                ? JSON.parse(restaurant.business_hours)
+                : restaurant.business_hours;
+              
+              if (parsedHours.regular) {
+                businessHours = parsedHours;
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing business hours:', e);
+          }
+
+          return {
+            id: restaurant.id,
+            name: restaurant.name || 'Restaurant sans nom',
+            description: restaurant.description || '',
+            address: restaurant.address || '',
+            latitude: restaurant.latitude || 0,
+            longitude: restaurant.longitude || 0,
+            phone: restaurant.phone || '',
+            email: restaurant.email || '',
+            status: (restaurant.status as "open" | "closed" | "busy") || 'closed',
+            average_prep_time: restaurant.average_prep_time || 30,
+            banner_image_url: restaurant.banner_image_url || '',
+            logo_url: restaurant.logo_url || '',
+            cuisine_type: restaurant.cuisine_type || '',
+            rating: restaurant.rating || 0,
+            total_ratings: restaurant.total_ratings || 0,
+            minimum_order: restaurant.minimum_order || 0,
+            delivery_fee: restaurant.delivery_fee || 0,
+            business_hours: businessHours,
+            trending: restaurant.trending || false,
+            special_days: []
+          };
+        });
         
         // Filter by price range
+        let filteredData = typedRestaurants;
+        
         if (priceRange !== 'all') {
           filteredData = filteredData.filter(restaurant => {
             const avgPrice = restaurant.minimum_order;
@@ -123,7 +176,7 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
         <RestaurantCard
           key={restaurant.id}
           restaurant={restaurant}
-          onClick={() => handleRestaurantClick(restaurant.id)}
+          onClick={handleRestaurantClick}
         />
       ))}
     </div>

@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { MenuItem } from '@/types/menu';
+import type { MenuItem } from '@/types/restaurant';
 
 export const useMenuItems = (restaurantId: string) => {
   return useQuery<MenuItem[]>({
@@ -40,12 +40,12 @@ export const useMenuItems = (restaurantId: string) => {
           restaurant_id: item.restaurant_id,
           available: item.available !== false,
           created_at: item.created_at,
-          updated_at: item.updated_at || item.created_at,
+          updated_at: item.created_at, // Fallback if updated_at is missing
           ingredients: Array.isArray(item.dietary_preferences) ? item.dietary_preferences : [],
-          rating: 4.5,
+          rating: item.rating || 4.5,
           preparation_time: item.average_prep_time || 30,
           dietary_preferences: Array.isArray(item.dietary_preferences) ? item.dietary_preferences : [],
-          customization_options: customizationOptions,
+          customization_options: customizationOptions as Record<string, any>,
           nutritional_info: {
             calories: null,
             protein: null,
@@ -54,7 +54,7 @@ export const useMenuItems = (restaurantId: string) => {
             fiber: null
           },
           allergens: [],
-          popularity_score: 0
+          popularity_score: item.popularity_score || 0
         };
       });
     },

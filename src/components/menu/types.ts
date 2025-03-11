@@ -1,6 +1,6 @@
 
-import { MenuItem } from "@/types/menu";
-import { CartItem } from "@/types/cart";
+import type { MenuItem } from "@/types/restaurant";
+import type { CartItem } from "@/types/cart";
 
 export type { MenuItem };  // Export MenuItem type explicitly
 

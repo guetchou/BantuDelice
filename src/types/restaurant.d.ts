@@ -39,3 +39,30 @@ export interface BusinessHours {
     };
   }[];
 }
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image_url?: string;
+  category: string;
+  restaurant_id: string;
+  available: boolean;
+  created_at: string;
+  updated_at: string;
+  ingredients?: string[];
+  rating?: number;
+  preparation_time?: number;
+  dietary_preferences?: string[];
+  customization_options?: Record<string, any>;
+  nutritional_info?: {
+    calories?: number | null;
+    protein?: number | null;
+    carbs?: number | null;
+    fat?: number | null;
+    fiber?: number | null;
+  };
+  allergens?: string[];
+  popularity_score?: number;
+}
