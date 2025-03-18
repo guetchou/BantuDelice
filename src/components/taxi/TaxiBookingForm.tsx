@@ -3,25 +3,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
-import { Database } from '@/integrations/supabase/types';
-import { Car, CreditCard, Clock, MapPin, Navigation } from "lucide-react";
+import { Car } from "lucide-react";
 import LocationSection from './LocationSection';
-import VehicleSection from './VehicleSection';
-import PaymentSection from './PaymentSection';
-import PickupTimeSection from './PickupTimeSection';
-import NearbyDrivers from './NearbyDrivers';
 import RideSharing from './RideSharing';
-import { useTaxiBooking } from '@/hooks/useTaxiBooking';
+import NearbyDrivers from './NearbyDrivers';
 import { calculateDistance } from '@/utils/deliveryOptimization';
-
-type TaxiRide = Database['public']['Tables']['taxi_rides']['Row'];
-type TaxiPayment = Database['public']['Tables']['taxi_payments']['Row'];
+import StepIndicator from './StepIndicator';
+import EnhancedVehicleSection from './EnhancedVehicleSection';
+import EnhancedPickupTimeSection from './EnhancedPickupTimeSection';
+import EnhancedPaymentSection from './EnhancedPaymentSection';
+import BookingExtras from './BookingExtras';
+import PriceEstimation from './PriceEstimation';
 
 interface BookingFormState {
   pickupAddress: string;
@@ -42,7 +37,6 @@ interface BookingFormState {
 
 export default function TaxiBookingForm() {
   const navigate = useNavigate();
-  const { createBooking } = useTaxiBooking();
   
   const [formState, setFormState] = useState<BookingFormState>({
     pickupAddress: '',
@@ -213,6 +207,23 @@ export default function TaxiBookingForm() {
     setSelectedDriver(driver);
   };
   
+  const getDistanceEstimate = () => {
+    if (
+      formState.pickupLatitude && 
+      formState.pickupLongitude && 
+      formState.destinationLatitude && 
+      formState.destinationLongitude
+    ) {
+      return calculateDistance(
+        formState.pickupLatitude,
+        formState.pickupLongitude,
+        formState.destinationLatitude,
+        formState.destinationLongitude
+      );
+    }
+    return null;
+  };
+  
   const validateCurrentStep = () => {
     switch (currentStep) {
       case 1: // Location
@@ -264,7 +275,7 @@ export default function TaxiBookingForm() {
         return;
       }
       
-      const rideData = {
+      const newRideData = {
         user_id: user.id,
         pickup_address: formState.pickupAddress,
         destination_address: formState.destinationAddress,
@@ -285,15 +296,15 @@ export default function TaxiBookingForm() {
         special_instructions: formState.specialInstructions
       };
       
-      const { data: rideData, error: rideError } = await supabase
+      const { data, error } = await supabase
         .from('taxi_rides')
-        .insert(rideData)
+        .insert(newRideData)
         .select()
         .single();
         
-      if (rideError) throw rideError;
+      if (error) throw error;
       
-      setCreatedRideId(rideData.id);
+      setCreatedRideId(data.id);
       setCurrentStep(prev => prev + 1);
       
       toast.success("Votre réservation a été créée");
@@ -321,7 +332,8 @@ export default function TaxiBookingForm() {
           .insert({
             ride_id: createdRideId,
             driver_id: selectedDriver.id,
-            status: 'pending'
+            status: 'pending',
+            requested_at: new Date().toISOString()
           });
           
         if (error) throw error;
@@ -343,45 +355,11 @@ export default function TaxiBookingForm() {
     }
   };
 
-  return (
-    <Card className="max-w-xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Car className="h-5 w-5 text-primary" />
-          Réservation de taxi
-        </CardTitle>
-        <CardDescription>
-          Remplissez le formulaire ci-dessous pour réserver votre course
-        </CardDescription>
-        
-        {/* Step indicator */}
-        <div className="w-full mt-4">
-          <div className="flex justify-between mb-2">
-            <span className={`text-xs ${currentStep >= 1 ? 'text-primary' : 'text-gray-400'}`}>
-              Adresse
-            </span>
-            <span className={`text-xs ${currentStep >= 2 ? 'text-primary' : 'text-gray-400'}`}>
-              Véhicule
-            </span>
-            <span className={`text-xs ${currentStep >= 3 ? 'text-primary' : 'text-gray-400'}`}>
-              Détails
-            </span>
-            <span className={`text-xs ${currentStep >= 4 ? 'text-primary' : 'text-gray-400'}`}>
-              Chauffeur
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / 4) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        {/* Step 1: Location */}
-        {currentStep === 1 && (
+  // Render different content based on current step
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1: // Location
+        return (
           <LocationSection
             pickupAddress={formState.pickupAddress}
             setPickupAddress={(val) => updateFormState({ pickupAddress: val })}
@@ -390,12 +368,11 @@ export default function TaxiBookingForm() {
             onLocationSelect={handleLocationSelect}
             onUseCurrentLocation={handleUseCurrentLocation}
           />
-        )}
-        
-        {/* Step 2: Vehicle Selection */}
-        {currentStep === 2 && (
+        );
+      case 2: // Vehicle Selection
+        return (
           <div className="space-y-6">
-            <VehicleSection
+            <EnhancedVehicleSection
               selectedVehicleType={formState.vehicleType}
               onVehicleSelect={(val) => updateFormState({ vehicleType: val })}
             />
@@ -409,33 +386,17 @@ export default function TaxiBookingForm() {
             />
             
             {formState.pickupLatitude && formState.destinationLatitude && (
-              <div className="bg-green-50 p-3 rounded-md border border-green-200">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-700">Distance estimée:</span>
-                  <span className="font-semibold">
-                    {calculateDistance(
-                      formState.pickupLatitude,
-                      formState.pickupLongitude!,
-                      formState.destinationLatitude,
-                      formState.destinationLongitude!
-                    ).toFixed(1)} km
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-sm text-gray-700">Prix estimé:</span>
-                  <span className="font-semibold text-lg text-primary">
-                    {estimatedPrice} FCFA
-                  </span>
-                </div>
-              </div>
+              <PriceEstimation 
+                estimatedPrice={estimatedPrice} 
+                distance={getDistanceEstimate() || undefined}
+              />
             )}
           </div>
-        )}
-        
-        {/* Step 3: Time and Payment */}
-        {currentStep === 3 && (
+        );
+      case 3: // Time and Payment
+        return (
           <div className="space-y-6">
-            <PickupTimeSection
+            <EnhancedPickupTimeSection
               pickupTime={formState.pickupTime}
               scheduledTime={formState.scheduledTime}
               onPickupTimeChange={(val) => updateFormState({ pickupTime: val })}
@@ -444,41 +405,28 @@ export default function TaxiBookingForm() {
             
             <Separator />
             
-            <PaymentSection
+            <EnhancedPaymentSection
               paymentMethod={formState.paymentMethod}
               onPaymentMethodChange={(val) => updateFormState({ paymentMethod: val })}
               estimatedPrice={estimatedPrice}
             />
             
-            <div className="space-y-2">
-              <Label htmlFor="special-instructions">Instructions spéciales (facultatif)</Label>
-              <Input
-                id="special-instructions"
-                placeholder="Informations supplémentaires pour le chauffeur"
-                value={formState.specialInstructions}
-                onChange={(e) => updateFormState({ specialInstructions: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="promo-code">Code promotionnel (facultatif)</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="promo-code"
-                  placeholder="Entrez un code promo"
-                  value={formState.promoCode}
-                  onChange={(e) => updateFormState({ promoCode: e.target.value })}
-                />
-                <Button variant="outline" type="button">
-                  Appliquer
-                </Button>
-              </div>
-            </div>
+            <BookingExtras
+              specialInstructions={formState.specialInstructions}
+              promoCode={formState.promoCode}
+              onSpecialInstructionsChange={(val) => updateFormState({ specialInstructions: val })}
+              onPromoCodeChange={(val) => updateFormState({ promoCode: val })}
+              onApplyPromoCode={() => {
+                if (formState.promoCode) {
+                  toast.info("Vérification du code promo...");
+                  // Implementation for promo code validation would go here
+                }
+              }}
+            />
           </div>
-        )}
-        
-        {/* Step 4: Driver Selection */}
-        {currentStep === 4 && createdRideId && (
+        );
+      case 4: // Driver Selection
+        return createdRideId ? (
           <div className="space-y-6">
             <NearbyDrivers
               pickupLatitude={formState.pickupLatitude!}
@@ -496,7 +444,30 @@ export default function TaxiBookingForm() {
               </p>
             </div>
           </div>
-        )}
+        ) : (
+          <div>Une erreur est survenue lors de la création de la course.</div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Card className="max-w-xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Car className="h-5 w-5 text-primary" />
+          Réservation de taxi
+        </CardTitle>
+        <CardDescription>
+          Remplissez le formulaire ci-dessous pour réserver votre course
+        </CardDescription>
+        
+        <StepIndicator currentStep={currentStep} totalSteps={4} />
+      </CardHeader>
+      
+      <CardContent>
+        {renderStepContent()}
       </CardContent>
       
       <CardFooter className="flex justify-between border-t pt-6">

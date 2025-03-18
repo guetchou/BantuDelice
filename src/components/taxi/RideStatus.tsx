@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { TaxiRide } from '@/types/taxi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, Car, CreditCard } from 'lucide-react';
+import { Clock, MapPin, Car, CreditCard, Users } from 'lucide-react';
 
 interface RideStatusProps {
   rideId: string;
@@ -26,13 +26,13 @@ export default function RideStatus({ rideId }: RideStatusProps) {
       if (error) {
         console.error('Error fetching ride:', error);
       } else if (data) {
-        setRide({
+        const fetchedRide: TaxiRide = {
           id: data.id,
           user_id: data.user_id,
           pickup_address: data.pickup_address,
           destination_address: data.destination_address,
           pickup_time: data.pickup_time,
-          status: data.status,
+          status: data.status as 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled',
           driver_id: data.driver_id,
           estimated_price: data.estimated_price,
           actual_price: data.actual_price,
@@ -43,17 +43,19 @@ export default function RideStatus({ rideId }: RideStatusProps) {
           pickup_longitude: data.pickup_longitude,
           destination_latitude: data.destination_latitude,
           destination_longitude: data.destination_longitude,
-          special_instructions: data.special_instructions,
-          is_shared_ride: data.is_shared_ride,
-          max_passengers: data.max_passengers,
-          current_passengers: data.current_passengers,
-          estimated_arrival_time: data.estimated_arrival_time,
-          actual_arrival_time: data.actual_arrival_time,
-          distance_km: data.distance_km,
-          route_polyline: data.route_polyline,
-          promo_code_applied: data.promo_code_applied,
-          promo_discount: data.promo_discount
-        });
+          special_instructions: data.special_instructions || undefined,
+          is_shared_ride: data.is_shared_ride || false,
+          max_passengers: data.max_passengers || 0,
+          current_passengers: data.current_passengers || 0,
+          estimated_arrival_time: data.estimated_arrival_time || undefined,
+          actual_arrival_time: data.actual_arrival_time || undefined,
+          distance_km: data.distance_km || undefined,
+          route_polyline: data.route_polyline || undefined,
+          promo_code_applied: data.promo_code_applied || undefined,
+          promo_discount: data.promo_discount || undefined
+        };
+        
+        setRide(fetchedRide);
       }
       setLoading(false);
     };
@@ -165,6 +167,3 @@ export default function RideStatus({ rideId }: RideStatusProps) {
     </Card>
   );
 }
-
-// Add missing import
-import { Users } from 'lucide-react';
