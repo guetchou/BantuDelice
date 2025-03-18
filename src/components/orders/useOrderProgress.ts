@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { OrderStatus } from '@/types/order';
+import { formatTimeString } from '@/utils/dateFormatters';
 
 export function useOrderProgress(initialStatus: OrderStatus, orderId: string) {
   const [status, setStatus] = useState<OrderStatus>(initialStatus);
@@ -29,7 +30,8 @@ export function useOrderProgress(initialStatus: OrderStatus, orderId: string) {
           }
           
           if (payload.new && payload.new.estimated_delivery_time) {
-            setEstimatedTime(payload.new.estimated_delivery_time);
+            const formattedTime = formatTimeString(payload.new.estimated_delivery_time);
+            setEstimatedTime(formattedTime);
           }
 
           // Check if restaurant is open for this order
@@ -83,7 +85,8 @@ export function useOrderProgress(initialStatus: OrderStatus, orderId: string) {
       
       if (data) {
         if (data.estimated_delivery_time) {
-          setEstimatedTime(data.estimated_delivery_time);
+          const formattedTime = formatTimeString(data.estimated_delivery_time);
+          setEstimatedTime(formattedTime);
         }
         if (data.restaurant_id) {
           checkRestaurantOpenStatus(data.restaurant_id);
@@ -99,7 +102,7 @@ export function useOrderProgress(initialStatus: OrderStatus, orderId: string) {
         .single();
       
       if (data) {
-        setIsRestaurantOpen(data.is_open);
+        setIsRestaurantOpen(!!data.is_open);
       }
     };
 
@@ -112,20 +115,10 @@ export function useOrderProgress(initialStatus: OrderStatus, orderId: string) {
     };
   }, [orderId, initialStatus]);
 
-  const formatEstimatedTime = () => {
-    if (!estimatedTime) return null;
-    
-    const estTime = new Date(estimatedTime);
-    if (isNaN(estTime.getTime())) return null;
-    
-    return `${estTime.getHours().toString().padStart(2, '0')}:${estTime.getMinutes().toString().padStart(2, '0')}`;
-  };
-
   return {
     status,
     deliveryStatus,
     estimatedTime,
-    isRestaurantOpen,
-    formatEstimatedTime
+    isRestaurantOpen
   };
 }

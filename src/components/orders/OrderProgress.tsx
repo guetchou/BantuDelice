@@ -14,8 +14,7 @@ const OrderProgress = ({ status: initialStatus, orderId }: OrderProgressProps) =
     status,
     deliveryStatus,
     estimatedTime,
-    isRestaurantOpen,
-    formatEstimatedTime
+    isRestaurantOpen
   } = useOrderProgress(initialStatus, orderId);
 
   return (
@@ -28,7 +27,7 @@ const OrderProgress = ({ status: initialStatus, orderId }: OrderProgressProps) =
       <div className="flex justify-between items-center relative mb-2">
         {estimatedTime && (
           <div className="absolute -top-6 right-0 text-sm text-gray-500">
-            Livraison estimée: {formatEstimatedTime()}
+            Livraison estimée: {estimatedTime}
           </div>
         )}
         
