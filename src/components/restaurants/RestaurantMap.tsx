@@ -1,10 +1,33 @@
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import type { Restaurant } from '@/types/restaurant';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { MapPin } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icons in Leaflet with React
+const defaultIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = defaultIcon;
+
+// Component to update map view when center prop changes
+function MapViewUpdater({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
 
 interface RestaurantMapProps {
   restaurants: Restaurant[];
@@ -21,6 +44,7 @@ export default function RestaurantMap({
 }: RestaurantMapProps) {
   const { toast } = useToast();
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(center);
 
   const handleLocationClick = () => {
     if (!navigator.geolocation) {
@@ -34,7 +58,12 @@ export default function RestaurantMap({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setUserLocation([position.coords.latitude, position.coords.longitude]);
+        const newLocation: [number, number] = [
+          position.coords.latitude,
+          position.coords.longitude
+        ];
+        setUserLocation(newLocation);
+        setMapCenter(newLocation);
       },
       () => {
         toast({
@@ -57,13 +86,15 @@ export default function RestaurantMap({
       </Button>
 
       <MapContainer
-        center={userLocation || center}
+        center={mapCenter}
         zoom={zoom}
         className="h-full w-full"
       >
+        <MapViewUpdater center={userLocation || mapCenter} />
+        
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; OpenStreetMap contributors'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
         {restaurants.map((restaurant) => (

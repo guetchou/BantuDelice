@@ -1,12 +1,18 @@
-import * as React from "react"
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { Check } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+"use client";
+
+import * as React from "react";
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import { Check } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+export interface CheckboxProps
+  extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {}
 
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
+  CheckboxProps
 >(({ className, ...props }, ref) => (
   <CheckboxPrimitive.Root
     ref={ref}
@@ -19,10 +25,43 @@ const Checkbox = React.forwardRef<
     <CheckboxPrimitive.Indicator
       className={cn("flex items-center justify-center text-current")}
     >
-      <Check className="h-4 w-4" />
+      <Check className="h-3.5 w-3.5" />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
-))
-Checkbox.displayName = CheckboxPrimitive.Root.displayName
+));
+Checkbox.displayName = CheckboxPrimitive.Root.displayName;
 
-export { Checkbox }
+// CheckboxGroup and CheckboxItem components
+export interface CheckboxGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
+
+export const CheckboxGroup = React.forwardRef<
+  HTMLDivElement,
+  CheckboxGroupProps
+>(({ className, children, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("space-y-2", className)}
+    {...props}
+  >
+    {children}
+  </div>
+));
+CheckboxGroup.displayName = "CheckboxGroup";
+
+export interface CheckboxItemProps extends CheckboxProps {}
+
+export const CheckboxItem = React.forwardRef<
+  React.ElementRef<typeof CheckboxPrimitive.Root>,
+  CheckboxItemProps
+>(({ className, ...props }, ref) => (
+  <Checkbox
+    ref={ref}
+    className={cn("", className)}
+    {...props}
+  />
+));
+CheckboxItem.displayName = "CheckboxItem";
+
+export { Checkbox };
