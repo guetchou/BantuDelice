@@ -10,6 +10,9 @@ import { Users, Banknote, Clock, Shield } from "lucide-react";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { TaxiRide, RideShareRequest } from '@/types/taxi';
+import { NearbyRidesList } from './ride-sharing/NearbyRidesList';
+import { PriceDiscount } from './ride-sharing/PriceDiscount';
+import { RideSharingBenefits } from './ride-sharing/RideSharingBenefits';
 
 interface RideSharingProps {
   rideId?: string;
@@ -49,8 +52,7 @@ const RideSharing: React.FC<RideSharingProps> = ({
         
       if (!currentRide) return;
       
-      // Then find nearby rides that could be shared
-      // In a real app, you would use geospatial queries to find rides with similar routes
+      // Find nearby rides that could be shared
       const { data: ridesData } = await supabase
         .from('taxi_rides')
         .select('*')
@@ -60,13 +62,13 @@ const RideSharing: React.FC<RideSharingProps> = ({
         
       if (ridesData && ridesData.length > 0) {
         // Convert to our TaxiRide type to ensure type safety
-        const rides: TaxiRide[] = ridesData.map(ride => ({
+        const rides = ridesData.map(ride => ({
           id: ride.id,
           user_id: ride.user_id,
           pickup_address: ride.pickup_address,
           destination_address: ride.destination_address,
           pickup_time: ride.pickup_time,
-          status: ride.status,
+          status: ride.status as TaxiRide['status'],
           driver_id: ride.driver_id,
           estimated_price: ride.estimated_price,
           actual_price: ride.actual_price,
@@ -80,11 +82,15 @@ const RideSharing: React.FC<RideSharingProps> = ({
           special_instructions: ride.special_instructions,
           is_shared_ride: ride.is_shared_ride,
           max_passengers: ride.max_passengers,
-          current_passengers: ride.current_passengers
+          current_passengers: ride.current_passengers,
+          estimated_arrival_time: ride.estimated_arrival_time,
+          actual_arrival_time: ride.actual_arrival_time,
+          distance_km: ride.distance_km,
+          route_polyline: ride.route_polyline,
+          promo_code_applied: ride.promo_code_applied,
+          promo_discount: ride.promo_discount
         }));
 
-        // Filter to only show rides that are close to your pickup and destination
-        // This is a simplified version - in production you'd use proper spatial calculations
         setNearbySharedRides(rides);
       }
     } catch (error) {
@@ -191,58 +197,18 @@ const RideSharing: React.FC<RideSharingProps> = ({
             />
           </div>
           
-          <div className="bg-primary/10 p-3 rounded-md flex justify-between">
-            <div className="flex items-center">
-              <Banknote className="h-5 w-5 text-primary mr-2" />
-              <span>Prix estimé avec réduction</span>
-            </div>
-            <div className="flex items-center">
-              <span className="line-through text-gray-500 mr-2">{initialPrice} FCFA</span>
-              <Badge variant="outline" className="bg-primary/20 text-primary">
-                {calculateDiscountedPrice()} FCFA
-              </Badge>
-            </div>
-          </div>
+          <PriceDiscount 
+            initialPrice={initialPrice} 
+            discountedPrice={calculateDiscountedPrice()} 
+          />
           
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-gray-600">Sécurisé et vérifié</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-amber-500" />
-              <span className="text-sm text-gray-600">+5-10 min sur le temps de trajet</span>
-            </div>
-          </div>
+          <RideSharingBenefits />
           
-          {nearbySharedRides.length > 0 && (
-            <div className="mt-4 space-y-3">
-              <h4 className="text-sm font-medium">Covoiturages disponibles à proximité</h4>
-              
-              {nearbySharedRides.map(ride => (
-                <Card key={ride.id} className="p-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium">
-                        Trajet vers {ride.destination_address.split(',')[0]}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Départ dans ~{Math.floor(Math.random() * 10) + 5} min
-                      </p>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => joinSharedRide(ride.id)}
-                      disabled={loading}
-                    >
-                      Rejoindre
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
+          <NearbyRidesList 
+            rides={nearbySharedRides} 
+            loading={loading} 
+            onJoinRide={joinSharedRide} 
+          />
         </CardContent>
       )}
     </Card>
