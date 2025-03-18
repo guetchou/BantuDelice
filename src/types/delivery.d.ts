@@ -9,7 +9,7 @@ export interface DeliveryDriver {
   current_longitude: number;
   current_location?: string;
   is_available: boolean;
-  status: 'online' | 'offline' | 'delivering';
+  status: 'online' | 'offline' | 'delivering' | 'available' | 'busy' | 'on_break';
   vehicle_type?: 'bike' | 'car' | 'scooter' | 'walk';
   total_deliveries: number;
   average_rating: number;
@@ -77,6 +77,10 @@ export interface DeliveryTracking {
   longitude: number;
   timestamp: string;
   notes?: string;
+  delivered_at?: string;
+  picked_up_at?: string;
+  updated_at?: string;
+  delivery_user_id?: string;
 }
 
 export interface ExternalDeliveryService {
@@ -129,6 +133,7 @@ export interface DeliveryMessage {
   message: string;
   created_at: string;
   read: boolean;
+  order_id?: string;
 }
 
 // Type pour la notation des livreurs
@@ -145,5 +150,5 @@ export interface DeliveryDriverRating {
   created_at: string;
 }
 
-export type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'failed';
+export type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'failed' | 'completed' | 'accepted' | 'rejected' | 'cancelled' | 'on_the_way';
 export type DeliveryType = 'restaurant' | 'external' | 'pickup';

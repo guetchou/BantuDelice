@@ -8,6 +8,7 @@ import DeliveryDriverRating from './DeliveryDriverRating';
 import DeliveryRating from './DeliveryRating';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingBag, User } from 'lucide-react';
+import { DeliveryRequest } from '@/types/delivery';
 
 interface DeliveryOrderCompleteProps {
   orderId: string;
@@ -15,7 +16,7 @@ interface DeliveryOrderCompleteProps {
 }
 
 const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteProps) => {
-  const [deliveryRequest, setDeliveryRequest] = useState<any | null>(null);
+  const [deliveryRequest, setDeliveryRequest] = useState<DeliveryRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasRatedDelivery, setHasRatedDelivery] = useState(false);
   const [hasRatedDriver, setHasRatedDriver] = useState(false);
@@ -26,45 +27,68 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
       try {
         setLoading(true);
         
+        // Vérifier si la table delivery_requests existe
+        const { count, error: tableCheckError } = await supabase
+          .from('delivery_requests')
+          .select('*', { count: 'exact', head: true });
+          
+        if (tableCheckError) {
+          console.log('La table delivery_requests n\'existe pas encore');
+          setLoading(false);
+          return;
+        }
+        
         // Récupérer la demande de livraison
         const { data: requestData, error: requestError } = await supabase
           .from('delivery_requests')
           .select('*')
           .eq('order_id', orderId)
-          .single();
+          .maybeSingle();
           
         if (requestError && requestError.code !== 'PGRST116') {
           console.error('Erreur lors de la récupération de la demande de livraison:', requestError);
+          setLoading(false);
           return;
         }
         
-        setDeliveryRequest(requestData);
+        if (requestData) {
+          setDeliveryRequest(requestData as unknown as DeliveryRequest);
         
-        // Vérifier si l'utilisateur a déjà évalué la livraison
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user && requestData) {
-          // Vérifier notation restaurant
-          const { data: restaurantRating } = await supabase
-            .from('detailed_restaurant_reviews')
-            .select('id')
-            .eq('order_id', orderId)
-            .eq('user_id', user.id)
-            .maybeSingle();
-            
-          setHasRatedDelivery(!!restaurantRating);
+          // Vérifier si l'utilisateur a déjà évalué la livraison
+          const { data: { user } } = await supabase.auth.getUser();
           
-          // Vérifier notation livreur
-          if (requestData.assigned_driver_id) {
-            const { data: driverRating } = await supabase
-              .from('delivery_driver_ratings')
+          if (user && requestData) {
+            // Vérifier notation restaurant
+            const { data: restaurantRating } = await supabase
+              .from('detailed_restaurant_reviews')
               .select('id')
               .eq('order_id', orderId)
               .eq('user_id', user.id)
-              .eq('driver_id', requestData.assigned_driver_id)
               .maybeSingle();
-              
-            setHasRatedDriver(!!driverRating);
+                
+            setHasRatedDelivery(!!restaurantRating);
+            
+            // Vérifier notation livreur
+            if (requestData.assigned_driver_id) {
+              try {
+                const { count } = await supabase
+                  .from('delivery_driver_ratings')
+                  .select('*', { count: 'exact', head: true });
+                
+                // La table existe, on peut continuer
+                const { data: driverRating } = await supabase
+                  .from('delivery_driver_ratings')
+                  .select('id')
+                  .eq('order_id', orderId)
+                  .eq('user_id', user.id)
+                  .eq('driver_id', requestData.assigned_driver_id)
+                  .maybeSingle();
+                  
+                setHasRatedDriver(!!driverRating);
+              } catch (error) {
+                console.log('La table delivery_driver_ratings n\'existe pas encore');
+              }
+            }
           }
         }
       } catch (error) {
