@@ -103,14 +103,15 @@ const MobilePayment = ({
       // Si l'utilisateur veut sauvegarder la méthode de paiement
       if (saveMethod) {
         try {
-          // Vérifier d'abord si la table existe
-          const { count, error: tableCheckError } = await supabase
-            .from('user_payment_methods')
-            .select('*', { count: 'exact', head: true });
+          // Vérifier si la table existe en comptant le nombre de tables
+          const { count, error: metadataError } = await supabase
+            .rpc('check_table_exists', { table_name: 'user_payment_methods' });
             
-          // Si la table existe, on peut insérer la méthode de paiement
-          if (tableCheckError === null) {
-            const { data: paymentMethod, error: methodError } = await supabase
+          if (metadataError) {
+            console.warn('Erreur lors de la vérification de la table:', metadataError);
+          } else if (count && count > 0) {
+            // La table existe, on peut insérer la méthode de paiement
+            const { error: methodError } = await supabase
               .from('user_payment_methods')
               .insert({
                 user_id: user.id,

@@ -6,7 +6,7 @@ export interface Order {
   id: string;
   user_id: string;
   restaurant_id: string;
-  status: OrderStatus;
+  status: OrderStatus | string; // Rendre plus flexible pour compatibilité avec la BD
   total_amount: number;
   delivery_address: string;
   payment_status: string;
@@ -17,6 +17,14 @@ export interface Order {
   delivery_instructions?: string;
   items?: OrderItem[];
   loyalty_points_earned?: number;
+  
+  // Champs additionnels pour la compatibilité
+  accepted_at?: string;
+  completed_at?: string;
+  cancelled_at?: string;
+  actual_delivery_time?: string;
+  cancellation_reason?: string;
+  delivery_fee?: number;
 }
 
 export interface OrderItem {
@@ -37,7 +45,7 @@ export interface OrderItem {
 export interface OrderTrackingDetails {
   id: string;
   order_id: string;
-  status: 'preparing' | 'ready' | 'picked_up' | 'delivering' | 'delivered';
+  status: 'preparing' | 'ready' | 'picked_up' | 'delivering' | 'delivered' | string;
   timestamp: string;
   updated_at: string;
   estimated_delivery_time: string;
@@ -58,11 +66,16 @@ export interface Restaurant {
   website?: string;
   logo_url?: string;
   banner_image_url?: string;
-  cuisine_type: string[];
+  cuisine_type: string[] | string;
   price_range: number;
   rating: number;
   opening_hours: BusinessHours;
-  status: 'open' | 'busy' | 'closed';
+  status: 'open' | 'busy' | 'closed' | string;
+  
+  // Champs additionnels pour compatibilité
+  average_rating?: number; 
+  total_ratings?: number;
+  business_hours?: any;
 }
 
 export interface BusinessHours {
@@ -70,11 +83,13 @@ export interface BusinessHours {
     [key: string]: {
       open: string;
       close: string;
+      is_closed?: boolean;
     };
   };
   special?: {
     date: string;
     open: string;
     close: string;
+    is_closed?: boolean;
   }[];
 }
