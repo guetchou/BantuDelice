@@ -49,36 +49,31 @@ const DeliveryDriverRating = ({
             phone: driverData.phone || '',
             current_latitude: driverData.current_latitude,
             current_longitude: driverData.current_longitude,
-            current_location: driverData.current_location,
-            is_available: driverData.is_available || false,
-            status: driverData.status || 'offline',
-            vehicle_type: driverData.vehicle_type || 'bike',
-            total_deliveries: driverData.total_deliveries || 0,
-            average_rating: driverData.average_rating || 0,
-            profile_picture: driverData.profile_picture,
-            restaurant_id: driverData.restaurant_id,
-            commission_rate: driverData.commission_rate || 0,
-            total_earnings: driverData.total_earnings || 0,
+            is_available: driverData.is_available,
+            status: driverData.status,
+            average_rating: driverData.average_rating,
+            total_deliveries: driverData.total_deliveries,
+            total_earnings: driverData.total_earnings,
+            commission_rate: driverData.commission_rate,
             created_at: driverData.created_at,
-            updated_at: driverData.updated_at || driverData.created_at
+            updated_at: driverData.updated_at,
+            last_location_update: driverData.last_location_update
           });
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des informations du livreur:', error);
+        console.error('Error fetching driver data:', error);
       }
     };
 
-    if (driverId) {
-      fetchDriverInfo();
-    }
+    fetchDriverInfo();
   }, [driverId]);
 
   const handleSubmit = async () => {
-    if (speedRating === 0 || politenessRating === 0 || overallRating === 0) {
+    if (overallRating === 0) {
       toast({
-        title: 'Évaluation incomplète',
-        description: 'Veuillez évaluer toutes les catégories',
-        variant: 'destructive',
+        title: "Note requise",
+        description: "Veuillez donner une note globale au livreur",
+        variant: "destructive"
       });
       return;
     }
@@ -86,170 +81,157 @@ const DeliveryDriverRating = ({
     setSubmitting(true);
 
     try {
-      // Vérifier si la table existe
-      const { count, error: tableCheckError } = await supabase
-        .from('delivery_driver_ratings')
-        .select('*', { count: 'exact', head: true });
-        
-      if (tableCheckError) {
-        console.error('La table delivery_driver_ratings n\'existe pas encore:', tableCheckError);
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (!userData.user) {
         toast({
-          title: 'Évaluation enregistrée',
-          description: 'Votre évaluation a été enregistrée avec succès (simulation)',
-          variant: 'default',
+          title: "Erreur d'authentification",
+          description: "Vous devez être connecté pour évaluer un livreur",
+          variant: "destructive"
         });
-        if (onRatingSubmitted) onRatingSubmitted();
         return;
       }
-
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        throw new Error('Vous devez être connecté pour évaluer un livreur');
-      }
+      // Calculate the average rating (overall counts double)
+      const finalRating = Math.round(
+        (overallRating * 2 + speedRating + politenessRating) / 
+        (2 + (speedRating > 0 ? 1 : 0) + (politenessRating > 0 ? 1 : 0))
+      );
 
-      // Create rating
+      const ratingData: Partial<DeliveryDriverRating> = {
+        driver_id: driverId,
+        user_id: userData.user.id,
+        order_id: orderId,
+        rating: finalRating,
+        comment: comment || undefined
+      };
+
       const { error } = await supabase
         .from('delivery_driver_ratings')
-        .insert({
-          delivery_request_id: deliveryId,
-          order_id: orderId,
-          driver_id: driverId,
-          user_id: user.id,
-          speed_rating: speedRating,
-          politeness_rating: politenessRating,
-          overall_rating: overallRating,
-          comment: comment || null,
-          created_at: new Date().toISOString()
-        });
+        .insert([ratingData]);
 
       if (error) throw error;
 
-      // Update driver's average rating
-      // Cette partie peut être gérée côté serveur avec un déclencheur
-      // mais nous l'incluons ici pour être sûr
-      const { data: allRatings, error: ratingsError } = await supabase
-        .from('delivery_driver_ratings')
-        .select('overall_rating')
-        .eq('driver_id', driverId);
-
-      if (!ratingsError && allRatings && allRatings.length > 0) {
-        const totalRating = allRatings.reduce((sum, rating) => sum + rating.overall_rating, 0);
-        const avgRating = totalRating / allRatings.length;
-        
-        await supabase
-          .from('delivery_drivers')
-          .update({ 
-            average_rating: avgRating,
-            total_deliveries: allRatings.length
-          })
-          .eq('id', driverId);
-      }
-
-      toast({
-        title: 'Évaluation enregistrée',
-        description: 'Votre évaluation a été enregistrée avec succès',
-        variant: 'default',
+      // Update the driver's average rating
+      await supabase.rpc('update_driver_rating', { 
+        driver_id: driverId 
+      }).catch(err => {
+        console.error('Error updating driver rating:', err);
       });
 
-      if (onRatingSubmitted) onRatingSubmitted();
-
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement de l\'évaluation:', error);
       toast({
-        title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Une erreur est survenue',
-        variant: 'destructive',
+        title: "Merci pour votre évaluation",
+        description: "Votre avis nous aide à améliorer notre service de livraison"
+      });
+
+      if (onRatingSubmitted) {
+        onRatingSubmitted();
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'envoi de votre évaluation",
+        variant: "destructive"
       });
     } finally {
       setSubmitting(false);
     }
   };
-
-  const renderStars = (rating: number, setRating: (rating: number) => void) => {
-    return (
-      <div className="flex space-x-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => setRating(star)}
-            className="focus:outline-none"
-          >
-            <StarIcon
-              className={`h-6 w-6 ${
-                star <= rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'
-              }`}
-            />
-          </button>
-        ))}
-      </div>
-    );
-  };
+  
+  const RatingStars = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          className="focus:outline-none"
+        >
+          <StarIcon
+            className={`h-6 w-6 ${
+              star <= value ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="text-lg">Évaluer votre livreur</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
         {driver && (
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="h-12 w-12 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center">
+          <div className="flex items-center mb-4 p-3 bg-muted/20 rounded-lg">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
               {driver.profile_picture ? (
-                <img src={driver.profile_picture} alt={driver.name} className="h-full w-full object-cover" />
+                <img 
+                  src={driver.profile_picture} 
+                  alt={driver.name} 
+                  className="h-full w-full rounded-full object-cover"
+                />
               ) : (
-                <span className="text-lg font-semibold text-gray-600">{driver.name.charAt(0)}</span>
+                <span className="text-lg font-medium text-primary">
+                  {driver.name.charAt(0)}
+                </span>
               )}
             </div>
             <div>
-              <h3 className="font-medium">{driver.name}</h3>
-              <div className="text-sm text-gray-500">
-                {driver.vehicle_type === 'bike' ? 'À vélo' : 
-                driver.vehicle_type === 'car' ? 'En voiture' : 
-                driver.vehicle_type === 'scooter' ? 'En scooter' : 'À pied'}
-              </div>
+              <h4 className="font-medium">{driver.name}</h4>
+              <p className="text-sm text-muted-foreground">Livreur</p>
             </div>
           </div>
         )}
-      
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Rapidité de livraison</label>
-            {renderStars(speedRating, setSpeedRating)}
+
+        <div className="space-y-4 mt-4">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Note globale</span>
+              <RatingStars 
+                value={overallRating} 
+                onChange={setOverallRating} 
+              />
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Rapidité</span>
+              <RatingStars 
+                value={speedRating} 
+                onChange={setSpeedRating} 
+              />
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Courtoisie</span>
+              <RatingStars 
+                value={politenessRating} 
+                onChange={setPolitenessRating} 
+              />
+            </div>
           </div>
           
-          <div>
-            <label className="block text-sm font-medium mb-1">Politesse et amabilité</label>
-            {renderStars(politenessRating, setPolitenessRating)}
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Évaluation globale</label>
-            {renderStars(overallRating, setOverallRating)}
-          </div>
-          
-          <div>
-            <label htmlFor="comment" className="block text-sm font-medium mb-1">
+          <div className="space-y-2">
+            <label htmlFor="comment" className="block text-sm font-medium">
               Commentaire (optionnel)
             </label>
             <Textarea
               id="comment"
-              placeholder="Partagez votre expérience avec ce livreur..."
+              placeholder="Partagez votre expérience de livraison..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              rows={3}
-              className="w-full"
+              className="resize-none h-24"
             />
           </div>
           
           <Button 
             onClick={handleSubmit} 
-            disabled={submitting}
+            disabled={submitting || overallRating === 0}
             className="w-full"
           >
-            {submitting ? 'Envoi en cours...' : 'Soumettre l\'évaluation'}
+            {submitting ? "Envoi en cours..." : "Envoyer l'évaluation"}
           </Button>
         </div>
       </CardContent>

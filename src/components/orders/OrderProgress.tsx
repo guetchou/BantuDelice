@@ -1,128 +1,104 @@
 
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { OrderStatus as Status } from "@/types/order";
+import { CheckCircle, Circle, Clock, ChefHat, Truck, Package } from 'lucide-react';
+import { OrderStatus } from '@/types/order';
 
 interface OrderProgressProps {
-  status: Status | string;
-  estimatedTime?: number;
+  status: OrderStatus;
 }
 
-interface StepProps {
-  title: string;
-  description: string;
-  status: 'completed' | 'current' | 'upcoming';
-}
-
-const Step = ({ title, description, status }: StepProps) => {
-  return (
-    <div className="flex items-start mb-6 last:mb-0">
-      <div className="flex flex-col items-center mr-4">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
-          status === 'completed' ? 'bg-green-500 border-green-500 text-white' :
-          status === 'current' ? 'bg-blue-500 border-blue-500 text-white' :
-          'bg-transparent border-gray-600 text-gray-500'
-        }`}>
-          {status === 'completed' ? '✓' : ''}
-        </div>
-        {/* Vertical line connecting steps */}
-        <div className={`w-0.5 h-12 ${
-          status === 'completed' ? 'bg-green-500' :
-          status === 'current' ? 'bg-gradient-to-b from-blue-500 to-gray-600' :
-          'bg-gray-600'
-        }`}></div>
-      </div>
-      <div className="pt-1">
-        <h3 className="text-lg font-medium mb-1">{title}</h3>
-        <p className="text-sm text-gray-400">{description}</p>
-        {status === 'current' && (
-          <Badge variant="outline" className="mt-2 bg-blue-500/10 text-blue-400 border-blue-400">
-            En cours
-          </Badge>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const OrderProgress = ({ status, estimatedTime = 0 }: OrderProgressProps) => {
-  // Define all possible steps
-  const allSteps = [
+const OrderProgress = ({ status }: OrderProgressProps) => {
+  const steps = [
     {
       key: 'pending',
-      title: 'Commande reçue',
-      description: 'Votre commande a été reçue par le restaurant'
-    },
-    {
-      key: 'accepted',
-      title: 'Commande acceptée',
-      description: 'Le restaurant a accepté votre commande'
+      label: 'Commande reçue',
+      icon: Clock,
+      completedStatuses: ['accepted', 'preparing', 'prepared', 'delivering', 'delivered', 'completed'],
+      currentStatus: 'pending',
     },
     {
       key: 'preparing',
-      title: 'En préparation',
-      description: 'Vos plats sont en cours de préparation'
-    },
-    {
-      key: 'prepared',
-      title: 'Prête pour livraison',
-      description: 'Votre commande est prête et attend un livreur'
+      label: 'En préparation',
+      icon: ChefHat,
+      completedStatuses: ['prepared', 'delivering', 'delivered', 'completed'],
+      currentStatus: 'preparing',
+      previousStatuses: ['accepted']
     },
     {
       key: 'delivering',
-      title: 'En livraison',
-      description: 'Votre commande est en route'
+      label: 'En livraison',
+      icon: Truck,
+      completedStatuses: ['delivered', 'completed'],
+      currentStatus: 'delivering',
+      previousStatuses: ['prepared']
     },
     {
       key: 'delivered',
-      title: 'Livrée',
-      description: 'Votre commande a été livrée avec succès'
+      label: 'Livré',
+      icon: Package,
+      completedStatuses: ['completed'],
+      currentStatus: 'delivered',
+      previousStatuses: []
     }
   ];
 
-  // Status mapping to determine current step
-  const statusIndex = {
-    'pending': 0,
-    'accepted': 1,
-    'preparing': 2,
-    'prepared': 3,
-    'delivering': 4,
-    'delivered': 5,
-    'cancelled': -1
-  }[status] || 0;
+  const getStepStatus = (step: typeof steps[0]) => {
+    if (status === 'cancelled') {
+      return 'inactive';
+    }
+    
+    if (step.completedStatuses.includes(status) || status === step.currentStatus) {
+      return 'completed';
+    }
+    
+    if (status === step.currentStatus || (step.previousStatuses && step.previousStatuses.includes(status))) {
+      return 'current';
+    }
+    
+    return 'waiting';
+  };
 
   return (
-    <Card className="p-6 bg-white/5 backdrop-blur-sm border-gray-800">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-white">Suivi de commande</h2>
-        {estimatedTime > 0 && (
-          <p className="text-sm text-gray-300 mt-1">
-            Temps estimé: {estimatedTime} minutes
-          </p>
-        )}
-        {status === 'cancelled' && (
-          <Badge variant="destructive" className="mt-2">
-            Commande annulée
-          </Badge>
-        )}
+    <div className="w-full">
+      <div className="flex justify-between items-center relative">
+        {/* Connecting line */}
+        <div className="absolute h-1 bg-gray-200 left-0 right-0 top-4 -z-10"></div>
+        
+        {steps.map((step, index) => {
+          const stepStatus = getStepStatus(step);
+          return (
+            <div key={step.key} className="flex flex-col items-center space-y-2">
+              {/* Circle */}
+              <div className="relative">
+                {stepStatus === 'completed' ? (
+                  <CheckCircle className="h-8 w-8 text-primary" />
+                ) : stepStatus === 'current' ? (
+                  <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
+                    <step.icon className="h-5 w-5" />
+                  </div>
+                ) : (
+                  <Circle className={`h-8 w-8 ${status === 'cancelled' ? 'text-gray-300' : 'text-gray-400'}`} />
+                )}
+                
+                {/* Active line before this step */}
+                {index > 0 && (stepStatus === 'completed' || stepStatus === 'current') && (
+                  <div className="absolute h-1 bg-primary right-4 w-full top-4 -z-10" style={{ left: '-100%' }}></div>
+                )}
+              </div>
+              
+              {/* Label */}
+              <span className={`text-xs text-center ${
+                status === 'cancelled' ? 'text-gray-400' :
+                stepStatus === 'completed' ? 'text-primary font-medium' :
+                stepStatus === 'current' ? 'text-primary font-medium' :
+                'text-gray-500'
+              }`}>
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
       </div>
-
-      {status !== 'cancelled' && (
-        <div className="pt-2">
-          {allSteps.map((step, index) => (
-            <Step
-              key={step.key}
-              title={step.title}
-              description={step.description}
-              status={
-                index < statusIndex ? 'completed' :
-                index === statusIndex ? 'current' : 'upcoming'
-              }
-            />
-          ))}
-        </div>
-      )}
-    </Card>
+    </div>
   );
 };
 

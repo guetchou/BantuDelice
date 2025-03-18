@@ -1,430 +1,356 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Clock, User, MessageSquare, PhoneCall, Star, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { DeliveryStatus, DeliveryTracking as DeliveryTrackingType, DeliveryRequest, DeliveryDriver } from '@/types/delivery';
-import { Restaurant } from '@/types/restaurant';
-import { Order } from '@/types/order';
-import { MapPin, Clock, Bike, CheckCircle, Phone, MapPinned } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import DeliveryDriverMap from './DeliveryDriverMap';
+import { supabase } from '@/integrations/supabase/client';
+import { useTableExistence } from '@/hooks/useTableExistence';
+import DeliveryRating from '@/components/delivery/DeliveryRating';
+import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
 
 interface DeliveryTrackingProps {
   orderId: string;
 }
 
-export default function DeliveryTracking({ orderId }: DeliveryTrackingProps) {
-  const [order, setOrder] = useState<Order | null>(null);
-  const [deliveryRequest, setDeliveryRequest] = useState<DeliveryRequest | null>(null);
-  const [trackingData, setTrackingData] = useState<DeliveryTrackingType[]>([]);
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
+const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [deliveryData, setDeliveryData] = useState<DeliveryRequest | null>(null);
+  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null);
+  const [showRating, setShowRating] = useState(false);
   const { toast } = useToast();
-
+  const { exists: deliveryTrackingExists } = useTableExistence('delivery_tracking');
+  const { exists: deliveryRequestsExists } = useTableExistence('delivery_requests');
+  const { exists: deliveryDriversExists } = useTableExistence('delivery_drivers');
+  
   useEffect(() => {
-    if (orderId) {
-      fetchOrderData();
-      subscribeToUpdates();
-    }
-  }, [orderId]);
-
-  const subscribeToUpdates = () => {
-    const orderSubscription = supabase
-      .channel(`order-${orderId}`)
+    const fetchDeliveryData = async () => {
+      try {
+        setLoading(true);
+        
+        if (!deliveryRequestsExists) {
+          return;
+        }
+        
+        // Get delivery request for this order
+        const { data: requestData, error: requestError } = await supabase
+          .from('delivery_requests')
+          .select('*')
+          .eq('order_id', orderId)
+          .single();
+          
+        if (requestError && requestError.code !== 'PGRST116') {
+          throw requestError;
+        }
+        
+        if (requestData) {
+          setDeliveryData(requestData);
+          setDeliveryStatus(requestData.status);
+          
+          // If there's an assigned driver, get driver info
+          if (requestData.assigned_driver_id && deliveryDriversExists) {
+            const { data: driverData, error: driverError } = await supabase
+              .from('delivery_drivers')
+              .select('*')
+              .eq('id', requestData.assigned_driver_id)
+              .single();
+              
+            if (driverError) throw driverError;
+            
+            if (driverData) {
+              setDriver(driverData);
+            }
+          }
+        }
+        
+        // Check if delivery status is available from tracking data
+        if (deliveryTrackingExists) {
+          const { data: trackingData, error: trackingError } = await supabase
+            .from('delivery_tracking')
+            .select('status')
+            .eq('order_id', orderId)
+            .order('timestamp', { ascending: false })
+            .limit(1);
+            
+          if (trackingError) throw trackingError;
+          
+          if (trackingData && trackingData.length > 0) {
+            setDeliveryStatus(trackingData[0].status);
+          }
+        }
+        
+        // Check if rating was already submitted
+        const { data: ratingData, error: ratingError } = await supabase
+          .from('delivery_driver_ratings')
+          .select('id')
+          .eq('order_id', orderId)
+          .limit(1);
+          
+        if (ratingError && ratingError.code !== 'PGRST116') {
+          console.error('Error checking rating:', ratingError);
+        }
+        
+        if (ratingData && ratingData.length > 0) {
+          setRatingSubmitted(true);
+        }
+        
+      } catch (err) {
+        console.error('Error fetching delivery data:', err);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de charger les données de livraison',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDeliveryData();
+    
+    // Setup real-time updates for delivery status
+    const deliveryChannel = supabase
+      .channel(`delivery-${orderId}`)
       .on('postgres_changes', {
-        event: 'UPDATE',
+        event: '*',
         schema: 'public',
-        table: 'orders',
-        filter: `id=eq.${orderId}`
-      }, () => {
-        fetchOrderData();
+        table: 'delivery_tracking',
+        filter: `order_id=eq.${orderId}`
+      }, (payload) => {
+        if (payload.new) {
+          setDeliveryStatus(payload.new.status);
+          
+          // If delivered, show rating option
+          if (payload.new.status === 'delivered') {
+            setShowRating(true);
+          }
+        }
       })
       .subscribe();
-
-    const deliverySubscription = supabase
-      .channel(`delivery-${orderId}`)
+      
+    // Get updates to delivery_requests
+    const requestChannel = supabase
+      .channel(`delivery-request-${orderId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'delivery_requests',
         filter: `order_id=eq.${orderId}`
-      }, () => {
-        fetchDeliveryRequest();
-      })
-      .subscribe();
-
-    const trackingSubscription = supabase
-      .channel(`tracking-${orderId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'delivery_tracking',
-        filter: `delivery_request_id=eq.(SELECT id FROM delivery_requests WHERE order_id = '${orderId}')`
-      }, () => {
-        fetchTrackingData();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(orderSubscription);
-      supabase.removeChannel(deliverySubscription);
-      supabase.removeChannel(trackingSubscription);
-    };
-  };
-
-  const fetchOrderData = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
-
-      if (error) throw error;
-      
-      setOrder(data);
-      
-      // Charger le restaurant
-      if (data?.restaurant_id) {
-        const { data: restaurantData, error: restaurantError } = await supabase
-          .from('restaurants')
-          .select('*')
-          .eq('id', data.restaurant_id)
-          .single();
-
-        if (restaurantError) throw restaurantError;
-        setRestaurant(restaurantData);
-      }
-
-      // Charger la demande de livraison
-      fetchDeliveryRequest();
-    } catch (error) {
-      console.error('Error fetching order data:', error);
-      setError('Impossible de charger les données de la commande');
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les données de la commande',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDeliveryRequest = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('delivery_requests')
-        .select('*')
-        .eq('order_id', orderId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Pas de demande de livraison trouvée
-          setDeliveryRequest(null);
-          return;
+      }, (payload) => {
+        if (payload.new) {
+          setDeliveryData(payload.new as DeliveryRequest);
+          
+          // If there's an assigned driver, reload driver info
+          if (payload.new.assigned_driver_id && deliveryDriversExists) {
+            fetchDriverInfo(payload.new.assigned_driver_id);
+          }
         }
-        throw error;
-      }
-
-      setDeliveryRequest(data);
-
-      // Charger les données du livreur si assigné
-      if (data?.assigned_driver_id) {
-        const { data: driverData, error: driverError } = await supabase
-          .from('delivery_drivers')
-          .select('*')
-          .eq('id', data.assigned_driver_id)
-          .single();
-
-        if (driverError) throw driverError;
-        setDriver(driverData);
-      }
-
-      // Charger les données de suivi
-      fetchTrackingData();
-    } catch (error) {
-      console.error('Error fetching delivery request:', error);
-      // Ne pas afficher d'erreur si c'est juste qu'aucune livraison n'est trouvée
-    }
-  };
-
-  const fetchTrackingData = async () => {
-    if (!deliveryRequest?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('delivery_tracking')
-        .select('*')
-        .eq('delivery_request_id', deliveryRequest.id)
-        .order('timestamp', { ascending: true });
-
-      if (error) throw error;
-      setTrackingData(data || []);
-    } catch (error) {
-      console.error('Error fetching tracking data:', error);
-    }
-  };
-
-  const getDeliveryProgress = (status: DeliveryStatus) => {
-    switch (status) {
-      case 'pending': return 10;
-      case 'assigned': return 30;
-      case 'picked_up': return 60;
-      case 'delivering': return 80;
-      case 'delivered': return 100;
-      case 'failed': return 100;
-      default: return 0;
-    }
-  };
-
-  const getStatusLabel = (status: DeliveryStatus) => {
-    switch (status) {
-      case 'pending': return 'En attente de livreur';
-      case 'assigned': return 'Livreur assigné';
-      case 'picked_up': return 'Commande récupérée';
-      case 'delivering': return 'En cours de livraison';
-      case 'delivered': return 'Livrée';
-      case 'failed': return 'Échec de livraison';
-      default: return 'Statut inconnu';
-    }
-  };
-
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getEstimatedDeliveryTime = () => {
-    if (!deliveryRequest || !deliveryRequest.pickup_time) return 'Estimation en attente';
-    
-    // Si la commande est déjà livrée, afficher l'heure de livraison
-    if (deliveryRequest.status === 'delivered' && deliveryRequest.delivery_time) {
-      return formatTime(deliveryRequest.delivery_time);
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(deliveryChannel);
+      supabase.removeChannel(requestChannel);
+    };
+  }, [orderId, deliveryRequestsExists, deliveryDriversExists, deliveryTrackingExists]);
+  
+  const fetchDriverInfo = async (driverId: string) => {
+    const { data, error } = await supabase
+      .from('delivery_drivers')
+      .select('*')
+      .eq('id', driverId)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching driver info:', error);
+      return;
     }
     
-    // Sinon calculer une estimation basée sur le temps de pick-up et la distance
-    const pickupTime = new Date(deliveryRequest.pickup_time);
-    // Estimer 5 minutes par km avec un minimum de 10 minutes
-    const estimatedMinutes = Math.max(10, Math.round(deliveryRequest.distance_km * 5));
-    const estimatedDeliveryTime = new Date(pickupTime.getTime() + estimatedMinutes * 60000);
-    
-    return formatTime(estimatedDeliveryTime.toISOString());
+    if (data) {
+      setDriver(data);
+    }
   };
-
-  const callDriver = () => {
-    if (driver?.phone) {
+  
+  const handleCallDriver = () => {
+    if (driver && driver.phone) {
       window.location.href = `tel:${driver.phone}`;
     }
   };
-
+  
+  const handleRatingSubmitted = () => {
+    setRatingSubmitted(true);
+    toast({
+      title: 'Merci !',
+      description: 'Votre évaluation a été enregistrée',
+    });
+  };
+  
+  const getStatusBadge = () => {
+    if (!deliveryStatus) return null;
+    
+    const statusColors: Record<string, string> = {
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'assigned': 'bg-blue-100 text-blue-800',
+      'accepted': 'bg-blue-100 text-blue-800',
+      'picked_up': 'bg-indigo-100 text-indigo-800',
+      'delivering': 'bg-orange-100 text-orange-800 animate-pulse',
+      'delivered': 'bg-green-100 text-green-800',
+      'completed': 'bg-green-100 text-green-800',
+      'cancelled': 'bg-red-100 text-red-800',
+    };
+    
+    const statusLabels: Record<string, string> = {
+      'pending': 'En attente',
+      'assigned': 'Livreur assigné',
+      'accepted': 'Commande acceptée',
+      'picked_up': 'Commande récupérée',
+      'delivering': 'En livraison',
+      'delivered': 'Livré',
+      'completed': 'Terminé',
+      'cancelled': 'Annulé',
+    };
+    
+    return (
+      <Badge className={statusColors[deliveryStatus] || 'bg-gray-100'}>
+        {statusLabels[deliveryStatus] || deliveryStatus}
+      </Badge>
+    );
+  };
+  
   if (loading) {
     return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex justify-center">
-            <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3 className="mt-2 text-lg font-medium">{error}</h3>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!deliveryRequest) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center text-center">
-            <Clock className="h-10 w-10 text-muted-foreground" />
-            <h3 className="mt-2 text-lg font-medium">En attente de livraison</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              La livraison n'a pas encore été assignée. Merci de patienter.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <Card className="w-full overflow-hidden">
-        <CardHeader className="pb-2 bg-muted/30">
-          <CardTitle className="flex items-center justify-between">
-            <span>Suivi de livraison</span>
-            {deliveryRequest.status === 'delivered' && (
-              <span className="text-green-600 flex items-center text-sm font-normal">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Livraison terminée
-              </span>
-            )}
-          </CardTitle>
-        </CardHeader>
+      <Card>
         <CardContent className="p-6">
-          <div className="space-y-6">
-            {/* Barre de progression */}
-            <div className="space-y-2">
-              <Progress value={getDeliveryProgress(deliveryRequest.status)} className="h-2" />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Commande</span>
-                <span>Préparation</span>
-                <span>Livraison</span>
-              </div>
+          <div className="flex justify-center">
+            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // No delivery data or order not in delivery yet
+  if (!deliveryData && !deliveryStatus) {
+    return null; // Don't show anything if no delivery yet
+  }
+  
+  const isDeliveryComplete = deliveryStatus === 'delivered' || deliveryStatus === 'completed';
+  
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between text-xl">
+          <div className="flex items-center">
+            <Package className="h-5 w-5 mr-2" />
+            Suivi de livraison
+          </div>
+          {getStatusBadge()}
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="pt-0">
+        {driver && (
+          <div className="flex items-center p-4 bg-muted/30 rounded-lg mb-4">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+              {driver.profile_picture ? (
+                <img 
+                  src={driver.profile_picture} 
+                  alt={driver.name} 
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : (
+                <User className="h-6 w-6 text-primary" />
+              )}
             </div>
-
-            {/* Statut actuel */}
-            <div className="flex items-center justify-between bg-muted/40 p-3 rounded-lg">
+            
+            <div className="flex-1">
               <div className="flex items-center">
-                {deliveryRequest.status === 'delivered' ? (
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
-                ) : (
-                  <Bike className="h-5 w-5 text-primary animate-pulse mr-3" />
+                <h3 className="font-semibold">{driver.name || 'Livreur'}</h3>
+                {driver.average_rating > 0 && (
+                  <div className="flex items-center ml-2 text-yellow-500">
+                    <Star className="h-3.5 w-3.5 mr-0.5 fill-current" />
+                    <span className="text-sm">{driver.average_rating.toFixed(1)}</span>
+                  </div>
                 )}
-                <div>
-                  <p className="font-medium">{getStatusLabel(deliveryRequest.status)}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {deliveryRequest.status === 'delivered' 
-                      ? `Livré ${deliveryRequest.delivery_time ? `à ${formatTime(deliveryRequest.delivery_time)}` : ''}` 
-                      : `Estimation: ${getEstimatedDeliveryTime()}`
-                    }
-                  </p>
-                </div>
               </div>
-            </div>
-
-            {/* Informations du livreur */}
-            {driver && (
-              <div className="space-y-3 border p-4 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium">Votre livreur</h3>
-                  {driver.status !== 'offline' && (
-                    <Button variant="outline" size="sm" onClick={callDriver}>
-                      <Phone className="h-4 w-4 mr-2" />
+              
+              <p className="text-sm text-muted-foreground">
+                {deliveryStatus === 'accepted' ? 'En route vers le restaurant' :
+                 deliveryStatus === 'picked_up' ? 'A récupéré votre commande' :
+                 deliveryStatus === 'delivering' ? 'En route vers votre adresse' :
+                 isDeliveryComplete ? 'A livré votre commande' : 
+                 'Assigné à votre commande'}
+              </p>
+              
+              {(deliveryStatus === 'picked_up' || deliveryStatus === 'delivering') && (
+                <div className="flex mt-2 space-x-2">
+                  {driver.phone && (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="h-8 px-2 text-xs"
+                      onClick={handleCallDriver}
+                    >
+                      <PhoneCall className="h-3.5 w-3.5 mr-1" />
                       Appeler
                     </Button>
                   )}
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="h-8 px-2 text-xs"
+                    disabled // For future implementation of in-app messaging
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                    Message
+                  </Button>
                 </div>
-                <div className="flex items-center">
-                  <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mr-3">
-                    {driver.vehicle_type === 'bike' ? (
-                      <Bike className="h-6 w-6 text-primary" />
-                    ) : driver.vehicle_type === 'car' ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2" />
-                        <circle cx="6.5" cy="16.5" r="2.5" />
-                        <circle cx="16.5" cy="16.5" r="2.5" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <circle cx="12" cy="10" r="3" />
-                        <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
-                      </svg>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium">{driver.name}</p>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <span className="flex items-center">
-                        <svg className="h-3 w-3 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        {driver.average_rating.toFixed(1)}
-                      </span>
-                      <span className="mx-2">•</span>
-                      <span>
-                        {driver.total_deliveries} livraisons
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Carte de suivi */}
-            {deliveryRequest && deliveryRequest.restaurant_id && (
-              <>
-                <Separator />
-                <div className="h-[300px] rounded-lg overflow-hidden">
-                  <DeliveryDriverMap 
-                    restaurantId={deliveryRequest.restaurant_id} 
-                    deliveryId={deliveryRequest.id}
-                    height="100%"
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Timeline de livraison */}
-            {trackingData.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="font-medium">Suivi détaillé</h3>
-                <ol className="relative border-l border-gray-200 dark:border-gray-700 ml-3 space-y-4">
-                  {trackingData.map((tracking, index) => (
-                    <li key={tracking.id} className="ml-6">
-                      <span className="absolute flex items-center justify-center w-6 h-6 bg-primary rounded-full -left-3">
-                        {index === 0 ? (
-                          <MapPin className="w-3 h-3 text-white" />
-                        ) : (
-                          <span className="text-white text-xs">{index + 1}</span>
-                        )}
-                      </span>
-                      <div className="p-3 bg-white shadow-sm border rounded-lg">
-                        <h3 className="font-medium">{getStatusLabel(tracking.status)}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {formatTime(tracking.timestamp)}
-                        </p>
-                        {tracking.notes && (
-                          <p className="text-sm mt-1">{tracking.notes}</p>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
-
-            {/* Adresse de livraison */}
-            <div className="flex items-start space-x-3 bg-muted/30 p-4 rounded-lg">
-              <MapPinned className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="font-medium">Adresse de livraison</p>
-                <p className="text-muted-foreground">{deliveryRequest.delivery_address}</p>
-                {deliveryRequest.delivery_instructions && (
-                  <p className="text-sm italic mt-1">{deliveryRequest.delivery_instructions}</p>
-                )}
-              </div>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+        
+        {deliveryData && (
+          <div className="space-y-4">
+            <div className="flex items-start space-x-3">
+              <MapPin className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <span className="font-medium">Adresse de livraison</span>
+                <p className="text-sm">
+                  {deliveryData.delivery_address || 'Adresse non disponible'}
+                </p>
+              </div>
+            </div>
+            
+            {deliveryData.estimated_duration && (
+              <div className="flex items-start space-x-3">
+                <Clock className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <span className="font-medium">Temps estimé</span>
+                  <p className="text-sm">
+                    {deliveryData.estimated_duration} minutes
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {isDeliveryComplete && !ratingSubmitted && showRating && driver && (
+          <div className="mt-4">
+            <DeliveryRating 
+              orderId={orderId}
+              restaurantId={deliveryData?.restaurant_id || ''} 
+              onRatingSubmitted={handleRatingSubmitted}
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default DeliveryTracking;

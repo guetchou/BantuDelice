@@ -1,277 +1,301 @@
 
-import { useEffect, useState } from 'react';
-import LiveDeliveryTracking from './LiveDeliveryTracking';
-import { Card } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliveryRequest, DeliveryDriver } from '@/types/delivery';
-import { Phone, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from '@/hooks/use-toast';
+import { MapPin, MapIcon } from 'lucide-react';
+import { useTableExistence } from '@/hooks/useTableExistence';
+import { OrderTrackingRoutePoint } from '@/types/orderTracking';
+import { 
+  MapContainer, 
+  TileLayer, 
+  Marker, 
+  Popup 
+} from '@/components/ui/leaflet-map';
+import { divIcon } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface LiveTrackingProps {
   orderId: string;
 }
 
 const LiveTracking = ({ orderId }: LiveTrackingProps) => {
-  const [deliveryRequest, setDeliveryRequest] = useState<DeliveryRequest | null>(null);
-  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [message, setMessage] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+  const [deliveryRoute, setDeliveryRoute] = useState<OrderTrackingRoutePoint[]>([]);
+  const [restaurant, setRestaurant] = useState<{ name: string; latitude: number; longitude: number } | null>(null);
+  const [deliveryAddress, setDeliveryAddress] = useState<{ address: string; latitude: number; longitude: number } | null>(null);
+  const { toast } = useToast();
+  const { exists: trackingTableExists } = useTableExistence('delivery_tracking');
+  
   useEffect(() => {
-    const fetchDeliveryRequest = async () => {
+    const fetchOrderDetails = async () => {
       try {
-        setIsLoading(true);
-
-        const { data, error } = await supabase
-          .from('delivery_requests')
+        setLoading(true);
+        
+        // Get order details including restaurant and delivery address
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select(`
+            id, 
+            delivery_address,
+            restaurant_id,
+            restaurants:restaurant_id (
+              id, name, latitude, longitude
+            )
+          `)
+          .eq('id', orderId)
+          .single();
+          
+        if (orderError) throw orderError;
+        
+        if (orderData?.restaurants) {
+          setRestaurant({
+            name: orderData.restaurants.name,
+            latitude: orderData.restaurants.latitude || 0,
+            longitude: orderData.restaurants.longitude || 0
+          });
+        }
+        
+        // Attempt to get delivery address coordinates
+        // This would typically come from a geocoding service in a real app
+        // For now using dummy coordinates slightly offset from restaurant
+        if (orderData?.restaurants) {
+          setDeliveryAddress({
+            address: orderData.delivery_address || 'Unknown address',
+            latitude: (orderData.restaurants.latitude || 0) + 0.01,
+            longitude: (orderData.restaurants.longitude || 0) + 0.015
+          });
+        }
+        
+        // If tracking table exists, get real-time tracking data
+        if (trackingTableExists) {
+          await fetchTrackingData();
+          
+          // Subscribe to real-time updates
+          const channel = supabase
+            .channel(`order-${orderId}-tracking`)
+            .on('postgres_changes', {
+              event: '*',
+              schema: 'public',
+              table: 'delivery_tracking',
+              filter: `order_id=eq.${orderId}`
+            }, () => {
+              fetchTrackingData();
+            })
+            .subscribe();
+            
+          return () => {
+            supabase.removeChannel(channel);
+          };
+        }
+      } catch (err) {
+        console.error('Error fetching order details:', err);
+        setError('Failed to load tracking information');
+        toast({
+          title: 'Error',
+          description: 'Unable to load tracking information',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    const fetchTrackingData = async () => {
+      // If tracking table exists, get real-time tracking data
+      if (trackingTableExists) {
+        const { data: trackingData, error: trackingError } = await supabase
+          .from('delivery_tracking')
           .select('*')
           .eq('order_id', orderId)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        if (data) {
-          setDeliveryRequest({
-            id: data.id,
-            order_id: data.order_id,
-            restaurant_id: data.restaurant_id,
-            status: data.status,
-            pickup_address: data.pickup_address,
-            pickup_latitude: data.pickup_latitude,
-            pickup_longitude: data.pickup_longitude,
-            delivery_address: data.delivery_address,
-            delivery_latitude: data.delivery_latitude,
-            delivery_longitude: data.delivery_longitude,
-            assigned_driver_id: data.assigned_driver_id,
-            requested_at: data.requested_at,
-            accepted_at: data.accepted_at,
-            completed_at: data.completed_at,
-            cancelled_at: data.cancelled_at,
-            delivery_fee: data.delivery_fee,
-            is_external: data.is_external,
-            external_service_id: data.external_service_id,
-            notes: data.notes,
-            priority: data.priority,
-            estimated_distance: data.estimated_distance,
-            estimated_duration: data.estimated_duration
-          });
-
-          if (data.assigned_driver_id) {
-            fetchDriver(data.assigned_driver_id);
-          }
+          .order('timestamp', { ascending: true });
+          
+        if (trackingError) throw trackingError;
+        
+        if (trackingData && trackingData.length > 0) {
+          setDeliveryRoute(
+            trackingData.map(point => ({
+              latitude: point.latitude,
+              longitude: point.longitude,
+              timestamp: point.timestamp,
+              status: point.status
+            }))
+          );
+          
+          // Set current location to the most recent
+          const latest = trackingData[trackingData.length - 1];
+          setCurrentLocation([latest.latitude, latest.longitude]);
         }
-      } catch (err) {
-        console.error('Error fetching delivery request:', err);
-      } finally {
-        setIsLoading(false);
       }
     };
-
-    const fetchDriver = async (driverId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from('delivery_drivers')
-          .select('*')
-          .eq('id', driverId)
-          .single();
-
-        if (error) throw error;
-
-        setDriver({
-          id: data.id,
-          user_id: data.user_id,
-          name: data.name || 'Driver',
-          phone: data.phone || '',
-          current_latitude: data.current_latitude,
-          current_longitude: data.current_longitude,
-          current_location: data.current_location,
-          is_available: data.is_available,
-          status: data.status || 'delivering',
-          vehicle_type: data.vehicle_type || 'bike',
-          total_deliveries: data.total_deliveries || 0,
-          average_rating: data.average_rating || 4.5,
-          profile_picture: data.profile_picture,
-          restaurant_id: data.restaurant_id,
-          commission_rate: data.commission_rate || 0,
-          total_earnings: data.total_earnings || 0,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          last_location_update: data.last_location_update
-        });
-      } catch (err) {
-        console.error('Error fetching driver:', err);
-      }
-    };
-
-    fetchDeliveryRequest();
-
-    // Setup realtime subscription for delivery updates
-    const deliveryChannel = supabase
-      .channel(`delivery_request:${orderId}`)
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'delivery_requests',
-          filter: `order_id=eq.${orderId}`
-        }, 
-        (payload) => {
-          if (payload.new) {
-            setDeliveryRequest(prev => ({
-              ...prev,
-              ...payload.new
-            } as DeliveryRequest));
-
-            if (payload.new.assigned_driver_id && 
-                (!deliveryRequest?.assigned_driver_id || 
-                payload.new.assigned_driver_id !== deliveryRequest.assigned_driver_id)) {
-              fetchDriver(payload.new.assigned_driver_id);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(deliveryChannel);
-    };
-  }, [orderId]);
-
-  const handleSendMessage = async () => {
-    if (!message.trim() || !deliveryRequest) {
-      return;
-    }
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
+    
+    fetchOrderDetails();
+  }, [orderId, trackingTableExists]);
+  
+  // For demo purposes, simulate a moving driver if no tracking data
+  useEffect(() => {
+    if (!trackingTableExists && restaurant && deliveryAddress && !currentLocation) {
+      // Start from restaurant
+      let position = [restaurant.latitude, restaurant.longitude];
       
-      if (!user) {
-        toast.error("Vous devez être connecté pour envoyer un message");
-        return;
-      }
-
-      const { error } = await supabase.from('delivery_messages').insert({
-        delivery_request_id: deliveryRequest.id,
-        sender_id: user.id,
-        sender_type: 'customer',
-        message: message.trim(),
-        created_at: new Date().toISOString(),
-        read: false
-      });
-
-      if (error) throw error;
-
-      toast.success("Message envoyé avec succès");
-      setMessage('');
-      setDialogOpen(false);
-    } catch (err) {
-      console.error('Error sending message:', err);
-      toast.error("Erreur lors de l'envoi du message");
+      // Create a path between restaurant and delivery address
+      const simulateMovement = setInterval(() => {
+        const target = [deliveryAddress.latitude, deliveryAddress.longitude];
+        const newLat = position[0] + (target[0] - position[0]) * 0.05;
+        const newLng = position[1] + (target[1] - position[1]) * 0.05;
+        
+        position = [newLat, newLng];
+        setCurrentLocation([newLat, newLng]);
+        
+        setDeliveryRoute(prev => [
+          ...prev, 
+          {
+            latitude: newLat,
+            longitude: newLng,
+            timestamp: new Date().toISOString(),
+            status: 'delivering'
+          }
+        ]);
+        
+        // Check if we've reached the target
+        if (Math.abs(newLat - target[0]) < 0.001 && Math.abs(newLng - target[1]) < 0.001) {
+          clearInterval(simulateMovement);
+        }
+      }, 2000);
+      
+      return () => clearInterval(simulateMovement);
     }
-  };
-
-  if (isLoading) {
+  }, [restaurant, deliveryAddress, trackingTableExists, currentLocation]);
+  
+  if (loading) {
     return (
-      <Card className="p-6 my-4">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin h-8 w-8 border-t-2 border-orange-500 rounded-full" />
-        </div>
-      </Card>
-    );
-  }
-
-  if (!deliveryRequest) {
-    return (
-      <Card className="p-6 my-4">
-        <div className="text-center py-8">
-          <h3 className="text-xl font-semibold">Aucune livraison en cours</h3>
-          <p className="text-gray-500 mt-2">Cette commande n'a pas encore été assignée à un livreur.</p>
-        </div>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {driver && (
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                {driver.profile_picture ? (
-                  <img 
-                    src={driver.profile_picture} 
-                    alt={driver.name} 
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-lg font-semibold text-gray-500">
-                    {driver.name.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <div>
-                <h3 className="font-medium">{driver.name}</h3>
-                <div className="text-sm text-gray-500">
-                  <span className="inline-flex items-center">
-                    <span className="text-yellow-500 mr-1">★</span>
-                    {driver.average_rating.toFixed(1)}
-                  </span>
-                  <span className="mx-2">•</span>
-                  <span>{driver.total_deliveries} livraisons</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Button size="sm" variant="outline" onClick={() => window.location.href = `tel:${driver.phone}`}>
-                <Phone className="h-4 w-4 mr-1" />
-                Appeler
-              </Button>
-
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <MessageCircle className="h-4 w-4 mr-1" />
-                    Message
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Envoyer un message au livreur</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <p className="text-sm text-gray-500">
-                      Envoyez un message à {driver.name} concernant votre livraison.
-                    </p>
-                    <Textarea
-                      placeholder="Votre message..."
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="min-h-[100px]"
-                    />
-                    <Button onClick={handleSendMessage} className="w-full">
-                      Envoyer
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
-        </Card>
-      )}
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center h-64">
+            <MapIcon className="h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-center text-muted-foreground">{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // If we don't have restaurant or delivery coordinates, show a message
+  if (!restaurant && !deliveryAddress) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center h-64">
+            <MapIcon className="h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-center text-muted-foreground">
+              Tracking information is not available for this order
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Calculate center of map between restaurant and delivery address
+  const center: [number, number] = restaurant && deliveryAddress 
+    ? [
+        (restaurant.latitude + deliveryAddress.latitude) / 2,
+        (restaurant.longitude + deliveryAddress.longitude) / 2
+      ]
+    : currentLocation 
+      ? currentLocation 
+      : [0, 0];
 
-      <LiveDeliveryTracking orderId={orderId} />
-    </div>
+  const createCustomIcon = (iconName: 'restaurant' | 'home' | 'delivery') => {
+    const colors = {
+      restaurant: '#8B5CF6', // purple
+      home: '#2DD4BF', // teal
+      delivery: '#F59E0B', // amber
+    };
+    
+    const color = colors[iconName];
+    return divIcon({
+      className: '',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      html: `
+        <div style="background-color: ${color}; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px ${color};">
+          <div style="background-color: white; width: 8px; height: 8px; border-radius: 50%;"></div>
+        </div>
+      `
+    });
+  };
+  
+  return (
+    <Card className="w-full overflow-hidden">
+      <CardHeader className="px-6 py-4">
+        <CardTitle className="text-lg font-medium flex items-center">
+          <MapPin className="h-5 w-5 mr-2" />
+          Suivi de livraison
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="h-[300px] w-full relative">
+          {restaurant && deliveryAddress && (
+            <MapContainer 
+              center={center} 
+              zoom={13} 
+              scrollWheelZoom={false} 
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              
+              {/* Restaurant marker */}
+              {restaurant && (
+                <Marker position={[restaurant.latitude, restaurant.longitude]} icon={createCustomIcon('restaurant')}>
+                  <Popup>
+                    <div className="font-semibold">{restaurant.name}</div>
+                    <div>Restaurant</div>
+                  </Popup>
+                </Marker>
+              )}
+              
+              {/* Delivery address marker */}
+              {deliveryAddress && (
+                <Marker position={[deliveryAddress.latitude, deliveryAddress.longitude]} icon={createCustomIcon('home')}>
+                  <Popup>
+                    <div className="font-semibold">Adresse de livraison</div>
+                    <div>{deliveryAddress.address}</div>
+                  </Popup>
+                </Marker>
+              )}
+              
+              {/* Delivery driver marker */}
+              {currentLocation && (
+                <Marker position={currentLocation} icon={createCustomIcon('delivery')}>
+                  <Popup>
+                    <div className="font-semibold">Livreur</div>
+                    <div>En route</div>
+                  </Popup>
+                </Marker>
+              )}
+            </MapContainer>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
