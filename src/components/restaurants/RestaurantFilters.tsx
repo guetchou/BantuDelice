@@ -67,15 +67,15 @@ export default function RestaurantFilters({
           <div className="space-y-4">
             <Label>Type de cuisine</Label>
             <Select 
-              value={filters.cuisine_type?.[0] || "Tout"}
-              onValueChange={(value) => updateFilter('cuisine_type', value === "Tout" ? undefined : [value])}
+              value={filters.cuisine_type?.[0] || "all"}
+              onValueChange={(value) => updateFilter('cuisine_type', value === "all" ? [] : [value])}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez un type de cuisine" />
               </SelectTrigger>
               <SelectContent>
                 {CUISINE_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
+                  <SelectItem key={type} value={type === "Tout" ? "all" : type}>
                     {type}
                   </SelectItem>
                 ))}
@@ -86,8 +86,8 @@ export default function RestaurantFilters({
           <div className="space-y-4">
             <Label>Gamme de prix</Label>
             <Select 
-              value={filters.price_range || "all"}
-              onValueChange={(value) => updateFilter('price_range', value === "all" ? undefined : value)}
+              value={filters.price_range?.toString() || "all"}
+              onValueChange={(value) => updateFilter('price_range', value === "all" ? [] : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une gamme de prix" />

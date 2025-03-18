@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,7 +63,6 @@ export default function Restaurants() {
         .select('*');
 
       if (searchQuery) {
-        // If your table has text search configured:
         query = query.textSearch('search_vector', searchQuery, {
           type: 'websearch',
           config: 'english'
@@ -90,9 +88,7 @@ export default function Restaurants() {
         throw error;
       }
 
-      // Process restaurants data
       const processedData = data.map(restaurant => {
-        // Type assertion to match Restaurant type
         const typedRestaurant: Restaurant = {
           id: restaurant.id,
           name: restaurant.name || 'Unknown Restaurant',
@@ -139,7 +135,6 @@ export default function Restaurants() {
   }, [fetchRestaurants]);
 
   useEffect(() => {
-    // Get user's location if permitted
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -147,7 +142,6 @@ export default function Restaurants() {
         },
         (error) => {
           console.log('Geolocation error:', error);
-          // Default to a central location in the region
           setUserLocation([4.0383, 9.7084]); // Douala, Cameroon
         }
       );
@@ -264,16 +258,16 @@ export default function Restaurants() {
               </Select>
 
               <Select
-                value={filters.cuisine_type?.length ? filters.cuisine_type[0] : ""}
+                value={filters.cuisine_type?.length ? filters.cuisine_type[0] : "all"}
                 onValueChange={(value) => handleFilterChange({ cuisine_type: value ? [value] : [] })}
               >
                 <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Type de cuisine" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                  <SelectItem value="">Toutes les cuisines</SelectItem>
+                  <SelectItem value="all">Toutes les cuisines</SelectItem>
                   {CUISINE_TYPES.map(type => (
-                    <SelectItem key={type} value={type === "Tout" ? "" : type}>{type}</SelectItem>
+                    <SelectItem key={type} value={type === "Tout" ? "all" : type}>{type}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
