@@ -70,18 +70,18 @@ export interface DeliveryZone {
 
 export interface DeliveryTracking {
   id: string;
-  delivery_request_id: string;
-  driver_id: string;
   order_id: string;
   status: 'assigned' | 'picked_up' | 'on_the_way' | 'delivered' | 'failed' | string;
   latitude: number;
   longitude: number;
   timestamp: string;
-  notes?: string;
+  updated_at: string;
   delivered_at?: string;
   picked_up_at?: string;
-  updated_at?: string;
   delivery_user_id?: string;
+  driver_id: string;
+  notes?: string;
+  delivery_request_id: string;
 }
 
 export interface ExternalDeliveryService {

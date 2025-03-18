@@ -18,7 +18,7 @@ export const useRestaurantDetails = (restaurantId: string) => {
       // Extraire et convertir les données nécessaires
       let businessHours: BusinessHours;
       try {
-        businessHours = data.business_hours as BusinessHours;
+        businessHours = data.business_hours as unknown as BusinessHours;
       } catch (e) {
         // Créer une structure par défaut si les données sont invalides
         businessHours = {
@@ -47,20 +47,20 @@ export const useRestaurantDetails = (restaurantId: string) => {
         logo_url: data.logo_url,
         banner_image_url: data.banner_image_url,
         cuisine_type: data.cuisine_type,
-        price_range: data.price_range,
-        average_rating: data.average_rating,
+        price_range: data.price_range || 1,
+        average_rating: data.average_rating || 0,
         total_ratings: data.total_ratings || 0,
         featured: data.featured || false,
         user_id: data.user_id,
         created_at: data.created_at,
-        updated_at: data.updated_at,
-        status: data.status,
+        updated_at: data.updated_at || data.created_at,
+        status: data.status || 'active',
         business_hours: businessHours,
         delivery_radius: data.delivery_radius,
-        minimum_order: data.minimum_order,
+        minimum_order: data.minimum_order || 0,
         payment_methods: data.payment_methods || [],
         tags: data.tags || [],
-        opening_date: data.opening_date,
+        opening_date: data.opening_date || '',
         special_features: data.special_features || [],
         delivery_fee: data.delivery_fee || 0,
         free_delivery_min: data.free_delivery_min,

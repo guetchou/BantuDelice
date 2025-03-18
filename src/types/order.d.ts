@@ -25,6 +25,9 @@ export interface Order {
   actual_delivery_time?: string;
   cancellation_reason?: string;
   delivery_fee?: number;
+  // Nouveaux champs pour la compatibilité avec la BD
+  delivery_latitude?: number;
+  delivery_longitude?: number;
 }
 
 export interface OrderItem {

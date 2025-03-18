@@ -32,13 +32,13 @@ export const useRestaurant = (restaurantId: string) => {
         } else {
           businessHours = {
             regular: {
-              monday: { open: '08:00', close: '22:00' },
-              tuesday: { open: '08:00', close: '22:00' },
-              wednesday: { open: '08:00', close: '22:00' },
-              thursday: { open: '08:00', close: '22:00' },
-              friday: { open: '08:00', close: '22:00' },
-              saturday: { open: '08:00', close: '22:00' },
-              sunday: { open: '08:00', close: '22:00' }
+              monday: { open: '08:00', close: '22:00', is_closed: false },
+              tuesday: { open: '08:00', close: '22:00', is_closed: false },
+              wednesday: { open: '08:00', close: '22:00', is_closed: false },
+              thursday: { open: '08:00', close: '22:00', is_closed: false },
+              friday: { open: '08:00', close: '22:00', is_closed: false },
+              saturday: { open: '08:00', close: '22:00', is_closed: false },
+              sunday: { open: '08:00', close: '22:00', is_closed: false }
             }
           };
         }
@@ -46,13 +46,13 @@ export const useRestaurant = (restaurantId: string) => {
         console.error("Error parsing business hours:", e);
         businessHours = {
           regular: {
-            monday: { open: '08:00', close: '22:00' },
-            tuesday: { open: '08:00', close: '22:00' },
-            wednesday: { open: '08:00', close: '22:00' },
-            thursday: { open: '08:00', close: '22:00' },
-            friday: { open: '08:00', close: '22:00' },
-            saturday: { open: '08:00', close: '22:00' },
-            sunday: { open: '08:00', close: '22:00' }
+            monday: { open: '08:00', close: '22:00', is_closed: false },
+            tuesday: { open: '08:00', close: '22:00', is_closed: false },
+            wednesday: { open: '08:00', close: '22:00', is_closed: false },
+            thursday: { open: '08:00', close: '22:00', is_closed: false },
+            friday: { open: '08:00', close: '22:00', is_closed: false },
+            saturday: { open: '08:00', close: '22:00', is_closed: false },
+            sunday: { open: '08:00', close: '22:00', is_closed: false }
           }
         };
       }
@@ -68,17 +68,21 @@ export const useRestaurant = (restaurantId: string) => {
         status: (data.status as "open" | "closed" | "busy") || 'closed',
         phone: data.phone || '',
         email: data.email || '',
-        average_prep_time: data.average_prep_time || 30,
+        website: data.website || '',
+        logo_url: data.logo_url || '',
+        banner_image_url: data.banner_image_url || '',
+        cuisine_type: data.cuisine_type || '',
+        price_range: data.price_range || 1,
+        rating: data.rating || 0,
+        average_rating: data.average_rating || 0,
         total_ratings: data.total_ratings || 0,
         minimum_order: data.minimum_order || 0,
         delivery_fee: data.delivery_fee || 0,
         business_hours: businessHours,
         special_days: data.special_days as string[] || [],
-        cuisine_type: data.cuisine_type || '',
-        banner_image_url: data.banner_image_url || '',
-        logo_url: data.logo_url || '',
-        rating: data.rating || 0,
-        trending: data.trending || false
+        average_prep_time: data.average_prep_time || 30,
+        trending: data.trending || false,
+        is_open: data.is_open || false
       };
 
       return restaurant;

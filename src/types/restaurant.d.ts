@@ -86,7 +86,7 @@ export interface BusinessHours {
     date: string;
     open: string;
     close: string;
-    is_closed: boolean;
+    is_closed?: boolean;
   }[];
 }
 
@@ -153,6 +153,13 @@ export interface Restaurant {
   business_hours?: any;
   status: 'open' | 'busy' | 'closed' | string;
   is_open?: boolean;
+  // Ajout des champs manquants nécessaires
+  total_ratings?: number;
+  trending?: boolean;
+  minimum_order?: number;
+  delivery_fee?: number;
+  average_prep_time?: number;
+  special_days?: any;
 }
 
 export interface RestaurantFilters {
@@ -162,6 +169,12 @@ export interface RestaurantFilters {
   distance: number | null;
   openNow: boolean;
   sortBy: 'distance' | 'rating' | 'price' | string;
+  // Champs additionnels pour la compatibilité
+  cuisine_type?: string[];
+  price_range?: number[];
+  isOpen?: boolean;
+  hasDelivery?: boolean;
+  hasPickup?: boolean;
 }
 
 export type RestaurantViewMode = 'grid' | 'map' | 'list';

@@ -3457,6 +3457,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_table_exists: {
+        Args: {
+          table_name: string
+        }
+        Returns: number
+      }
       create_notification: {
         Args: {
           p_user_id: string

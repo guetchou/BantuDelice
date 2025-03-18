@@ -3,10 +3,20 @@ export interface CartItem {
   id: string;
   name: string;
   price: number;
-  restaurant_id: string;
   quantity: number;
+  menu_item_id: string;
+  special_instructions?: string;
   image_url?: string;
-  category?: string;
-  description?: string;
-  customization_options?: Record<string, any>;
+  options?: {
+    name: string;
+    value: string;
+    price?: number;
+  }[];
+}
+
+export interface CartState {
+  items: CartItem[];
+  total: number;
+  restaurant_id?: string;
+  restaurant_name?: string;
 }

@@ -1,77 +1,102 @@
 
-import { CheckCircle2, Clock, CookingPot, PackageCheck, Send, Truck } from 'lucide-react';
+import React from 'react';
+import { Progress } from '@/components/ui/progress';
 import { OrderStatus } from '@/types/order';
+import { CheckCircle, Clock, CookingPot, Package, Truck, XCircle } from 'lucide-react';
 
 interface OrderProgressProps {
   status: OrderStatus | string;
 }
 
-const OrderProgress = ({ status }: OrderProgressProps) => {
-  // Conversion de string en OrderStatus si nécessaire
-  const orderStatus = status as OrderStatus;
-  
-  const steps = [
-    { key: 'pending', label: 'Commande reçue', icon: Clock, description: 'Votre commande a été reçue' },
-    { key: 'accepted', label: 'Acceptée', icon: CheckCircle2, description: 'Le restaurant a confirmé votre commande' },
-    { key: 'preparing', label: 'En préparation', icon: CookingPot, description: 'Vos plats sont en cours de préparation' },
-    { key: 'prepared', label: 'Prête', icon: PackageCheck, description: 'Votre commande est prête' },
-    { key: 'delivering', label: 'En livraison', icon: Truck, description: 'Votre commande est en route' },
-    { key: 'delivered', label: 'Livrée', icon: Send, description: 'Votre commande a été livrée' },
-  ];
-
-  const getCurrentStepIndex = () => {
-    const statusIndex = steps.findIndex(step => step.key === orderStatus);
-    if (statusIndex === -1) {
-      // Si le status n'est pas trouvé, déterminer l'étape la plus proche
-      if (orderStatus === 'cancelled') return -1;
-      return 0; // Par défaut, première étape
+const OrderProgress: React.FC<OrderProgressProps> = ({ status }) => {
+  const getProgressValue = (): number => {
+    switch (status) {
+      case 'pending':
+        return 0;
+      case 'accepted':
+        return 20;
+      case 'preparing':
+        return 40;
+      case 'prepared':
+        return 60;
+      case 'delivering':
+        return 80;
+      case 'delivered':
+        return 100;
+      case 'cancelled':
+        return 0;
+      default:
+        return 0;
     }
-    return statusIndex;
   };
 
-  const currentStepIndex = getCurrentStepIndex();
-  
-  if (orderStatus === 'cancelled') {
-    return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-center text-red-600">Cette commande a été annulée</p>
-      </div>
-    );
-  }
+  const getStatusIcon = () => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-6 w-6 text-yellow-500" />;
+      case 'accepted':
+        return <CheckCircle className="h-6 w-6 text-blue-500" />;
+      case 'preparing':
+        return <CookingPot className="h-6 w-6 text-orange-500" />;
+      case 'prepared':
+        return <Package className="h-6 w-6 text-green-500" />;
+      case 'delivering':
+        return <Truck className="h-6 w-6 text-blue-500" />;
+      case 'delivered':
+        return <CheckCircle className="h-6 w-6 text-green-500" />;
+      case 'cancelled':
+        return <XCircle className="h-6 w-6 text-red-500" />;
+      default:
+        return <Clock className="h-6 w-6 text-gray-500" />;
+    }
+  };
+
+  const getStatusText = (): string => {
+    switch (status) {
+      case 'pending':
+        return 'Commande en attente de confirmation';
+      case 'accepted':
+        return 'Commande acceptée par le restaurant';
+      case 'preparing':
+        return 'Préparation en cours';
+      case 'prepared':
+        return 'Commande prête pour la livraison';
+      case 'delivering':
+        return 'En cours de livraison';
+      case 'delivered':
+        return 'Commande livrée';
+      case 'cancelled':
+        return 'Commande annulée';
+      default:
+        return 'Statut inconnu';
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        {/* Ligne de progression */}
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200 transform -translate-x-1/2" />
-        
-        {/* Étapes */}
-        <div className="space-y-8">
-          {steps.map((step, index) => {
-            const isCompleted = index <= currentStepIndex;
-            const isActive = index === currentStepIndex;
-            
-            return (
-              <div key={step.key} className={`relative flex items-start ${isActive ? 'opacity-100' : isCompleted ? 'opacity-90' : 'opacity-40'}`}>
-                <div className={`
-                  absolute left-6 -ml-3 mt-1 h-6 w-6 rounded-full flex items-center justify-center
-                  ${isCompleted ? 'bg-primary text-white' : 'bg-gray-200'}
-                  ${isActive ? 'ring-4 ring-primary/20' : ''}
-                `}>
-                  <step.icon className="h-3 w-3" />
-                </div>
-                
-                <div className="ml-10">
-                  <p className={`text-sm font-medium ${isActive ? 'text-primary' : 'text-gray-900'}`}>
-                    {step.label}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Statut de la commande</h3>
+        <div className="flex items-center">
+          {getStatusIcon()}
+          <span className="ml-2 text-sm font-medium">{getStatusText()}</span>
+        </div>
+      </div>
+      <Progress value={getProgressValue()} className="h-2" />
+      <div className="grid grid-cols-5 text-xs text-center">
+        <div className={`${status === 'accepted' || getProgressValue() >= 20 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+          Acceptée
+        </div>
+        <div className={`${status === 'preparing' || getProgressValue() >= 40 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+          Préparation
+        </div>
+        <div className={`${status === 'prepared' || getProgressValue() >= 60 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+          Prête
+        </div>
+        <div className={`${status === 'delivering' || getProgressValue() >= 80 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+          En livraison
+        </div>
+        <div className={`${status === 'delivered' || getProgressValue() >= 100 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+          Livrée
         </div>
       </div>
     </div>
