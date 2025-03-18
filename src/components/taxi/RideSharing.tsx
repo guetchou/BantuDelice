@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Users, Banknote, Clock, Shield } from "lucide-react";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { TaxiRide } from '@/types/taxi';
+import { TaxiRide, RideShareRequest } from '@/types/taxi';
 
 interface RideSharingProps {
   rideId?: string;
@@ -51,18 +51,41 @@ const RideSharing: React.FC<RideSharingProps> = ({
       
       // Then find nearby rides that could be shared
       // In a real app, you would use geospatial queries to find rides with similar routes
-      const { data: rides } = await supabase
+      const { data: ridesData } = await supabase
         .from('taxi_rides')
         .select('*')
         .eq('status', 'pending')
         .eq('is_shared_ride', true)
         .neq('id', rideId);
         
-      if (rides && rides.length > 0) {
+      if (ridesData && ridesData.length > 0) {
+        // Convert to our TaxiRide type to ensure type safety
+        const rides: TaxiRide[] = ridesData.map(ride => ({
+          id: ride.id,
+          user_id: ride.user_id,
+          pickup_address: ride.pickup_address,
+          destination_address: ride.destination_address,
+          pickup_time: ride.pickup_time,
+          status: ride.status,
+          driver_id: ride.driver_id,
+          estimated_price: ride.estimated_price,
+          actual_price: ride.actual_price,
+          payment_status: ride.payment_status,
+          vehicle_type: ride.vehicle_type,
+          payment_method: ride.payment_method,
+          pickup_latitude: ride.pickup_latitude,
+          pickup_longitude: ride.pickup_longitude,
+          destination_latitude: ride.destination_latitude,
+          destination_longitude: ride.destination_longitude,
+          special_instructions: ride.special_instructions,
+          is_shared_ride: ride.is_shared_ride,
+          max_passengers: ride.max_passengers,
+          current_passengers: ride.current_passengers
+        }));
+
         // Filter to only show rides that are close to your pickup and destination
         // This is a simplified version - in production you'd use proper spatial calculations
-        const filteredRides = rides;
-        setNearbySharedRides(filteredRides);
+        setNearbySharedRides(rides);
       }
     } catch (error) {
       console.error('Error fetching shared rides:', error);
@@ -99,14 +122,27 @@ const RideSharing: React.FC<RideSharingProps> = ({
     try {
       setLoading(true);
       
+      if (!rideId) {
+        toast.error("Erreur: identifiant de course manquant");
+        return;
+      }
+      
       // Create a ride share request
+      const shareRequest: Omit<RideShareRequest, 'id' | 'created_at'> = {
+        ride_id: sharedRideId,
+        requester_id: rideId,
+        status: 'pending',
+        pickup_address: '',  // These would come from the current ride
+        destination_address: '', 
+        pickup_latitude: 0,
+        pickup_longitude: 0,
+        destination_latitude: 0,
+        destination_longitude: 0
+      };
+      
       const { error } = await supabase
         .from('ride_share_requests')
-        .insert({
-          ride_id: sharedRideId,
-          requester_id: rideId,
-          status: 'pending'
-        });
+        .insert(shareRequest);
         
       if (error) throw error;
       

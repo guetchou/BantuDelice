@@ -56,7 +56,10 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
     }
   };
 
-  const renderDriverCard = (driver: any) => {
+  const renderDriverCard = (driver: TaxiDriver & {
+    distance_to_pickup?: number;
+    time_to_pickup?: number;
+  }) => {
     const isSelected = selectedDriverId === driver.id;
     
     return (
@@ -98,11 +101,11 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
             </div>
             <div className="flex items-center">
               <MapPin className="h-4 w-4 text-gray-500 mr-2" />
-              <span>{driver.distance_to_pickup.toFixed(1)} km</span>
+              <span>{driver.distance_to_pickup?.toFixed(1) || '-'} km</span>
             </div>
             <div className="flex items-center">
               <Clock className="h-4 w-4 text-gray-500 mr-2" />
-              <span>~{driver.time_to_pickup} min</span>
+              <span>~{driver.time_to_pickup || '-'} min</span>
             </div>
             {driver.languages && (
               <div className="flex items-center">

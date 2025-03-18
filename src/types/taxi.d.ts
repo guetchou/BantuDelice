@@ -101,3 +101,12 @@ export interface RideShareRequest {
   destination_longitude?: number;
   created_at: string;
 }
+
+export interface TaxiRideRequest {
+  id?: string;
+  ride_id: string;
+  driver_id: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
+  requested_at: string;
+  responded_at?: string;
+}
