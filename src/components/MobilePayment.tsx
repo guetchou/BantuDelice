@@ -15,6 +15,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { UserPaymentMethod } from '@/types/delivery';
 
 export interface MobilePaymentProps {
   amount: number;
@@ -100,10 +101,39 @@ const MobilePayment = ({
       if (paymentError) throw paymentError;
 
       // Si l'utilisateur veut sauvegarder la méthode de paiement
-      // Cette fonctionnalité sera implémentée ultérieurement quand la table sera disponible
       if (saveMethod) {
-        console.log("Sauvegarde de la méthode de paiement demandée - à implémenter");
-        // Nous allons simuler une sauvegarde réussie sans accéder à une table qui n'existe pas
+        try {
+          // Vérifier d'abord si la table existe
+          const { count, error: tableCheckError } = await supabase
+            .from('user_payment_methods')
+            .select('*', { count: 'exact', head: true });
+            
+          // Si la table existe, on peut insérer la méthode de paiement
+          if (tableCheckError === null) {
+            const { data: paymentMethod, error: methodError } = await supabase
+              .from('user_payment_methods')
+              .insert({
+                user_id: user.id,
+                payment_type: 'mobile',
+                provider: operator,
+                last_four: phoneNumber.slice(-4),
+                is_default: false,
+                metadata: {
+                  phone_number: phoneNumber
+                },
+                last_used: new Date().toISOString()
+              });
+
+            if (methodError) {
+              console.warn('Erreur lors de la sauvegarde de la méthode de paiement:', methodError);
+            }
+          } else {
+            console.log('La table user_payment_methods n\'existe pas encore');
+          }
+        } catch (err) {
+          console.warn('Erreur lors de la gestion de la méthode de paiement:', err);
+          // On continue quand même car ce n'est pas critique
+        }
       }
 
       // Simulate payment processing

@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Star, Truck, Clock, ThumbsUp } from 'lucide-react';
-import type { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
+import { supabase } from '@/integrations/supabase/client';
+import { DeliveryDriver, DeliveryDriverRating } from '@/types/delivery';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { StarIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface DeliveryDriverRatingProps {
   deliveryId: string;
@@ -15,249 +15,244 @@ interface DeliveryDriverRatingProps {
   onRatingSubmitted?: () => void;
 }
 
-const DeliveryDriverRating = ({ deliveryId, orderId, driverId, onRatingSubmitted }: DeliveryDriverRatingProps) => {
-  const [ratings, setRatings] = useState({
-    speed: 0,
-    politeness: 0, 
-    overall: 0
-  });
-  const [comment, setComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [driverInfo, setDriverInfo] = useState<DeliveryDriver | null>(null);
+const DeliveryDriverRating = ({ 
+  deliveryId, 
+  orderId, 
+  driverId,
+  onRatingSubmitted
+}: DeliveryDriverRatingProps) => {
+  const [speedRating, setSpeedRating] = useState<number>(0);
+  const [politenessRating, setPolitenessRating] = useState<number>(0);
+  const [overallRating, setOverallRating] = useState<number>(0);
+  const [comment, setComment] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
   const { toast } = useToast();
 
-  // Récupérer les infos du livreur
   useEffect(() => {
     const fetchDriverInfo = async () => {
-      if (!driverId) return;
-      
-      const { data, error } = await supabase
-        .from('delivery_drivers')
-        .select('*')
-        .eq('id', driverId)
-        .single();
-        
-      if (error) {
-        console.error('Erreur lors de la récupération des infos du livreur:', error);
-        return;
-      }
-      
-      if (data) {
-        // Nous devons nous assurer que toutes les propriétés requises sont présentes
-        setDriverInfo({
-          id: data.id,
-          user_id: data.user_id,
-          name: data.name || 'Livreur',
-          phone: data.phone || '',
-          current_latitude: data.current_latitude,
-          current_longitude: data.current_longitude,
-          current_location: data.current_location,
-          is_available: data.is_available ?? true,
-          status: (data.status as any) || 'offline',
-          vehicle_type: data.vehicle_type,
-          total_deliveries: data.total_deliveries || 0,
-          average_rating: data.average_rating || 4.5,
-          profile_picture: data.profile_picture,
-          restaurant_id: data.restaurant_id,
-          commission_rate: data.commission_rate || 0,
-          total_earnings: data.total_earnings || 0,
-          created_at: data.created_at,
-          updated_at: data.updated_at || data.created_at,
-          last_location_update: data.last_location_update
-        });
+      try {
+        const { data: driverData, error } = await supabase
+          .from('delivery_drivers')
+          .select('*')
+          .eq('id', driverId)
+          .single();
+
+        if (error) throw error;
+
+        if (driverData) {
+          // Type casting to match the DeliveryDriver interface with required fields
+          setDriver({
+            id: driverData.id,
+            user_id: driverData.user_id,
+            name: driverData.name || 'Livreur',
+            phone: driverData.phone || '',
+            current_latitude: driverData.current_latitude,
+            current_longitude: driverData.current_longitude,
+            current_location: driverData.current_location,
+            is_available: driverData.is_available || false,
+            status: driverData.status || 'offline',
+            vehicle_type: driverData.vehicle_type || 'bike',
+            total_deliveries: driverData.total_deliveries || 0,
+            average_rating: driverData.average_rating || 0,
+            profile_picture: driverData.profile_picture,
+            restaurant_id: driverData.restaurant_id,
+            commission_rate: driverData.commission_rate || 0,
+            total_earnings: driverData.total_earnings || 0,
+            created_at: driverData.created_at,
+            updated_at: driverData.updated_at || driverData.created_at
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des informations du livreur:', error);
       }
     };
-    
-    fetchDriverInfo();
+
+    if (driverId) {
+      fetchDriverInfo();
+    }
   }, [driverId]);
 
-  const handleRatingChange = (type: keyof typeof ratings, value: number) => {
-    setRatings(prev => ({ ...prev, [type]: value }));
-  };
+  const handleSubmit = async () => {
+    if (speedRating === 0 || politenessRating === 0 || overallRating === 0) {
+      toast({
+        title: 'Évaluation incomplète',
+        description: 'Veuillez évaluer toutes les catégories',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-  const submitRating = async () => {
+    setSubmitting(true);
+
     try {
-      if (ratings.overall === 0) {
-        toast({
-          title: "Note requise",
-          description: "Veuillez attribuer une note globale",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setIsSubmitting(true);
-      
-      // Récupérer l'utilisateur connecté
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erreur",
-          description: "Vous devez être connecté pour noter un livreur",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Vérifier si la table de notation existe
+      // Vérifier si la table existe
       const { count, error: tableCheckError } = await supabase
         .from('delivery_driver_ratings')
         .select('*', { count: 'exact', head: true });
-      
+        
       if (tableCheckError) {
-        console.log('La table delivery_driver_ratings nexiste pas encore, simulation de notation');
-        
+        console.error('La table delivery_driver_ratings n\'existe pas encore:', tableCheckError);
         toast({
-          title: "Merci pour votre avis !",
-          description: "Votre notation a été enregistrée avec succès",
+          title: 'Évaluation enregistrée',
+          description: 'Votre évaluation a été enregistrée avec succès (simulation)',
+          variant: 'default',
         });
-        
-        if (onRatingSubmitted) {
-          onRatingSubmitted();
-        }
-        
+        if (onRatingSubmitted) onRatingSubmitted();
         return;
       }
 
-      // Enregistrer la notation
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Vous devez être connecté pour évaluer un livreur');
+      }
+
+      // Create rating
       const { error } = await supabase
         .from('delivery_driver_ratings')
-        .insert([
-          {
-            delivery_request_id: deliveryId,
-            order_id: orderId,
-            driver_id: driverId,
-            user_id: user.id,
-            speed_rating: ratings.speed,
-            politeness_rating: ratings.politeness,
-            overall_rating: ratings.overall,
-            comment: comment || null
-          }
-        ]);
+        .insert({
+          delivery_request_id: deliveryId,
+          order_id: orderId,
+          driver_id: driverId,
+          user_id: user.id,
+          speed_rating: speedRating,
+          politeness_rating: politenessRating,
+          overall_rating: overallRating,
+          comment: comment || null,
+          created_at: new Date().toISOString()
+        });
 
       if (error) throw error;
 
-      // Mettre à jour la note moyenne du livreur
-      if (driverInfo) {
-        const newTotalDeliveries = driverInfo.total_deliveries + 1;
-        const newAverageRating = 
-          ((driverInfo.average_rating * driverInfo.total_deliveries) + ratings.overall) / 
-          newTotalDeliveries;
-          
+      // Update driver's average rating
+      // Cette partie peut être gérée côté serveur avec un déclencheur
+      // mais nous l'incluons ici pour être sûr
+      const { data: allRatings, error: ratingsError } = await supabase
+        .from('delivery_driver_ratings')
+        .select('overall_rating')
+        .eq('driver_id', driverId);
+
+      if (!ratingsError && allRatings && allRatings.length > 0) {
+        const totalRating = allRatings.reduce((sum, rating) => sum + rating.overall_rating, 0);
+        const avgRating = totalRating / allRatings.length;
+        
         await supabase
           .from('delivery_drivers')
           .update({ 
-            average_rating: newAverageRating,
-            total_deliveries: newTotalDeliveries
+            average_rating: avgRating,
+            total_deliveries: allRatings.length
           })
           .eq('id', driverId);
       }
 
       toast({
-        title: "Merci pour votre avis !",
-        description: "Votre notation a été enregistrée avec succès",
+        title: 'Évaluation enregistrée',
+        description: 'Votre évaluation a été enregistrée avec succès',
+        variant: 'default',
       });
 
-      if (onRatingSubmitted) {
-        onRatingSubmitted();
-      }
+      if (onRatingSubmitted) onRatingSubmitted();
+
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de la notation:', error);
+      console.error('Erreur lors de l\'enregistrement de l\'évaluation:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer votre notation",
-        variant: "destructive",
+        title: 'Erreur',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
+        variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  const RatingStars = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => onChange(star)}
-          className="focus:outline-none"
-        >
-          <Star
-            className={`h-6 w-6 ${
-              star <= value ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-            }`}
-          />
-        </button>
-      ))}
-    </div>
-  );
+  const renderStars = (rating: number, setRating: (rating: number) => void) => {
+    return (
+      <div className="flex space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => setRating(star)}
+            className="focus:outline-none"
+          >
+            <StarIcon
+              className={`h-6 w-6 ${
+                star <= rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'
+              }`}
+            />
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Évaluer votre livreur</CardTitle>
-        <CardDescription>
-          Aidez-nous à améliorer notre service de livraison en notant votre expérience
-        </CardDescription>
+        <CardTitle className="text-lg">Évaluer votre livreur</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {driver && (
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="h-12 w-12 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center">
+              {driver.profile_picture ? (
+                <img src={driver.profile_picture} alt={driver.name} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-lg font-semibold text-gray-600">{driver.name.charAt(0)}</span>
+              )}
+            </div>
+            <div>
+              <h3 className="font-medium">{driver.name}</h3>
+              <div className="text-sm text-gray-500">
+                {driver.vehicle_type === 'bike' ? 'À vélo' : 
+                driver.vehicle_type === 'car' ? 'En voiture' : 
+                driver.vehicle_type === 'scooter' ? 'En scooter' : 'À pied'}
+              </div>
+            </div>
+          </div>
+        )}
+      
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-500" />
-              <span>Rapidité de livraison</span>
-            </div>
-            <RatingStars
-              value={ratings.speed}
-              onChange={(value) => handleRatingChange('speed', value)}
-            />
+          <div>
+            <label className="block text-sm font-medium mb-1">Rapidité de livraison</label>
+            {renderStars(speedRating, setSpeedRating)}
           </div>
-
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <ThumbsUp className="h-5 w-5 text-green-500" />
-              <span>Politesse et professionnalisme</span>
-            </div>
-            <RatingStars
-              value={ratings.politeness}
-              onChange={(value) => handleRatingChange('politeness', value)}
-            />
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Politesse et amabilité</label>
+            {renderStars(politenessRating, setPolitenessRating)}
           </div>
-
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-yellow-500" />
-              <span>Note globale</span>
-            </div>
-            <RatingStars
-              value={ratings.overall}
-              onChange={(value) => handleRatingChange('overall', value)}
-            />
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Évaluation globale</label>
+            {renderStars(overallRating, setOverallRating)}
           </div>
-
-          <div className="pt-4">
-            <label className="block text-sm font-medium mb-2">
+          
+          <div>
+            <label htmlFor="comment" className="block text-sm font-medium mb-1">
               Commentaire (optionnel)
             </label>
             <Textarea
+              id="comment"
               placeholder="Partagez votre expérience avec ce livreur..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
+              className="w-full"
             />
           </div>
+          
+          <Button 
+            onClick={handleSubmit} 
+            disabled={submitting}
+            className="w-full"
+          >
+            {submitting ? 'Envoi en cours...' : 'Soumettre l\'évaluation'}
+          </Button>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={submitRating} 
-          disabled={isSubmitting || ratings.overall === 0}
-          className="w-full"
-        >
-          {isSubmitting ? 'Envoi en cours...' : 'Soumettre mon évaluation'}
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

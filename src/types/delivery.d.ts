@@ -1,4 +1,5 @@
 
+
 // Types pour les livraisons
 export interface DeliveryDriver {
   id: string;
@@ -26,7 +27,7 @@ export interface DeliveryRequest {
   id: string;
   order_id: string;
   restaurant_id: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'failed';
+  status: DeliveryStatus;
   pickup_address: string;
   pickup_latitude: number;
   pickup_longitude: number;
@@ -49,13 +50,14 @@ export interface DeliveryRequest {
   delivery_instructions?: string;
   pickup_time?: string;
   distance_km?: number;
+  delivery_type?: DeliveryType; // Ajout pour la compatibilité avec le code existant
 }
 
 export interface DeliveryZone {
   id: string;
   name: string;
   description: string;
-  polygon: GeoJSON.Polygon;
+  polygon: any; // JSONB dans la base de données
   base_delivery_fee: number;
   minimum_order: number;
   estimated_time_range: {
@@ -150,5 +152,21 @@ export interface DeliveryDriverRating {
   created_at: string;
 }
 
+// Interface pour les méthodes de paiement utilisateur
+export interface UserPaymentMethod {
+  id: string;
+  user_id: string;
+  payment_type: string;
+  provider: string;
+  last_four?: string;
+  expiry_date?: string;
+  is_default: boolean;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  last_used?: string;
+}
+
 export type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'failed' | 'completed' | 'accepted' | 'rejected' | 'cancelled' | 'on_the_way';
 export type DeliveryType = 'restaurant' | 'external' | 'pickup';
+

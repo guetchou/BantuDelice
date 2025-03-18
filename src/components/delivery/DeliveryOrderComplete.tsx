@@ -8,7 +8,7 @@ import DeliveryDriverRating from './DeliveryDriverRating';
 import DeliveryRating from './DeliveryRating';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingBag, User } from 'lucide-react';
-import { DeliveryRequest } from '@/types/delivery';
+import { DeliveryRequest, DeliveryStatus } from '@/types/delivery';
 
 interface DeliveryOrderCompleteProps {
   orderId: string;
@@ -20,20 +20,50 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
   const [loading, setLoading] = useState(true);
   const [hasRatedDelivery, setHasRatedDelivery] = useState(false);
   const [hasRatedDriver, setHasRatedDriver] = useState(false);
+  const [tablesExist, setTablesExist] = useState({
+    delivery_requests: false,
+    delivery_driver_ratings: false
+  });
   const { toast } = useToast();
+
+  // Vérifier si les tables nécessaires existent
+  useEffect(() => {
+    const checkTables = async () => {
+      try {
+        // Vérifier la table delivery_requests
+        const { count: requestsCount, error: requestsError } = await supabase
+          .from('delivery_requests')
+          .select('*', { count: 'exact', head: true });
+          
+        setTablesExist(prev => ({
+          ...prev,
+          delivery_requests: requestsError ? false : true
+        }));
+        
+        // Vérifier la table delivery_driver_ratings
+        const { count: ratingsCount, error: ratingsError } = await supabase
+          .from('delivery_driver_ratings')
+          .select('*', { count: 'exact', head: true });
+          
+        setTablesExist(prev => ({
+          ...prev,
+          delivery_driver_ratings: ratingsError ? false : true
+        }));
+      } catch (error) {
+        console.error('Erreur lors de la vérification des tables:', error);
+      }
+    };
+    
+    checkTables();
+  }, []);
 
   useEffect(() => {
     const fetchDeliveryRequest = async () => {
       try {
         setLoading(true);
         
-        // Vérifier si la table delivery_requests existe
-        const { count, error: tableCheckError } = await supabase
-          .from('delivery_requests')
-          .select('*', { count: 'exact', head: true });
-          
-        if (tableCheckError) {
-          console.log('La table delivery_requests n\'existe pas encore');
+        // Si la table n'existe pas, on arrête
+        if (!tablesExist.delivery_requests) {
           setLoading(false);
           return;
         }
@@ -52,7 +82,36 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
         }
         
         if (requestData) {
-          setDeliveryRequest(requestData as unknown as DeliveryRequest);
+          // Assurer que les propriétés correspondent à l'interface DeliveryRequest
+          setDeliveryRequest({
+            id: requestData.id,
+            order_id: requestData.order_id,
+            restaurant_id: requestData.restaurant_id,
+            status: requestData.status as DeliveryStatus,
+            pickup_address: requestData.pickup_address,
+            pickup_latitude: requestData.pickup_latitude,
+            pickup_longitude: requestData.pickup_longitude,
+            delivery_address: requestData.delivery_address,
+            delivery_latitude: requestData.delivery_latitude,
+            delivery_longitude: requestData.delivery_longitude,
+            assigned_driver_id: requestData.assigned_driver_id,
+            requested_at: requestData.requested_at,
+            accepted_at: requestData.accepted_at,
+            completed_at: requestData.completed_at,
+            cancelled_at: requestData.cancelled_at,
+            delivery_fee: requestData.delivery_fee,
+            is_external: requestData.is_external,
+            external_service_id: requestData.external_service_id,
+            notes: requestData.notes,
+            priority: requestData.priority || 'normal',
+            estimated_distance: requestData.estimated_distance,
+            estimated_duration: requestData.estimated_duration,
+            delivery_time: requestData.delivery_time,
+            delivery_instructions: requestData.delivery_instructions,
+            pickup_time: requestData.pickup_time,
+            distance_km: requestData.distance_km,
+            delivery_type: requestData.delivery_type as any
+          });
         
           // Vérifier si l'utilisateur a déjà évalué la livraison
           const { data: { user } } = await supabase.auth.getUser();
@@ -69,25 +128,16 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
             setHasRatedDelivery(!!restaurantRating);
             
             // Vérifier notation livreur
-            if (requestData.assigned_driver_id) {
-              try {
-                const { count } = await supabase
-                  .from('delivery_driver_ratings')
-                  .select('*', { count: 'exact', head: true });
+            if (requestData.assigned_driver_id && tablesExist.delivery_driver_ratings) {
+              const { data: driverRating } = await supabase
+                .from('delivery_driver_ratings')
+                .select('id')
+                .eq('order_id', orderId)
+                .eq('user_id', user.id)
+                .eq('driver_id', requestData.assigned_driver_id)
+                .maybeSingle();
                 
-                // La table existe, on peut continuer
-                const { data: driverRating } = await supabase
-                  .from('delivery_driver_ratings')
-                  .select('id')
-                  .eq('order_id', orderId)
-                  .eq('user_id', user.id)
-                  .eq('driver_id', requestData.assigned_driver_id)
-                  .maybeSingle();
-                  
-                setHasRatedDriver(!!driverRating);
-              } catch (error) {
-                console.log('La table delivery_driver_ratings n\'existe pas encore');
-              }
+              setHasRatedDriver(!!driverRating);
             }
           }
         }
@@ -103,10 +153,12 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
       }
     };
     
-    if (orderId) {
+    if (orderId && (tablesExist.delivery_requests || tablesExist.delivery_driver_ratings)) {
       fetchDeliveryRequest();
+    } else if (!tablesExist.delivery_requests && !tablesExist.delivery_driver_ratings) {
+      setLoading(false);
     }
-  }, [orderId, toast]);
+  }, [orderId, toast, tablesExist]);
 
   const handleRatingSubmitted = () => {
     setHasRatedDelivery(true);
@@ -127,7 +179,7 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
   }
 
   // Si pas de livraison trouvée
-  if (!deliveryRequest) {
+  if (!deliveryRequest && tablesExist.delivery_requests) {
     return null;
   }
 
@@ -146,7 +198,7 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
               <ShoppingBag className="w-4 h-4 mr-2" />
               Restaurant
             </TabsTrigger>
-            {deliveryRequest.assigned_driver_id && (
+            {deliveryRequest && deliveryRequest.assigned_driver_id && tablesExist.delivery_driver_ratings && (
               <TabsTrigger value="driver" className="flex-1">
                 <User className="w-4 h-4 mr-2" />
                 Livreur
@@ -170,7 +222,7 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
             )}
           </TabsContent>
           
-          {deliveryRequest.assigned_driver_id && (
+          {deliveryRequest && deliveryRequest.assigned_driver_id && tablesExist.delivery_driver_ratings && (
             <TabsContent value="driver" className="pt-4">
               {hasRatedDriver ? (
                 <div className="text-center py-6">

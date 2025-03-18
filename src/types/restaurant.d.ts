@@ -1,4 +1,58 @@
-export interface Restaurant {
+
+export interface Table {
+  id: string;
+  restaurant_id: string;
+  table_number: number;
+  capacity: number;
+  minimum_guests: number;
+  maximum_guests: number;
+  is_available: boolean;
+  location: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Reservation {
+  id: string;
+  restaurant_id: string;
+  table_id: string;
+  user_id: string;
+  reservation_date: string;
+  party_size: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
+  special_requests?: string;
+  contact_phone: string;
+  contact_email?: string;
+  estimated_duration_minutes: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BusinessDay {
+  open: string;
+  close: string;
+  is_closed: boolean;
+}
+
+export interface BusinessHours {
+  regular: {
+    monday: BusinessDay;
+    tuesday: BusinessDay;
+    wednesday: BusinessDay;
+    thursday: BusinessDay;
+    friday: BusinessDay;
+    saturday: BusinessDay;
+    sunday: BusinessDay;
+  };
+  special?: {
+    date: string;
+    open: string;
+    close: string;
+    is_closed: boolean;
+  }[];
+}
+
+export interface RestaurantDetails {
   id: string;
   name: string;
   description: string;
@@ -6,82 +60,39 @@ export interface Restaurant {
   latitude: number;
   longitude: number;
   phone: string;
+  website?: string;
   email: string;
-  status: "open" | "closed" | "busy";
-  average_prep_time: number; 
-  banner_image_url?: string;
   logo_url?: string;
-  cuisine_type: string;
-  rating?: number;
+  banner_image_url?: string;
+  cuisine_type: string[];
+  price_range: number;
+  average_rating: number;
   total_ratings: number;
-  minimum_order: number;
-  delivery_fee: number;
-  business_hours: BusinessHours;
-  special_days?: string[];
-  distance?: number;
-  menu_items?: MenuItem[];
-  trending?: boolean;
-}
-
-export interface BusinessHours {
-  regular: {
-    [key: string]: {
-      open: string;
-      close: string;
-    };
-  };
-  special?: {
-    date: string;
-    hours: {
-      open: string;
-      close: string;
-    };
-  }[];
-}
-
-export interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image_url?: string;
-  category: string;
-  restaurant_id: string;
-  available: boolean;
+  featured: boolean;
+  user_id: string;
   created_at: string;
   updated_at: string;
-  ingredients?: string[];
-  rating?: number;
-  preparation_time?: number;
-  dietary_preferences?: string[];
-  customization_options?: Record<string, any>;
-  nutritional_info?: {
-    calories?: number | null;
-    protein?: number | null;
-    carbs?: number | null;
-    fat?: number | null;
-    fiber?: number | null;
-  };
-  allergens?: string[];
-  popularity_score?: number;
+  status: 'active' | 'inactive' | 'pending';
+  business_hours: BusinessHours;
+  delivery_radius?: number;
+  minimum_order?: number;
+  payment_methods: string[];
+  tags?: string[];
+  opening_date?: string;
+  special_features?: string[];
+  delivery_fee?: number;
+  free_delivery_min?: number;
+  special_days?: {
+    date: string;
+    name: string;
+    open: string;
+    close: string;
+    is_closed: boolean;
+  }[];
+  contact_phone: string;
+  contact_email: string;
+  is_open: boolean;
+  estimated_delivery_time: number;
 }
 
-export interface RestaurantFilters {
-  cuisine_type?: string[];
-  price_range?: 'low' | 'medium' | 'high';
-  rating?: number;
-  distance?: number;
-  isOpen?: boolean;
-  hasDelivery?: boolean;
-  hasPickup?: boolean;
-}
-
-export interface RestaurantSortOption {
-  label: string;
-  value: 'rating' | 'distance' | 'price' | 'preparation_time';
-}
-
-export interface RestaurantViewMode {
-  type: 'grid' | 'map';
-  gridColumns?: 1 | 2 | 3 | 4;
-}
+export type RestaurantStatus = 'open' | 'busy' | 'closed';
