@@ -161,6 +161,12 @@ export interface Restaurant {
   average_prep_time?: number;
   special_days?: any;
   updated_at?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  free_delivery_min?: number;
+  opening_date?: string;
+  special_features?: string[];
+  estimated_delivery_time?: number;
 }
 
 export interface RestaurantFilters {

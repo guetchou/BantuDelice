@@ -3,7 +3,7 @@ export interface Notification {
   id: string;
   user_id: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: 'info' | 'success' | 'warning' | 'error' | string;
   action_type: string;
   read: boolean;
   link?: string;

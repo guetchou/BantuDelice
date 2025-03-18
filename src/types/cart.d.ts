@@ -10,6 +10,7 @@ export interface CartItem {
   quantity: number;
   options?: { name: string; value: string; price: number }[];
   instructions?: string;
+  special_instructions?: string;
   restaurant_id?: string;
   customization_options?: Record<string, any>;
 }

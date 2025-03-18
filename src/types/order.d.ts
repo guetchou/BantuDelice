@@ -11,16 +11,35 @@ export interface Order {
   created_at: string;
   updated_at?: string;
   delivery_address_id?: string;
+  delivery_address?: string;
   delivery_fee?: number;
   estimated_delivery_time?: string;
   actual_delivery_time?: string;
   special_instructions?: string;
+  delivery_instructions?: string;
   coupon_id?: string;
   discount_amount?: number;
   driver_id?: string;
   tip_amount?: number;
   tax_amount?: number;
   subtotal_amount?: number;
+  
+  // Additional fields from the database
+  rating?: number;
+  accepted_at?: string;
+  prepared_at?: string;
+  restaurant_rating?: number;
+  loyalty_points_earned?: number;
+  estimated_preparation_time?: number;
+  special_requests?: any;
+  delivery_time_preference?: string;
+  cancelled_at?: string;
+  stock_validated?: boolean;
+  delivery_status?: string;
+  rating_comment?: string;
+  restaurant_comment?: string;
+  payment_reference?: string;
+  cancellation_reason?: string;
 }
 
 export interface OrderItem {
@@ -36,6 +55,7 @@ export interface OrderItem {
     value: string;
     price: number;
   }>;
+  item_name?: string;
 }
 
 export type OrderStatus = 
@@ -69,6 +89,7 @@ export interface OrderTrackingDetail {
     longitude: number;
   };
   handled_by?: string;
+  estimated_completion_time?: string;
 }
 
 export interface OrderWithDetails extends Order {

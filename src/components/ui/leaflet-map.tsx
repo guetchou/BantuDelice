@@ -14,44 +14,79 @@ import {
   PopupProps, 
   PolylineProps 
 } from 'react-leaflet';
-import { LeafletMouseEvent } from 'leaflet';
+import { LeafletMouseEvent, Icon } from 'leaflet';
 
 // Wrapper components to ensure compatibility with the latest react-leaflet
-
-export const MapContainer: React.FC<MapContainerProps & { 
+export interface ExtendedMapContainerProps extends MapContainerProps {
   center?: [number, number];
   zoom?: number;
   children: React.ReactNode;
-}> = ({ center, zoom, children, ...props }) => {
+  scrollWheelZoom?: boolean;
+}
+
+export interface ExtendedTileLayerProps extends TileLayerProps {
+  attribution?: string;
+  url: string;
+}
+
+export interface ExtendedMarkerProps extends Omit<MarkerProps, 'position'> {
+  position: [number, number];
+  icon?: Icon;
+  eventHandlers?: {
+    click?: (e: LeafletMouseEvent) => void;
+    [key: string]: any;
+  };
+  children?: React.ReactNode;
+}
+
+export interface ExtendedPolylineProps extends PolylineProps {
+  positions: [number, number][];
+  color?: string;
+  weight?: number;
+  opacity?: number;
+  dashArray?: string;
+}
+
+export const MapContainer: React.FC<ExtendedMapContainerProps> = ({ 
+  center, 
+  zoom, 
+  children,
+  scrollWheelZoom,
+  ...props 
+}) => {
   return (
     <LeafletMapContainer 
       {...props}
       center={center}
       zoom={zoom}
+      scrollWheelZoom={scrollWheelZoom}
     >
       {children}
     </LeafletMapContainer>
   );
 };
 
-export const TileLayer: React.FC<TileLayerProps & {
-  attribution?: string;
-}> = ({ attribution, ...props }) => {
+export const TileLayer: React.FC<ExtendedTileLayerProps> = ({ 
+  attribution, 
+  url,
+  ...props 
+}) => {
   return (
     <LeafletTileLayer 
       {...props}
       attribution={attribution}
+      url={url}
     />
   );
 };
 
-export const Marker: React.FC<MarkerProps & {
-  icon?: any;
-  position: [number, number];
-  eventHandlers?: {
-    click?: (e: LeafletMouseEvent) => void;
-  };
-}> = ({ icon, position, eventHandlers, children, ...props }) => {
+export const Marker: React.FC<ExtendedMarkerProps> = ({ 
+  icon, 
+  position, 
+  eventHandlers, 
+  children,
+  ...props 
+}) => {
   return (
     <LeafletMarker 
       {...props}
@@ -74,13 +109,14 @@ export const Popup: React.FC<PopupProps & {
   );
 };
 
-export const Polyline: React.FC<PolylineProps & {
-  positions: [number, number][];
-  color?: string;
-  weight?: number;
-  opacity?: number;
-  dashArray?: string;
-}> = ({ positions, color, weight, opacity, dashArray, ...props }) => {
+export const Polyline: React.FC<ExtendedPolylineProps> = ({ 
+  positions, 
+  color, 
+  weight, 
+  opacity, 
+  dashArray,
+  ...props 
+}) => {
   const pathOptions = {
     color,
     weight,

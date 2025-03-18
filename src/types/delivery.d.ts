@@ -36,7 +36,7 @@ export interface DeliveryRequest {
   id: string;
   order_id: string;
   restaurant_id: string;
-  status: string;
+  status: DeliveryStatus;
   pickup_address: string;
   pickup_latitude: number;
   pickup_longitude: number;
@@ -59,7 +59,7 @@ export interface DeliveryRequest {
   delivery_instructions?: string;
   pickup_time?: string;
   distance_km: number;
-  delivery_type: string;
+  delivery_type: DeliveryType;
 }
 
 export interface DeliveryTracking {
@@ -67,7 +67,7 @@ export interface DeliveryTracking {
   delivery_request_id: string;
   order_id: string;
   driver_id: string;
-  status: string;
+  status: DeliveryStatus;
   latitude: number;
   longitude: number;
   timestamp: string;
@@ -126,6 +126,15 @@ export interface DeliverySettings {
   external_service_id?: string;
   created_at: string;
   updated_at: string;
+  allow_restaurant_delivery?: boolean;
+  allow_external_delivery?: boolean;
+  default_delivery_fee?: number;
+  free_delivery_threshold?: number;
+  max_delivery_distance?: number;
+  estimated_delivery_time?: number;
+  auto_accept_orders?: boolean;
+  auto_assign_drivers?: boolean;
+  accepted_external_services?: string[];
 }
 
 export interface ExternalDeliveryService {
@@ -134,6 +143,7 @@ export interface ExternalDeliveryService {
   logo_url?: string;
   base_fee: number;
   price_per_km?: number;
+  fee_per_km?: number;
   estimated_time: number;
   is_active: boolean;
   created_at: string;
@@ -143,9 +153,12 @@ export interface ExternalDeliveryService {
 // Enum type for delivery status
 export type DeliveryStatus = 
   | 'pending'
+  | 'assigned'
   | 'accepted'
   | 'pickup'
+  | 'picked_up'
   | 'in_transit'
+  | 'delivering'
   | 'delivered'
   | 'cancelled'
   | 'failed';
@@ -155,4 +168,6 @@ export type DeliveryType =
   | 'standard'
   | 'express'
   | 'scheduled'
-  | 'partner';
+  | 'partner'
+  | 'restaurant'
+  | 'external';

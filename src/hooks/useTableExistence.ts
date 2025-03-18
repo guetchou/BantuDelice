@@ -14,16 +14,26 @@ export const useTableExistence = (tableName: string) => {
     const checkTableExists = async () => {
       try {
         setLoading(true);
-        // Use the function we created in SQL
-        const { data, error: queryError } = await supabase.rpc('check_table_exists', {
-          table_name: tableName
-        });
+        // First try using RPC function if it exists
+        try {
+          const { data, error: rpcError } = await supabase.rpc('check_table_exists', {
+            table_name: tableName
+          });
+          
+          if (!rpcError && data !== null) {
+            setExists(data > 0);
+            return;
+          }
+        } catch (rpcErr) {
+          // RPC function doesn't exist, continue with fallback approach
+          console.log('RPC check_table_exists not available, using fallback approach');
+        }
         
-        if (queryError) {
-          // If the function doesn't exist, check using a different approach
-          // Try a simple select from the table
+        // Fallback approach: Check if a query to the table works
+        try {
+          // This approach will only work if the table has an 'id' column
           const { error: fallbackError } = await supabase
-            .from(tableName)
+            .from(tableName as any)
             .select('id')
             .limit(1);
 
@@ -33,8 +43,9 @@ export const useTableExistence = (tableName: string) => {
           } else {
             setExists(true);
           }
-        } else {
-          setExists(data > 0);
+        } catch (fallbackErr) {
+          console.error(`Fallback check for table '${tableName}' failed:`, fallbackErr);
+          setExists(false);
         }
       } catch (err) {
         console.error(`Error checking if table '${tableName}' exists:`, err);
