@@ -17,6 +17,15 @@ export interface TaxiRide {
   destination_latitude?: number;
   destination_longitude?: number;
   special_instructions?: string;
+  is_shared_ride?: boolean;
+  max_passengers?: number;
+  current_passengers?: number;
+  estimated_arrival_time?: string;
+  actual_arrival_time?: string;
+  distance_km?: number;
+  route_polyline?: string;
+  promo_code_applied?: string;
+  promo_discount?: number;
 }
 
 export interface TaxiRating {
@@ -53,4 +62,42 @@ export interface TaxiDriver {
   current_location?: string;
   current_latitude?: number;
   current_longitude?: number;
+  total_rides?: number;
+  total_earnings?: number;
+  years_experience?: number;
+  languages?: string[];
+  verified?: boolean;
+  background_check_passed?: boolean;
+  vehicle_inspection_date?: string;
+  insurance_verified?: boolean;
+}
+
+export interface TaxiPromoCode {
+  id: string;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  valid_from: string;
+  valid_until: string;
+  max_uses: number;
+  current_uses: number;
+  min_ride_value?: number;
+  max_discount?: number;
+  applies_to_vehicle_types?: string[];
+  description?: string;
+  is_active: boolean;
+}
+
+export interface RideShareRequest {
+  id: string;
+  ride_id: string;
+  requester_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  pickup_address: string;
+  destination_address: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  destination_latitude?: number;
+  destination_longitude?: number;
+  created_at: string;
 }
