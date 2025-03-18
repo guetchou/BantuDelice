@@ -74,6 +74,7 @@ export interface DeliveryTracking {
   updated_at: string;
   picked_up_at?: string;
   delivered_at?: string;
+  notes?: string;
 }
 
 export interface DeliveryDriverRating {
@@ -110,3 +111,48 @@ export interface UserPaymentMethod {
   created_at: string;
   last_used?: string;
 }
+
+export interface DeliverySettings {
+  id: string;
+  restaurant_id: string;
+  is_enabled: boolean;
+  delivery_radius: number;
+  minimum_order: number;
+  base_delivery_fee: number;
+  free_delivery_min?: number;
+  estimated_time_range: string;
+  allow_scheduling: boolean;
+  use_external_service: boolean;
+  external_service_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExternalDeliveryService {
+  id: string;
+  name: string;
+  logo_url?: string;
+  base_fee: number;
+  price_per_km?: number;
+  estimated_time: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Enum type for delivery status
+export type DeliveryStatus = 
+  | 'pending'
+  | 'accepted'
+  | 'pickup'
+  | 'in_transit'
+  | 'delivered'
+  | 'cancelled'
+  | 'failed';
+
+// Enum type for delivery type
+export type DeliveryType =
+  | 'standard'
+  | 'express'
+  | 'scheduled'
+  | 'partner';

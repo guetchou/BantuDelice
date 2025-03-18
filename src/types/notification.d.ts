@@ -1,6 +1,24 @@
 
-import { Database } from "@/integrations/supabase/database.types";
+export interface Notification {
+  id: string;
+  user_id: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  action_type: string;
+  read: boolean;
+  link?: string;
+  created_at: string;
+  metadata?: any;
+}
 
-export type Notification = Database['public']['Tables']['notifications']['Row'];
-export type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
-export type NotificationUpdate = Database['public']['Tables']['notifications']['Update'];
+export interface NotificationPreference {
+  id: string;
+  user_id: string;
+  type: string;  // order_updates, promotions, etc.
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+  in_app: boolean;
+  created_at: string;
+  updated_at: string;
+}

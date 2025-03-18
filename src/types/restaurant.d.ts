@@ -57,7 +57,7 @@ export interface Reservation {
   created_at: string;
   updated_at: string;
   
-  // Champs additionnels pour compatibilité
+  // Additional fields for compatibility
   arrival_time?: string;
   departure_time?: string;
   customer_name?: string;
@@ -160,6 +160,7 @@ export interface Restaurant {
   delivery_fee?: number;
   average_prep_time?: number;
   special_days?: any;
+  updated_at?: string;
 }
 
 export interface RestaurantFilters {

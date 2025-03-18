@@ -1,33 +1,26 @@
 
-// Types pour les commandes
-export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'prepared' | 'delivering' | 'delivered' | 'cancelled';
-
 export interface Order {
   id: string;
   user_id: string;
   restaurant_id: string;
-  status: OrderStatus | string; // Rendre plus flexible pour compatibilité avec la BD
+  order_items: OrderItem[];
+  status: OrderStatus;
   total_amount: number;
-  delivery_address: string;
-  payment_status: string;
-  delivery_status: string;
+  payment_status: PaymentStatus;
+  payment_method: string;
   created_at: string;
   updated_at?: string;
-  estimated_preparation_time?: number;
-  delivery_instructions?: string;
-  items?: OrderItem[];
-  loyalty_points_earned?: number;
-  
-  // Champs additionnels pour la compatibilité
-  accepted_at?: string;
-  completed_at?: string;
-  cancelled_at?: string;
-  actual_delivery_time?: string;
-  cancellation_reason?: string;
+  delivery_address_id?: string;
   delivery_fee?: number;
-  // Nouveaux champs pour la compatibilité avec la BD
-  delivery_latitude?: number;
-  delivery_longitude?: number;
+  estimated_delivery_time?: string;
+  actual_delivery_time?: string;
+  special_instructions?: string;
+  coupon_id?: string;
+  discount_amount?: number;
+  driver_id?: string;
+  tip_amount?: number;
+  tax_amount?: number;
+  subtotal_amount?: number;
 }
 
 export interface OrderItem {
@@ -35,64 +28,67 @@ export interface OrderItem {
   order_id: string;
   menu_item_id: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
+  price: number;
   special_instructions?: string;
-  options?: {
+  created_at: string;
+  options?: Array<{
     name: string;
     value: string;
-    price?: number;
-  }[];
+    price: number;
+  }>;
 }
 
-export interface OrderTrackingDetails {
+export type OrderStatus = 
+  | 'pending'
+  | 'accepted'
+  | 'preparing'
+  | 'prepared'
+  | 'ready'
+  | 'delivering'
+  | 'delivered'
+  | 'completed'
+  | 'cancelled'
+  | 'refunded';
+
+export type PaymentStatus = 
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed'
+  | 'refunded'
+  | 'cancelled';
+
+export interface OrderTrackingDetail {
   id: string;
   order_id: string;
-  status: 'preparing' | 'ready' | 'picked_up' | 'delivering' | 'delivered' | string;
+  status: OrderStatus;
   timestamp: string;
-  updated_at: string;
-  estimated_delivery_time: string;
-  location_data: any | null;
-  notes: string;
-  handled_by: string;
-}
-
-export interface Restaurant {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  phone: string;
-  email: string;
-  website?: string;
-  logo_url?: string;
-  banner_image_url?: string;
-  cuisine_type: string[] | string;
-  price_range: number;
-  rating: number;
-  opening_hours: BusinessHours;
-  status: 'open' | 'busy' | 'closed' | string;
-  
-  // Champs additionnels pour compatibilité
-  average_rating?: number; 
-  total_ratings?: number;
-  business_hours?: any;
-}
-
-export interface BusinessHours {
-  regular: {
-    [key: string]: {
-      open: string;
-      close: string;
-      is_closed?: boolean;
-    };
+  notes?: string;
+  location_data?: {
+    latitude: number;
+    longitude: number;
   };
-  special?: {
-    date: string;
-    open: string;
-    close: string;
-    is_closed?: boolean;
-  }[];
+  handled_by?: string;
+}
+
+export interface OrderWithDetails extends Order {
+  restaurant: {
+    id: string;
+    name: string;
+    logo_url?: string;
+    phone?: string;
+  };
+  items: (OrderItem & {
+    menu_item: {
+      name: string;
+      image_url?: string;
+      description?: string;
+    }
+  })[];
+  delivery_address?: {
+    id: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
 }

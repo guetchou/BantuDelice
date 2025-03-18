@@ -1,38 +1,52 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface TableExistenceResult {
-  exists: boolean;
-  isLoading: boolean;
-  error: Error | null;
-}
+/**
+ * Hook to check if a table exists in the Supabase database
+ */
+export const useTableExistence = (tableName: string) => {
+  const [exists, setExists] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-export const useTableExistence = (tableName: string): TableExistenceResult => {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['table-existence', tableName],
-    queryFn: async () => {
+  useEffect(() => {
+    const checkTableExists = async () => {
       try {
-        const { data, error } = await supabase.rpc('check_table_exists', {
+        setLoading(true);
+        // Use the function we created in SQL
+        const { data, error: queryError } = await supabase.rpc('check_table_exists', {
           table_name: tableName
         });
-
-        if (error) throw error;
         
-        return data > 0;
-      } catch (err) {
-        console.error(`Erreur lors de la vérification de l'existence de la table ${tableName}:`, err);
-        return false;
-      }
-    },
-    meta: {
-      errorMessage: `Impossible de vérifier l'existence de la table ${tableName}`
-    }
-  });
+        if (queryError) {
+          // If the function doesn't exist, check using a different approach
+          // Try a simple select from the table
+          const { error: fallbackError } = await supabase
+            .from(tableName)
+            .select('id')
+            .limit(1);
 
-  return {
-    exists: !!data,
-    isLoading,
-    error: error as Error | null
-  };
+          if (fallbackError && fallbackError.code === '42P01') {
+            // Error code for undefined_table
+            setExists(false);
+          } else {
+            setExists(true);
+          }
+        } else {
+          setExists(data > 0);
+        }
+      } catch (err) {
+        console.error(`Error checking if table '${tableName}' exists:`, err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+        setExists(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkTableExists();
+  }, [tableName]);
+
+  return { exists, loading, error };
 };

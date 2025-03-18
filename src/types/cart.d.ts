@@ -1,22 +1,23 @@
 
 export interface CartItem {
   id: string;
+  menu_item_id?: string;
   name: string;
+  description?: string;
   price: number;
-  quantity: number;
-  menu_item_id: string;
-  special_instructions?: string;
   image_url?: string;
-  options?: {
-    name: string;
-    value: string;
-    price?: number;
-  }[];
+  category?: string;
+  quantity: number;
+  options?: { name: string; value: string; price: number }[];
+  instructions?: string;
+  restaurant_id?: string;
+  customization_options?: Record<string, any>;
 }
 
 export interface CartState {
   items: CartItem[];
-  total: number;
-  restaurant_id?: string;
-  restaurant_name?: string;
+  restaurant?: {
+    id: string;
+    name: string;
+  };
 }

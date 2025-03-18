@@ -1,6 +1,43 @@
 
-import { Database } from "@/integrations/supabase/database.types";
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+  address?: string;
+  phone_number?: string;
+  email?: string;
+  preferences?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+  role?: string;
+  user_metadata?: {
+    first_name?: string;
+    last_name?: string;
+    full_name?: string;
+    avatar_url?: string;
+    [key: string]: any;
+  };
+}
 
-export type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
-export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
-export type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update'];
+export interface UserPreferences {
+  id?: string;
+  user_id?: string;
+  dietary_restrictions?: string[];
+  favorite_cuisines?: string[];
+  allergens?: string[];
+  spice_level?: number;
+  notification_preferences?: {
+    email?: boolean;
+    push?: boolean;
+    sms?: boolean;
+  };
+  default_payment_method?: string;
+  saved_addresses?: {
+    id: string;
+    name: string;
+    address: string;
+    is_default: boolean;
+  }[];
+  created_at?: string;
+  updated_at?: string;
+}

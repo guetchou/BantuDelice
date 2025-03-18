@@ -1,10 +1,22 @@
 
 import React from 'react';
-import { MapContainer as LeafletMapContainer, TileLayer as LeafletTileLayer, Marker as LeafletMarker, Popup as LeafletPopup, Polyline as LeafletPolyline } from 'react-leaflet';
-import { MapContainerProps, TileLayerProps, MarkerProps, PopupProps, PolylineProps } from 'react-leaflet';
+import { 
+  MapContainer as LeafletMapContainer, 
+  TileLayer as LeafletTileLayer, 
+  Marker as LeafletMarker, 
+  Popup as LeafletPopup,
+  Polyline as LeafletPolyline
+} from 'react-leaflet';
+import { 
+  MapContainerProps, 
+  TileLayerProps, 
+  MarkerProps, 
+  PopupProps, 
+  PolylineProps 
+} from 'react-leaflet';
 import { LeafletMouseEvent } from 'leaflet';
 
-// Wrappers pour assurer la compatibilité des props avec les versions récentes
+// Wrapper components to ensure compatibility with the latest react-leaflet
 
 export const MapContainer: React.FC<MapContainerProps & { 
   center?: [number, number];
@@ -14,7 +26,7 @@ export const MapContainer: React.FC<MapContainerProps & {
   return (
     <LeafletMapContainer 
       {...props}
-      center={center as any}
+      center={center}
       zoom={zoom}
     >
       {children}
