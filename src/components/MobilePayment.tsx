@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Phone, CreditCard } from 'lucide-react';
+import { Loader2, Phone, CreditCard, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
@@ -11,6 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export interface MobilePaymentProps {
   amount: number;
@@ -18,6 +22,7 @@ export interface MobilePaymentProps {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
   onPaymentComplete?: () => void;
+  savePaymentMethod?: boolean;
 }
 
 const MobilePayment = ({ 
@@ -25,15 +30,39 @@ const MobilePayment = ({
   description, 
   onSuccess, 
   onError,
-  onPaymentComplete 
+  onPaymentComplete,
+  savePaymentMethod
 }: MobilePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [operator, setOperator] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [saveMethod, setSaveMethod] = useState(savePaymentMethod || false);
   const { toast } = useToast();
+
+  const validatePhoneNumber = (number: string) => {
+    const regex = /^[0-9]{9}$/;
+    return regex.test(number);
+  };
+
+  const formatPhoneNumber = (number: string) => {
+    // Format en groupes de 3 chiffres
+    if (number.length <= 3) return number;
+    if (number.length <= 6) return `${number.slice(0, 3)} ${number.slice(3)}`;
+    return `${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)}`;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Garder seulement les chiffres
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (rawValue.length <= 9) {
+      setPhoneNumber(rawValue);
+    }
+  };
 
   const handlePayment = async () => {
     try {
+      setError(null);
       setIsProcessing(true);
 
       // Validation
@@ -41,8 +70,8 @@ const MobilePayment = ({
         throw new Error('Veuillez remplir tous les champs');
       }
 
-      if (!/^[0-9]{9}$/.test(phoneNumber)) {
-        throw new Error('Numéro de téléphone invalide');
+      if (!validatePhoneNumber(phoneNumber)) {
+        throw new Error('Numéro de téléphone invalide (9 chiffres requis)');
       }
 
       // Get current user
@@ -70,6 +99,38 @@ const MobilePayment = ({
 
       if (paymentError) throw paymentError;
 
+      // Si l'utilisateur veut sauvegarder la méthode de paiement
+      if (saveMethod) {
+        // Vérifier si cette méthode existe déjà
+        const { data: existingMethod } = await supabase
+          .from('user_payment_methods')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('phone_number', phoneNumber)
+          .eq('provider', operator)
+          .maybeSingle();
+          
+        // Si la méthode n'existe pas, l'enregistrer
+        if (!existingMethod) {
+          await supabase
+            .from('user_payment_methods')
+            .insert({
+              user_id: user.id,
+              method_type: 'mobile_money',
+              provider: operator,
+              phone_number: phoneNumber,
+              is_default: false,
+              last_used: new Date().toISOString()
+            });
+        } else {
+          // Mettre à jour la date d'utilisation
+          await supabase
+            .from('user_payment_methods')
+            .update({ last_used: new Date().toISOString() })
+            .eq('id', existingMethod.id);
+        }
+      }
+
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -91,6 +152,7 @@ const MobilePayment = ({
 
     } catch (error) {
       console.error('Erreur de paiement:', error);
+      setError(error instanceof Error ? error.message : "Une erreur est survenue");
       toast({
         title: "Erreur de paiement",
         description: error instanceof Error ? error.message : "Une erreur est survenue",
@@ -110,6 +172,13 @@ const MobilePayment = ({
           {description || 'Veuillez choisir votre opérateur et entrer votre numéro de téléphone'}
         </p>
       </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="space-y-4">
         <Select
@@ -135,14 +204,32 @@ const MobilePayment = ({
           </SelectContent>
         </Select>
 
-        <Input
-          type="tel"
-          placeholder="Numéro de téléphone (9 chiffres)"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          maxLength={9}
-          className="w-full"
-        />
+        <div>
+          <label htmlFor="phone" className="text-sm font-medium block mb-1">
+            Numéro de téléphone
+          </label>
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="Entrez 9 chiffres"
+            value={formatPhoneNumber(phoneNumber)}
+            onChange={handleInputChange}
+            className="w-full"
+            maxLength={13} // 9 chiffres + espaces
+          />
+          <p className="text-xs text-gray-500 mt-1">Format: XXX XXX XXX</p>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="saveMethod" 
+            checked={saveMethod} 
+            onCheckedChange={(checked) => setSaveMethod(!!checked)} 
+          />
+          <Label htmlFor="saveMethod" className="text-sm">
+            Enregistrer ce mode de paiement
+          </Label>
+        </div>
 
         <div className="bg-muted/50 p-4 rounded-lg">
           <div className="flex justify-between text-sm">

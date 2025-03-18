@@ -26,7 +26,7 @@ export interface DeliveryRequest {
   id: string;
   order_id: string;
   restaurant_id: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'failed';
   pickup_address: string;
   pickup_latitude: number;
   pickup_longitude: number;
@@ -45,6 +45,10 @@ export interface DeliveryRequest {
   priority: 'normal' | 'high' | 'urgent';
   estimated_distance: number;
   estimated_duration: number;
+  delivery_time?: string;
+  delivery_instructions?: string;
+  pickup_time?: string;
+  distance_km?: number;
 }
 
 export interface DeliveryZone {
@@ -126,3 +130,20 @@ export interface DeliveryMessage {
   created_at: string;
   read: boolean;
 }
+
+// Type pour la notation des livreurs
+export interface DeliveryDriverRating {
+  id: string;
+  delivery_request_id: string;
+  order_id: string;
+  driver_id: string;
+  user_id: string;
+  speed_rating: number;
+  politeness_rating: number;
+  overall_rating: number;
+  comment?: string;
+  created_at: string;
+}
+
+export type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'failed';
+export type DeliveryType = 'restaurant' | 'external' | 'pickup';

@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Bike, TruckIcon, Clock, Shop, Info } from 'lucide-react';
+import { Bike, TruckIcon, Clock, Store, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -196,7 +196,7 @@ const DeliveryOptions = ({
           <Label htmlFor="pickup" className="flex-1 cursor-pointer">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
-                <Shop className="h-5 w-5 mr-2 text-green-500" />
+                <Store className="h-5 w-5 mr-2 text-green-500" />
                 <div>
                   <span className="font-medium">Récupérer sur place</span>
                   <p className="text-sm text-gray-500">15-20 min de préparation</p>
