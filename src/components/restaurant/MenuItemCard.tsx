@@ -6,21 +6,34 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CartItem } from "@/types/cart";
-import { MenuItemCardProps } from "@/components/menu/types";
+import { type CartItem } from "@/types/cart";
+import { type MenuItem } from "@/types/restaurant";
 
-const MenuItemCard = ({ item, onAddToCart, onRemoveFromCart, quantity = 0, showNutritionalInfo = false }: MenuItemCardProps) => {
+export interface MenuItemCardProps {
+  item: MenuItem;
+  onAddToCart: (item: CartItem) => void;
+  onRemoveFromCart?: (id: string) => void;
+  quantity?: number;
+  showNutritionalInfo?: boolean;
+}
+
+const MenuItemCard = ({ 
+  item, 
+  onAddToCart, 
+  onRemoveFromCart, 
+  quantity = 0, 
+  showNutritionalInfo = false 
+}: MenuItemCardProps) => {
   const handleAddToCart = () => {
     const cartItem: CartItem = {
       id: item.id,
       name: item.name,
       price: item.price,
-      restaurant_id: item.restaurant_id,
+      menu_item_id: item.id,
       quantity: 1,
       image_url: item.image_url,
-      description: item.description,
-      category: item.category,
-      customization_options: item.customization_options || {}
+      special_instructions: "",
+      options: []
     };
     
     onAddToCart(cartItem);

@@ -1,137 +1,184 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Popup, useMap } from 'react-leaflet';
-import { MarkerF as Marker } from '@react-leaflet/core';
-import { Card } from '@/components/ui/card';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useState } from 'react';
 import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from '@/components/ui/leaflet-map';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from '@/components/ui/button';
+import { ExternalLink, Phone, Clock, Star } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import type { Restaurant } from '@/types/restaurant';
 
-// Restaurant type from restaurant.d.ts
-interface Restaurant {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  logo_url?: string;
-  cuisine_type: string[] | string;
-  average_rating?: number;
-  rating?: number;
-}
-
-interface RestaurantMapProps {
-  restaurants: Restaurant[];
-}
-
-// Custom marker icons
-const createMarkerIcon = (iconUrl: string) => {
-  return L.divIcon({
-    html: `<div class="bg-white p-1 rounded-full shadow-md">
-             <img src="${iconUrl}" class="w-8 h-8 rounded-full object-cover" />
-           </div>`,
-    className: '',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32]
+// Define custom marker icons
+const createMarkerIcon = (color: string) => {
+  return L.icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 };
 
-const defaultIcon = L.divIcon({
-  html: `<div class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md">
-           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 14h14.5c0-6-5-10-7-10-1 0-2 .5-2.5 1.5"></path><path d="M7.5 18c1.71 0 3.287-.573 4.5-1.5 1.213.927 2.79 1.5 4.5 1.5"></path><path d="M6.5 13c-.828 0-1.5-.895-1.5-2s.672-2 1.5-2c.828 0 1.5.895 1.5 2s-.672 2-1.5 2z"></path></svg>
-         </div>`,
-  className: '',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32]
-});
-
-// Component to set the view to fit all markers
-const ChangeView = ({ restaurants }: { restaurants: Restaurant[] }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (restaurants.length === 0) return;
-    
-    // Create bounds for all restaurants
-    const bounds = L.latLngBounds(
-      restaurants.map(r => [r.latitude, r.longitude])
-    );
-    
-    // Fit the map to the bounds with some padding
-    map.fitBounds(bounds, { padding: [50, 50] });
-  }, [restaurants, map]);
-  
-  return null;
+const icons = {
+  restaurant: createMarkerIcon('blue'),
+  user: createMarkerIcon('red'),
+  open: createMarkerIcon('green'),
+  closed: createMarkerIcon('gray'),
+  busy: createMarkerIcon('orange')
 };
 
-const RestaurantMap = ({ restaurants }: RestaurantMapProps) => {
-  const navigate = useNavigate();
-  const [center, setCenter] = useState<[number, number]>([48.856614, 2.3522219]); // Default to Paris
-  
-  // Use the first restaurant's coordinates as the center if available
+interface RestaurantMapProps {
+  restaurants: Restaurant[];
+  userLocation: [number, number] | null;
+  onMarkerClick: (id: string) => void;
+  isLoading: boolean;
+}
+
+const getStatusIcon = (status: string) => {
+  if (status === 'open') return icons.open;
+  if (status === 'busy') return icons.busy;
+  return icons.closed;
+};
+
+const RestaurantMap = ({ 
+  restaurants, 
+  userLocation, 
+  onMarkerClick,
+  isLoading 
+}: RestaurantMapProps) => {
+  const [mapCenter, setMapCenter] = useState<[number, number]>([4.0383, 9.7084]); // Default center (Douala)
+  const [zoom, setZoom] = useState(12);
+
   useEffect(() => {
-    if (restaurants.length > 0) {
-      const firstRestaurant = restaurants[0];
-      setCenter([firstRestaurant.latitude, firstRestaurant.longitude]);
+    if (userLocation) {
+      setMapCenter(userLocation);
+      setZoom(14);
+    } else if (restaurants.length > 0) {
+      // Center map on first restaurant if no user location
+      setMapCenter([restaurants[0].latitude, restaurants[0].longitude]);
     }
-  }, [restaurants]);
+  }, [userLocation, restaurants]);
+
+  if (isLoading) {
+    return (
+      <div className="h-[600px] w-full">
+        <Skeleton className="h-full w-full rounded-lg" />
+      </div>
+    );
+  }
 
   return (
-    <Card className="overflow-hidden border">
+    <div className="h-[600px] w-full rounded-lg overflow-hidden shadow-xl">
       <MapContainer
-        style={{ height: '75vh', width: '100%' }}
-        center={[0, 0]}
-        zoom={13}
-        scrollWheelZoom={false}
+        style={{ height: '100%', width: '100%' }}
+        center={mapCenter}
+        zoom={zoom}
+        scrollWheelZoom={true}
         className="z-0"
       >
-        <ChangeView restaurants={restaurants} />
-        
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="Map data &copy; OpenStreetMap contributors"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         
+        {/* User position marker */}
+        {userLocation && (
+          <Marker position={userLocation} icon={icons.user}>
+            <Popup>
+              <div className="text-center p-1">
+                <div className="font-bold">Votre position</div>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+        
+        {/* Restaurant markers */}
         {restaurants.map(restaurant => (
           <Marker
             key={restaurant.id}
             position={[restaurant.latitude, restaurant.longitude]}
-            icon={restaurant.logo_url ? createMarkerIcon(restaurant.logo_url) : defaultIcon}
-            eventHandlers={{
-              click: () => navigate(`/restaurants/${restaurant.id}`)
-            }}
+            icon={getStatusIcon(restaurant.status)}
           >
             <Popup>
-              <div className="p-1">
-                <h3 className="font-medium text-base">{restaurant.name}</h3>
-                <p className="text-xs text-gray-500 mb-1">{restaurant.address}</p>
-                <div className="flex items-center">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <span 
-                        key={i} 
-                        className={`text-xs ${i < (restaurant.average_rating || restaurant.rating || 0) 
-                          ? 'text-yellow-500' 
-                          : 'text-gray-300'}`}
-                      >
-                        ★
-                      </span>
-                    ))}
+              <div className="w-[220px]">
+                {restaurant.banner_image_url && (
+                  <div className="h-24 w-full mb-2 overflow-hidden rounded">
+                    <img 
+                      src={restaurant.banner_image_url} 
+                      alt={restaurant.name} 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <button
-                    onClick={() => navigate(`/restaurants/${restaurant.id}`)}
-                    className="ml-2 text-xs text-blue-600 hover:underline"
+                )}
+                
+                <h3 className="font-bold text-lg mb-1">{restaurant.name}</h3>
+                
+                <div className="flex items-center text-sm mb-1">
+                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                  <span>{restaurant.rating} ({restaurant.total_ratings})</span>
+                </div>
+                
+                <div className="text-sm mb-1">
+                  <span className="text-gray-700">Cuisine: </span>
+                  <span>{typeof restaurant.cuisine_type === 'string' ? restaurant.cuisine_type : restaurant.cuisine_type?.join(', ')}</span>
+                </div>
+                
+                <div className="flex items-center text-sm mb-1">
+                  <Clock className="h-3 w-3 mr-1 text-gray-500" />
+                  <span className={restaurant.is_open ? "text-green-600" : "text-red-600"}>
+                    {restaurant.is_open ? "Ouvert" : "Fermé"}
+                  </span>
+                </div>
+                
+                <div className="mt-3 flex flex-col gap-2">
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMarkerClick(restaurant.id);
+                    }}
+                    className="bg-orange-500 hover:bg-orange-600 w-full"
+                    size="sm"
                   >
                     Voir le menu
-                  </button>
+                  </Button>
+                  
+                  <div className="flex gap-2">
+                    {restaurant.phone && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`tel:${restaurant.phone}`);
+                        }}
+                      >
+                        <Phone className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {restaurant.website && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(restaurant.website, '_blank');
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </Popup>
           </Marker>
         ))}
       </MapContainer>
-    </Card>
+    </div>
   );
 };
 

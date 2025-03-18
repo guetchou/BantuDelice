@@ -150,10 +150,10 @@ export interface Restaurant {
   rating?: number;
   average_rating?: number;
   opening_hours?: BusinessHours | any;
-  business_hours?: any;
+  business_hours?: BusinessHours | any;
   status: 'open' | 'busy' | 'closed' | string;
   is_open?: boolean;
-  // Ajout des champs manquants nécessaires
+  // Fields needed for the app
   total_ratings?: number;
   trending?: boolean;
   minimum_order?: number;
@@ -168,10 +168,10 @@ export interface RestaurantFilters {
   rating: number | null;
   distance: number | null;
   openNow: boolean;
-  sortBy: 'distance' | 'rating' | 'price' | string;
-  // Champs additionnels pour la compatibilité
+  sortBy: 'distance' | 'rating' | 'price' | 'trending' | string;
+  // Additional fields for compatibility
   cuisine_type?: string[];
-  price_range?: number[];
+  price_range?: number[] | string;
   isOpen?: boolean;
   hasDelivery?: boolean;
   hasPickup?: boolean;

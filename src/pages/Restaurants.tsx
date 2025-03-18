@@ -1,324 +1,315 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { MapPin, Search, SlidersHorizontal, Grid3X3, Map, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Layout, MapPin, List, Grid } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { useToast } from '@/hooks/use-toast';
 import RestaurantGrid from '@/components/restaurants/RestaurantGrid';
 import RestaurantMap from '@/components/restaurants/RestaurantMap';
 import RestaurantFilters from '@/components/restaurants/RestaurantFilters';
-import CategoryList from '@/components/restaurants/CategoryList';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import type { Restaurant, RestaurantFilters as Filters, RestaurantViewMode } from '@/types/restaurant';
+import { useTableExistence } from '@/hooks/useTableExistence';
 
-// Importing types from restaurant.d.ts
-interface Restaurant {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  cuisine_type: string[] | string;
-  rating?: number;
-  average_rating?: number;
-  logo_url?: string;
-  banner_image_url?: string;
-  price_range: number;
-  status: string;
-}
+const CUISINE_TYPES = [
+  "Tout",
+  "Africain",
+  "Congolais",
+  "Européen", 
+  "Italien",
+  "Asiatique",
+  "Fast Food",
+  "Végétarien",
+  "Fruits de mer"
+];
 
-interface RestaurantFilters {
-  cuisine: string[];
-  price: number[];
-  rating: number | null;
-  distance: number | null;
-  openNow: boolean;
-  sortBy: string;
-}
-
-type RestaurantViewMode = 'grid' | 'map' | 'list';
-
-const Restaurants = () => {
-  const [viewMode, setViewMode] = useState<RestaurantViewMode>('grid');
+export default function Restaurants() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
-  const [filters, setFilters] = useState<RestaurantFilters>({
+  const [isLoading, setIsLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [viewMode, setViewMode] = useState<RestaurantViewMode>('grid');
+  const [filters, setFilters] = useState<Filters>({
     cuisine: [],
     price: [],
     rating: null,
-    distance: null,
+    distance: 10,
     openNow: false,
-    sortBy: 'rating'
+    sortBy: 'rating',
+    cuisine_type: [],
+    price_range: []
   });
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchRestaurants();
-  }, []);
+  const { exists: tableExists } = useTableExistence('restaurants');
 
-  useEffect(() => {
-    applyFilters();
-  }, [filters, restaurants, searchTerm]);
-
-  const fetchRestaurants = async () => {
+  const fetchRestaurants = useCallback(async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       
-      const { data, error } = await supabase
+      if (!tableExists) {
+        console.log('Table restaurants does not exist yet');
+        setTimeout(() => setIsLoading(false), 1000);
+        return;
+      }
+
+      let query = supabase
         .from('restaurants')
-        .select('*')
-        .order('average_rating', { ascending: false });
+        .select('*');
 
-      if (error) throw error;
+      if (searchQuery) {
+        // If your table has text search configured:
+        query = query.textSearch('search_vector', searchQuery, {
+          type: 'websearch',
+          config: 'english'
+        });
+      }
 
-      setRestaurants(data || []);
-      setFilteredRestaurants(data || []);
-    } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      if (filters.cuisine_type && filters.cuisine_type.length > 0) {
+        query = query.in('cuisine_type', filters.cuisine_type);
+      }
+
+      if (filters.rating) {
+        query = query.gte('average_rating', filters.rating);
+      }
+
+      if (filters.isOpen) {
+        query = query.eq('is_open', true);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching restaurants:', error);
+        throw error;
+      }
+
+      // Process restaurants data
+      const processedData = data.map(restaurant => {
+        // Type assertion to match Restaurant type
+        const typedRestaurant: Restaurant = {
+          id: restaurant.id,
+          name: restaurant.name || 'Unknown Restaurant',
+          description: restaurant.description || '',
+          address: restaurant.address || '',
+          latitude: restaurant.latitude || 0,
+          longitude: restaurant.longitude || 0,
+          phone: restaurant.phone || '',
+          email: restaurant.email || '',
+          website: restaurant.website || '',
+          logo_url: restaurant.logo_url || '',
+          banner_image_url: restaurant.banner_image_url || '',
+          cuisine_type: restaurant.cuisine_type || '',
+          price_range: restaurant.price_range || 1,
+          rating: restaurant.rating || restaurant.average_rating || 0,
+          status: (restaurant.status as "open" | "closed" | "busy") || 'closed',
+          business_hours: restaurant.business_hours || restaurant.opening_hours,
+          total_ratings: restaurant.total_ratings || 0,
+          trending: restaurant.trending || false,
+          minimum_order: restaurant.minimum_order || 0,
+          delivery_fee: restaurant.delivery_fee || 0,
+          average_prep_time: restaurant.average_prep_time || 30,
+          is_open: restaurant.is_open || false
+        };
+        return typedRestaurant;
+      });
+
+      setRestaurants(processedData);
+      setFilteredRestaurants(processedData);
+    } catch (err) {
+      console.error('Error:', err);
       toast({
-        title: "Erreur",
+        title: "Erreur de chargement",
         description: "Impossible de charger les restaurants",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, [searchQuery, filters, toast, tableExists]);
 
-  const applyFilters = () => {
-    let result = [...restaurants];
-    
-    // Apply search filter
-    if (searchTerm) {
-      result = result.filter(restaurant => 
-        restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restaurant.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restaurant.address.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    fetchRestaurants();
+  }, [fetchRestaurants]);
+
+  useEffect(() => {
+    // Get user's location if permitted
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude]);
+        },
+        (error) => {
+          console.log('Geolocation error:', error);
+          // Default to a central location in the region
+          setUserLocation([4.0383, 9.7084]); // Douala, Cameroon
+        }
       );
     }
+  }, []);
 
-    // Apply cuisine filter
-    if (filters.cuisine.length > 0) {
-      result = result.filter(restaurant => {
-        let cuisines = restaurant.cuisine_type;
-        if (typeof cuisines === 'string') {
-          cuisines = [cuisines];
+  const handleRestaurantClick = (id: string) => {
+    navigate(`/restaurants/${id}`);
+  };
+
+  const handleFilterChange = (newFilters: Partial<Filters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
+  const handleFindNearMe = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude]);
+          setViewMode('map');
+          toast({
+            title: "Localisation mise à jour",
+            description: "Restaurants à proximité affichés sur la carte",
+          });
+        },
+        () => {
+          toast({
+            title: "Erreur de localisation",
+            description: "Impossible d'accéder à votre position",
+            variant: "destructive",
+          });
         }
-        return filters.cuisine.some(c => 
-          Array.isArray(cuisines) && cuisines.includes(c)
-        );
+      );
+    } else {
+      toast({
+        title: "Géolocalisation non supportée",
+        description: "Votre navigateur ne supporte pas la géolocalisation",
+        variant: "destructive",
       });
     }
-
-    // Apply price filter
-    if (filters.price.length > 0) {
-      result = result.filter(restaurant => 
-        filters.price.includes(restaurant.price_range)
-      );
-    }
-
-    // Apply rating filter
-    if (filters.rating) {
-      result = result.filter(restaurant => 
-        (restaurant.average_rating || restaurant.rating || 0) >= filters.rating!
-      );
-    }
-
-    // Apply open now filter
-    if (filters.openNow) {
-      result = result.filter(restaurant => 
-        restaurant.status === 'open'
-      );
-    }
-
-    // Apply sorting
-    if (filters.sortBy === 'rating') {
-      result.sort((a, b) => (b.average_rating || b.rating || 0) - (a.average_rating || a.rating || 0));
-    } else if (filters.sortBy === 'price') {
-      result.sort((a, b) => a.price_range - b.price_range);
-    }
-    // Distance sorting would be handled separately
-
-    setFilteredRestaurants(result);
-  };
-
-  const handleFilterChange = (newFilters: Partial<RestaurantFilters>) => {
-    setFilters(prev => ({
-      ...prev,
-      ...newFilters
-    }));
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8 flex flex-col md:flex-row justify-between items-start gap-4">
-        <div className="flex-1 w-full">
-          <h1 className="text-3xl font-bold mb-2">Restaurants</h1>
-          <p className="text-muted-foreground mb-4">
-            Découvrez les meilleurs restaurants près de chez vous
-          </p>
-          <div className="relative mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Explorez les restaurants</h1>
+          <p className="text-gray-300">Découvrez les meilleurs restaurants de votre région</p>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              type="text"
-              placeholder="Rechercher un restaurant, un type de cuisine..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="w-full"
+              placeholder="Rechercher un restaurant, un plat ou une cuisine..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-gray-800 border-gray-700 text-white"
             />
           </div>
-        </div>
-        
-        <div className="flex gap-2 mt-2 md:mt-0">
-          <Button 
-            variant={viewMode === 'grid' ? 'default' : 'outline'}
-            size="sm" 
-            onClick={() => setViewMode('grid')}
-          >
-            <Grid className="h-4 w-4 mr-1" />
-            Grille
-          </Button>
-          <Button 
-            variant={viewMode === 'map' ? 'default' : 'outline'}
-            size="sm" 
-            onClick={() => setViewMode('map')}
-          >
-            <MapPin className="h-4 w-4 mr-1" />
-            Carte
-          </Button>
-          <Button 
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            size="sm" 
-            onClick={() => setViewMode('list')}
-          >
-            <List className="h-4 w-4 mr-1" />
-            Liste
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-3">
-          <RestaurantFilters 
-            filters={filters} 
-            onFilterChange={handleFilterChange} 
-          />
-        </div>
-        
-        <div className="lg:col-span-9">
-          <CategoryList 
-            selectedCategories={filters.cuisine}
-            onCategoryChange={(categories) => handleFilterChange({ cuisine: categories })} 
-          />
           
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full" />
-            </div>
-          ) : filteredRestaurants.length === 0 ? (
-            <div className="text-center py-16 border rounded-lg">
-              <p className="text-lg text-muted-foreground">
-                Aucun restaurant ne correspond à vos critères
-              </p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => {
-                  setFilters({
-                    cuisine: [],
-                    price: [],
-                    rating: null,
-                    distance: null,
-                    openNow: false,
-                    sortBy: 'rating'
-                  });
-                  setSearchTerm('');
-                }}
+          <Button 
+            onClick={handleFindNearMe}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
+            <MapPin className="mr-2 h-4 w-4" />
+            Près de moi
+          </Button>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-6 mb-6">
+          <RestaurantFilters
+            filters={filters}
+            onChange={handleFilterChange}
+          />
+
+          <div className="flex-grow">
+            <Tabs 
+              defaultValue="grid" 
+              value={viewMode} 
+              onValueChange={(value) => setViewMode(value as RestaurantViewMode)}
+              className="mb-6"
+            >
+              <TabsList className="grid grid-cols-3 w-[240px] bg-gray-800">
+                <TabsTrigger value="grid" className="flex items-center gap-2">
+                  <Grid3X3 size={16} />
+                  Grille
+                </TabsTrigger>
+                <TabsTrigger value="list" className="flex items-center gap-2">
+                  <List size={16} />
+                  Liste
+                </TabsTrigger>
+                <TabsTrigger value="map" className="flex items-center gap-2">
+                  <Map size={16} />
+                  Carte
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <div className="mb-4 flex flex-wrap gap-4">
+              <Select
+                value={filters.sortBy}
+                onValueChange={(value) => handleFilterChange({ sortBy: value })}
               >
-                Réinitialiser les filtres
-              </Button>
-            </div>
-          ) : (
-            <div>
-              {viewMode === 'grid' && (
-                <RestaurantGrid restaurants={filteredRestaurants} />
-              )}
-              
-              {viewMode === 'map' && (
-                <RestaurantMap restaurants={filteredRestaurants} />
-              )}
-              
-              {viewMode === 'list' && (
-                <div className="space-y-4">
-                  {filteredRestaurants.map(restaurant => (
-                    <div 
-                      key={restaurant.id}
-                      className="p-4 border rounded-lg flex gap-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => navigate(`/restaurants/${restaurant.id}`)}
-                    >
-                      <div className="w-24 h-24 bg-muted rounded-md overflow-hidden flex-shrink-0">
-                        {restaurant.logo_url ? (
-                          <img 
-                            src={restaurant.logo_url} 
-                            alt={restaurant.name}
-                            className="w-full h-full object-cover" 
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                            <Layout className="h-8 w-8 text-primary/50" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <h3 className="font-medium">{restaurant.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-1">
-                          {restaurant.description}
-                        </p>
-                        <div className="flex items-center text-sm">
-                          <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
-                          <span className="text-muted-foreground">{restaurant.address}</span>
-                        </div>
-                        <div className="flex items-center mt-1">
-                          <div className="flex">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <span 
-                                key={i} 
-                                className={`text-sm ${i < (restaurant.average_rating || restaurant.rating || 0) 
-                                  ? 'text-yellow-500' 
-                                  : 'text-muted'}`}
-                              >
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                          <span className="text-sm text-muted-foreground ml-2">
-                            {restaurant.average_rating || restaurant.rating || 0}/5
-                          </span>
-                          <span className="mx-2">•</span>
-                          <span className="text-sm">
-                            {"$".repeat(restaurant.price_range)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="Trier par" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                  <SelectItem value="distance">Distance</SelectItem>
+                  <SelectItem value="rating">Évaluation</SelectItem>
+                  <SelectItem value="price">Prix</SelectItem>
+                  <SelectItem value="trending">Popularité</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.cuisine_type?.length ? filters.cuisine_type[0] : ""}
+                onValueChange={(value) => handleFilterChange({ cuisine_type: value ? [value] : [] })}
+              >
+                <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="Type de cuisine" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                  <SelectItem value="">Toutes les cuisines</SelectItem>
+                  {CUISINE_TYPES.map(type => (
+                    <SelectItem key={type} value={type === "Tout" ? "" : type}>{type}</SelectItem>
                   ))}
-                </div>
-              )}
+                </SelectContent>
+              </Select>
             </div>
-          )}
+
+            <div className="flex items-center gap-2 mb-6">
+              <p className="text-sm text-gray-300 min-w-[120px]">Distance maximum:</p>
+              <Slider
+                value={[filters.distance || 10]}
+                min={1}
+                max={20}
+                step={1}
+                onValueChange={([value]) => handleFilterChange({ distance: value })}
+                className="flex-1"
+              />
+              <span className="min-w-[60px] text-sm text-gray-300">{filters.distance || 10} km</span>
+            </div>
+
+            {viewMode === 'map' ? (
+              <RestaurantMap 
+                restaurants={filteredRestaurants}
+                userLocation={userLocation}
+                onMarkerClick={handleRestaurantClick}
+                isLoading={isLoading}
+              />
+            ) : (
+              <RestaurantGrid 
+                restaurants={filteredRestaurants}
+                isLoading={isLoading}
+                onRestaurantClick={handleRestaurantClick}
+                columns={viewMode === 'list' ? 1 : 3}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Restaurants;
+}
