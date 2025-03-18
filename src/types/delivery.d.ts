@@ -1,65 +1,52 @@
 
-export interface DeliveryMessage {
-  id: string;
-  delivery_request_id: string;
-  order_id?: string | null;
-  sender_id?: string | null;
-  message: string;
-  sender_type: 'driver' | 'customer';
-  read?: boolean | null;
-  created_at?: string | null;
-}
-
 export interface DeliveryDriver {
   id: string;
   user_id: string;
   name: string;
   phone: string;
-  status: string;
-  average_rating: number;
-  total_deliveries: number;
-  total_earnings: number;
+  status: 'available' | 'busy' | 'offline';
   current_latitude: number;
   current_longitude: number;
-  current_location?: [number, number];
-  is_available: boolean;
-  commission_rate: number;
-  created_at: string;
-  updated_at: string;
+  current_location?: {
+    latitude: number;
+    longitude: number;
+  };
   last_location_update: string;
-  vehicle_type?: string;
+  current_order_id?: string;
+  total_deliveries: number;
+  average_rating: number;
+  commission_rate: number;
+  total_earnings: number;
+  is_available: boolean;
+  updated_at: string;
+  created_at: string;
+  distance?: number;
+  estimated_time?: number;
+  vehicle_type?: 'bike' | 'car' | 'scooter' | 'walk';
   profile_picture?: string;
-  restaurant_id?: string;
+  is_external?: boolean;
+  service_id?: string;
 }
 
 export interface DeliveryRequest {
   id: string;
   order_id: string;
   restaurant_id: string;
-  status: DeliveryStatus;
+  customer_id: string;
   pickup_address: string;
-  pickup_latitude: number;
-  pickup_longitude: number;
   delivery_address: string;
-  delivery_latitude: number;
-  delivery_longitude: number;
+  status: 'pending' | 'assigned' | 'picked_up' | 'delivered' | 'cancelled';
   assigned_driver_id?: string;
-  requested_at: string;
-  accepted_at?: string;
-  completed_at?: string;
-  cancelled_at?: string;
-  delivery_fee: number;
-  is_external: boolean;
-  external_service_id?: string;
-  notes?: string;
-  priority: number;
-  estimated_distance: number;
-  estimated_duration: number;
-  delivery_time?: string;
-  delivery_instructions?: string;
   pickup_time?: string;
-  distance_km: number;
-  delivery_type: DeliveryType;
+  delivery_time?: string;
+  distance?: number;
+  estimated_duration?: number;
+  delivery_fee: number;
+  special_instructions?: string;
+  is_priority: boolean;
+  external_service_id?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DeliveryTracking {
@@ -67,7 +54,7 @@ export interface DeliveryTracking {
   delivery_request_id: string;
   order_id: string;
   driver_id: string;
-  status: DeliveryStatus;
+  status: string;
   latitude: number;
   longitude: number;
   timestamp: string;
@@ -77,7 +64,51 @@ export interface DeliveryTracking {
   notes?: string;
 }
 
-export interface DeliveryDriverRating {
+export interface DeliveryMessage {
+  id: string;
+  delivery_request_id: string;
+  order_id?: string;
+  sender_id?: string;
+  sender_type: 'driver' | 'customer';
+  message: string;
+  read?: boolean;
+  created_at?: string;
+}
+
+export interface DeliverySettings {
+  id: string;
+  restaurant_id: string;
+  allow_restaurant_delivery: boolean;
+  allow_external_delivery: boolean;
+  default_delivery_radius: number;
+  base_delivery_fee: number;
+  fee_per_km: number;
+  min_order_amount_for_delivery: number;
+  free_delivery_min_amount: number;
+  estimated_preparation_time: number;
+  priority_delivery_fee: number;
+  active_external_services: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeliveryZone {
+  id: string;
+  name: string;
+  description?: string;
+  polygon: any;
+  active: boolean;
+  minimum_order: number;
+  base_delivery_fee: number;
+  estimated_delivery_time: {
+    min: number;
+    max: number;
+  };
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface DeliveryRating {
   id: string;
   driver_id: string;
   user_id: string;
@@ -87,87 +118,14 @@ export interface DeliveryDriverRating {
   created_at: string;
 }
 
-export interface DeliveryZone {
-  id: string;
-  name: string;
-  description?: string;
-  active: boolean;
-  polygon: any;
-  minimum_order: number;
-  base_delivery_fee: number;
-  estimated_time_range: any;
-  created_at: string;
-}
-
-export interface UserPaymentMethod {
-  id: string;
-  user_id: string;
-  payment_type: string;
-  provider: string;
-  last_four: string;
-  expiry_date?: string;
-  is_default: boolean;
-  metadata?: any;
-  created_at: string;
-  last_used?: string;
-}
-
-export interface DeliverySettings {
-  id: string;
-  restaurant_id: string;
-  is_enabled: boolean;
-  delivery_radius: number;
-  minimum_order: number;
-  base_delivery_fee: number;
-  free_delivery_min?: number;
-  estimated_time_range: string;
-  allow_scheduling: boolean;
-  use_external_service: boolean;
-  external_service_id?: string;
-  created_at: string;
-  updated_at: string;
-  allow_restaurant_delivery?: boolean;
-  allow_external_delivery?: boolean;
-  default_delivery_fee?: number;
-  free_delivery_threshold?: number;
-  max_delivery_distance?: number;
-  estimated_delivery_time?: number;
-  auto_accept_orders?: boolean;
-  auto_assign_drivers?: boolean;
-  accepted_external_services?: string[];
-}
-
 export interface ExternalDeliveryService {
   id: string;
   name: string;
   logo_url?: string;
   base_fee: number;
-  price_per_km?: number;
   fee_per_km?: number;
   estimated_time: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
-
-// Enum type for delivery status
-export type DeliveryStatus = 
-  | 'pending'
-  | 'assigned'
-  | 'accepted'
-  | 'pickup'
-  | 'picked_up'
-  | 'in_transit'
-  | 'delivering'
-  | 'delivered'
-  | 'cancelled'
-  | 'failed';
-
-// Enum type for delivery type
-export type DeliveryType =
-  | 'standard'
-  | 'express'
-  | 'scheduled'
-  | 'partner'
-  | 'restaurant'
-  | 'external';

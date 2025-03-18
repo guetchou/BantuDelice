@@ -1,169 +1,284 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { DeliveryDriver } from '@/types/delivery';
-import { toast } from '@/components/ui/use-toast';
+import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
 
-interface OrderLocation {
-  id: string;
-  delivery_address: string;
-  latitude: number;
-  longitude: number;
-  total_amount: number;
-}
-
-const MAX_DRIVER_DISTANCE_KM = 10; // Max distance to consider driver in km
-
-// Calculate distance between two points using Haversine formula
-function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+// Calculate distance between two points using the Haversine formula
+export const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
   const R = 6371; // Radius of the earth in km
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
 
-function deg2rad(deg: number): number {
-  return deg * (Math.PI/180);
-}
+const deg2rad = (deg: number): number => {
+  return deg * (Math.PI / 180);
+};
 
-export async function findOptimalDriver(order: OrderLocation): Promise<DeliveryDriver | null> {
+// Estimate delivery time based on distance and vehicle type
+export const estimateDeliveryTime = (
+  distance: number,
+  vehicleType: string = 'bike'
+): number => {
+  // Average speeds in km/h
+  const speeds: Record<string, number> = {
+    bike: 15,
+    scooter: 25,
+    car: 35,
+    walk: 5
+  };
+  
+  // Get speed based on vehicle type or default to bike
+  const speed = speeds[vehicleType] || speeds.bike;
+  
+  // Calculate time in minutes, adding a base of 10 minutes for pickup
+  const timeInMinutes = Math.ceil((distance / speed) * 60) + 10;
+  
+  return timeInMinutes;
+};
+
+// Find the optimal driver for a delivery based on various factors
+export const findOptimalDriver = async (
+  restaurantLat: number,
+  restaurantLng: number,
+  deliveryLat: number,
+  deliveryLng: number,
+  isPriority: boolean = false
+): Promise<DeliveryDriver | null> => {
   try {
-    // Fetch all available drivers
+    // Fetch available drivers
     const { data: drivers, error } = await supabase
       .from('delivery_drivers')
       .select('*')
-      .eq('is_available', true)
       .eq('status', 'available');
       
     if (error) throw error;
+    if (!drivers || drivers.length === 0) return null;
     
-    if (!drivers || drivers.length === 0) {
-      return null;
-    }
-    
-    // Calculate distance for each driver to the restaurant
-    // In a real app, this would be more complex, considering traffic, driver ratings, etc.
-    const driversWithScore = drivers.map((driver: DeliveryDriver) => {
-      // Distance to the order
-      const distance = getDistanceInKm(
+    // Calculate scores for each driver
+    const scoredDrivers = drivers.map(driver => {
+      // Calculate distance from restaurant to driver
+      const distanceToRestaurant = calculateDistance(
         driver.current_latitude,
         driver.current_longitude,
-        order.latitude,
-        order.longitude
+        restaurantLat,
+        restaurantLng
       );
       
-      // Simple scoring - closer is better, but also consider rating
-      // A higher rating means the driver gets a bonus
-      const ratingBonus = driver.average_rating ? (driver.average_rating - 3) * 2 : 0;
+      // Calculate total delivery distance
+      const deliveryDistance = calculateDistance(
+        restaurantLat,
+        restaurantLng,
+        deliveryLat,
+        deliveryLng
+      );
       
-      // Lower score is better
-      const score = distance - ratingBonus;
+      // Estimate total time (driver to restaurant + restaurant to delivery)
+      const estimatedTime = estimateDeliveryTime(distanceToRestaurant + deliveryDistance, driver.vehicle_type || 'bike');
+      
+      // Calculate a score (lower is better)
+      // Factors: distance to restaurant, delivery rating, driver experience, current workload
+      let score = distanceToRestaurant * 1.5; // Distance factor
+      score -= driver.average_rating * 2; // Rating bonus (higher rating lowers score)
+      score -= Math.min(driver.total_deliveries / 50, 5); // Experience bonus (up to 5 points)
+      
+      // Adjust score for priority deliveries (prefer higher-rated drivers)
+      if (isPriority) {
+        score -= driver.average_rating * 3;
+      }
       
       return {
         ...driver,
-        distance,
-        score
+        score,
+        distance: distanceToRestaurant,
+        estimated_time: estimatedTime
       };
     });
     
-    // Filter out drivers too far away
-    const nearbyDrivers = driversWithScore.filter(d => d.distance <= MAX_DRIVER_DISTANCE_KM);
+    // Sort by score (lower is better) and return the best driver
+    scoredDrivers.sort((a, b) => a.score - b.score);
     
-    if (nearbyDrivers.length === 0) {
-      return null;
+    if (scoredDrivers.length > 0) {
+      return scoredDrivers[0];
     }
     
-    // Sort by score (lower is better)
-    nearbyDrivers.sort((a, b) => a.score - b.score);
-    
-    // Return the best match
-    return nearbyDrivers[0];
-  } catch (err) {
-    console.error('Error finding optimal driver:', err);
+    return null;
+  } catch (error) {
+    console.error('Error finding optimal driver:', error);
     return null;
   }
-}
+};
 
-export async function createDeliveryRequest(
-  orderId: string, 
+// Create a delivery request in the database
+export const createDeliveryRequest = async (
+  orderId: string,
   restaurantId: string,
-  restaurant: { latitude: number, longitude: number },
-  delivery: { address: string, latitude: number, longitude: number },
-  driverId?: string
-): Promise<string | null> {
+  customerId: string,
+  pickupAddress: string,
+  deliveryAddress: string,
+  deliveryFee: number,
+  isPriority: boolean = false,
+  specialInstructions?: string
+): Promise<{ success: boolean, delivery_request_id?: string, error?: string }> => {
   try {
-    // Calculate distance and estimated time
-    const distanceKm = getDistanceInKm(
-      restaurant.latitude,
-      restaurant.longitude,
-      delivery.latitude,
-      delivery.longitude
+    // Get restaurant and delivery locations
+    const { data: locations } = await supabase
+      .from('orders')
+      .select(`
+        restaurants:restaurant_id (
+          latitude,
+          longitude,
+          address
+        ),
+        delivery_latitude,
+        delivery_longitude
+      `)
+      .eq('id', orderId)
+      .single();
+      
+    if (!locations) {
+      throw new Error('Could not find order locations');
+    }
+    
+    const restaurantLat = locations.restaurants?.latitude || 0;
+    const restaurantLng = locations.restaurants?.longitude || 0;
+    const deliveryLat = locations.delivery_latitude || 0;
+    const deliveryLng = locations.delivery_longitude || 0;
+    
+    // Calculate distance
+    const distance = calculateDistance(
+      restaurantLat,
+      restaurantLng,
+      deliveryLat,
+      deliveryLng
     );
     
-    // Assume average speed of 30 km/h for urban delivery
-    const estimatedMinutes = Math.round((distanceKm / 30) * 60);
-    
-    const { data, error } = await supabase
+    // Create delivery request
+    const { data: deliveryRequest, error } = await supabase
       .from('delivery_requests')
       .insert({
         order_id: orderId,
         restaurant_id: restaurantId,
-        status: driverId ? 'assigned' : 'pending',
-        assigned_driver_id: driverId || null,
-        pickup_address: 'Restaurant address', // Would come from restaurant in real app
-        pickup_latitude: restaurant.latitude,
-        pickup_longitude: restaurant.longitude,
-        delivery_address: delivery.address,
-        delivery_latitude: delivery.latitude,
-        delivery_longitude: delivery.longitude,
-        requested_at: new Date().toISOString(),
-        accepted_at: driverId ? new Date().toISOString() : null,
-        estimated_distance: distanceKm,
-        estimated_duration: estimatedMinutes,
-        delivery_fee: 1500 + (distanceKm * 300), // Base fee + per km
-        is_external: false
+        customer_id: customerId,
+        pickup_address: pickupAddress,
+        delivery_address: deliveryAddress,
+        status: 'pending',
+        distance: distance,
+        estimated_duration: estimateDeliveryTime(distance),
+        delivery_fee: deliveryFee,
+        special_instructions: specialInstructions,
+        is_priority: isPriority
       })
       .select()
       .single();
       
     if (error) throw error;
     
-    if (driverId) {
-      // Update driver status
-      await supabase
+    // Update the order with delivery request info
+    await supabase
+      .from('orders')
+      .update({
+        delivery_status: 'requested',
+        delivery_request_id: deliveryRequest.id
+      })
+      .eq('id', orderId);
+    
+    return {
+      success: true,
+      delivery_request_id: deliveryRequest.id
+    };
+  } catch (error) {
+    console.error('Error creating delivery request:', error);
+    return {
+      success: false,
+      error: 'Failed to create delivery request'
+    };
+  }
+};
+
+// Assign a driver to a delivery request
+export const assignDriverToDelivery = async (
+  deliveryRequestId: string,
+  driverId: string,
+  isExternalService: boolean = false
+): Promise<{ success: boolean, error?: string }> => {
+  try {
+    // Update the delivery request
+    const { error: requestError } = await supabase
+      .from('delivery_requests')
+      .update({
+        assigned_driver_id: driverId,
+        status: 'assigned',
+        external_service_id: isExternalService ? driverId : null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', deliveryRequestId);
+      
+    if (requestError) throw requestError;
+    
+    if (!isExternalService) {
+      // Update the driver status
+      const { error: driverError } = await supabase
         .from('delivery_drivers')
         .update({
-          is_available: false,
           status: 'busy',
-          current_order_id: orderId
+          current_order_id: deliveryRequestId,
+          updated_at: new Date().toISOString()
         })
         .eq('id', driverId);
         
-      // Create initial tracking entry
-      await supabase
-        .from('delivery_tracking')
-        .insert({
-          delivery_request_id: data.id,
-          order_id: orderId,
-          driver_id: driverId,
-          status: 'assigned',
-          latitude: restaurant.latitude,
-          longitude: restaurant.longitude
-        });
+      if (driverError) throw driverError;
     }
     
-    return data.id;
-  } catch (err) {
-    console.error('Error creating delivery request:', err);
-    toast({
-      title: 'Error',
-      description: 'Failed to create delivery request',
-      variant: 'destructive',
-    });
-    return null;
+    // Get the order_id from the request
+    const { data: request } = await supabase
+      .from('delivery_requests')
+      .select('order_id')
+      .eq('id', deliveryRequestId)
+      .single();
+      
+    if (request) {
+      // Update the order status
+      const { error: orderError } = await supabase
+        .from('orders')
+        .update({
+          delivery_status: 'assigned',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', request.order_id);
+        
+      if (orderError) throw orderError;
+      
+      // Create initial tracking entry
+      const { error: trackingError } = await supabase
+        .from('delivery_tracking')
+        .insert({
+          delivery_request_id: deliveryRequestId,
+          order_id: request.order_id,
+          driver_id: driverId,
+          status: 'assigned',
+          latitude: 0, // Will be updated when driver starts
+          longitude: 0, // Will be updated when driver starts
+        });
+        
+      if (trackingError) throw trackingError;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error assigning driver:', error);
+    return {
+      success: false,
+      error: 'Failed to assign driver'
+    };
   }
-}
+};

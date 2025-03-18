@@ -14,6 +14,7 @@ const OrderProgress = ({ status: initialStatus, orderId }: OrderProgressProps) =
   const [status, setStatus] = useState<OrderStatus>(initialStatus);
   const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<string | null>(null);
+  const [isRestaurantOpen, setIsRestaurantOpen] = useState<boolean>(true);
 
   useEffect(() => {
     // Set initial status
@@ -36,6 +37,11 @@ const OrderProgress = ({ status: initialStatus, orderId }: OrderProgressProps) =
           
           if (payload.new && payload.new.estimated_delivery_time) {
             setEstimatedTime(payload.new.estimated_delivery_time);
+          }
+
+          // Check if restaurant is open for this order
+          if (payload.new && payload.new.restaurant_id) {
+            checkRestaurantOpenStatus(payload.new.restaurant_id);
           }
         }
       )
@@ -78,12 +84,29 @@ const OrderProgress = ({ status: initialStatus, orderId }: OrderProgressProps) =
     const fetchEstimatedTime = async () => {
       const { data } = await supabase
         .from('orders')
-        .select('estimated_delivery_time')
+        .select('estimated_delivery_time, restaurant_id')
         .eq('id', orderId)
         .single();
       
-      if (data && data.estimated_delivery_time) {
-        setEstimatedTime(data.estimated_delivery_time);
+      if (data) {
+        if (data.estimated_delivery_time) {
+          setEstimatedTime(data.estimated_delivery_time);
+        }
+        if (data.restaurant_id) {
+          checkRestaurantOpenStatus(data.restaurant_id);
+        }
+      }
+    };
+
+    const checkRestaurantOpenStatus = async (restaurantId: string) => {
+      const { data } = await supabase
+        .from('restaurants')
+        .select('is_open')
+        .eq('id', restaurantId)
+        .single();
+      
+      if (data) {
+        setIsRestaurantOpen(data.is_open);
       }
     };
 
@@ -166,6 +189,13 @@ const OrderProgress = ({ status: initialStatus, orderId }: OrderProgressProps) =
 
   return (
     <div className="w-full">
+      {!isRestaurantOpen && (
+        <div className="bg-amber-50 text-amber-800 p-3 rounded-md mb-4 text-sm flex items-center">
+          <Clock className="h-4 w-4 mr-2" />
+          <span>Le restaurant est actuellement fermé. Votre commande sera traitée dès leur réouverture.</span>
+        </div>
+      )}
+    
       <div className="flex justify-between items-center relative mb-2">
         {estimatedTime && (
           <div className="absolute -top-6 right-0 text-sm text-gray-500">
@@ -221,6 +251,12 @@ const OrderProgress = ({ status: initialStatus, orderId }: OrderProgressProps) =
       {status === 'cancelled' && (
         <div className="mt-4 bg-red-50 text-red-700 p-2 rounded-md text-sm text-center">
           Cette commande a été annulée
+        </div>
+      )}
+      
+      {status === 'pending' && !isRestaurantOpen && (
+        <div className="mt-4 bg-amber-50 text-amber-700 p-2 rounded-md text-sm text-center">
+          Le restaurant traitera votre commande lors de sa réouverture
         </div>
       )}
     </div>
