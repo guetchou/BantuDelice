@@ -1,4 +1,3 @@
-
 /**
  * Custom API client to interface with our backend API
  * This will progressively replace the Supabase client
@@ -188,11 +187,63 @@ export const orderApi = {
   }
 };
 
+// Payment API functions
+export const paymentApi = {
+  processMobileMoneyPayment: async (paymentData: {
+    phoneNumber: string;
+    amount: number;
+    provider: 'mtn' | 'airtel' | 'orange';
+    description?: string;
+    reference?: string;
+  }) => {
+    return apiRequest('/payments/mobile-money', 'POST', paymentData);
+  },
+  
+  checkPaymentStatus: async (transactionId: string) => {
+    return apiRequest(`/payments/status/${transactionId}`, 'GET');
+  },
+  
+  getWalletBalance: async () => {
+    return apiRequest('/payments/wallet/balance', 'GET');
+  },
+  
+  withdrawFunds: async (data: {
+    amount: number;
+    destination: string;
+    provider: 'mtn' | 'airtel' | 'orange' | 'bank';
+  }) => {
+    return apiRequest('/payments/withdraw', 'POST', data);
+  },
+  
+  getUserPaymentMethods: async () => {
+    return apiRequest('/payments/methods', 'GET');
+  },
+  
+  addPaymentMethod: async (data: {
+    type: 'mobile' | 'card' | 'bank';
+    provider?: string;
+    accountNumber?: string;
+    phoneNumber?: string;
+    isDefault?: boolean;
+  }) => {
+    return apiRequest('/payments/methods', 'POST', data);
+  },
+  
+  deletePaymentMethod: async (methodId: string) => {
+    return apiRequest(`/payments/methods/${methodId}`, 'DELETE');
+  },
+  
+  setDefaultPaymentMethod: async (methodId: string) => {
+    return apiRequest(`/payments/methods/${methodId}/default`, 'PATCH');
+  }
+};
+
 // Default export for the entire API client
 const apiClient = {
   auth: authApi,
   restaurants: restaurantApi,
-  orders: orderApi
+  orders: orderApi,
+  payments: paymentApi
 };
 
 export default apiClient;

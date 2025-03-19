@@ -60,3 +60,34 @@ export interface SubscriptionPlan {
   created_at: string;
   updated_at?: string;
 }
+
+export interface MobileMoneyProvider {
+  id: string;
+  name: string;
+  code: 'mtn' | 'airtel' | 'orange';
+  logo_url?: string;
+  country_codes: string[];
+  is_active: boolean;
+  min_amount?: number;
+  max_amount?: number;
+  configuration: Record<string, any>;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface MobileMoneyTransaction {
+  id: string;
+  user_id: string;
+  provider: 'mtn' | 'airtel' | 'orange';
+  phone_number: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  transaction_reference: string;
+  provider_reference?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  completed_at?: string;
+  failed_at?: string;
+  error_message?: string;
+}

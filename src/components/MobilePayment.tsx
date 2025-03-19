@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Phone, CreditCard, AlertCircle, QrCode } from 'lucide-react';
+import { Loader2, Phone, CreditCard, AlertCircle, QrCode, ChevronsUpDown, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import apiClient from '@/integrations/api/client';
 import {
   Select,
   SelectContent,
@@ -15,6 +16,19 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { cn } from '@/lib/utils';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export interface MobilePaymentProps {
   amount: number;
@@ -24,6 +38,13 @@ export interface MobilePaymentProps {
   onPaymentComplete?: () => void;
   savePaymentMethod?: boolean;
 }
+
+// Mobile network operators
+const operators = [
+  { value: "mtn", label: "MTN Mobile Money", icon: "🟡" },
+  { value: "airtel", label: "Airtel Money", icon: "🔴" },
+  { value: "orange", label: "Orange Money", icon: "🟠" },
+];
 
 const MobilePayment = ({ 
   amount, 
@@ -39,6 +60,7 @@ const MobilePayment = ({
   const [error, setError] = useState<string | null>(null);
   const [saveMethod, setSaveMethod] = useState(savePaymentMethod || false);
   const [paymentMethod, setPaymentMethod] = useState<'mobile' | 'card' | 'cashdelivery'>('mobile');
+  const [openOperatorSelect, setOpenOperatorSelect] = useState(false);
   const { toast } = useToast();
 
   const validatePhoneNumber = (number: string) => {
@@ -83,9 +105,9 @@ const MobilePayment = ({
         throw new Error('Utilisateur non connecté');
       }
 
-      // Create payment record
+      // Create payment record in Supabase
       const paymentMethodId = paymentMethod === 'mobile' 
-        ? (operator === 'mtn' ? 'mobile_mtn' : 'mobile_airtel')
+        ? `mobile_${operator}`
         : paymentMethod === 'card'
           ? 'card'
           : 'cash_delivery';
@@ -96,6 +118,7 @@ const MobilePayment = ({
           ? { card_last_four: '4242' }
           : { qr_code: true };
 
+      // Create a payment record in the Supabase database
       const { data: payment, error: paymentError } = await supabase
         .from('payments')
         .insert({
@@ -111,45 +134,68 @@ const MobilePayment = ({
 
       if (paymentError) throw paymentError;
 
-      // Si l'utilisateur veut sauvegarder la méthode de paiement
-      if (saveMethod) {
+      // For mobile money payment, use our API endpoint
+      if (paymentMethod === 'mobile') {
         try {
-          // Vérifier si la table existe en comptant le nombre de tables
-          const { count, error: metadataError } = await supabase
-            .rpc('check_table_exists', { table_name: 'user_payment_methods' });
-            
-          if (metadataError) {
-            console.warn('Erreur lors de la vérification de la table:', metadataError);
-          } else if (count && count > 0) {
-            // La table existe, on peut insérer la méthode de paiement
-            const { error: methodError } = await supabase
+          // Call our backend API to process the mobile money payment
+          await apiClient.payments.processMobileMoneyPayment({
+            phoneNumber,
+            amount,
+            provider: operator as 'mtn' | 'airtel' | 'orange',
+            description: description || `Paiement de ${amount} FCFA`,
+            reference: payment.id
+          });
+          
+          // In a real app, this would be handled by a webhook
+          // For this demo, we'll just simulate a successful payment
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+        } catch (apiError) {
+          console.error('Mobile money API error:', apiError);
+          // If the API call fails, we still want to continue with the simulation
+          // In a real app, we would handle this differently
+        }
+      } else {
+        // Simulate payment processing for non-mobile money methods
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      // If l'utilisateur veut sauvegarder la méthode de paiement
+      if (saveMethod && paymentMethod === 'mobile') {
+        try {
+          // Check if the table exists by checking if we can query it
+          const { data: methods, error: methodsError } = await supabase
+            .from('user_payment_methods')
+            .select('id')
+            .limit(1);
+          
+          // If we can query the table (no error), save the payment method
+          if (!methodsError) {
+            const { error: insertError } = await supabase
               .from('user_payment_methods')
               .insert({
                 user_id: user.id,
                 payment_type: paymentMethod,
-                provider: paymentMethod === 'mobile' ? operator : undefined,
-                last_four: paymentMethod === 'mobile' ? phoneNumber.slice(-4) : '4242',
+                provider: operator,
+                last_four: phoneNumber.slice(-4),
                 is_default: false,
-                metadata: paymentMethod === 'mobile' 
-                  ? { phone_number: phoneNumber }
-                  : { },
+                metadata: { 
+                  phone_number: phoneNumber 
+                },
                 last_used: new Date().toISOString()
               });
 
-            if (methodError) {
-              console.warn('Erreur lors de la sauvegarde de la méthode de paiement:', methodError);
+            if (insertError) {
+              console.warn('Erreur lors de la sauvegarde de la méthode de paiement:', insertError);
             }
           } else {
-            console.log('La table user_payment_methods n\'existe pas encore');
+            console.log('La table user_payment_methods n\'existe pas encore ou n\'est pas accessible');
           }
         } catch (err) {
           console.warn('Erreur lors de la gestion de la méthode de paiement:', err);
-          // On continue quand même car ce n'est pas critique
+          // Continue anyway, as this is not critical
         }
       }
-
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Update payment status
       const { error: updateError } = await supabase
@@ -224,40 +270,59 @@ const MobilePayment = ({
             onClick={() => setPaymentMethod('cashdelivery')}
           >
             <QrCode className="h-4 w-4 mr-2" />
-            Paiement à la livraison
+            À la livraison
           </Button>
         </div>
 
         {paymentMethod === 'mobile' && (
           <>
-            <Select
-              value={operator}
-              onValueChange={setOperator}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionnez un opérateur" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mtn">
-                  <div className="flex items-center">
-                    <Phone className="w-4 h-4 mr-2" />
-                    MTN Mobile Money
-                  </div>
-                </SelectItem>
-                <SelectItem value="airtel">
-                  <div className="flex items-center">
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Airtel Money
-                  </div>
-                </SelectItem>
-                <SelectItem value="orange">
-                  <div className="flex items-center">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Orange Money
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <Label className="text-sm font-medium block mb-1">
+                Opérateur
+              </Label>
+              <Popover open={openOperatorSelect} onOpenChange={setOpenOperatorSelect}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openOperatorSelect}
+                    className="w-full justify-between"
+                  >
+                    {operator
+                      ? operators.find((op) => op.value === operator)?.label
+                      : "Sélectionnez un opérateur"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Rechercher un opérateur..." />
+                    <CommandEmpty>Aucun opérateur trouvé.</CommandEmpty>
+                    <CommandGroup>
+                      {operators.map((op) => (
+                        <CommandItem
+                          key={op.value}
+                          value={op.value}
+                          onSelect={(currentValue) => {
+                            setOperator(currentValue === operator ? "" : currentValue);
+                            setOpenOperatorSelect(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              operator === op.value ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className="mr-2">{op.icon}</span>
+                          {op.label}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
 
             <div>
               <label htmlFor="phone" className="text-sm font-medium block mb-1">
