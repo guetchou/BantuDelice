@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,15 +15,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import LoyaltyStatus from "@/components/loyalty/LoyaltyStatus";
+import { useTheme } from '@/components/ui/ThemeProvider';
 
 const Navbar = () => {
-  const { user, isLoading } = useUser();
+  const { user, loading } = useUser();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    if (user && user.user_metadata?.avatar_url) {
-      setAvatarUrl(user.user_metadata.avatar_url as string);
+    if (user && user.avatar_url) {
+      setAvatarUrl(user.avatar_url);
     } else if (user) {
       const fetchAvatar = async () => {
         const { data } = await supabase.storage
@@ -39,14 +42,28 @@ const Navbar = () => {
     navigate('/auth');
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <nav className="bg-white shadow">
+    <nav className="bg-background border-b border-border shadow">
       <div className="container mx-auto px-6 py-3 flex items-center justify-between">
-        <Link to="/" className="text-xl font-bold text-gray-800">
+        <Link to="/" className="text-xl font-bold text-foreground">
           Buntudelice
         </Link>
         <div className="flex items-center space-x-4">
-          {isLoading ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="mr-2"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
+          
+          {loading ? (
             <div>Chargement...</div>
           ) : user ? (
             <DropdownMenu>
@@ -67,6 +84,12 @@ const Navbar = () => {
                 <DropdownMenuItem onClick={() => navigate('/orders')}>
                   Mes commandes
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/favorites')}>
+                  Favoris
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/loyalty')}>
+                  Programme de fidélité
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   Paramètres
                 </DropdownMenuItem>
@@ -83,12 +106,12 @@ const Navbar = () => {
             </DropdownMenu>
           ) : (
             <>
-              <Link to="/auth" className="text-gray-700 hover:text-gray-900">
+              <Link to="/auth" className="text-foreground hover:text-primary">
                 Se connecter
               </Link>
               <Link
                 to="/auth"
-                className="px-4 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-700"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
               >
                 S'inscrire
               </Link>

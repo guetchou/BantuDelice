@@ -43,6 +43,7 @@ export interface Order {
   cancellation_reason?: string;
   loyalty_points_earned?: number;
   accepted_at?: string;
+  delivery_instructions?: string;
 }
 
 export interface OrderProgress {

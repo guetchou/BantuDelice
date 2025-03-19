@@ -1,157 +1,90 @@
 
-import { createBrowserRouter, Outlet } from "react-router-dom";
-import Index from "@/pages/Index";
-import Auth from "@/pages/Auth";
-import Profile from "@/pages/Profile";
-import Restaurants from "@/pages/Restaurants";
-import RestaurantMenu from "@/pages/RestaurantMenu";
-import Orders from "@/pages/Orders";
-import Services from "@/pages/Services";
-import TaxiBookingPage from "@/pages/taxi/Booking";
-import RideStatusPage from "@/pages/taxi/RideStatus";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import { NavigationProvider } from "@/contexts/NavigationContext";
-import { Toaster } from "@/components/ui/toaster";
-import Settings from "@/pages/Settings";
-import Notifications from "@/pages/Notifications";
-import Wallet from "@/pages/Wallet";
-import Favorites from "@/pages/Favorites";
-import Help from "@/pages/Help";
-import About from "@/pages/About";
-import Contact from "@/pages/Contact";
-import Legal from "@/pages/Legal";
-import RestaurantManagementPage from "@/pages/restaurant/ManagementPage";
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import Restaurants from './pages/Restaurants';
+import RestaurantMenu from './pages/RestaurantMenu';
+import Orders from './pages/Orders';
+import OrderDetails from './pages/OrderDetails';
+import OrderTracking from './pages/OrderTracking';
+import Auth from './pages/Auth';
+import Profile from './pages/Profile';
+import ProtectedRoute from './components/ProtectedRoute';
+import Settings from './pages/Settings';
+import Favorites from './pages/Favorites';
+import Loyalty from './pages/Loyalty';
+import Dashboard from './pages/Dashboard';
+import Wallet from './pages/Wallet';
 
-const RootLayout = () => {
-  return (
-    <NavigationProvider>
-      <Outlet />
-      <Toaster />
-    </NavigationProvider>
-  );
-};
-
-export const router = createBrowserRouter([
+// Routes configuration
+const router = createBrowserRouter([
   {
-    path: "/",
-    element: <RootLayout />,
+    path: '/',
+    element: <Layout />,
     children: [
       {
         index: true,
-        element: <Index />,
+        element: <Home />,
       },
       {
-        path: "auth",
-        element: <Auth />,
-      },
-      {
-        path: "profile",
-        element: (
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "restaurants",
+        path: 'restaurants',
         element: <Restaurants />,
       },
       {
-        path: "restaurants/:id",
+        path: 'restaurants/:id',
         element: <RestaurantMenu />,
       },
       {
-        path: "orders",
-        element: (
-          <ProtectedRoute>
-            <Orders />
-          </ProtectedRoute>
-        ),
+        path: 'orders',
+        element: <ProtectedRoute><Orders /></ProtectedRoute>,
       },
       {
-        path: "services",
-        element: <Services />,
+        path: 'orders/:id',
+        element: <ProtectedRoute><OrderDetails /></ProtectedRoute>,
       },
       {
-        path: "taxi/booking",
-        element: (
-          <ProtectedRoute>
-            <TaxiBookingPage />
-          </ProtectedRoute>
-        ),
+        path: 'orders/:id/tracking',
+        element: <ProtectedRoute><OrderTracking /></ProtectedRoute>,
       },
       {
-        path: "taxi/ride/:rideId",
-        element: (
-          <ProtectedRoute>
-            <RideStatusPage />
-          </ProtectedRoute>
-        ),
-      },
-      // Nouvelles routes
-      {
-        path: "settings",
-        element: (
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        ),
+        path: 'auth',
+        element: <Auth />,
       },
       {
-        path: "notifications",
-        element: (
-          <ProtectedRoute>
-            <Notifications />
-          </ProtectedRoute>
-        ),
+        path: 'profile',
+        element: <ProtectedRoute><Profile /></ProtectedRoute>,
       },
       {
-        path: "wallet",
-        element: (
-          <ProtectedRoute>
-            <Wallet />
-          </ProtectedRoute>
-        ),
+        path: 'settings',
+        element: <ProtectedRoute><Settings /></ProtectedRoute>,
       },
       {
-        path: "favorites",
-        element: (
-          <ProtectedRoute>
-            <Favorites />
-          </ProtectedRoute>
-        ),
+        path: 'favorites',
+        element: <ProtectedRoute><Favorites /></ProtectedRoute>,
       },
       {
-        path: "help",
-        element: <Help />,
+        path: 'loyalty',
+        element: <ProtectedRoute><Loyalty /></ProtectedRoute>,
       },
       {
-        path: "about",
-        element: <About />,
+        path: 'loyalty/rewards',
+        element: <ProtectedRoute><Rewards /></ProtectedRoute>,
       },
       {
-        path: "contact",
-        element: <Contact />,
+        path: 'dashboard',
+        element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
       },
       {
-        path: "legal",
-        element: <Legal />,
-      },
-      // Routes pour la gestion du restaurant
-      {
-        path: "restaurant/manage/:id",
-        element: (
-          <ProtectedRoute>
-            <RestaurantManagementPage />
-          </ProtectedRoute>
-        ),
+        path: 'wallet',
+        element: <ProtectedRoute><Wallet /></ProtectedRoute>,
       },
     ],
   },
 ]);
 
-const Routes = () => {
-  return router;
-};
+// Router component to be used in the application
+export default function Routes() {
+  return <RouterProvider router={router} />;
+}
 
-export default Routes;
+import Rewards from './pages/loyalty/Rewards';

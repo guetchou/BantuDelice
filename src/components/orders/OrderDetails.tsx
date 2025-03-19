@@ -1,129 +1,107 @@
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Order } from '@/types/order';
-import { Loader2 } from 'lucide-react';
-import OrderProgress from './OrderProgress';
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { Clock, MapPin, User, CalendarDays, CreditCard, Award } from "lucide-react";
+import { Order } from "@/types/order";
+import { Card } from "@/components/ui/card";
+import { OrderSharing } from "@/components/sharing/OrderSharing";
+import LoyaltyBadge from "@/components/loyalty/LoyaltyBadge";
 
 interface OrderDetailsProps {
-  orderId?: string;
+  order: Order;
+  restaurantName?: string;
 }
 
-const OrderDetails = ({ orderId: propOrderId }: OrderDetailsProps) => {
-  const { orderId: paramOrderId } = useParams<{ orderId: string }>();
-  const orderId = propOrderId || paramOrderId;
-  
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      if (!orderId) {
-        setError('ID de commande manquant');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('id', orderId)
-          .single();
-
-        if (fetchError) throw fetchError;
-        
-        if (data) {
-          setOrder(data as unknown as Order);
-        }
-      } catch (err) {
-        console.error('Erreur lors de la récupération des détails de la commande:', err);
-        setError('Impossible de charger les détails de la commande');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrderDetails();
-  }, [orderId]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center p-6">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error || !order) {
-    return (
-      <Card className="p-6">
-        <p className="text-center text-red-500">{error || 'Commande non trouvée'}</p>
-      </Card>
-    );
-  }
+export default function OrderDetails({ order, restaurantName }: OrderDetailsProps) {
+  if (!order) return null;
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Détails de la commande #{order.id.slice(-6)}</h2>
-      
-      <div className="mb-6">
-        <OrderProgress status={order.status} orderId={order.id} />
-      </div>
-      
-      <div className="space-y-4">
+    <Card className="p-6 shadow-md">
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h3 className="font-medium mb-2">Informations générales</h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <p className="text-gray-600">Date de commande</p>
-            <p>{new Date(order.created_at).toLocaleString('fr-FR')}</p>
-            
-            <p className="text-gray-600">Statut</p>
-            <p>{order.status}</p>
-            
-            <p className="text-gray-600">Montant total</p>
-            <p>{(order.total_amount / 100).toFixed(2)}€</p>
-            
-            <p className="text-gray-600">Adresse de livraison</p>
-            <p>{order.delivery_address || 'Non spécifiée'}</p>
-          </div>
+          <h2 className="text-2xl font-bold">Commande #{order.id.slice(0, 8)}</h2>
+          <p className="text-muted-foreground">
+            {format(new Date(order.created_at), "PPP à HH:mm")}
+          </p>
         </div>
-        
+        <div className="flex flex-col items-end gap-2">
+          <OrderSharing order={order} restaurant_name={restaurantName} />
+          
+          {order.loyalty_points_earned && (
+            <div className="flex items-center gap-2">
+              <Award className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">+{order.loyalty_points_earned} points</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4 text-muted-foreground" />
+          <span>Status: <span className="font-medium">{order.status}</span></span>
+        </div>
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <span>Livraison à: <span className="font-medium">{order.delivery_address}</span></span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <span>Status de livraison: <span className="font-medium">{order.delivery_status}</span></span>
+        </div>
+        <div className="flex items-center gap-2">
+          <CreditCard className="h-4 w-4 text-muted-foreground" />
+          <span>Paiement: <span className="font-medium">{order.payment_method}</span> ({order.payment_status})</span>
+        </div>
         {order.special_instructions && (
-          <div>
-            <h3 className="font-medium mb-2">Instructions spéciales</h3>
-            <p className="text-sm bg-gray-50 p-3 rounded">{order.special_instructions}</p>
+          <div className="flex items-start gap-2">
+            <span className="text-muted-foreground mt-1">Instructions:</span>
+            <span className="font-medium">{order.special_instructions}</span>
           </div>
         )}
-        
-        <div>
-          <h3 className="font-medium mb-2">Éléments de la commande</h3>
-          <p className="text-sm text-gray-500">Les détails des articles commandés ne sont pas disponibles.</p>
-        </div>
-        
-        <div>
-          <h3 className="font-medium mb-2">Paiement</h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <p className="text-gray-600">Méthode de paiement</p>
-            <p>{order.payment_method || 'Non spécifiée'}</p>
-            
-            <p className="text-gray-600">Statut du paiement</p>
-            <p>{order.payment_status}</p>
-          </div>
-        </div>
       </div>
-      
-      <div className="mt-6 flex justify-end">
-        <Button variant="outline" size="sm">
-          Contacter le support
-        </Button>
+
+      <h3 className="font-semibold text-lg mb-3">Articles commandés</h3>
+      <ul className="space-y-3 mb-6">
+        {order.order_items.map((item) => (
+          <li key={item.id} className="flex justify-between">
+            <div>
+              <span className="font-medium">
+                {item.quantity}x {item.item_name}
+              </span>
+              {item.options && (
+                <p className="text-sm text-muted-foreground">{item.options}</p>
+              )}
+              {item.special_instructions && (
+                <p className="text-sm text-muted-foreground italic">
+                  "{item.special_instructions}"
+                </p>
+              )}
+            </div>
+            <span>{(item.price * item.quantity).toLocaleString()} FCFA</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="border-t pt-4">
+        <div className="flex justify-between mb-1">
+          <span>Sous-total</span>
+          <span>
+            {order.order_items
+              .reduce((sum, item) => sum + item.price * item.quantity, 0)
+              .toLocaleString()}{" "}
+            FCFA
+          </span>
+        </div>
+        <div className="flex justify-between mb-1">
+          <span>Frais de livraison</span>
+          <span>{order.delivery_fee.toLocaleString()} FCFA</span>
+        </div>
+        <div className="flex justify-between font-bold text-lg mt-2">
+          <span>Total</span>
+          <span>{order.total_amount.toLocaleString()} FCFA</span>
+        </div>
       </div>
     </Card>
   );
-};
-
-export default OrderDetails;
+}
