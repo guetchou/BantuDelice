@@ -1,0 +1,41 @@
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: buntudelice-api
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=db
+      - DB_USER=buntudelice
+      - DB_PASSWORD=buntudelice_password
+      - DB_NAME=buntudelice
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    container_name: buntudelice-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=buntudelice
+      - MYSQL_USER=buntudelice
+      - MYSQL_PASSWORD=buntudelice_password
+    volumes:
+      - buntudelice-db-data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  buntudelice-db-data:
