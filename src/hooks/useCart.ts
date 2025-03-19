@@ -12,13 +12,14 @@ export const useCart = () => {
   
   const { 
     state, 
-    addItem, 
-    removeItem, 
-    clearItems, 
+    addItem,
+    removeItem,
+    clearItems,
     updateDeliveryAddress, 
     updatePaymentMethod,
     updateDeliveryFee,
-    updateSpecialInstructions
+    updateSpecialInstructions,
+    setState
   } = context;
   
   // Calculer le montant total du panier
@@ -41,7 +42,7 @@ export const useCart = () => {
       ...state,
       discountAmount: amount
     };
-    context.setState(updatedState);
+    setState(updatedState);
   };
   
   // Supprimer une réduction du panier
@@ -50,7 +51,7 @@ export const useCart = () => {
       ...state,
       discountAmount: 0
     };
-    context.setState(updatedState);
+    setState(updatedState);
   };
   
   return {
