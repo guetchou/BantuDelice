@@ -16,7 +16,8 @@ import Notifications from "@/pages/Notifications";
 import Favorites from "@/pages/Favorites";
 import Covoiturage from "@/pages/Covoiturage";
 import Dashboard from "@/pages/Dashboard";
-import Loyalty from "@/pages/loyalty/Rewards";
+import Loyalty from "@/pages/Loyalty";
+import ReferralProgram from "@/pages/ReferralProgram";
 import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -56,6 +57,7 @@ export default (
       <Route path="favorites" element={<Favorites />} />
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="loyalty" element={<Loyalty />} />
+      <Route path="referral" element={<ReferralProgram />} />
       
       {/* Wallet and Payment routes */}
       <Route path="wallet" element={<Wallet />} />
