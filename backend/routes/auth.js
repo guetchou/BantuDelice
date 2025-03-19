@@ -2,62 +2,64 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const db = require('../config/database');
-
+const { pool } = require('../config/database');
 const router = express.Router();
 
-// Register a new user
+/**
+ * Register a new user
+ * POST /api/auth/register
+ */
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, first_name, last_name } = req.body;
+    const { email, password, firstName, lastName } = req.body;
     
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
     
-    const connection = db.getConnection();
-    
     // Check if user already exists
-    const [existingUsers] = await connection.execute(
-      'SELECT * FROM users WHERE email = ?',
-      [email]
-    );
+    const [existingUsers] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     
     if (existingUsers.length > 0) {
-      return res.status(409).json({ error: 'User already exists' });
+      return res.status(409).json({ error: 'User already exists with this email' });
     }
     
     // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Create user
-    const userId = uuidv4();
-    await connection.execute(
-      'INSERT INTO users (id, email, password, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
-      [userId, email, hashedPassword, first_name || null, last_name || null]
+    // Create new user
+    const [result] = await pool.query(
+      'INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)',
+      [email, hashedPassword, firstName || null, lastName || null]
     );
     
     // Generate token
     const token = jwt.sign(
-      { id: userId, email },
+      { userId: result.insertId, email, role: 'user' },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
     
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: userId, email, first_name, last_name },
-      token
+      token,
+      user: {
+        id: result.insertId,
+        email,
+        firstName: firstName || null,
+        lastName: lastName || null
+      }
     });
   } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ error: 'Registration failed' });
+    console.error('Error registering user:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Login
+/**
+ * Login user
+ * POST /api/auth/login
+ */
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -66,13 +68,8 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
     
-    const connection = db.getConnection();
-    
     // Find user
-    const [users] = await connection.execute(
-      'SELECT * FROM users WHERE email = ?',
-      [email]
-    );
+    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
     
     if (users.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -80,39 +77,43 @@ router.post('/login', async (req, res) => {
     
     const user = users[0];
     
-    // Verify password
+    // Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
     // Generate token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { userId: user.id, email: user.email, role: user.role || 'user' },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
     
     res.json({
       message: 'Login successful',
+      token,
       user: {
         id: user.id,
         email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name
-      },
-      token
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role || 'user'
+      }
     });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Error logging in:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get current user profile
+/**
+ * Get current user data
+ * GET /api/auth/me
+ */
 router.get('/me', async (req, res) => {
   try {
-    // Get token from headers
     const token = req.headers.authorization?.split(' ')[1];
     
     if (!token) {
@@ -122,27 +123,32 @@ router.get('/me', async (req, res) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    const connection = db.getConnection();
-    
-    // Get user from database
-    const [users] = await connection.execute(
-      'SELECT id, email, first_name, last_name, created_at FROM users WHERE id = ?',
-      [decoded.id]
-    );
+    // Get user data
+    const [users] = await pool.query('SELECT id, email, first_name, last_name, role, created_at FROM users WHERE id = ?', [decoded.userId]);
     
     if (users.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
     
+    const user = users[0];
+    
     res.json({
-      user: users[0]
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role || 'user',
+        createdAt: user.created_at
+      }
     });
   } catch (err) {
     if (err.name === 'JsonWebTokenError') {
       return res.status(401).json({ error: 'Invalid token' });
     }
-    console.error('Profile error:', err);
-    res.status(500).json({ error: 'Failed to get user profile' });
+    
+    console.error('Error getting user data:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

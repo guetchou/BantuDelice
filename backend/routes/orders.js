@@ -1,48 +1,58 @@
 
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const db = require('../config/database');
-const { authenticate } = require('../middleware/auth');
-
+const { pool } = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
-// All routes require authentication
-router.use(authenticate);
-
-// Get all orders for the authenticated user
-router.get('/', async (req, res) => {
+/**
+ * Get all orders for the current user
+ * GET /api/orders
+ */
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const connection = db.getConnection();
+    const userId = req.user.userId;
     
-    const [orders] = await connection.execute(
-      `SELECT o.*, r.name as restaurant_name
-       FROM orders o
-       JOIN restaurants r ON o.restaurant_id = r.id
-       WHERE o.user_id = ?
+    const [orders] = await pool.query(
+      `SELECT o.*, r.name as restaurant_name 
+       FROM orders o 
+       LEFT JOIN restaurants r ON o.restaurant_id = r.id 
+       WHERE o.user_id = ? 
        ORDER BY o.created_at DESC`,
-      [req.user.id]
+      [userId]
     );
     
-    res.json({ orders });
+    // Get order items for each order
+    for (let order of orders) {
+      const [items] = await pool.query(
+        'SELECT * FROM order_items WHERE order_id = ?',
+        [order.id]
+      );
+      order.items = items;
+    }
+    
+    res.json(orders);
   } catch (err) {
-    console.error('Error fetching orders:', err);
-    res.status(500).json({ error: 'Failed to fetch orders' });
+    console.error('Error getting orders:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get order details by ID
-router.get('/:orderId', async (req, res) => {
+/**
+ * Get a specific order by ID
+ * GET /api/orders/:id
+ */
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const connection = db.getConnection();
+    const orderId = req.params.id;
+    const userId = req.user.userId;
     
-    // Get order details
-    const [orders] = await connection.execute(
-      `SELECT o.*, r.name as restaurant_name, r.latitude, r.longitude
-       FROM orders o
-       JOIN restaurants r ON o.restaurant_id = r.id
+    // Get order with restaurant info
+    const [orders] = await pool.query(
+      `SELECT o.*, r.name as restaurant_name, r.address as restaurant_address 
+       FROM orders o 
+       LEFT JOIN restaurants r ON o.restaurant_id = r.id 
        WHERE o.id = ? AND o.user_id = ?`,
-      [orderId, req.user.id]
+      [orderId, userId]
     );
     
     if (orders.length === 0) {
@@ -52,118 +62,182 @@ router.get('/:orderId', async (req, res) => {
     const order = orders[0];
     
     // Get order items
-    const [items] = await connection.execute(
+    const [items] = await pool.query(
       'SELECT * FROM order_items WHERE order_id = ?',
       [orderId]
     );
     
+    order.items = items;
+    
     // Get tracking information
-    const [tracking] = await connection.execute(
-      'SELECT * FROM delivery_tracking WHERE order_id = ? ORDER BY updated_at DESC LIMIT 1',
+    const [tracking] = await pool.query(
+      'SELECT * FROM order_tracking_details WHERE order_id = ? ORDER BY timestamp DESC',
       [orderId]
     );
     
-    res.json({
-      order,
-      items,
-      tracking: tracking.length > 0 ? tracking[0] : null
-    });
+    order.tracking = tracking;
+    
+    res.json(order);
   } catch (err) {
-    console.error('Error fetching order details:', err);
-    res.status(500).json({ error: 'Failed to fetch order details' });
+    console.error('Error getting order details:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Create a new order
-router.post('/', async (req, res) => {
+/**
+ * Create a new order
+ * POST /api/orders
+ */
+router.post('/', authenticateToken, async (req, res) => {
+  const connection = await pool.getConnection();
   try {
-    const { restaurant_id, total_amount, items, delivery_address } = req.body;
+    await connection.beginTransaction();
     
-    if (!restaurant_id || !total_amount || !items || !delivery_address) {
+    const {
+      restaurantId,
+      items,
+      totalAmount,
+      deliveryAddress,
+      paymentMethod,
+      specialInstructions
+    } = req.body;
+    
+    if (!restaurantId || !items || !totalAmount) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const connection = db.getConnection();
+    const userId = req.user.userId;
     
-    // Start transaction
-    await connection.beginTransaction();
+    // Create order
+    const [orderResult] = await connection.query(
+      `INSERT INTO orders 
+       (user_id, restaurant_id, total_amount, delivery_address, payment_method, special_instructions, status, payment_status) 
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
+      [userId, restaurantId, totalAmount, deliveryAddress, paymentMethod, specialInstructions]
+    );
     
-    try {
-      // Create order
-      const orderId = uuidv4();
-      await connection.execute(
-        `INSERT INTO orders 
-         (id, user_id, restaurant_id, total_amount, delivery_address) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [orderId, req.user.id, restaurant_id, total_amount, delivery_address]
+    const orderId = orderResult.insertId;
+    
+    // Create order items
+    for (const item of items) {
+      await connection.query(
+        `INSERT INTO order_items 
+         (order_id, item_name, quantity, price) 
+         VALUES (?, ?, ?, ?)`,
+        [orderId, item.name, item.quantity, item.price]
       );
-      
-      // Create order items
-      for (const item of items) {
-        await connection.execute(
-          `INSERT INTO order_items
-           (id, order_id, item_name, quantity, price)
-           VALUES (?, ?, ?, ?, ?)`,
-          [uuidv4(), orderId, item.name, item.quantity, item.price]
-        );
-      }
-      
-      // Initialize tracking
-      await connection.execute(
-        `INSERT INTO delivery_tracking
-         (id, order_id, status)
-         VALUES (?, ?, ?)`,
-        [uuidv4(), orderId, 'pending']
-      );
-      
-      // Commit transaction
-      await connection.commit();
-      
-      res.status(201).json({
-        message: 'Order created successfully',
-        order_id: orderId
-      });
-    } catch (err) {
-      // Rollback transaction on error
-      await connection.rollback();
-      throw err;
     }
+    
+    // Add initial tracking entry
+    await connection.query(
+      `INSERT INTO order_tracking_details 
+       (order_id, status, timestamp, notes) 
+       VALUES (?, 'pending', NOW(), 'Order received')`,
+      [orderId]
+    );
+    
+    await connection.commit();
+    
+    // Get the created order
+    const [orders] = await pool.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+    
+    res.status(201).json({
+      message: 'Order created successfully',
+      order: orders[0]
+    });
   } catch (err) {
+    await connection.rollback();
     console.error('Error creating order:', err);
-    res.status(500).json({ error: 'Failed to create order' });
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    connection.release();
   }
 });
 
-// Update an order (e.g., add special instructions)
-router.patch('/:orderId', async (req, res) => {
+/**
+ * Update an order (add special instructions, cancel, etc.)
+ * PATCH /api/orders/:id
+ */
+router.patch('/:id', authenticateToken, async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const { delivery_instructions } = req.body;
+    const orderId = req.params.id;
+    const userId = req.user.userId;
     
-    const connection = db.getConnection();
-    
-    // Check if order exists and belongs to user
-    const [orders] = await connection.execute(
+    // Verify order belongs to user
+    const [orders] = await pool.query(
       'SELECT * FROM orders WHERE id = ? AND user_id = ?',
-      [orderId, req.user.id]
+      [orderId, userId]
     );
     
     if (orders.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
     
+    const order = orders[0];
+    
+    // Prevent modification if order is already delivered or cancelled
+    if (['delivered', 'cancelled', 'completed'].includes(order.status)) {
+      return res.status(400).json({ error: 'Cannot modify completed or cancelled order' });
+    }
+    
+    const allowedUpdates = [
+      'delivery_instructions',
+      'special_instructions',
+      'status' // Allow status updates (e.g., for cancellation)
+    ];
+    
+    const updates = {};
+    let hasUpdates = false;
+    
+    // Create an object with only allowed updates
+    for (const key of Object.keys(req.body)) {
+      const snakeCaseKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      if (allowedUpdates.includes(snakeCaseKey)) {
+        updates[snakeCaseKey] = req.body[key];
+        hasUpdates = true;
+      }
+    }
+    
+    if (!hasUpdates) {
+      return res.status(400).json({ error: 'No valid updates provided' });
+    }
+    
+    // Special handling for cancelled status
+    if (updates.status === 'cancelled') {
+      updates.cancelled_at = new Date();
+      
+      // Add tracking entry for cancellation
+      await pool.query(
+        `INSERT INTO order_tracking_details 
+         (order_id, status, timestamp, notes) 
+         VALUES (?, 'cancelled', NOW(), 'Order cancelled by customer')`,
+        [orderId]
+      );
+    }
+    
+    // Convert updates to SQL format
+    const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(updates);
+    
+    // Add order ID and user ID to values
+    values.push(orderId, userId);
+    
     // Update order
-    await connection.execute(
-      'UPDATE orders SET delivery_instructions = ? WHERE id = ?',
-      [delivery_instructions, orderId]
+    await pool.query(
+      `UPDATE orders SET ${fields} WHERE id = ? AND user_id = ?`,
+      values
     );
     
+    // Get updated order
+    const [updatedOrders] = await pool.query('SELECT * FROM orders WHERE id = ?', [orderId]);
+    
     res.json({
-      message: 'Order updated successfully'
+      message: 'Order updated successfully',
+      order: updatedOrders[0]
     });
   } catch (err) {
     console.error('Error updating order:', err);
-    res.status(500).json({ error: 'Failed to update order' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
