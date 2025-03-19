@@ -1,54 +1,22 @@
+
 import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import Layout from "./components/Layout";
+import { Layout } from "./components/Layout";
 import Home from "./pages/Home";
 import Cashback from "./pages/Cashback";
-import Products from "./pages/Products";
-import ProductDetails from "./pages/ProductDetails";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
+// Remove imports for files that don't exist
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
-import NotFound from "./pages/NotFound";
 import Restaurants from "./pages/Restaurants";
-import RestaurantDetails from "./pages/RestaurantDetails";
 import Auth from "./pages/Auth";
-import Delivery from "./pages/Delivery";
-import Driver from "./pages/Driver";
-import DriverDetails from "./pages/DriverDetails";
-import DriverOrders from "./pages/DriverOrders";
-import DriverOrderDetails from "./pages/DriverOrderDetails";
-import DriverProfile from "./pages/DriverProfile";
-import DriverSettings from "./pages/DriverSettings";
-import DriverHelp from "./pages/DriverHelp";
-import RestaurantDashboard from "./pages/RestaurantDashboard";
-import RestaurantOrders from "./pages/RestaurantOrders";
-import RestaurantOrderDetails from "./pages/RestaurantOrderDetails";
-import RestaurantProducts from "./pages/RestaurantProducts";
-import RestaurantSettings from "./pages/RestaurantSettings";
-import RestaurantHelp from "./pages/RestaurantHelp";
 import Admin from "./pages/Admin";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminUsers from "./pages/AdminUsers";
-import AdminProducts from "./pages/AdminProducts";
-import AdminOrders from "./pages/AdminOrders";
-import AdminSettings from "./pages/AdminSettings";
-import AdminHelp from "./pages/AdminHelp";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import FAQ from "./pages/FAQ";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
 import Services from "./pages/Services";
-import ServiceDetails from "./pages/ServiceDetails";
-import Bookings from "./pages/Bookings";
-import BookingDetails from "./pages/BookingDetails";
-import Search from "./pages/Search";
+import NotFound from "./pages/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -63,6 +31,8 @@ export const router = createBrowserRouter([
         path: "cashback",
         element: <Cashback />
       },
+      // Comment out routes with components that don't exist
+      /*
       {
         path: "products",
         element: <Products />
@@ -79,6 +49,7 @@ export const router = createBrowserRouter([
         path: "checkout",
         element: <Checkout />
       },
+      */
       {
         path: "orders",
         element: <Orders />
@@ -103,6 +74,7 @@ export const router = createBrowserRouter([
         path: "restaurants",
         element: <Restaurants />
       },
+      /*
       {
         path: "restaurants/:id",
         element: <RestaurantDetails />
@@ -163,10 +135,12 @@ export const router = createBrowserRouter([
         path: "restaurant/help",
         element: <RestaurantHelp />
       },
+      */
       {
         path: "admin",
         element: <Admin />
       },
+      /*
       {
         path: "admin/dashboard",
         element: <AdminDashboard />
@@ -191,6 +165,7 @@ export const router = createBrowserRouter([
         path: "admin/help",
         element: <AdminHelp />
       },
+      */
       {
         path: "about",
         element: <About />
@@ -199,6 +174,7 @@ export const router = createBrowserRouter([
         path: "contact",
         element: <Contact />
       },
+      /*
       {
         path: "terms",
         element: <Terms />
@@ -219,15 +195,17 @@ export const router = createBrowserRouter([
         path: "blog/:id",
         element: <BlogPost />
       },
+      */
       {
         path: "services",
         element: <Services />
       },
+      /*
       {
         path: "services/:id",
         element: <ServiceDetails />
       },
-       {
+      {
         path: "bookings",
         element: <Bookings />
       },
@@ -239,6 +217,7 @@ export const router = createBrowserRouter([
         path: "search",
         element: <Search />
       },
+      */
     ]
   },
   {
