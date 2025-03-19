@@ -9,7 +9,8 @@ import RecurringTripMatches from './RecurringTripMatches';
 import RecurringTripDetails from './RecurringTripDetails';
 import RecurringBookingModal from './RecurringBookingModal';
 import UserRecurringTrips from './UserRecurringTrips';
-import { Repeat, Search, Plus } from 'lucide-react';
+import OrganizationTripsTab from './OrganizationTripsTab';
+import { Repeat, Search, Plus, Building2, User } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
 
 interface RecurringTripsTabProps {
@@ -38,7 +39,7 @@ const RecurringTripsTab: React.FC<RecurringTripsTabProps> = ({
   };
   
   useEffect(() => {
-    // Chargement initial des données
+    // Initial data loading
     if (activeTab === 'matches') {
       ridesharing.findRecurringTripMatches({});
     } else if (activeTab === 'my-trips' && user) {
@@ -46,7 +47,7 @@ const RecurringTripsTab: React.FC<RecurringTripsTabProps> = ({
     }
   }, [activeTab, ridesharing, user]);
   
-  // Gérer la sélection d'un trajet
+  // Handle trip selection
   const handleSelectTrip = (tripId: string) => {
     const trip = ridesharing.recurringTrips.find(t => t.id === tripId);
     if (trip) {
@@ -55,14 +56,14 @@ const RecurringTripsTab: React.FC<RecurringTripsTabProps> = ({
     }
   };
   
-  // Gérer la réservation d'un trajet
+  // Handle trip booking
   const handleBookTrip = (trip: RidesharingTrip) => {
     setSelectedTrip(trip);
     setTripDetailsOpen(false);
     setBookingModalOpen(true);
   };
   
-  // Confirmer la réservation
+  // Confirm booking
   const handleConfirmBooking = async (bookingData: any) => {
     if (!selectedTrip) return;
     
@@ -78,25 +79,25 @@ const RecurringTripsTab: React.FC<RecurringTripsTabProps> = ({
     }
   };
   
-  // Gérer l'édition d'un trajet
+  // Handle trip editing
   const handleEditTrip = (tripId: string) => {
     // Implementation would navigate to the edit form
     console.log("Edit trip:", tripId);
   };
   
-  // Gérer la suspension d'un trajet
+  // Handle trip pausing
   const handlePauseTrip = async (tripId: string) => {
     await ridesharing.pauseRecurringTrip(tripId);
     await ridesharing.fetchMyTrips();
   };
   
-  // Gérer la reprise d'un trajet
+  // Handle trip resuming
   const handleResumeTrip = async (tripId: string) => {
     await ridesharing.resumeRecurringTrip(tripId);
     await ridesharing.fetchMyTrips();
   };
   
-  // Gérer l'annulation d'un trajet
+  // Handle trip cancellation
   const handleCancelTrip = async (tripId: string) => {
     const confirmed = window.confirm("Êtes-vous sûr de vouloir annuler ce trajet ?");
     if (confirmed) {
@@ -131,9 +132,19 @@ const RecurringTripsTab: React.FC<RecurringTripsTabProps> = ({
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="matches">Trajets recommandés</TabsTrigger>
-          <TabsTrigger value="my-trips">Mes trajets récurrents</TabsTrigger>
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="matches">
+            <User className="h-4 w-4 mr-1" />
+            Trajets recommandés
+          </TabsTrigger>
+          <TabsTrigger value="my-trips">
+            <User className="h-4 w-4 mr-1" />
+            Mes trajets récurrents
+          </TabsTrigger>
+          <TabsTrigger value="organizations">
+            <Building2 className="h-4 w-4 mr-1" />
+            Entreprises & Écoles
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="matches" className="space-y-6">
@@ -167,6 +178,13 @@ const RecurringTripsTab: React.FC<RecurringTripsTabProps> = ({
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="organizations">
+          <OrganizationTripsTab 
+            onNavigateToSearch={onNavigateToSearch}
+            onNavigateToCreate={onNavigateToCreate}
+          />
         </TabsContent>
       </Tabs>
       
