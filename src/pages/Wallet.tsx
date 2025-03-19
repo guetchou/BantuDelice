@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet as WalletIcon, User, Truck, CreditCard, History } from "lucide-react";
+import { Wallet as WalletIcon, User, Truck, CreditCard, History, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import DriverWallet from "@/components/delivery/DriverWallet";
+import WalletManager from "@/components/payment/WalletManager";
 
 export default function Wallet() {
   usePageTitle({ title: "Portefeuille" });
@@ -101,11 +102,11 @@ export default function Wallet() {
   const getTransactionIcon = (type: string) => {
     switch(type) {
       case 'deposit':
-        return <CreditCard className="h-5 w-5 text-green-500" />;
+        return <ArrowDownLeft className="h-5 w-5 text-green-500" />;
       case 'payment':
         return <CreditCard className="h-5 w-5 text-blue-500" />;
       case 'withdraw':
-        return <CreditCard className="h-5 w-5 text-red-500" />;
+        return <ArrowUpRight className="h-5 w-5 text-red-500" />;
       case 'refund':
         return <CreditCard className="h-5 w-5 text-purple-500" />;
       default:
@@ -150,104 +151,7 @@ export default function Wallet() {
         </TabsList>
         
         <TabsContent value="main">
-          <div className="grid gap-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Solde disponible
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {wallet ? formatCurrency(wallet.balance) : 'N/A'}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total dépensé
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(
-                      transactions
-                        .filter(t => t.type === 'payment')
-                        .reduce((sum, t) => sum + t.amount, 0)
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total remboursé
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(
-                      transactions
-                        .filter(t => t.type === 'refund')
-                        .reduce((sum, t) => sum + t.amount, 0)
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Historique des transactions</CardTitle>
-                <CardDescription>
-                  Toutes vos transactions récentes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {transactions.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Aucune transaction à afficher
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {transactions.map(transaction => (
-                      <div key={transaction.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            {getTransactionIcon(transaction.type)}
-                          </div>
-                          <div>
-                            <div className="font-medium">{transaction.description || transaction.type}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {new Date(transaction.created_at).toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-                        <div className={`text-lg font-medium ${
-                          transaction.type === 'payment' || transaction.type === 'withdraw' 
-                            ? 'text-red-600' 
-                            : 'text-green-600'
-                        }`}>
-                          {transaction.type === 'payment' || transaction.type === 'withdraw' ? '-' : '+'}
-                          {formatCurrency(transaction.amount)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            
-            <div className="flex justify-center">
-              <Button>
-                Recharger mon compte
-              </Button>
-            </div>
-          </div>
+          <WalletManager />
         </TabsContent>
         
         {isDriver && driverId && (

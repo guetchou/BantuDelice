@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Phone, CreditCard, AlertCircle } from 'lucide-react';
+import { Loader2, Phone, CreditCard, AlertCircle, QrCode } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
@@ -15,7 +15,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { UserPaymentMethod } from '@/types/delivery';
 
 export interface MobilePaymentProps {
   amount: number;
@@ -39,6 +38,7 @@ const MobilePayment = ({
   const [operator, setOperator] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saveMethod, setSaveMethod] = useState(savePaymentMethod || false);
+  const [paymentMethod, setPaymentMethod] = useState<'mobile' | 'card' | 'cashdelivery'>('mobile');
   const { toast } = useToast();
 
   const validatePhoneNumber = (number: string) => {
@@ -66,13 +66,15 @@ const MobilePayment = ({
       setError(null);
       setIsProcessing(true);
 
-      // Validation
-      if (!phoneNumber || !operator) {
-        throw new Error('Veuillez remplir tous les champs');
-      }
+      // Validation for mobile payment
+      if (paymentMethod === 'mobile') {
+        if (!phoneNumber || !operator) {
+          throw new Error('Veuillez remplir tous les champs');
+        }
 
-      if (!validatePhoneNumber(phoneNumber)) {
-        throw new Error('Numéro de téléphone invalide (9 chiffres requis)');
+        if (!validatePhoneNumber(phoneNumber)) {
+          throw new Error('Numéro de téléphone invalide (9 chiffres requis)');
+        }
       }
 
       // Get current user
@@ -82,18 +84,27 @@ const MobilePayment = ({
       }
 
       // Create payment record
+      const paymentMethodId = paymentMethod === 'mobile' 
+        ? (operator === 'mtn' ? 'mobile_mtn' : 'mobile_airtel')
+        : paymentMethod === 'card'
+          ? 'card'
+          : 'cash_delivery';
+          
+      const metadata = paymentMethod === 'mobile'
+        ? { phone_number: phoneNumber, operator }
+        : paymentMethod === 'card'
+          ? { card_last_four: '4242' }
+          : { qr_code: true };
+
       const { data: payment, error: paymentError } = await supabase
         .from('payments')
         .insert({
           user_id: user.id,
           amount,
-          payment_method_id: operator === 'mtn' ? 'mobile_mtn' : 'mobile_airtel',
+          payment_method_id: paymentMethodId,
           status: 'pending',
           description,
-          metadata: {
-            phone_number: phoneNumber,
-            operator
-          }
+          metadata
         })
         .select()
         .single();
@@ -115,13 +126,13 @@ const MobilePayment = ({
               .from('user_payment_methods')
               .insert({
                 user_id: user.id,
-                payment_type: 'mobile',
-                provider: operator,
-                last_four: phoneNumber.slice(-4),
+                payment_type: paymentMethod,
+                provider: paymentMethod === 'mobile' ? operator : undefined,
+                last_four: paymentMethod === 'mobile' ? phoneNumber.slice(-4) : '4242',
                 is_default: false,
-                metadata: {
-                  phone_number: phoneNumber
-                },
+                metadata: paymentMethod === 'mobile' 
+                  ? { phone_number: phoneNumber }
+                  : { },
                 last_used: new Date().toISOString()
               });
 
@@ -173,9 +184,9 @@ const MobilePayment = ({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Paiement Mobile</h3>
+        <h3 className="text-lg font-semibold mb-2">Paiement</h3>
         <p className="text-sm text-muted-foreground">
-          {description || 'Veuillez choisir votre opérateur et entrer votre numéro de téléphone'}
+          {description || 'Choisissez votre méthode de paiement préférée'}
         </p>
       </div>
 
@@ -187,44 +198,138 @@ const MobilePayment = ({
       )}
 
       <div className="space-y-4">
-        <Select
-          value={operator}
-          onValueChange={setOperator}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Sélectionnez un opérateur" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="mtn">
-              <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-2" />
-                MTN Mobile Money
-              </div>
-            </SelectItem>
-            <SelectItem value="airtel">
-              <div className="flex items-center">
-                <CreditCard className="w-4 h-4 mr-2" />
-                Airtel Money
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div>
-          <label htmlFor="phone" className="text-sm font-medium block mb-1">
-            Numéro de téléphone
-          </label>
-          <Input
-            id="phone"
-            type="tel"
-            placeholder="Entrez 9 chiffres"
-            value={formatPhoneNumber(phoneNumber)}
-            onChange={handleInputChange}
-            className="w-full"
-            maxLength={13} // 9 chiffres + espaces
-          />
-          <p className="text-xs text-gray-500 mt-1">Format: XXX XXX XXX</p>
+        <div className="flex space-x-2">
+          <Button 
+            type="button" 
+            variant={paymentMethod === 'mobile' ? 'default' : 'outline'} 
+            className="flex-1"
+            onClick={() => setPaymentMethod('mobile')}
+          >
+            <Phone className="h-4 w-4 mr-2" />
+            Mobile Money
+          </Button>
+          <Button 
+            type="button" 
+            variant={paymentMethod === 'card' ? 'default' : 'outline'} 
+            className="flex-1"
+            onClick={() => setPaymentMethod('card')}
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            Carte Bancaire
+          </Button>
+          <Button 
+            type="button" 
+            variant={paymentMethod === 'cashdelivery' ? 'default' : 'outline'} 
+            className="flex-1"
+            onClick={() => setPaymentMethod('cashdelivery')}
+          >
+            <QrCode className="h-4 w-4 mr-2" />
+            Paiement à la livraison
+          </Button>
         </div>
+
+        {paymentMethod === 'mobile' && (
+          <>
+            <Select
+              value={operator}
+              onValueChange={setOperator}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Sélectionnez un opérateur" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="mtn">
+                  <div className="flex items-center">
+                    <Phone className="w-4 h-4 mr-2" />
+                    MTN Mobile Money
+                  </div>
+                </SelectItem>
+                <SelectItem value="airtel">
+                  <div className="flex items-center">
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Airtel Money
+                  </div>
+                </SelectItem>
+                <SelectItem value="orange">
+                  <div className="flex items-center">
+                    <Phone className="w-4 h-4 mr-2" />
+                    Orange Money
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div>
+              <label htmlFor="phone" className="text-sm font-medium block mb-1">
+                Numéro de téléphone
+              </label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Entrez 9 chiffres"
+                value={formatPhoneNumber(phoneNumber)}
+                onChange={handleInputChange}
+                className="w-full"
+                maxLength={13} // 9 chiffres + espaces
+              />
+              <p className="text-xs text-gray-500 mt-1">Format: XXX XXX XXX</p>
+            </div>
+          </>
+        )}
+
+        {paymentMethod === 'card' && (
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="cardNumber" className="text-sm font-medium block mb-1">
+                Numéro de carte
+              </label>
+              <Input
+                id="cardNumber"
+                type="text"
+                placeholder="4242 4242 4242 4242"
+                className="w-full"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="expiryDate" className="text-sm font-medium block mb-1">
+                  Date d'expiration
+                </label>
+                <Input
+                  id="expiryDate"
+                  type="text"
+                  placeholder="MM/YY"
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="cvv" className="text-sm font-medium block mb-1">
+                  Code de sécurité
+                </label>
+                <Input
+                  id="cvv"
+                  type="text"
+                  placeholder="123"
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {paymentMethod === 'cashdelivery' && (
+          <div className="p-4 bg-muted rounded-lg">
+            <div className="flex items-start space-x-3">
+              <QrCode className="w-6 h-6 text-primary" />
+              <div>
+                <p className="font-medium">Paiement à la livraison</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Un code QR sera généré pour votre livraison. Le livreur scannera ce code pour confirmer le paiement. Cela permet d'éviter les fraudes et d'assurer la sécurité des transactions.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center space-x-2">
           <Checkbox 

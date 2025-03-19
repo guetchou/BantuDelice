@@ -1,90 +1,77 @@
 
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './pages/Home';
-import Restaurants from './pages/Restaurants';
-import RestaurantMenu from './pages/RestaurantMenu';
-import Orders from './pages/Orders';
-import OrderDetails from './pages/OrderDetails';
-import OrderTracking from './pages/OrderTracking';
-import Auth from './pages/Auth';
-import Profile from './pages/Profile';
-import ProtectedRoute from './components/ProtectedRoute';
-import Settings from './pages/Settings';
-import Favorites from './pages/Favorites';
-import Loyalty from './pages/Loyalty';
-import Dashboard from './pages/Dashboard';
-import Wallet from './pages/Wallet';
+import { Route } from "react-router-dom";
+import Home from "@/pages/Home";
+import Restaurants from "@/pages/Restaurants";
+import RestaurantMenu from "@/pages/RestaurantMenu";
+import Orders from "@/pages/Orders";
+import OrderDetails from "@/pages/OrderDetails";
+import Wallet from "@/pages/Wallet";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
+import Auth from "@/pages/Auth";
+import OrderTracking from "@/pages/OrderTracking";
+import Taxi from "@/pages/Taxi";
+import TaxiRide from "@/pages/TaxiRide";
+import Notifications from "@/pages/Notifications";
+import Favorites from "@/pages/Favorites";
+import Covoiturage from "@/pages/Covoiturage";
+import Dashboard from "@/pages/Dashboard";
+import Loyalty from "@/pages/loyalty/Rewards";
+import Layout from "@/components/Layout";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-// Routes configuration
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <Home />,
-      },
-      {
-        path: 'restaurants',
-        element: <Restaurants />,
-      },
-      {
-        path: 'restaurants/:id',
-        element: <RestaurantMenu />,
-      },
-      {
-        path: 'orders',
-        element: <ProtectedRoute><Orders /></ProtectedRoute>,
-      },
-      {
-        path: 'orders/:id',
-        element: <ProtectedRoute><OrderDetails /></ProtectedRoute>,
-      },
-      {
-        path: 'orders/:id/tracking',
-        element: <ProtectedRoute><OrderTracking /></ProtectedRoute>,
-      },
-      {
-        path: 'auth',
-        element: <Auth />,
-      },
-      {
-        path: 'profile',
-        element: <ProtectedRoute><Profile /></ProtectedRoute>,
-      },
-      {
-        path: 'settings',
-        element: <ProtectedRoute><Settings /></ProtectedRoute>,
-      },
-      {
-        path: 'favorites',
-        element: <ProtectedRoute><Favorites /></ProtectedRoute>,
-      },
-      {
-        path: 'loyalty',
-        element: <ProtectedRoute><Loyalty /></ProtectedRoute>,
-      },
-      {
-        path: 'loyalty/rewards',
-        element: <ProtectedRoute><Rewards /></ProtectedRoute>,
-      },
-      {
-        path: 'dashboard',
-        element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
-      },
-      {
-        path: 'wallet',
-        element: <ProtectedRoute><Wallet /></ProtectedRoute>,
-      },
-    ],
-  },
-]);
+// Wallet and Payment routes
+import Deposit from "@/pages/wallet/Deposit";
+import Withdraw from "@/pages/wallet/Withdraw";
+import PaymentMethods from "@/pages/wallet/PaymentMethods";
+import Transactions from "@/pages/wallet/Transactions";
+import Invoices from "@/pages/wallet/Invoices";
+import Analytics from "@/pages/wallet/Analytics";
 
-// Router component to be used in the application
-export default function Routes() {
-  return <RouterProvider router={router} />;
-}
+// Admin dashboard routes
+import AdminDashboard from "@/pages/admin/Dashboard";
+import RestaurantDashboard from "@/pages/restaurant/Dashboard";
+import KitchenDashboard from "@/pages/kitchen/Dashboard";
+import DeliveryDashboard from "@/pages/delivery/Dashboard";
+import AnalyticsDashboard from "@/pages/analytics/Dashboard";
 
-import Rewards from './pages/loyalty/Rewards';
+export default (
+  <Route path="/" element={<Layout />}>
+    <Route index element={<Home />} />
+    <Route path="restaurants" element={<Restaurants />} />
+    <Route path="restaurant/:id" element={<RestaurantMenu />} />
+    <Route path="covoiturage" element={<Covoiturage />} />
+    <Route path="auth" element={<Auth />} />
+    <Route path="taxi" element={<Taxi />} />
+    <Route path="taxi/ride/:id" element={<TaxiRide />} />
+    
+    {/* Protected Routes */}
+    <Route element={<ProtectedRoute />}>
+      <Route path="orders" element={<Orders />} />
+      <Route path="order/:id" element={<OrderDetails />} />
+      <Route path="order/tracking/:id" element={<OrderTracking />} />
+      <Route path="profile" element={<Profile />} />
+      <Route path="settings" element={<Settings />} />
+      <Route path="notifications" element={<Notifications />} />
+      <Route path="favorites" element={<Favorites />} />
+      <Route path="dashboard" element={<Dashboard />} />
+      <Route path="loyalty" element={<Loyalty />} />
+      
+      {/* Wallet and Payment routes */}
+      <Route path="wallet" element={<Wallet />} />
+      <Route path="wallet/deposit" element={<Deposit />} />
+      <Route path="wallet/withdraw" element={<Withdraw />} />
+      <Route path="wallet/payment-methods" element={<PaymentMethods />} />
+      <Route path="wallet/transactions" element={<Transactions />} />
+      <Route path="wallet/invoices" element={<Invoices />} />
+      <Route path="wallet/analytics" element={<Analytics />} />
+      
+      {/* Admin dashboard routes */}
+      <Route path="admin" element={<AdminDashboard />} />
+      <Route path="restaurant/dashboard" element={<RestaurantDashboard />} />
+      <Route path="kitchen/dashboard" element={<KitchenDashboard />} />
+      <Route path="delivery/dashboard" element={<DeliveryDashboard />} />
+      <Route path="analytics/dashboard" element={<AnalyticsDashboard />} />
+    </Route>
+  </Route>
+);

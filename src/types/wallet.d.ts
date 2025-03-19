@@ -45,3 +45,63 @@ export interface WalletSummary {
   pendingAmount: number;
   lastTransactions: DriverTransaction[];
 }
+
+export interface PaymentMethod {
+  id: string;
+  user_id: string;
+  payment_type: 'mobile' | 'card' | 'bank' | 'cashdelivery';
+  provider?: string;
+  last_four: string;
+  is_default: boolean;
+  metadata?: Record<string, any>;
+  last_used?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface Commission {
+  id: string;
+  restaurant_id: string;
+  rate: number;
+  fixed_amount?: number;
+  min_amount?: number;
+  max_amount?: number;
+  is_percentage: boolean;
+  effective_from: string;
+  effective_to?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface RestaurantSubscription {
+  id: string;
+  restaurant_id: string;
+  plan_type: 'basic' | 'premium' | 'elite';
+  price: number;
+  start_date: string;
+  end_date: string;
+  features: string[];
+  auto_renew: boolean;
+  status: 'active' | 'expired' | 'cancelled';
+  payment_id?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface Invoice {
+  id: string;
+  user_id: string;
+  invoice_number: string;
+  amount: number;
+  status: 'paid' | 'pending' | 'overdue' | 'cancelled';
+  due_date: string;
+  items?: {
+    description: string;
+    quantity: number;
+    unit_price: number;
+    total: number;
+  }[];
+  pdf_url?: string;
+  created_at: string;
+  updated_at?: string;
+}

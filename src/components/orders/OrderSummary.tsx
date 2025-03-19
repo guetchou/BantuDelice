@@ -7,7 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useCart } from '@/contexts/CartContext';
 import MobilePayment from '@/components/MobilePayment';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 export const OrderSummary = () => {
   const { state, clearCart } = useCart();
@@ -17,7 +18,10 @@ export const OrderSummary = () => {
   const [validatingStock, setValidatingStock] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const total = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const deliveryFee = subtotal > 0 ? 1000 : 0; // Example delivery fee
+  const serviceFee = subtotal > 0 ? Math.round(subtotal * 0.05) : 0; // 5% service fee
+  const total = subtotal + deliveryFee + serviceFee;
 
   const handlePaymentComplete = async () => {
     try {
@@ -42,6 +46,9 @@ export const OrderSummary = () => {
         .insert({
           user_id: user.id,
           total_amount: total,
+          subtotal_amount: subtotal,
+          delivery_fee: deliveryFee,
+          service_fee: serviceFee,
           status: 'pending',
           payment_status: 'completed',
           delivery_status: 'pending',
@@ -110,39 +117,57 @@ export const OrderSummary = () => {
         {state.items.map((item) => (
           <div key={item.id} className="flex justify-between">
             <span>{item.quantity}x {item.name}</span>
-            <span>{item.price * item.quantity} FCFA</span>
+            <span>{formatCurrency(item.price * item.quantity)}</span>
           </div>
         ))}
         
-        <div className="border-t pt-4">
-          <div className="flex justify-between font-bold">
+        <div className="border-t pt-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Sous-total</span>
+            <span>{formatCurrency(subtotal)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Frais de livraison</span>
+            <span>{formatCurrency(deliveryFee)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span>Frais de service (5%)</span>
+            <span>{formatCurrency(serviceFee)}</span>
+          </div>
+          <div className="flex justify-between font-bold pt-2 border-t">
             <span>Total</span>
-            <span>{total} FCFA</span>
+            <span>{formatCurrency(total)}</span>
           </div>
         </div>
 
-        <Button 
-          className="w-full flex items-center justify-center gap-2"
-          onClick={() => setShowPayment(true)}
-          disabled={loading || validatingStock || state.items.length === 0}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {validatingStock ? 'Validation du stock...' : 'Traitement...'}
-            </>
-          ) : (
-            'Procéder au paiement'
-          )}
-        </Button>
+        {!showPayment ? (
+          <Button 
+            className="w-full flex items-center justify-center gap-2"
+            onClick={() => setShowPayment(true)}
+            disabled={loading || validatingStock || state.items.length === 0}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {validatingStock ? 'Validation du stock...' : 'Traitement...'}
+              </>
+            ) : (
+              <>
+                Procéder au paiement
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </>
+            )}
+          </Button>
+        ) : (
+          <MobilePayment
+            amount={total}
+            description="Paiement de commande"
+            onSuccess={handlePaymentComplete}
+            onError={() => setError("Erreur lors du paiement. Veuillez réessayer.")}
+            savePaymentMethod={true}
+          />
+        )}
       </div>
-
-      {showPayment && (
-        <MobilePayment
-          amount={total}
-          onPaymentComplete={handlePaymentComplete}
-        />
-      )}
     </Card>
   );
 };
