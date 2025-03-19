@@ -1,13 +1,36 @@
 
-import { Database } from "@/integrations/supabase/database.types";
+export interface Payment {
+  id: string;
+  order_id: string;
+  user_id: string;
+  amount: number;
+  payment_method: string;
+  payment_provider: string;
+  status: PaymentStatus;
+  transaction_id?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at?: string;
+}
 
-export type Payment = Database['public']['Tables']['payments']['Row'];
-export type PaymentInsert = Database['public']['Tables']['payments']['Insert'];
-export type PaymentUpdate = Database['public']['Tables']['payments']['Update'];
+export type PaymentInsert = Omit<Payment, 'id' | 'created_at' | 'updated_at'>;
+export type PaymentUpdate = Partial<PaymentInsert>;
 
-export type PaymentMethod = Database['public']['Tables']['payment_methods']['Row'];
-export type PaymentMethodInsert = Database['public']['Tables']['payment_methods']['Insert'];
-export type PaymentMethodUpdate = Database['public']['Tables']['payment_methods']['Update'];
+export interface PaymentMethod {
+  id: string;
+  user_id: string;
+  payment_type: 'mobile' | 'card' | 'bank';
+  provider?: string;
+  account_number?: string;
+  last_four: string;
+  is_default: boolean;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at?: string;
+}
+
+export type PaymentMethodInsert = Omit<PaymentMethod, 'id' | 'created_at' | 'updated_at'>;
+export type PaymentMethodUpdate = Partial<PaymentMethodInsert>;
 
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded' | 'partially_refunded';
 
@@ -121,7 +144,7 @@ export interface CashbackPromotion {
   updated_at?: string;
 }
 
-// Ajouter les types Supabase pour le cashback
+// Define cashback related interfaces
 export interface Cashback {
   id: string;
   user_id: string;
