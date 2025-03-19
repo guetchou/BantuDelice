@@ -26,6 +26,7 @@ export interface MenuItem {
   };
   allergens?: string[];
   is_available?: boolean;
+  stock_level?: number;
 }
 
 export interface MenuSection {

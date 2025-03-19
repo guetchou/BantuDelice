@@ -18,13 +18,30 @@ const refreshFeatureFlags = async () => {
       flags[feature.feature_name] = feature.is_enabled;
     });
     
+    // Ensure availability feature flags are always defined
+    if (flags.dynamic_menu_availability === undefined) {
+      flags.dynamic_menu_availability = true;
+    }
+    
+    if (flags.restaurant_temporary_closure === undefined) {
+      flags.restaurant_temporary_closure = true;
+    }
+    
+    if (flags.special_hours_management === undefined) {
+      flags.special_hours_management = true;
+    }
+    
     featureFlagsCache = flags;
     lastFetchTime = Date.now();
     
     return flags;
   } catch (err) {
     console.error('Error fetching feature flags:', err);
-    return {};
+    return {
+      dynamic_menu_availability: true,
+      restaurant_temporary_closure: true,
+      special_hours_management: true
+    };
   }
 };
 
