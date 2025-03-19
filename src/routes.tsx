@@ -18,7 +18,7 @@ import Covoiturage from "@/pages/Covoiturage";
 import Dashboard from "@/pages/Dashboard";
 import Loyalty from "@/pages/Loyalty";
 import ReferralProgram from "@/pages/ReferralProgram";
-import Layout from "@/components/Layout";
+import { Layout } from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Wallet and Payment routes
@@ -36,6 +36,11 @@ import KitchenDashboard from "@/pages/kitchen/Dashboard";
 import DeliveryDashboard from "@/pages/delivery/Dashboard";
 import AnalyticsDashboard from "@/pages/analytics/Dashboard";
 
+// New subscription routes
+import RestaurantSubscriptionPlans from "@/pages/restaurant/SubscriptionPlans";
+import DriverSubscriptionPlans from "@/pages/driver/SubscriptionPlans";
+import SubscriptionCheckout from "@/pages/subscription/Checkout";
+
 export default (
   <Route path="/" element={<Layout />}>
     <Route index element={<Home />} />
@@ -46,8 +51,14 @@ export default (
     <Route path="taxi" element={<Taxi />} />
     <Route path="taxi/ride/:id" element={<TaxiRide />} />
     
+    {/* Subscription routes */}
+    <Route path="restaurant/subscription/plans" element={<RestaurantSubscriptionPlans />} />
+    <Route path="driver/subscription/plans" element={<DriverSubscriptionPlans />} />
+    <Route path="restaurant/subscription/checkout/:planId" element={<SubscriptionCheckout />} />
+    <Route path="driver/subscription/checkout/:planId" element={<SubscriptionCheckout />} />
+    
     {/* Protected Routes */}
-    <Route element={<ProtectedRoute />}>
+    <Route element={<ProtectedRoute children={undefined} />}>
       <Route path="orders" element={<Orders />} />
       <Route path="order/:id" element={<OrderDetails />} />
       <Route path="order/tracking/:id" element={<OrderTracking />} />
