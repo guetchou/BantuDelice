@@ -1,12 +1,15 @@
 
 import { useContext } from 'react';
-import { CartContext } from '@/contexts/CartContext';
-import { CartItem, CartContextType } from '@/types/cart';
+import { CartContext, CartContextType } from '@/contexts/CartContext';
 
+/**
+ * Hook to access the cart context
+ * @returns The cart context
+ */
 export const useCart = (): CartContextType => {
   const context = useContext(CartContext);
   
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
   
@@ -16,6 +19,14 @@ export const useCart = (): CartContextType => {
     removeFromCart: context.removeFromCart,
     clearCart: context.clearCart,
     applyDiscount: context.applyDiscount,
-    removeDiscount: context.removeDiscount
+    removeDiscount: context.removeDiscount,
+    updateQuantity: context.updateQuantity,
+    subtotal: context.subtotal,
+    totalItems: context.totalItems,
+    discount: context.discount,
+    discountCode: context.discountCode,
+    state: context.state
   };
 };
+
+export default useCart;

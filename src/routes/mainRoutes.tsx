@@ -12,7 +12,7 @@ import OrderDetails from '@/pages/OrderDetails';
 import OrderTracking from '@/pages/OrderTracking';
 import ReferralProgram from '@/pages/ReferralProgram';
 import Wallet from '@/pages/Wallet';
-import { TaxiBookingForm } from '@/components/taxi/TaxiBookingForm';
+import TaxiBookingForm from '@/components/taxi/TaxiBookingForm';
 import TaxiRideStatus from '@/components/taxi/TaxiRideStatus';
 import TaxiRideDetails from '@/pages/TaxiRideDetails';
 

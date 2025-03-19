@@ -1,113 +1,144 @@
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
+import { CartItem, MenuItem } from '@/types/cart';
 
-// Types
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image_url?: string;
-  description?: string;
-  restaurant_id: string;
-  customizations?: Record<string, any>;
-}
-
-interface CartContextType {
-  items: CartItem[];
-  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
-  removeItem: (itemId: string) => void;
-  updateItemQuantity: (itemId: string, quantity: number) => void;
-  clearCart: () => void;
-  itemCount: number;
+export interface CartContextType {
+  cart: CartItem[];
   subtotal: number;
-  restaurantId: string | null;
+  totalItems: number;
+  discount: number | null;
+  discountCode: string | null;
+  addToCart: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
+  removeFromCart: (itemId: string) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
+  clearCart: () => void;
+  applyDiscount: (code: string, amount: number) => void;
+  removeDiscount: () => void;
+  state: {
+    cart: CartItem[];
+    subtotal: number;
+    totalItems: number;
+    discount: number | null;
+    discountCode: string | null;
+  };
 }
 
-// Create context
-const CartContext = createContext<CartContextType | undefined>(undefined);
+export const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Provider component
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+interface CartProviderProps {
+  children: ReactNode;
+}
 
-  const addItem = useCallback((newItem: Omit<CartItem, 'quantity'>, quantity = 1) => {
-    setItems(currentItems => {
-      // Check if cart is empty or if item is from the same restaurant
-      if (currentItems.length > 0) {
-        const firstItemRestaurantId = currentItems[0].restaurant_id;
-        if (newItem.restaurant_id !== firstItemRestaurantId) {
-          toast.error("Vous ne pouvez commander que d'un restaurant à la fois", {
-            description: "Videz votre panier avant d'ajouter des articles d'un autre restaurant."
-          });
-          return currentItems;
-        }
-      }
+export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [subtotal, setSubtotal] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const [discount, setDiscount] = useState<number | null>(null);
+  const [discountCode, setDiscountCode] = useState<string | null>(null);
 
-      // Check if item already exists in cart
-      const existingItemIndex = currentItems.findIndex(item => item.id === newItem.id);
+  // Calculate subtotal and total items whenever cart changes
+  useEffect(() => {
+    const newSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const newTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
+    setSubtotal(newSubtotal);
+    setTotalItems(newTotalItems);
+  }, [cart]);
+
+  // Add item to cart or increment quantity if already exists
+  const addToCart = (item: Omit<CartItem, 'quantity'>, quantity = 1) => {
+    setCart(prevCart => {
+      const existingItemIndex = prevCart.findIndex(cartItem => cartItem.id === item.id);
       
-      if (existingItemIndex > -1) {
-        // Update quantity of existing item
-        const updatedItems = [...currentItems];
-        updatedItems[existingItemIndex].quantity += quantity;
-        return updatedItems;
+      if (existingItemIndex >= 0) {
+        // If item exists, update quantity
+        const updatedCart = [...prevCart];
+        updatedCart[existingItemIndex].quantity += quantity;
+        toast.success(`Quantité modifiée (${updatedCart[existingItemIndex].quantity})`);
+        return updatedCart;
       } else {
-        // Add new item
-        return [...currentItems, { ...newItem, quantity }];
+        // Add new item to cart
+        toast.success('Ajouté au panier');
+        return [...prevCart, { ...item, quantity }];
       }
     });
-    
-    toast.success(`${newItem.name} ajouté au panier`);
-  }, []);
+  };
 
-  const removeItem = useCallback((itemId: string) => {
-    setItems(currentItems => currentItems.filter(item => item.id !== itemId));
-    toast.info("Article retiré du panier");
-  }, []);
+  // Remove item from cart
+  const removeFromCart = (itemId: string) => {
+    setCart(prevCart => {
+      const updatedCart = prevCart.filter(item => item.id !== itemId);
+      toast.success('Retiré du panier');
+      return updatedCart;
+    });
+  };
 
-  const updateItemQuantity = useCallback((itemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(itemId);
+  // Update item quantity
+  const updateQuantity = (itemId: string, quantity: number) => {
+    if (quantity < 1) {
+      removeFromCart(itemId);
       return;
     }
     
-    setItems(currentItems => 
-      currentItems.map(item => 
+    setCart(prevCart => {
+      return prevCart.map(item => 
         item.id === itemId ? { ...item, quantity } : item
-      )
-    );
-  }, [removeItem]);
+      );
+    });
+  };
 
-  const clearCart = useCallback(() => {
-    setItems([]);
-    toast.info("Panier vidé");
-  }, []);
+  // Clear cart
+  const clearCart = () => {
+    setCart([]);
+    setDiscount(null);
+    setDiscountCode(null);
+  };
 
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-  
-  const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
-  
-  const restaurantId = items.length > 0 ? items[0].restaurant_id : null;
+  // Apply discount
+  const applyDiscount = (code: string, amount: number) => {
+    setDiscount(amount);
+    setDiscountCode(code);
+    toast.success(`Code promo "${code}" appliqué`);
+  };
+
+  // Remove discount
+  const removeDiscount = () => {
+    setDiscount(null);
+    setDiscountCode(null);
+    toast.success('Code promo retiré');
+  };
+
+  // Create state object for easier access
+  const state = {
+    cart,
+    subtotal,
+    totalItems,
+    discount,
+    discountCode
+  };
 
   return (
     <CartContext.Provider value={{
-      items,
-      addItem,
-      removeItem,
-      updateItemQuantity,
-      clearCart,
-      itemCount,
+      cart,
       subtotal,
-      restaurantId
+      totalItems,
+      discount,
+      discountCode,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      applyDiscount,
+      removeDiscount,
+      state
     }}>
       {children}
     </CartContext.Provider>
   );
 };
 
-// Custom hook to use the cart context
+// Custom hook to use cart context
 export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
