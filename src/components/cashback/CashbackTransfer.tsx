@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Send, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -52,112 +51,18 @@ const CashbackTransfer = ({
         throw new Error("Vous ne pouvez pas transférer plus de 50% de votre solde");
       }
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("Utilisateur non connecté");
-      }
+      // In a real app, here you would call your API to process the transfer
+      // Simulate API call with a timeout
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Find the receiver by email
-      const { data: receiverData, error: receiverError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', receiverEmail)
-        .single();
-        
-      if (receiverError || !receiverData) {
-        throw new Error("Destinataire introuvable");
-      }
+      // In a real application, you would update cashback in your database
+      const mockUserId = "user123";
+      const mockReceiverId = "user456";
+      const mockTransferId = "transfer-" + Date.now();
       
-      const receiverId = receiverData.id;
+      // Here we would make API calls to update user's cashback balance,
+      // update receiver's cashback balance, and create transaction records
       
-      // Check if receiver has cashback entry, create one if not
-      const { data: receiverCashback, error: cashbackError } = await supabase
-        .from('cashback')
-        .select('id')
-        .eq('user_id', receiverId)
-        .maybeSingle();
-        
-      if (!receiverCashback) {
-        await supabase
-          .from('cashback')
-          .insert({
-            user_id: receiverId,
-            balance: 0,
-            lifetime_earned: 0,
-            tier: 'bronze',
-            tier_progress: 0,
-            last_updated: new Date().toISOString(),
-            created_at: new Date().toISOString()
-          });
-      }
-      
-      // Create transfer record
-      const { data: transfer, error: transferError } = await supabase
-        .from('cashback_transfers')
-        .insert({
-          sender_id: user.id,
-          receiver_id: receiverId,
-          amount: amountValue,
-          status: 'pending',
-          description: description || 'Transfert de cashback',
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-        
-      if (transferError) throw transferError;
-      
-      // Update sender's cashback balance
-      await supabase
-        .from('cashback')
-        .update({ 
-          balance: cashback.balance - amountValue,
-          last_updated: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-        
-      // Update receiver's cashback balance
-      await supabase
-        .from('cashback')
-        .update({ 
-          balance: supabase.rpc('increment', { x: amountValue }),
-          last_updated: new Date().toISOString()
-        })
-        .eq('user_id', receiverId);
-        
-      // Add transaction records
-      await supabase
-        .from('cashback_transactions')
-        .insert([
-          {
-            user_id: user.id,
-            amount: amountValue,
-            type: 'transferred',
-            reference_id: transfer.id,
-            reference_type: 'transfer',
-            receiver_id: receiverId,
-            description: description || 'Transfert de cashback',
-            created_at: new Date().toISOString()
-          },
-          {
-            user_id: receiverId,
-            amount: amountValue,
-            type: 'received',
-            reference_id: transfer.id,
-            reference_type: 'transfer',
-            sender_id: user.id,
-            description: description || 'Transfert de cashback',
-            created_at: new Date().toISOString()
-          }
-        ]);
-        
-      // Update transfer status
-      await supabase
-        .from('cashback_transfers')
-        .update({ status: 'completed' })
-        .eq('id', transfer.id);
-        
       toast({
         title: "Transfert réussi",
         description: `Vous avez transféré ${formatCurrency(amountValue)} à ${receiverEmail}`,

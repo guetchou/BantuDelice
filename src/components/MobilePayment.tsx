@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Phone, CreditCard, AlertCircle, QrCode, ChevronsUpDown, Check } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import apiClient from '@/integrations/api/client';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -16,7 +15,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { cn } from '@/lib/utils';
 import {
   Command,
   CommandEmpty,
@@ -32,7 +30,6 @@ import {
 
 export interface MobilePaymentProps {
   amount: number;
-  description?: string;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
   onPaymentComplete?: () => void;
@@ -48,7 +45,6 @@ const operators = [
 
 const MobilePayment = ({ 
   amount, 
-  description, 
   onSuccess, 
   onError,
   onPaymentComplete,
@@ -99,119 +95,41 @@ const MobilePayment = ({
         }
       }
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Utilisateur non connecté');
-      }
-
-      // Create payment record in Supabase
+      // In a real application, here you would call your backend API
+      // to process the payment. For now, we'll simulate that with a timeout.
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Simulate payment processing for non-mobile money methods
+      const userId = "user123"; // This would come from authentication
+      const paymentId = "payment-" + Date.now();
       const paymentMethodId = paymentMethod === 'mobile' 
         ? `mobile_${operator}`
         : paymentMethod === 'card'
           ? 'card'
           : 'cash_delivery';
-          
-      const metadata = paymentMethod === 'mobile'
-        ? { phone_number: phoneNumber, operator }
-        : paymentMethod === 'card'
-          ? { card_last_four: '4242' }
-          : { qr_code: true };
-
-      // Create a payment record in the Supabase database
-      const { data: payment, error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          user_id: user.id,
-          amount,
-          payment_method_id: paymentMethodId,
-          status: 'pending',
-          description,
-          metadata
-        })
-        .select()
-        .single();
-
-      if (paymentError) throw paymentError;
-
-      // For mobile money payment, use our API endpoint
-      if (paymentMethod === 'mobile') {
-        try {
-          // Call our backend API to process the mobile money payment
-          await apiClient.payments.processMobileMoneyPayment({
-            phoneNumber,
-            amount,
-            provider: operator as 'mtn' | 'airtel' | 'orange',
-            description: description || `Paiement de ${amount} FCFA`,
-            reference: payment.id
-          });
-          
-          // In a real app, this would be handled by a webhook
-          // For this demo, we'll just simulate a successful payment
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-        } catch (apiError) {
-          console.error('Mobile money API error:', apiError);
-          // If the API call fails, we still want to continue with the simulation
-          // In a real app, we would handle this differently
-        }
-      } else {
-        // Simulate payment processing for non-mobile money methods
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      // If l'utilisateur veut sauvegarder la méthode de paiement
+      
+      // If the user wants to save the payment method (for a real app, save to your database)
       if (saveMethod && paymentMethod === 'mobile') {
-        try {
-          // Check if the table exists by checking if we can query it
-          const { data: methods, error: methodsError } = await supabase
-            .from('user_payment_methods')
-            .select('id')
-            .limit(1);
-          
-          // If we can query the table (no error), save the payment method
-          if (!methodsError) {
-            const { error: insertError } = await supabase
-              .from('user_payment_methods')
-              .insert({
-                user_id: user.id,
-                payment_type: paymentMethod,
-                provider: operator,
-                last_four: phoneNumber.slice(-4),
-                is_default: false,
-                metadata: { 
-                  phone_number: phoneNumber 
-                },
-                last_used: new Date().toISOString()
-              });
-
-            if (insertError) {
-              console.warn('Erreur lors de la sauvegarde de la méthode de paiement:', insertError);
-            }
-          } else {
-            console.log('La table user_payment_methods n\'existe pas encore ou n\'est pas accessible');
-          }
-        } catch (err) {
-          console.warn('Erreur lors de la gestion de la méthode de paiement:', err);
-          // Continue anyway, as this is not critical
-        }
+        console.log('Saving payment method:', {
+          user_id: userId,
+          payment_type: paymentMethod,
+          provider: operator,
+          last_four: phoneNumber.slice(-4),
+          is_default: false,
+          metadata: { phone_number: phoneNumber },
+          last_used: new Date().toISOString()
+        });
       }
-
-      // Update payment status
-      const { error: updateError } = await supabase
-        .from('payments')
-        .update({ status: 'completed' })
-        .eq('id', payment.id);
-
-      if (updateError) throw updateError;
 
       toast({
         title: "Paiement réussi",
         description: "Votre paiement a été traité avec succès",
       });
 
-      onSuccess?.();
-      onPaymentComplete?.();
+      if (onSuccess) onSuccess();
+      if (onPaymentComplete) onPaymentComplete();
 
     } catch (error) {
       console.error('Erreur de paiement:', error);
@@ -221,7 +139,7 @@ const MobilePayment = ({
         description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive",
       });
-      onError?.(error instanceof Error ? error : new Error('Unknown error'));
+      if (onError) onError(error instanceof Error ? error : new Error('Unknown error'));
     } finally {
       setIsProcessing(false);
     }
@@ -232,7 +150,7 @@ const MobilePayment = ({
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Paiement</h3>
         <p className="text-sm text-muted-foreground">
-          {description || 'Choisissez votre méthode de paiement préférée'}
+          Choisissez votre méthode de paiement préférée
         </p>
       </div>
 

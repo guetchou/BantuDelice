@@ -1,419 +1,252 @@
-
 import { createBrowserRouter } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
-import ProtectedRoute from "./components/ProtectedRoute";
-
-// Import pages
-import Index from "./pages/Index";
 import Home from "./pages/Home";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Auth from "./pages/Auth";
-import Profile from "./pages/Profile";
-import Restaurants from "./pages/Restaurants";
-import RestaurantMenu from "./pages/RestaurantMenu";
+import Cashback from "./pages/Cashback";
+import Products from "./pages/Products";
+import ProductDetails from "./pages/ProductDetails";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
-import OrderTracking from "./pages/OrderTracking";
-import Favorites from "./pages/Favorites";
-import Services from "./pages/Services";
+import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
-import Wallet from "./pages/Wallet";
-import Transactions from "./pages/wallet/Transactions";
-import Loyalty from "./pages/Loyalty";
-import Cashback from "./pages/Cashback";
-import Taxi from "./pages/Taxi";
-import TaxiRide from "./pages/TaxiRide";
-import Notifications from "./pages/Notifications";
-import Covoiturage from "./pages/Covoiturage";
-import Explorer from "./pages/Explorer";
-import Deals from "./pages/Deals";
 import Help from "./pages/Help";
-import ReferralProgram from "./pages/ReferralProgram";
+import NotFound from "./pages/NotFound";
+import Restaurants from "./pages/Restaurants";
+import RestaurantDetails from "./pages/RestaurantDetails";
+import Auth from "./pages/Auth";
+import Delivery from "./pages/Delivery";
+import Driver from "./pages/Driver";
+import DriverDetails from "./pages/DriverDetails";
+import DriverOrders from "./pages/DriverOrders";
+import DriverOrderDetails from "./pages/DriverOrderDetails";
+import DriverProfile from "./pages/DriverProfile";
+import DriverSettings from "./pages/DriverSettings";
+import DriverHelp from "./pages/DriverHelp";
+import RestaurantDashboard from "./pages/RestaurantDashboard";
+import RestaurantOrders from "./pages/RestaurantOrders";
+import RestaurantOrderDetails from "./pages/RestaurantOrderDetails";
+import RestaurantProducts from "./pages/RestaurantProducts";
+import RestaurantSettings from "./pages/RestaurantSettings";
+import RestaurantHelp from "./pages/RestaurantHelp";
 import Admin from "./pages/Admin";
-import Dashboard from "./pages/Dashboard";
-import OrderDemo from "./pages/OrderDemo";
-import ContactDetails from "./pages/ContactDetails";
-import Contacts from "./pages/Contacts";
-import Messages from "./pages/Messages";
-import Specialties from "./pages/Specialties";
-import Legal from "./pages/Legal";
-import FeatureFlags from "./pages/FeatureFlags";
-
-// Admin pages
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminFeatureFlags from "./pages/admin/FeatureFlags";
-
-// Analytics pages
-import AnalyticsDashboard from "./pages/analytics/Dashboard";
-
-// Delivery pages
-import DeliveryDashboard from "./pages/delivery/Dashboard";
-
-// Kitchen pages
-import KitchenDashboard from "./pages/kitchen/Dashboard";
-
-// Restaurant pages
-import RestaurantDashboard from "./pages/restaurant/Dashboard";
-import RestaurantManagement from "./pages/restaurant/ManagementPage";
-import RestaurantSubscriptionPlans from "./pages/restaurant/SubscriptionPlans";
-
-// Driver pages
-import DriverSubscriptionPlans from "./pages/driver/SubscriptionPlans";
-
-// Subscription pages
-import SubscriptionCheckout from "./pages/subscription/Checkout";
-
-// Loyalty pages
-import LoyaltyRewards from "./pages/loyalty/Rewards";
-
-// Taxi pages
-import TaxiBooking from "./pages/taxi/Booking";
-import TaxiRideStatus from "./pages/taxi/RideStatus";
-
-// Wallet pages
-import WalletAnalytics from "./pages/wallet/Analytics";
-import WalletDeposit from "./pages/wallet/Deposit";
-import WalletWithdraw from "./pages/wallet/Withdraw";
-import WalletPaymentMethods from "./pages/wallet/PaymentMethods";
-import WalletInvoices from "./pages/wallet/Invoices";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminProducts from "./pages/AdminProducts";
+import AdminOrders from "./pages/AdminOrders";
+import AdminSettings from "./pages/AdminSettings";
+import AdminHelp from "./pages/AdminHelp";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import FAQ from "./pages/FAQ";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import Services from "./pages/Services";
+import ServiceDetails from "./pages/ServiceDetails";
+import Bookings from "./pages/Bookings";
+import BookingDetails from "./pages/BookingDetails";
+import Search from "./pages/Search";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
-    errorElement: <div>Erreur 404 - Page non trouvée</div>,
     children: [
       {
         index: true,
-        element: <Index />,
-      },
-      {
-        path: "home",
-        element: <Home />,
-      },
-      {
-        path: "auth",
-        element: <Auth />,
-      },
-      {
-        path: "profile",
-        element: (
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "restaurants",
-        element: <Restaurants />,
-      },
-      {
-        path: "restaurants/:id",
-        element: <RestaurantMenu />,
-      },
-      {
-        path: "orders",
-        element: (
-          <ProtectedRoute>
-            <Orders />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "orders/:id",
-        element: (
-          <ProtectedRoute>
-            <OrderDetails />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "order-tracking/:id",
-        element: <OrderTracking />,
-      },
-      {
-        path: "favorites",
-        element: (
-          <ProtectedRoute>
-            <Favorites />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "wallet",
-        element: (
-          <ProtectedRoute>
-            <Wallet />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "wallet/transactions",
-        element: (
-          <ProtectedRoute>
-            <Transactions />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "wallet/analytics",
-        element: (
-          <ProtectedRoute>
-            <WalletAnalytics />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "wallet/deposit",
-        element: (
-          <ProtectedRoute>
-            <WalletDeposit />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "wallet/withdraw",
-        element: (
-          <ProtectedRoute>
-            <WalletWithdraw />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "wallet/payment-methods",
-        element: (
-          <ProtectedRoute>
-            <WalletPaymentMethods />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "wallet/invoices",
-        element: (
-          <ProtectedRoute>
-            <WalletInvoices />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "loyalty",
-        element: (
-          <ProtectedRoute>
-            <Loyalty />
-          </ProtectedRoute>
-        ),
+        element: <Home />
       },
       {
         path: "cashback",
-        element: (
-          <ProtectedRoute>
-            <Cashback />
-          </ProtectedRoute>
-        ),
+        element: <Cashback />
       },
       {
-        path: "taxi",
-        element: <Taxi />,
+        path: "products",
+        element: <Products />
       },
       {
-        path: "taxi/:id",
-        element: <TaxiRide />,
+        path: "products/:id",
+        element: <ProductDetails />
       },
       {
-        path: "taxi/booking",
-        element: <TaxiBooking />,
+        path: "cart",
+        element: <Cart />
       },
       {
-        path: "taxi/ride/:id",
-        element: <TaxiRideStatus />,
+        path: "checkout",
+        element: <Checkout />
       },
       {
-        path: "notifications",
-        element: (
-          <ProtectedRoute>
-            <Notifications />
-          </ProtectedRoute>
-        ),
+        path: "orders",
+        element: <Orders />
       },
       {
-        path: "covoiturage",
-        element: <Covoiturage />,
+        path: "orders/:id",
+        element: <OrderDetails />
       },
       {
-        path: "about",
-        element: <About />,
-      },
-      {
-        path: "contact",
-        element: <Contact />,
-      },
-      {
-        path: "services",
-        element: <Services />,
+        path: "profile",
+        element: <Profile />
       },
       {
         path: "settings",
-        element: (
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "explorer",
-        element: <Explorer />,
-      },
-      {
-        path: "deals",
-        element: <Deals />,
+        element: <Settings />
       },
       {
         path: "help",
-        element: <Help />,
+        element: <Help />
       },
       {
-        path: "referral",
-        element: (
-          <ProtectedRoute>
-            <ReferralProgram />
-          </ProtectedRoute>
-        ),
+        path: "restaurants",
+        element: <Restaurants />
+      },
+      {
+        path: "restaurants/:id",
+        element: <RestaurantDetails />
+      },
+      {
+        path: "delivery",
+        element: <Delivery />
+      },
+      {
+        path: "driver",
+        element: <Driver />
+      },
+      {
+        path: "driver/:id",
+        element: <DriverDetails />
+      },
+      {
+        path: "driver/orders",
+        element: <DriverOrders />
+      },
+      {
+        path: "driver/orders/:id",
+        element: <DriverOrderDetails />
+      },
+      {
+        path: "driver/profile",
+        element: <DriverProfile />
+      },
+      {
+        path: "driver/settings",
+        element: <DriverSettings />
+      },
+      {
+        path: "driver/help",
+        element: <DriverHelp />
+      },
+      {
+        path: "restaurant",
+        element: <RestaurantDashboard />
+      },
+      {
+        path: "restaurant/orders",
+        element: <RestaurantOrders />
+      },
+      {
+        path: "restaurant/orders/:id",
+        element: <RestaurantOrderDetails />
+      },
+      {
+        path: "restaurant/products",
+        element: <RestaurantProducts />
+      },
+      {
+        path: "restaurant/settings",
+        element: <RestaurantSettings />
+      },
+      {
+        path: "restaurant/help",
+        element: <RestaurantHelp />
       },
       {
         path: "admin",
-        element: (
-          <ProtectedRoute>
-            <Admin />
-          </ProtectedRoute>
-        ),
+        element: <Admin />
       },
       {
         path: "admin/dashboard",
-        element: (
-          <ProtectedRoute>
-            <AdminDashboard />
-          </ProtectedRoute>
-        ),
+        element: <AdminDashboard />
       },
       {
-        path: "admin/features",
-        element: (
-          <ProtectedRoute>
-            <AdminFeatureFlags />
-          </ProtectedRoute>
-        ),
+        path: "admin/users",
+        element: <AdminUsers />
       },
       {
-        path: "analytics/dashboard",
-        element: (
-          <ProtectedRoute>
-            <AnalyticsDashboard />
-          </ProtectedRoute>
-        ),
+        path: "admin/products",
+        element: <AdminProducts />
       },
       {
-        path: "delivery/dashboard",
-        element: (
-          <ProtectedRoute>
-            <DeliveryDashboard />
-          </ProtectedRoute>
-        ),
+        path: "admin/orders",
+        element: <AdminOrders />
       },
       {
-        path: "kitchen/dashboard",
-        element: (
-          <ProtectedRoute>
-            <KitchenDashboard />
-          </ProtectedRoute>
-        ),
+        path: "admin/settings",
+        element: <AdminSettings />
       },
       {
-        path: "restaurant/dashboard",
-        element: (
-          <ProtectedRoute>
-            <RestaurantDashboard />
-          </ProtectedRoute>
-        ),
+        path: "admin/help",
+        element: <AdminHelp />
       },
       {
-        path: "restaurant/management",
-        element: (
-          <ProtectedRoute>
-            <RestaurantManagement />
-          </ProtectedRoute>
-        ),
+        path: "about",
+        element: <About />
       },
       {
-        path: "restaurant/subscription",
-        element: (
-          <ProtectedRoute>
-            <RestaurantSubscriptionPlans />
-          </ProtectedRoute>
-        ),
+        path: "contact",
+        element: <Contact />
       },
       {
-        path: "driver/subscription",
-        element: (
-          <ProtectedRoute>
-            <DriverSubscriptionPlans />
-          </ProtectedRoute>
-        ),
+        path: "terms",
+        element: <Terms />
       },
       {
-        path: "subscription/checkout",
-        element: (
-          <ProtectedRoute>
-            <SubscriptionCheckout />
-          </ProtectedRoute>
-        ),
+        path: "privacy",
+        element: <Privacy />
       },
       {
-        path: "loyalty/rewards",
-        element: (
-          <ProtectedRoute>
-            <LoyaltyRewards />
-          </ProtectedRoute>
-        ),
+        path: "faq",
+        element: <FAQ />
       },
       {
-        path: "dashboard",
-        element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
+        path: "blog",
+        element: <Blog />
       },
       {
-        path: "order-demo",
-        element: <OrderDemo />,
+        path: "blog/:id",
+        element: <BlogPost />
       },
       {
-        path: "contact-details",
-        element: <ContactDetails />,
+        path: "services",
+        element: <Services />
       },
       {
-        path: "contacts",
-        element: <Contacts />,
+        path: "services/:id",
+        element: <ServiceDetails />
+      },
+       {
+        path: "bookings",
+        element: <Bookings />
       },
       {
-        path: "messages",
-        element: <Messages />,
+        path: "bookings/:id",
+        element: <BookingDetails />
       },
       {
-        path: "specialties",
-        element: <Specialties />,
+        path: "search",
+        element: <Search />
       },
-      {
-        path: "legal",
-        element: <Legal />,
-      },
-      {
-        path: "feature-flags",
-        element: <FeatureFlags />,
-      },
-    ],
+    ]
+  },
+  {
+    path: "/auth",
+    element: <Auth />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
-
-export default router;

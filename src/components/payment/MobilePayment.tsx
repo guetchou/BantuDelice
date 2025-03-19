@@ -1,9 +1,9 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
   SelectContent,
@@ -37,40 +37,9 @@ const MobilePayment = ({ amount, onSuccess, onError }: MobilePaymentProps) => {
         throw new Error('Numéro de téléphone invalide');
       }
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Utilisateur non connecté');
-      }
-
-      // Create payment record
-      const { data: payment, error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          user_id: user.id,
-          amount,
-          payment_method_id: operator === 'mtn' ? 'mobile_mtn' : 'mobile_airtel',
-          status: 'pending',
-          metadata: {
-            phone_number: phoneNumber,
-            operator
-          }
-        })
-        .select()
-        .single();
-
-      if (paymentError) throw paymentError;
-
+      // Mock API call - in a real app this would be an API call to your backend
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Update payment status
-      const { error: updateError } = await supabase
-        .from('payments')
-        .update({ status: 'completed' })
-        .eq('id', payment.id);
-
-      if (updateError) throw updateError;
 
       toast({
         title: "Paiement réussi",

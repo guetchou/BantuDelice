@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Award, Coins, Gift, ArrowUp } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { Cashback, CashbackTier } from "@/types/wallet";
 import { useToast } from "@/hooks/use-toast";
@@ -54,45 +53,26 @@ const CashbackStatus = () => {
     const fetchCashbackStatus = async () => {
       try {
         setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
         
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-
-        // First check if the cashback table exists and the user has an entry
-        const { data, error } = await supabase
-          .from('cashback')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-
-        // If user doesn't have cashback entry, create one
-        if (!data) {
-          const { data: newCashback, error: createError } = await supabase
-            .from('cashback')
-            .insert({
-              user_id: user.id,
-              balance: 0,
-              lifetime_earned: 0,
-              tier: 'bronze',
-              tier_progress: 0,
-              last_updated: new Date().toISOString(),
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-          if (createError) throw createError;
-          setCashback(newCashback as Cashback);
-        } else {
-          setCashback(data as Cashback);
-        }
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mock user data
+        const userId = "user-123";
+        
+        // Simulated data - in a real app, this would come from your API
+        const mockCashback: Cashback = {
+          id: "cb-123",
+          user_id: userId,
+          balance: 7500,
+          lifetime_earned: 12000,
+          tier: 'silver',
+          tier_progress: 70, // 70% progress to gold
+          last_updated: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        };
+        
+        setCashback(mockCashback);
       } catch (error) {
         console.error("Error fetching cashback status:", error);
         toast({
@@ -106,7 +86,7 @@ const CashbackStatus = () => {
     };
 
     fetchCashbackStatus();
-  }, []);
+  }, [toast]);
 
   const getNextTier = (currentTier: string): CashbackTier | null => {
     if (currentTier === 'bronze') return tierDetails.silver;

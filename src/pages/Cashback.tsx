@@ -1,65 +1,43 @@
 
-import { useState, useEffect } from "react";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Award, Coins, ArrowUpDown, RefreshCw, Crown } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Cashback as CashbackType } from "@/types/wallet";
+import { Button } from "@/components/ui/button";
+import { Grid, History, PiggyBank, Zap, ArrowLeftRight, RefreshCcw, ChevronLeft } from "lucide-react";
 import CashbackStatus from "@/components/cashback/CashbackStatus";
 import CashbackTransactions from "@/components/cashback/CashbackTransactions";
-import CashbackTransfer from "@/components/cashback/CashbackTransfer";
 import CashbackLeaderboard from "@/components/cashback/CashbackLeaderboard";
-import { ShareSocial } from "@/components/sharing/ShareSocial";
+import CashbackTransfer from "@/components/cashback/CashbackTransfer";
+import RefundRequest from "@/components/cashback/RefundRequest";
+import { Link } from "react-router-dom";
+import { Cashback } from "@/types/wallet";
 
-export default function Cashback() {
-  usePageTitle({ title: "Cashback & Fidélité" });
-  const [cashback, setCashback] = useState<CashbackType | null>(null);
+const CashbackPage = () => {
   const [loading, setLoading] = useState(true);
+  const [cashback, setCashback] = useState<Cashback | null>(null);
+  const [activeTab, setActiveTab] = useState('status');
+  const [showRefundPage, setShowRefundPage] = useState(false);
 
   useEffect(() => {
     const fetchCashbackData = async () => {
       try {
         setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
         
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-
-        // Check if the cashback table exists and the user has an entry
-        const { data, error } = await supabase
-          .from('cashback')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-
-        // If user doesn't have cashback entry, create one
-        if (!data) {
-          const { data: newCashback, error: createError } = await supabase
-            .from('cashback')
-            .insert({
-              user_id: user.id,
-              balance: 0,
-              lifetime_earned: 0,
-              tier: 'bronze',
-              tier_progress: 0,
-              last_updated: new Date().toISOString(),
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-          if (createError) throw createError;
-          setCashback(newCashback as CashbackType);
-        } else {
-          setCashback(data as CashbackType);
-        }
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mock Cashback data
+        const mockCashback: Cashback = {
+          id: "cb-123",
+          user_id: "user-123",
+          balance: 7500,
+          lifetime_earned: 12000,
+          tier: 'silver',
+          tier_progress: 70, // 70% progress to gold
+          last_updated: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        };
+        
+        setCashback(mockCashback);
       } catch (error) {
         console.error("Error fetching cashback data:", error);
       } finally {
@@ -68,156 +46,146 @@ export default function Cashback() {
     };
 
     fetchCashbackData();
-
-    // Set up real-time subscription for cashback updates
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'cashback'
-        },
-        (payload) => {
-          console.log('Cashback change received:', payload);
-          fetchCashbackData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
-  const handleTransferComplete = () => {
-    // Refresh cashback data after transfer
-    const fetchCashbackData = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data } = await supabase
-          .from('cashback')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (data) {
-          setCashback(data as CashbackType);
-        }
-      } catch (error) {
-        console.error("Error refreshing cashback data:", error);
-      }
-    };
-
-    fetchCashbackData();
+  const refreshCashback = async () => {
+    try {
+      setLoading(true);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Mock updated cashback
+      const updatedCashback: Cashback = {
+        ...cashback!,
+        balance: cashback ? cashback.balance + 100 : 7600, // Add some points for testing
+        last_updated: new Date().toISOString()
+      };
+      
+      setCashback(updatedCashback);
+    } catch (error) {
+      console.error("Error refreshing cashback:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Coins className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Cashback & Fidélité</h1>
+  if (showRefundPage) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            className="flex items-center gap-2 mb-4"
+            onClick={() => setShowRefundPage(false)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Retour
+          </Button>
+          <h1 className="text-2xl font-bold mb-2">Demande de Remboursement</h1>
+          <p className="text-muted-foreground">
+            Vous pouvez demander un remboursement pour une commande récente
+          </p>
         </div>
-        <ShareSocial 
-          title="Mon cashback BuntuDelice" 
-          text={cashback ? `J'ai gagné ${cashback.balance} FCFA de cashback sur BuntuDelice! Rejoignez-moi pour profiter de réductions et avantages.` : "Programme de cashback BuntuDelice"}
-          url={window.location.href}
-        />
+        
+        <div className="grid gap-6">
+          <RefundRequest 
+            orderId="order-123456"
+            paymentId="payment-789012"
+            orderAmount={12500}
+            onRequestComplete={() => setShowRefundPage(false)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Mon Cashback</h1>
+          <p className="text-muted-foreground">
+            Gagnez et utilisez votre cashback sur BuntuDelice
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={refreshCashback}
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="animate-spin">
+              <RefreshCcw className="h-4 w-4" />
+            </span>
+          ) : (
+            <RefreshCcw className="h-4 w-4" />
+          )}
+          Actualiser
+        </Button>
       </div>
 
-      <Tabs defaultValue="status" className="w-full">
-        <TabsList className="mb-6 grid w-full md:grid-cols-4 grid-cols-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="status" className="flex items-center gap-2">
-            <Award className="h-4 w-4" />
-            <span className="hidden md:inline">Mon Statut</span>
-            <span className="md:hidden">Statut</span>
+            <PiggyBank className="h-4 w-4" />
+            <span className="hidden sm:inline">Status</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
-            <ArrowUpDown className="h-4 w-4" />
-            <span className="hidden md:inline">Historique</span>
-            <span className="md:hidden">Historique</span>
-          </TabsTrigger>
-          <TabsTrigger value="transfer" className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" />
-            <span className="hidden md:inline">Transferts</span>
-            <span className="md:hidden">Transferts</span>
+          <TabsTrigger value="transactions" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            <span className="hidden sm:inline">Transactions</span>
           </TabsTrigger>
           <TabsTrigger value="leaderboard" className="flex items-center gap-2">
-            <Crown className="h-4 w-4" />
-            <span className="hidden md:inline">Classement</span>
-            <span className="md:hidden">Top</span>
+            <Zap className="h-4 w-4" />
+            <span className="hidden sm:inline">Classement</span>
+          </TabsTrigger>
+          <TabsTrigger value="transfer" className="flex items-center gap-2">
+            <ArrowLeftRight className="h-4 w-4" />
+            <span className="hidden sm:inline">Transfert</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="status">
-          <div className="grid grid-cols-1 gap-6">
-            <CashbackStatus />
+        <TabsContent value="status" className="space-y-6">
+          <CashbackStatus />
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button 
+              className="flex items-center justify-center gap-2"
+              onClick={() => setActiveTab('transactions')}
+            >
+              <History className="h-4 w-4" />
+              Voir mes transactions
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex items-center justify-center gap-2"
+              onClick={() => setShowRefundPage(true)}
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Demander un remboursement
+            </Button>
           </div>
         </TabsContent>
 
-        <TabsContent value="history">
-          <ScrollArea className="h-[600px] pr-4">
-            <CashbackTransactions />
-          </ScrollArea>
+        <TabsContent value="transactions" className="space-y-6">
+          <CashbackTransactions limit={10} />
         </TabsContent>
 
-        <TabsContent value="transfer">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <CashbackTransfer 
-              cashback={cashback} 
-              onTransferComplete={handleTransferComplete} 
-            />
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Avantages du partage</h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="p-2 bg-primary/10 rounded-full">
-                    <Award className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Invitez vos amis</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Partagez votre cashback avec vos proches et gagnez encore plus de points de fidélité.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="p-2 bg-primary/10 rounded-full">
-                    <Coins className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Bonus de parrainage</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Recevez 500 FCFA de cashback supplémentaire pour chaque ami qui s'inscrit avec votre code.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="p-2 bg-primary/10 rounded-full">
-                    <Crown className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Progressez plus vite</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Les transferts comptent pour votre progression vers les niveaux supérieurs de fidélité.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <TabsContent value="leaderboard" className="space-y-6">
+          <CashbackLeaderboard limit={10} />
         </TabsContent>
 
-        <TabsContent value="leaderboard">
-          <CashbackLeaderboard />
+        <TabsContent value="transfer" className="space-y-6">
+          <CashbackTransfer 
+            cashback={cashback} 
+            onTransferComplete={refreshCashback}
+          />
         </TabsContent>
       </Tabs>
     </div>
   );
-}
+};
+
+export default CashbackPage;

@@ -3,14 +3,10 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, ArrowDownLeft, CreditCard, Send, Gift } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { CashbackTransaction } from "@/types/payment";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-
-// Créez cette table dans Supabase ou utilisez une autre qui existe
-const CASHBACK_TRANSACTIONS_TABLE = 'cashback_transactions';
 
 const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
   const [transactions, setTransactions] = useState<CashbackTransaction[]>([]);
@@ -21,18 +17,18 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
         
-        if (!user) {
-          setLoading(false);
-          return;
-        }
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Mock user ID
+        const userId = "user-123";
 
-        // Simulation de données en attendant que la table soit créée
+        // Simulation de données - in a real app, this would come from your API
         const simulatedData: CashbackTransaction[] = [
           {
             id: '1',
-            user_id: user.id,
+            user_id: userId,
             amount: 500,
             type: 'earned',
             reference_id: 'order-123',
@@ -42,7 +38,7 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
           },
           {
             id: '2',
-            user_id: user.id,
+            user_id: userId,
             amount: 200,
             type: 'used',
             reference_id: 'order-124',
@@ -52,7 +48,7 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
           },
           {
             id: '3',
-            user_id: user.id,
+            user_id: userId,
             amount: 300,
             type: 'received',
             sender_id: 'user-456',
@@ -62,33 +58,35 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
           },
           {
             id: '4',
-            user_id: user.id,
+            user_id: userId,
             amount: 150,
             type: 'transferred',
             receiver_id: 'user-789',
             reference_type: 'transfer',
             description: 'Envoyé à Amadou',
             created_at: new Date(Date.now() - 259200000).toISOString()
+          },
+          {
+            id: '5',
+            user_id: userId,
+            amount: 100,
+            type: 'earned',
+            reference_id: 'promotion-123',
+            reference_type: 'promotion',
+            description: 'Bonus fidélité',
+            created_at: new Date(Date.now() - 345600000).toISOString()
+          },
+          {
+            id: '6',
+            user_id: userId,
+            amount: 75,
+            type: 'refunded',
+            reference_id: 'refund-123',
+            reference_type: 'refund',
+            description: 'Remboursement commande annulée',
+            created_at: new Date(Date.now() - 432000000).toISOString()
           }
         ];
-
-        // Une fois que la table est créée dans Supabase, décommenter ce code
-        /*
-        const query = supabase
-          .from(CASHBACK_TRANSACTIONS_TABLE)
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        
-        if (!showAll) {
-          query.limit(limit);
-        }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-        setTransactions(data as CashbackTransaction[]);
-        */
 
         setTransactions(showAll ? simulatedData : simulatedData.slice(0, limit));
       } catch (error) {
