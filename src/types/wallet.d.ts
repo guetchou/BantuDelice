@@ -106,46 +106,5 @@ export interface Invoice {
   updated_at?: string;
 }
 
-export interface Cashback {
-  id: string;
-  user_id: string;
-  balance: number;
-  lifetime_earned: number;
-  tier: 'bronze' | 'silver' | 'gold';
-  tier_progress: number;
-  last_updated: string;
-  expiry_date?: string;
-  created_at: string;
-}
-
-export interface CashbackTransaction {
-  id: string;
-  user_id: string;
-  amount: number;
-  type: 'earned' | 'used' | 'expired' | 'transferred' | 'received' | 'refunded';
-  reference_id?: string;
-  reference_type?: 'order' | 'transfer' | 'promotion' | 'refund';
-  receiver_id?: string;
-  sender_id?: string;
-  description?: string;
-  created_at: string;
-}
-
-export interface CashbackTransfer {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  amount: number;
-  status: 'pending' | 'completed' | 'failed';
-  description?: string;
-  created_at: string;
-}
-
-export interface CashbackTier {
-  name: 'bronze' | 'silver' | 'gold';
-  minimum_points: number;
-  cashback_rate: number;
-  benefits: string[];
-  icon: string;
-  color: string;
-}
+// Export des interfaces directement depuis les types de payment.d.ts pour la cohérence
+export type { Cashback, CashbackTransaction, CashbackTransfer, CashbackTier } from './payment';

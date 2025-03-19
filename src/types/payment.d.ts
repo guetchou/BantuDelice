@@ -120,3 +120,48 @@ export interface CashbackPromotion {
   created_at: string;
   updated_at?: string;
 }
+
+// Ajouter les types Supabase pour le cashback
+export interface Cashback {
+  id: string;
+  user_id: string;
+  balance: number;
+  lifetime_earned: number;
+  tier: 'bronze' | 'silver' | 'gold';
+  tier_progress: number;
+  last_updated: string;
+  expiry_date?: string;
+  created_at: string;
+}
+
+export interface CashbackTransaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: 'earned' | 'used' | 'expired' | 'transferred' | 'received' | 'refunded';
+  reference_id?: string;
+  reference_type?: 'order' | 'transfer' | 'promotion' | 'refund';
+  receiver_id?: string;
+  sender_id?: string;
+  description?: string;
+  created_at: string;
+}
+
+export interface CashbackTransfer {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  amount: number;
+  status: 'pending' | 'completed' | 'failed';
+  description?: string;
+  created_at: string;
+}
+
+export interface CashbackTier {
+  name: 'bronze' | 'silver' | 'gold';
+  minimum_points: number;
+  cashback_rate: number;
+  benefits: string[];
+  icon: string;
+  color: string;
+}

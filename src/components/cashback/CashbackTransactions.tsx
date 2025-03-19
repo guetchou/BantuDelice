@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpRight, ArrowDownLeft, CreditCard, Send, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/utils/formatCurrency";
-import { CashbackTransaction } from "@/types/wallet";
+import { CashbackTransaction } from "@/types/payment";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+
+// Créez cette table dans Supabase ou utilisez une autre qui existe
+const CASHBACK_TRANSACTIONS_TABLE = 'cashback_transactions';
 
 const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
   const [transactions, setTransactions] = useState<CashbackTransaction[]>([]);
@@ -25,8 +28,54 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
           return;
         }
 
+        // Simulation de données en attendant que la table soit créée
+        const simulatedData: CashbackTransaction[] = [
+          {
+            id: '1',
+            user_id: user.id,
+            amount: 500,
+            type: 'earned',
+            reference_id: 'order-123',
+            reference_type: 'order',
+            description: 'Cashback pour commande #123',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: '2',
+            user_id: user.id,
+            amount: 200,
+            type: 'used',
+            reference_id: 'order-124',
+            reference_type: 'order',
+            description: 'Utilisé pour commande #124',
+            created_at: new Date(Date.now() - 86400000).toISOString()
+          },
+          {
+            id: '3',
+            user_id: user.id,
+            amount: 300,
+            type: 'received',
+            sender_id: 'user-456',
+            reference_type: 'transfer',
+            description: 'Reçu de Marie',
+            created_at: new Date(Date.now() - 172800000).toISOString()
+          },
+          {
+            id: '4',
+            user_id: user.id,
+            amount: 150,
+            type: 'transferred',
+            receiver_id: 'user-789',
+            reference_type: 'transfer',
+            description: 'Envoyé à Amadou',
+            created_at: new Date(Date.now() - 259200000).toISOString()
+          }
+        ];
+
+        // Une fois que la table est créée dans Supabase, décommenter ce code
+        /*
         const query = supabase
-          .from('cashback_transactions')
+          .from(CASHBACK_TRANSACTIONS_TABLE)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
@@ -39,6 +88,9 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
 
         if (error) throw error;
         setTransactions(data as CashbackTransaction[]);
+        */
+
+        setTransactions(showAll ? simulatedData : simulatedData.slice(0, limit));
       } catch (error) {
         console.error("Error fetching cashback transactions:", error);
       } finally {

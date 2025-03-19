@@ -5,6 +5,7 @@ import { Trophy, Award, Medal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Cashback } from '@/types/payment';
 
 interface LeaderboardUser {
   user_id: string;
@@ -14,6 +15,10 @@ interface LeaderboardUser {
   tier: string;
   rank: number;
 }
+
+// Créez cette table dans Supabase ou utilisez une autre qui existe
+const CASHBACK_TABLE = 'cashbacks';
+const PROFILES_TABLE = 'profiles';
 
 const CashbackLeaderboard = ({ limit = 10 }: { limit?: number }) => {
   const [leaders, setLeaders] = useState<LeaderboardUser[]>([]);
@@ -30,9 +35,54 @@ const CashbackLeaderboard = ({ limit = 10 }: { limit?: number }) => {
           setCurrentUserId(user.id);
         }
 
-        // Get top users with highest lifetime earned cashback
+        // Simulation de données en attendant que la table soit créée
+        const simulatedData: LeaderboardUser[] = [
+          {
+            user_id: '1',
+            full_name: 'Amadou Diallo',
+            avatar_url: '',
+            lifetime_earned: 15000,
+            tier: 'gold',
+            rank: 1
+          },
+          {
+            user_id: '2',
+            full_name: 'Fatou Sow',
+            avatar_url: '',
+            lifetime_earned: 12500,
+            tier: 'gold',
+            rank: 2
+          },
+          {
+            user_id: '3',
+            full_name: 'Ibrahim Touré',
+            avatar_url: '',
+            lifetime_earned: 10000,
+            tier: 'silver',
+            rank: 3
+          },
+          {
+            user_id: '4',
+            full_name: 'Marie Diop',
+            avatar_url: '',
+            lifetime_earned: 7500,
+            tier: 'silver',
+            rank: 4
+          },
+          {
+            user_id: '5',
+            full_name: 'Jean Ndoye',
+            avatar_url: '',
+            lifetime_earned: 5000,
+            tier: 'bronze',
+            rank: 5
+          }
+        ];
+
+        // Une fois que la table est créée dans Supabase, décommenter ce code
+        /*
         const { data, error } = await supabase
-          .from('cashback')
+          .from(CASHBACK_TABLE)
           .select(`
             user_id,
             lifetime_earned,
@@ -58,6 +108,9 @@ const CashbackLeaderboard = ({ limit = 10 }: { limit?: number }) => {
         }));
 
         setLeaders(formattedData as LeaderboardUser[]);
+        */
+
+        setLeaders(simulatedData);
       } catch (error) {
         console.error("Error fetching leaderboard:", error);
       } finally {
