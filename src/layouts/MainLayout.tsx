@@ -2,16 +2,18 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
+import Header from '@/components/layout/Header';
+import { Toaster } from '@/components/ui/toaster';
 
-export const MainLayout: React.FC = () => {
+export const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <Header />
       <main className="flex-1">
-        <Outlet />
+        {children || <Outlet />}
       </main>
       <Footer />
+      <Toaster />
     </div>
   );
 };

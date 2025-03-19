@@ -14,21 +14,35 @@ import { OrderTracking } from '@/pages/OrderTracking';
 import { ReferralProgram } from '@/pages/ReferralProgram';
 import { Wallet } from '@/pages/Wallet';
 import { TaxiBookingForm } from '@/pages/TaxiBookingForm';
+import TaxiRideStatus from '@/components/taxi/TaxiRideStatus';
+import TaxiRideDetails from '@/pages/TaxiRideDetails';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { MainLayout } from '@/layouts/MainLayout';
 
 const mainRoutes = [
   {
     path: '/',
-    element: <Home />,
+    element: <MainLayout><Home /></MainLayout>,
     authRequired: false,
   },
   {
     path: '/taxis',
-    element: <TaxiBookingForm />,
+    element: <MainLayout><TaxiBookingForm /></MainLayout>,
     authRequired: false,
   },
   {
+    path: '/taxi/ride/:rideId',
+    element: <MainLayout><TaxiRideStatus /></MainLayout>,
+    authRequired: true,
+  },
+  {
+    path: '/taxi/details/:rideId',
+    element: <MainLayout><TaxiRideDetails /></MainLayout>,
+    authRequired: true,
+  },
+  {
     path: '/covoiturage',
-    element: <Covoiturage />,
+    element: <MainLayout><Covoiturage /></MainLayout>,
     authRequired: false,
   },
   {
@@ -66,32 +80,32 @@ const mainRoutes = [
   },
   {
     path: '/order-confirmation/:orderId',
-    element: <OrderConfirmation />,
+    element: <MainLayout><OrderConfirmation /></MainLayout>,
     authRequired: true,
   },
   {
     path: '/orders',
-    element: <Orders />,
+    element: <MainLayout><Orders /></MainLayout>,
     authRequired: true,
   },
   {
     path: '/order/:orderId',
-    element: <OrderDetails />,
+    element: <MainLayout><OrderDetails /></MainLayout>,
     authRequired: true,
   },
   {
     path: '/order/:orderId/tracking',
-    element: <OrderTracking />,
+    element: <MainLayout><OrderTracking /></MainLayout>,
     authRequired: true,
   },
   {
     path: '/referral',
-    element: <ReferralProgram />,
+    element: <MainLayout><ReferralProgram /></MainLayout>,
     authRequired: true,
   },
   {
     path: '/wallet',
-    element: <Wallet />,
+    element: <MainLayout><Wallet /></MainLayout>,
     authRequired: true,
   },
 ];

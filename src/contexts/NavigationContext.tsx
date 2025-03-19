@@ -1,12 +1,13 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { logger } from '@/services/logger';
 
 interface NavigationContextType {
   previousRoute: string | null;
   navigateBack: () => void;
   navigateTo: (path: string) => void;
   canGoBack: boolean;
+  breadcrumbs: { label: string; path: string }[];
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -16,22 +17,55 @@ export const NavigationProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [previousRoute, setPreviousRoute] = useState<string | null>(null);
   const [canGoBack, setCanGoBack] = useState(false);
+  const [breadcrumbs, setBreadcrumbs] = useState<{ label: string; path: string }[]>([]);
+
+  // Update previous route when location changes
+  useEffect(() => {
+    const currentPath = location.pathname;
+    
+    // Skip authentication routes for breadcrumbs
+    if (!currentPath.startsWith('/auth')) {
+      // Generate breadcrumbs based on current path
+      const pathSegments = currentPath.split('/').filter(Boolean);
+      const newBreadcrumbs = pathSegments.map((segment, index) => {
+        const path = `/${pathSegments.slice(0, index + 1).join('/')}`;
+        
+        // Try to make a readable label from the segment
+        let label = segment.charAt(0).toUpperCase() + segment.slice(1);
+        
+        // Handle special cases
+        if (segment === 'taxis') label = 'Taxis';
+        if (segment === 'covoiturage') label = 'Covoiturage';
+        if (segment === 'restaurant') label = 'Restaurant';
+        if (segment === 'orders') label = 'Commandes';
+        if (segment === 'order') label = 'Commande';
+        if (segment === 'referral') label = 'Parrainage';
+        if (segment === 'wallet') label = 'Portefeuille';
+        
+        return { label, path };
+      });
+      
+      // Add home as first breadcrumb if we're not on the home page
+      if (currentPath !== '/') {
+        newBreadcrumbs.unshift({ label: 'Accueil', path: '/' });
+      }
+      
+      setBreadcrumbs(newBreadcrumbs);
+    }
+  }, [location.pathname]);
 
   const navigateBack = () => {
     if (previousRoute) {
-      logger.info("Navigating back to:", { route: previousRoute });
       navigate(previousRoute);
       setPreviousRoute(null);
       setCanGoBack(false);
     } else {
-      logger.info("No previous route, navigating to home");
       navigate('/');
     }
   };
 
   const navigateTo = (path: string) => {
     if (location.pathname !== path) {
-      logger.info("Navigating to:", { path, from: location.pathname });
       setPreviousRoute(location.pathname);
       setCanGoBack(true);
       navigate(path);
@@ -43,7 +77,8 @@ export const NavigationProvider = ({ children }: { children: ReactNode }) => {
       previousRoute, 
       navigateBack, 
       navigateTo,
-      canGoBack 
+      canGoBack,
+      breadcrumbs
     }}>
       {children}
     </NavigationContext.Provider>
