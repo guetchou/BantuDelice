@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -13,7 +14,7 @@ const data = [
 const DashboardChart = () => {
   return (
     <Card className="p-6 glass-effect hover-scale animate-fade-in">
-      <h3 className="text-lg font-medium text-gray-300 mb-4">Sales Overview</h3>
+      <h3 className="text-lg font-medium text-muted-foreground mb-4">Aperçu du portefeuille</h3>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>

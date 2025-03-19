@@ -75,3 +75,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 rounded-lg shadow-lg dark:bg-black/30;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+  
+  .animate-fade-in {
+    @apply animate-fade-in;
+  }
+}

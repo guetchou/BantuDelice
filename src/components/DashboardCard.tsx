@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 
 interface DashboardCardProps {
@@ -26,7 +27,7 @@ const DashboardCard = ({ title, value, icon, trend }: DashboardCardProps) => {
         )}
       </div>
       <div className="mt-4">
-        <h3 className="text-lg font-medium text-gray-300">{title}</h3>
+        <h3 className="text-lg font-medium text-muted-foreground">{title}</h3>
         <p className="text-2xl font-bold mt-1 bg-gradient-to-r from-primary/80 to-cyan-400 bg-clip-text text-transparent">{value}</p>
       </div>
     </Card>

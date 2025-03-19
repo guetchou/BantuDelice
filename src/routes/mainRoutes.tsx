@@ -15,11 +15,16 @@ import Wallet from '@/pages/Wallet';
 import TaxiBookingForm from '@/components/taxi/TaxiBookingForm';
 import TaxiRideStatus from '@/components/taxi/TaxiRideStatus';
 import TaxiRideDetails from '@/pages/TaxiRideDetails';
+import Dashboard from '@/pages/Dashboard';
 
 const mainRoutes: RouteObject[] = [
   {
     path: '/',
     element: <MainLayout><Home /></MainLayout>,
+  },
+  {
+    path: '/dashboard',
+    element: <ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>,
   },
   {
     path: '/taxis',

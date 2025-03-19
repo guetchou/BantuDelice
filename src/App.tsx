@@ -4,18 +4,10 @@ import { RouterProvider } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import router from './routes';
 import { NavigationProvider } from './contexts/NavigationContext';
+import { ThemeProvider } from './components/ThemeProvider';
 
 function App() {
   const { isLoading } = useAuth();
-
-  useEffect(() => {
-    // Check for dark mode preference on initial load
-    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, []);
 
   if (isLoading) {
     return (
@@ -26,9 +18,11 @@ function App() {
   }
 
   return (
-    <NavigationProvider>
-      <RouterProvider router={router} />
-    </NavigationProvider>
+    <ThemeProvider defaultTheme="system" storageKey="eazy-congo-theme">
+      <NavigationProvider>
+        <RouterProvider router={router} />
+      </NavigationProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -11,7 +12,7 @@ const data = [
 const DashboardBarChart = () => {
   return (
     <Card className="p-6 glass-effect hover-scale animate-fade-in">
-      <h3 className="text-lg font-medium text-gray-300 mb-4">Quarterly Performance</h3>
+      <h3 className="text-lg font-medium text-muted-foreground mb-4">Performance trimestrielle</h3>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
@@ -60,26 +61,26 @@ const DashboardBarChart = () => {
               fill="url(#dealsGradient)"
               radius={[4, 4, 0, 0]}
               barSize={24}
-              name="Deals"
+              name="Commandes"
             />
             <Bar 
               dataKey="revenue" 
               fill="url(#revenueGradient)"
               radius={[4, 4, 0, 0]}
               barSize={24}
-              name="Revenue"
+              name="Revenus"
             />
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex items-center justify-center gap-6 mt-4 text-sm text-gray-400">
+      <div className="flex items-center justify-center gap-6 mt-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-emerald-400 opacity-80" />
-          <span>Deals</span>
+          <span>Commandes</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-cyan-400 opacity-80" />
-          <span>Revenue</span>
+          <span>Revenus</span>
         </div>
       </div>
     </Card>
