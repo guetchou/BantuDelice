@@ -9,7 +9,7 @@ export type Transaction = Database['public']['Tables']['transactions']['Row'];
 export type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
 export type TransactionUpdate = Database['public']['Tables']['transactions']['Update'];
 
-export type TransactionType = 'deposit' | 'withdraw' | 'payment' | 'refund' | 'commission' | 'bonus';
+export type TransactionType = 'deposit' | 'withdraw' | 'payment' | 'refund' | 'commission' | 'bonus' | 'cashback' | 'cashback_transfer';
 export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'scheduled';
 
 export interface DriverWallet {
@@ -104,4 +104,48 @@ export interface Invoice {
   pdf_url?: string;
   created_at: string;
   updated_at?: string;
+}
+
+export interface Cashback {
+  id: string;
+  user_id: string;
+  balance: number;
+  lifetime_earned: number;
+  tier: 'bronze' | 'silver' | 'gold';
+  tier_progress: number;
+  last_updated: string;
+  expiry_date?: string;
+  created_at: string;
+}
+
+export interface CashbackTransaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: 'earned' | 'used' | 'expired' | 'transferred' | 'received' | 'refunded';
+  reference_id?: string;
+  reference_type?: 'order' | 'transfer' | 'promotion' | 'refund';
+  receiver_id?: string;
+  sender_id?: string;
+  description?: string;
+  created_at: string;
+}
+
+export interface CashbackTransfer {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  amount: number;
+  status: 'pending' | 'completed' | 'failed';
+  description?: string;
+  created_at: string;
+}
+
+export interface CashbackTier {
+  name: 'bronze' | 'silver' | 'gold';
+  minimum_points: number;
+  cashback_rate: number;
+  benefits: string[];
+  icon: string;
+  color: string;
 }

@@ -7,8 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useCart } from '@/contexts/CartContext';
 import MobilePayment from '@/components/MobilePayment';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowRight, Coins } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export const OrderSummary = () => {
   const { state, clearCart } = useCart();
@@ -17,11 +19,73 @@ export const OrderSummary = () => {
   const [loading, setLoading] = useState(false);
   const [validatingStock, setValidatingStock] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cashbackDetails, setCashbackDetails] = useState<{
+    available: number;
+    willEarn: number;
+    isApplied: boolean;
+    toApply: number;
+  }>({
+    available: 0,
+    willEarn: 0,
+    isApplied: false,
+    toApply: 0
+  });
 
   const subtotal = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryFee = subtotal > 0 ? 1000 : 0; // Example delivery fee
   const serviceFee = subtotal > 0 ? Math.round(subtotal * 0.05) : 0; // 5% service fee
-  const total = subtotal + deliveryFee + serviceFee;
+  
+  // Apply cashback if selected
+  const cashbackDiscount = cashbackDetails.isApplied ? cashbackDetails.toApply : 0;
+  const total = subtotal + deliveryFee + serviceFee - cashbackDiscount;
+
+  // Calculate potential cashback (5% standard rate)
+  const potentialCashback = Math.round(subtotal * 0.05);
+
+  // Fetch user's cashback balance
+  useState(() => {
+    const fetchCashbackBalance = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Check if cashback table exists
+        const { data, error } = await supabase
+          .from('cashback')
+          .select('balance')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching cashback:', error);
+          return;
+        }
+
+        if (data) {
+          const availableCashback = data.balance;
+          const maxApplicable = Math.min(availableCashback, Math.round(total * 0.1));
+          
+          setCashbackDetails({
+            available: availableCashback,
+            willEarn: potentialCashback,
+            isApplied: false,
+            toApply: maxApplicable
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching cashback balance:', err);
+      }
+    };
+
+    fetchCashbackBalance();
+  }, []);
+
+  const toggleCashback = () => {
+    setCashbackDetails(prev => ({
+      ...prev,
+      isApplied: !prev.isApplied
+    }));
+  };
 
   const handlePaymentComplete = async () => {
     try {
@@ -81,6 +145,87 @@ export const OrderSummary = () => {
         throw new Error('Impossible d\'ajouter les articles à la commande');
       }
 
+      // Apply cashback if selected
+      if (cashbackDetails.isApplied && cashbackDetails.toApply > 0) {
+        try {
+          // Deduct cashback from user's balance
+          await supabase
+            .from('cashback')
+            .update({ 
+              balance: supabase.rpc('decrement', { x: cashbackDetails.toApply }),
+              last_updated: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+          
+          // Add cashback transaction record
+          await supabase
+            .from('cashback_transactions')
+            .insert({
+              user_id: user.id,
+              amount: cashbackDetails.toApply,
+              type: 'used',
+              reference_id: order.id,
+              reference_type: 'order',
+              description: `Utilisé pour la commande #${order.id}`,
+              created_at: new Date().toISOString()
+            });
+        } catch (cashbackError) {
+          console.error('Erreur lors de l\'application du cashback:', cashbackError);
+          // Don't throw here, order is still valid
+        }
+      }
+
+      // Add earned cashback
+      try {
+        // Check if user has cashback entry
+        const { data: cashbackData } = await supabase
+          .from('cashback')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (cashbackData) {
+          // Update existing cashback
+          await supabase
+            .from('cashback')
+            .update({ 
+              balance: supabase.rpc('increment', { x: potentialCashback }),
+              lifetime_earned: supabase.rpc('increment', { x: potentialCashback }),
+              last_updated: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+        } else {
+          // Create new cashback entry
+          await supabase
+            .from('cashback')
+            .insert({
+              user_id: user.id,
+              balance: potentialCashback,
+              lifetime_earned: potentialCashback,
+              tier: 'bronze',
+              tier_progress: 0,
+              last_updated: new Date().toISOString(),
+              created_at: new Date().toISOString()
+            });
+        }
+        
+        // Add cashback transaction record
+        await supabase
+          .from('cashback_transactions')
+          .insert({
+            user_id: user.id,
+            amount: potentialCashback,
+            type: 'earned',
+            reference_id: order.id,
+            reference_type: 'order',
+            description: `Cashback gagné sur la commande #${order.id}`,
+            created_at: new Date().toISOString()
+          });
+      } catch (cashbackError) {
+        console.error('Erreur lors de l\'ajout du cashback:', cashbackError);
+        // Don't throw here, order is still valid
+      }
+
       toast({
         title: "Commande confirmée",
         description: "Votre commande a été enregistrée avec succès",
@@ -134,9 +279,48 @@ export const OrderSummary = () => {
             <span>Frais de service (5%)</span>
             <span>{formatCurrency(serviceFee)}</span>
           </div>
+          
+          {/* Cashback section */}
+          {cashbackDetails.available > 0 && (
+            <div className="py-2 mt-2 border-t border-dashed">
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="useCashback" 
+                  checked={cashbackDetails.isApplied}
+                  onCheckedChange={toggleCashback}
+                />
+                <div>
+                  <Label htmlFor="useCashback" className="flex items-center">
+                    <Coins className="h-4 w-4 mr-1 text-amber-500" />
+                    Utiliser mon cashback
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatCurrency(cashbackDetails.toApply)} disponible sur cette commande (max 10%)
+                  </p>
+                </div>
+              </div>
+              
+              {cashbackDetails.isApplied && (
+                <div className="flex justify-between text-sm mt-2 text-amber-600">
+                  <span>Cashback appliqué</span>
+                  <span>-{formatCurrency(cashbackDetails.toApply)}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
           <div className="flex justify-between font-bold pt-2 border-t">
             <span>Total</span>
             <span>{formatCurrency(total)}</span>
+          </div>
+          
+          {/* Cashback reward info */}
+          <div className="flex justify-between text-sm text-amber-600 items-center mt-1">
+            <span className="flex items-center">
+              <Coins className="h-4 w-4 mr-1" />
+              Cashback à gagner
+            </span>
+            <span>+{formatCurrency(potentialCashback)}</span>
           </div>
         </div>
 

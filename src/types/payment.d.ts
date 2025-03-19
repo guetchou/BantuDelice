@@ -9,7 +9,7 @@ export type PaymentMethod = Database['public']['Tables']['payment_methods']['Row
 export type PaymentMethodInsert = Database['public']['Tables']['payment_methods']['Insert'];
 export type PaymentMethodUpdate = Database['public']['Tables']['payment_methods']['Update'];
 
-export type PaymentStatus = 'pending' | 'completed' | 'failed';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded' | 'partially_refunded';
 
 export interface UserPaymentMethod {
   id: string;
@@ -90,4 +90,33 @@ export interface MobileMoneyTransaction {
   completed_at?: string;
   failed_at?: string;
   error_message?: string;
+}
+
+export interface Refund {
+  id: string;
+  payment_id: string;
+  order_id?: string;
+  amount: number;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  refund_type: 'original_payment' | 'wallet_credit' | 'cashback';
+  refunded_at?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface CashbackPromotion {
+  id: string;
+  name: string;
+  description: string;
+  rate: number;
+  is_percentage: boolean;
+  min_order_amount?: number;
+  start_date: string;
+  end_date?: string;
+  payment_methods?: ('mtn' | 'airtel' | 'orange' | 'card' | 'wallet')[];
+  user_type?: 'new' | 'existing' | 'all';
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
 }

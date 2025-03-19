@@ -235,6 +235,70 @@ export const paymentApi = {
   
   setDefaultPaymentMethod: async (methodId: string) => {
     return apiRequest(`/payments/methods/${methodId}/default`, 'PATCH');
+  },
+  
+  // Refund handling
+  requestRefund: async (data: {
+    order_id: string;
+    payment_id: string;
+    amount: number;
+    reason: string;
+    refund_type: 'original_payment' | 'wallet_credit' | 'cashback';
+  }) => {
+    return apiRequest('/payments/refunds', 'POST', data);
+  },
+  
+  getRefundStatus: async (refundId: string) => {
+    return apiRequest(`/payments/refunds/${refundId}`, 'GET');
+  },
+  
+  getAllRefunds: async () => {
+    return apiRequest('/payments/refunds', 'GET');
+  }
+};
+
+// Cashback API functions
+export const cashbackApi = {
+  getBalance: async () => {
+    return apiRequest('/cashback/balance', 'GET');
+  },
+  
+  getTransactions: async (limit = 10, offset = 0) => {
+    return apiRequest(`/cashback/transactions?limit=${limit}&offset=${offset}`, 'GET');
+  },
+  
+  transferCashback: async (data: {
+    receiver_id: string;
+    amount: number;
+    description?: string;
+  }) => {
+    return apiRequest('/cashback/transfer', 'POST', data);
+  },
+  
+  redeemCashback: async (data: {
+    amount: number;
+    redemption_type: 'order_discount' | 'delivery_fee' | 'voucher';
+  }) => {
+    return apiRequest('/cashback/redeem', 'POST', data);
+  },
+  
+  applyCashbackToOrder: async (data: {
+    order_id: string;
+    amount: number;
+  }) => {
+    return apiRequest('/cashback/apply-to-order', 'POST', data);
+  },
+  
+  getLeaderboard: async (limit = 10) => {
+    return apiRequest(`/cashback/leaderboard?limit=${limit}`, 'GET');
+  },
+  
+  getCashbackTiers: async () => {
+    return apiRequest('/cashback/tiers', 'GET');
+  },
+  
+  getCashbackPromotions: async () => {
+    return apiRequest('/cashback/promotions', 'GET');
   }
 };
 
@@ -243,7 +307,8 @@ const apiClient = {
   auth: authApi,
   restaurants: restaurantApi,
   orders: orderApi,
-  payments: paymentApi
+  payments: paymentApi,
+  cashback: cashbackApi
 };
 
 export default apiClient;
