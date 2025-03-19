@@ -1,21 +1,21 @@
 
-import { Suspense } from 'react';
-import { Routes } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import LiveChat from './components/chat/LiveChat';
-import { ThemeProvider } from './components/ui/ThemeProvider';
-import { LoyaltyProvider } from './contexts/LoyaltyContext';
+// We'll make minimal changes to the App component to use our new router
+import AppRoutes from "./routes";
+import { Toaster } from "@/components/ui/toaster";
+import { OfflineDetector } from "@/components/OfflineDetector";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const App = () => {
+// Create a client
+const queryClient = new QueryClient();
+
+function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="food-delivery-theme">
-      <LoyaltyProvider>
-        <Routes />
-        <Toaster position="top-right" richColors />
-        <LiveChat />
-      </LoyaltyProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AppRoutes />
+      <Toaster />
+      <OfflineDetector />
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;

@@ -1,5 +1,5 @@
 
-import { Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "@/pages/Home";
 import Restaurants from "@/pages/Restaurants";
 import RestaurantMenu from "@/pages/RestaurantMenu";
@@ -20,6 +20,8 @@ import Loyalty from "@/pages/Loyalty";
 import ReferralProgram from "@/pages/ReferralProgram";
 import { Layout } from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import FeatureFlags from "@/pages/FeatureFlags";
 
 // Wallet and Payment routes
 import Deposit from "@/pages/wallet/Deposit";
@@ -31,6 +33,7 @@ import Analytics from "@/pages/wallet/Analytics";
 
 // Admin dashboard routes
 import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminFeatureFlags from "@/pages/admin/FeatureFlags";
 import RestaurantDashboard from "@/pages/restaurant/Dashboard";
 import KitchenDashboard from "@/pages/kitchen/Dashboard";
 import DeliveryDashboard from "@/pages/delivery/Dashboard";
@@ -40,51 +43,83 @@ import AnalyticsDashboard from "@/pages/analytics/Dashboard";
 import RestaurantSubscriptionPlans from "@/pages/restaurant/SubscriptionPlans";
 import DriverSubscriptionPlans from "@/pages/driver/SubscriptionPlans";
 import SubscriptionCheckout from "@/pages/subscription/Checkout";
+import { useFeatureFlags } from "@/utils/featureFlags";
 
-export default (
-  <Route path="/" element={<Layout />}>
-    <Route index element={<Home />} />
-    <Route path="restaurants" element={<Restaurants />} />
-    <Route path="restaurant/:id" element={<RestaurantMenu />} />
-    <Route path="covoiturage" element={<Covoiturage />} />
-    <Route path="auth" element={<Auth />} />
-    <Route path="taxi" element={<Taxi />} />
-    <Route path="taxi/ride/:id" element={<TaxiRide />} />
-    
-    {/* Subscription routes */}
-    <Route path="restaurant/subscription/plans" element={<RestaurantSubscriptionPlans />} />
-    <Route path="driver/subscription/plans" element={<DriverSubscriptionPlans />} />
-    <Route path="restaurant/subscription/checkout/:planId" element={<SubscriptionCheckout />} />
-    <Route path="driver/subscription/checkout/:planId" element={<SubscriptionCheckout />} />
-    
-    {/* Protected Routes */}
-    <Route element={<ProtectedRoute children={undefined} />}>
-      <Route path="orders" element={<Orders />} />
-      <Route path="order/:id" element={<OrderDetails />} />
-      <Route path="order/tracking/:id" element={<OrderTracking />} />
-      <Route path="profile" element={<Profile />} />
-      <Route path="settings" element={<Settings />} />
-      <Route path="notifications" element={<Notifications />} />
-      <Route path="favorites" element={<Favorites />} />
-      <Route path="dashboard" element={<Dashboard />} />
-      <Route path="loyalty" element={<Loyalty />} />
-      <Route path="referral" element={<ReferralProgram />} />
-      
-      {/* Wallet and Payment routes */}
-      <Route path="wallet" element={<Wallet />} />
-      <Route path="wallet/deposit" element={<Deposit />} />
-      <Route path="wallet/withdraw" element={<Withdraw />} />
-      <Route path="wallet/payment-methods" element={<PaymentMethods />} />
-      <Route path="wallet/transactions" element={<Transactions />} />
-      <Route path="wallet/invoices" element={<Invoices />} />
-      <Route path="wallet/analytics" element={<Analytics />} />
-      
-      {/* Admin dashboard routes */}
-      <Route path="admin" element={<AdminDashboard />} />
-      <Route path="restaurant/dashboard" element={<RestaurantDashboard />} />
-      <Route path="kitchen/dashboard" element={<KitchenDashboard />} />
-      <Route path="delivery/dashboard" element={<DeliveryDashboard />} />
-      <Route path="analytics/dashboard" element={<AnalyticsDashboard />} />
-    </Route>
-  </Route>
-);
+// Create a component to handle route rendering with feature flags
+const AppRoutes = () => {
+  const isFeatureEnabled = useFeatureFlags(state => state.isEnabled);
+  
+  // Define routes
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <Layout />,
+      errorElement: <ErrorBoundary><div>Page not found</div></ErrorBoundary>,
+      children: [
+        { index: true, element: <Home /> },
+        { path: "restaurants", element: <Restaurants /> },
+        { path: "restaurant/:id", element: <RestaurantMenu /> },
+        { path: "covoiturage", element: <Covoiturage /> },
+        { path: "auth", element: <Auth /> },
+        { path: "taxi", element: <Taxi /> },
+        { path: "taxi/ride/:id", element: <TaxiRide /> },
+        
+        // Subscription routes - with feature flag check
+        ...(isFeatureEnabled('premium_subscription') ? [
+          { path: "restaurant/subscription/plans", element: <RestaurantSubscriptionPlans /> },
+          { path: "driver/subscription/plans", element: <DriverSubscriptionPlans /> },
+          { path: "restaurant/subscription/checkout/:planId", element: <SubscriptionCheckout /> },
+          { path: "driver/subscription/checkout/:planId", element: <SubscriptionCheckout /> },
+        ] : []),
+        
+        // Protected Routes
+        {
+          element: <ProtectedRoute children={undefined} />,
+          children: [
+            { path: "orders", element: <Orders /> },
+            { path: "order/:id", element: <OrderDetails /> },
+            { path: "order/tracking/:id", element: <OrderTracking /> },
+            { path: "profile", element: <Profile /> },
+            { path: "settings", element: <Settings /> },
+            { path: "notifications", element: <Notifications /> },
+            { path: "favorites", element: <Favorites /> },
+            { path: "dashboard", element: <Dashboard /> },
+            
+            // Loyalty - with feature flag check
+            ...(isFeatureEnabled('loyalty_points') ? [
+              { path: "loyalty", element: <Loyalty /> },
+            ] : []),
+            
+            // Referral - with feature flag check
+            ...(isFeatureEnabled('referral_program') ? [
+              { path: "referral", element: <ReferralProgram /> },
+            ] : []),
+            
+            // Wallet and Payment routes - with feature flag check
+            ...(isFeatureEnabled('wallet_management') ? [
+              { path: "wallet", element: <Wallet /> },
+              { path: "wallet/deposit", element: <Deposit /> },
+              { path: "wallet/withdraw", element: <Withdraw /> },
+              { path: "wallet/payment-methods", element: <PaymentMethods /> },
+              { path: "wallet/transactions", element: <Transactions /> },
+              { path: "wallet/invoices", element: <Invoices /> },
+              { path: "wallet/analytics", element: <Analytics /> },
+            ] : []),
+            
+            // Admin dashboard routes
+            { path: "admin", element: <AdminDashboard /> },
+            { path: "admin/feature-flags", element: <AdminFeatureFlags /> },
+            { path: "restaurant/dashboard", element: <RestaurantDashboard /> },
+            { path: "kitchen/dashboard", element: <KitchenDashboard /> },
+            { path: "delivery/dashboard", element: <DeliveryDashboard /> },
+            { path: "analytics/dashboard", element: <AnalyticsDashboard /> },
+          ]
+        }
+      ]
+    }
+  ]);
+  
+  return <RouterProvider router={router} />;
+};
+
+export default AppRoutes;
