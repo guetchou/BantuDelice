@@ -1,59 +1,9 @@
+
 import React, { useEffect } from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Route,
-  createRoutesFromElements,
-} from 'react-router-dom';
+import { RouterProvider } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
-import { AuthLayout } from './layouts/AuthLayout';
-import { MainLayout } from './layouts/MainLayout';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Home } from './pages/Home';
-import mainRoutes from './routes/mainRoutes';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { GuestRoute } from './components/GuestRoute';
-
-// Add route for taxi booking page
-
-const routes = [
-  {
-    path: '/',
-    element: <MainLayout />,
-    children: [
-      ...mainRoutes.map(route => ({
-        ...route,
-        element: route.element ? <ProtectedRoute>{route.element}</ProtectedRoute> : null,
-      })),
-    ],
-  },
-  {
-    path: '/auth',
-    element: <AuthLayout />,
-    children: [
-      {
-        path: 'login',
-        element: (
-          <GuestRoute>
-            <Login />
-          </GuestRoute>
-        ),
-      },
-      {
-        path: 'register',
-        element: (
-          <GuestRoute>
-            <Register />
-          </GuestRoute>
-        ),
-      },
-    ],
-  },
-  ...mainRoutes,
-];
-
-const router = createBrowserRouter(routes);
+import router from './routes';
+import { NavigationProvider } from './contexts/NavigationContext';
 
 function App() {
   const { isLoading } = useAuth();
@@ -68,10 +18,18 @@ function App() {
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
-  return <RouterProvider router={router} />;
+  return (
+    <NavigationProvider>
+      <RouterProvider router={router} />
+    </NavigationProvider>
+  );
 }
 
 export default App;

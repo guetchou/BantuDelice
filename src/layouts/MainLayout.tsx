@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Footer } from '@/components/Footer';
+import Footer from '@/components/Footer';
 import Header from '@/components/layout/Header';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -17,3 +17,5 @@ export const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children 
     </div>
   );
 };
+
+export default MainLayout;

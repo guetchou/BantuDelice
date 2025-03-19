@@ -1,112 +1,91 @@
 
 import React from 'react';
+import { RouteObject } from "react-router-dom";
 import { Home } from '@/pages/Home';
-import { RestaurantLayout } from '@/layouts/RestaurantLayout';
 import Covoiturage from '@/pages/Covoiturage';
-import { RestaurantDetails } from '@/pages/RestaurantDetails';
-import { RestaurantReservation } from '@/pages/RestaurantReservation';
-import { CartProvider } from '@/contexts/CartContext';
-import { RestaurantMenu } from '@/pages/RestaurantMenu';
 import OrderConfirmation from '@/pages/OrderConfirmation';
-import { Orders } from '@/pages/Orders';
-import { OrderDetails } from '@/pages/OrderDetails';
-import { OrderTracking } from '@/pages/OrderTracking';
-import { ReferralProgram } from '@/pages/ReferralProgram';
-import { Wallet } from '@/pages/Wallet';
-import { TaxiBookingForm } from '@/pages/TaxiBookingForm';
-import TaxiRideStatus from '@/components/taxi/TaxiRideStatus';
-import TaxiRideDetails from '@/pages/TaxiRideDetails';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { MainLayout } from '@/layouts/MainLayout';
+import { CartProvider } from '@/contexts/CartContext';
+import Orders from '@/pages/Orders';
+import OrderDetails from '@/pages/OrderDetails';
+import OrderTracking from '@/pages/OrderTracking';
+import ReferralProgram from '@/pages/ReferralProgram';
+import Wallet from '@/pages/Wallet';
+import { TaxiBookingForm } from '@/components/taxi/TaxiBookingForm';
+import TaxiRideStatus from '@/components/taxi/TaxiRideStatus';
+import TaxiRideDetails from '@/pages/TaxiRideDetails';
 
-const mainRoutes = [
+const mainRoutes: RouteObject[] = [
   {
     path: '/',
     element: <MainLayout><Home /></MainLayout>,
-    authRequired: false,
   },
   {
     path: '/taxis',
     element: <MainLayout><TaxiBookingForm /></MainLayout>,
-    authRequired: false,
   },
   {
     path: '/taxi/ride/:rideId',
-    element: <MainLayout><TaxiRideStatus /></MainLayout>,
-    authRequired: true,
+    element: <ProtectedRoute><MainLayout><TaxiRideStatus /></MainLayout></ProtectedRoute>,
   },
   {
     path: '/taxi/details/:rideId',
-    element: <MainLayout><TaxiRideDetails /></MainLayout>,
-    authRequired: true,
+    element: <ProtectedRoute><MainLayout><TaxiRideDetails /></MainLayout></ProtectedRoute>,
   },
   {
     path: '/covoiturage',
     element: <MainLayout><Covoiturage /></MainLayout>,
-    authRequired: false,
   },
   {
     path: '/restaurant/:id',
     element: (
       <CartProvider>
-        <RestaurantLayout>
-          <RestaurantDetails />
-        </RestaurantLayout>
+        <MainLayout />
       </CartProvider>
     ),
-    authRequired: false,
   },
   {
     path: '/restaurant/:id/menu',
     element: (
       <CartProvider>
-        <RestaurantLayout>
-          <RestaurantMenu />
-        </RestaurantLayout>
+        <MainLayout />
       </CartProvider>
     ),
-    authRequired: false,
   },
   {
     path: '/restaurant/:id/reservation',
     element: (
       <CartProvider>
-        <RestaurantLayout>
-          <RestaurantReservation />
-        </RestaurantLayout>
+        <ProtectedRoute>
+          <MainLayout />
+        </ProtectedRoute>
       </CartProvider>
     ),
-    authRequired: true,
   },
   {
     path: '/order-confirmation/:orderId',
-    element: <MainLayout><OrderConfirmation /></MainLayout>,
-    authRequired: true,
+    element: <ProtectedRoute><MainLayout><OrderConfirmation /></MainLayout></ProtectedRoute>,
   },
   {
     path: '/orders',
-    element: <MainLayout><Orders /></MainLayout>,
-    authRequired: true,
+    element: <ProtectedRoute><MainLayout><Orders /></MainLayout></ProtectedRoute>,
   },
   {
     path: '/order/:orderId',
-    element: <MainLayout><OrderDetails /></MainLayout>,
-    authRequired: true,
+    element: <ProtectedRoute><MainLayout><OrderDetails /></MainLayout></ProtectedRoute>,
   },
   {
     path: '/order/:orderId/tracking',
-    element: <MainLayout><OrderTracking /></MainLayout>,
-    authRequired: true,
+    element: <ProtectedRoute><MainLayout><OrderTracking /></MainLayout></ProtectedRoute>,
   },
   {
     path: '/referral',
-    element: <MainLayout><ReferralProgram /></MainLayout>,
-    authRequired: true,
+    element: <ProtectedRoute><MainLayout><ReferralProgram /></MainLayout></ProtectedRoute>,
   },
   {
     path: '/wallet',
-    element: <MainLayout><Wallet /></MainLayout>,
-    authRequired: true,
+    element: <ProtectedRoute><MainLayout><Wallet /></MainLayout></ProtectedRoute>,
   },
 ];
 
