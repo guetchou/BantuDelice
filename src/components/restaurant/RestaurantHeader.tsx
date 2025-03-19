@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Star, Clock, MapPin, Phone, Globe, ShareIcon, Heart, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import type { Restaurant } from '@/types/restaurant';
 
 interface RestaurantHeaderProps {
@@ -12,6 +12,7 @@ interface RestaurantHeaderProps {
 
 const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showOpeningHours, setShowOpeningHours] = useState(false);
 
   const handleFavoriteClick = () => {
     setIsFavorite(!isFavorite);
@@ -60,6 +61,35 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
     if (hours.is_closed) return "Fermé aujourd'hui";
     
     return `${hours.open} - ${hours.close}`;
+  };
+
+  // Récupérer les jours et horaires de la semaine
+  const getWeekSchedule = () => {
+    if (!restaurant.business_hours || !restaurant.business_hours.regular) {
+      return [];
+    }
+    
+    const days = [
+      { key: 'monday', label: 'Lundi' },
+      { key: 'tuesday', label: 'Mardi' },
+      { key: 'wednesday', label: 'Mercredi' },
+      { key: 'thursday', label: 'Jeudi' },
+      { key: 'friday', label: 'Vendredi' },
+      { key: 'saturday', label: 'Samedi' },
+      { key: 'sunday', label: 'Dimanche' },
+    ];
+    
+    return days.map(day => {
+      const hours = restaurant.business_hours?.regular[day.key];
+      return {
+        dayName: day.label,
+        hours: hours 
+          ? hours.is_closed 
+            ? "Fermé" 
+            : `${hours.open} - ${hours.close}`
+          : "Non renseigné"
+      };
+    });
   };
 
   return (
@@ -156,52 +186,107 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
                   href={restaurant.website} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="hover:text-white truncate"
+                  className="hover:text-white"
                 >
                   {restaurant.website.replace(/^https?:\/\//, '')}
                 </a>
               </div>
             )}
+            
+            {/* Horaires avec dropdown */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-gray-300">
+                <Clock className="w-5 h-5" />
+                <span>{formatBusinessHours()}</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 px-2 text-gray-300 hover:text-white"
+                  onClick={() => setShowOpeningHours(!showOpeningHours)}
+                >
+                  <ChevronDown className={`h-4 w-4 transition-transform ${showOpeningHours ? 'rotate-180' : ''}`} />
+                </Button>
+              </div>
+              
+              {showOpeningHours && (
+                <div className="mt-2 bg-gray-800 rounded-md p-3 text-sm text-gray-300">
+                  <h4 className="font-medium mb-2">Horaires d'ouverture</h4>
+                  <div className="space-y-1">
+                    {getWeekSchedule().map((day, index) => (
+                      <div key={index} className="flex justify-between">
+                        <span className="font-medium">{day.dayName}</span>
+                        <span>{day.hours}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
-        <div>
-          <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-gray-800">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-white">Horaires d'ouverture</h3>
-              <div className={`px-2 py-1 rounded text-xs ${restaurant.is_open ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                {restaurant.is_open ? 'Ouvert' : 'Fermé'}
-              </div>
+        <div className="bg-gray-800/50 p-4 rounded-lg">
+          <h3 className="text-lg font-medium text-white mb-3">Informations pratiques</h3>
+          
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {restaurant.is_open ? (
+                <Badge className="bg-green-600">Ouvert maintenant</Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-red-600/80">Fermé</Badge>
+              )}
+              
+              {restaurant.trending && (
+                <Badge className="bg-orange-500">Tendance</Badge>
+              )}
+              
+              {restaurant.average_prep_time && (
+                <Badge variant="outline">Préparation ~{restaurant.average_prep_time} min</Badge>
+              )}
+              
+              {restaurant.delivery_fee !== undefined && (
+                <Badge variant="outline">
+                  {restaurant.delivery_fee === 0 ? 'Livraison gratuite' : `Livraison ${restaurant.delivery_fee.toLocaleString()} XAF`}
+                </Badge>
+              )}
+              
+              {restaurant.minimum_order !== undefined && restaurant.minimum_order > 0 && (
+                <Badge variant="outline">
+                  Commande min. {restaurant.minimum_order.toLocaleString()} XAF
+                </Badge>
+              )}
             </div>
             
-            <div className="flex items-center gap-2 text-gray-300">
-              <Clock className="w-5 h-5" />
-              <span>Aujourd'hui: {formatBusinessHours()}</span>
-            </div>
-            
-            <Button variant="ghost" className="flex items-center mt-2 text-sm text-gray-400">
-              Voir tous les horaires
-              <ChevronDown className="ml-1 w-4 h-4" />
-            </Button>
-            
-            {restaurant.minimum_order > 0 && (
-              <div className="mt-2 text-sm text-gray-300">
-                Commande minimum: {restaurant.minimum_order.toLocaleString()} XAF
+            {restaurant.special_features && restaurant.special_features.length > 0 && (
+              <div>
+                <h4 className="text-white text-sm font-medium mb-2">Services</h4>
+                <div className="flex flex-wrap gap-2">
+                  {restaurant.special_features.map((feature, index) => (
+                    <Badge key={index} variant="secondary" className="bg-gray-700">
+                      {feature}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
             
-            {typeof restaurant.delivery_fee !== 'undefined' && (
-              <div className="mt-1 text-sm text-gray-300">
-                Frais de livraison: {restaurant.delivery_fee === 0 
-                  ? 'Gratuit' 
-                  : `${restaurant.delivery_fee.toLocaleString()} XAF`
-                }
+            {restaurant.payment_methods && restaurant.payment_methods.length > 0 && (
+              <div>
+                <h4 className="text-white text-sm font-medium mb-2">Moyens de paiement acceptés</h4>
+                <div className="flex flex-wrap gap-2">
+                  {restaurant.payment_methods.map((method, index) => (
+                    <Badge key={index} variant="outline">
+                      {method}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
             
-            {restaurant.average_prep_time && (
-              <div className="mt-1 text-sm text-gray-300">
-                Temps de préparation moyen: {restaurant.average_prep_time} min
+            {restaurant.estimated_delivery_time && (
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <Clock className="h-4 w-4" />
+                <span>Livraison estimée: {restaurant.estimated_delivery_time} min</span>
               </div>
             )}
           </div>

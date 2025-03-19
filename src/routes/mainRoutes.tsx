@@ -1,3 +1,4 @@
+
 import { lazy } from "react";
 import { RouteObject } from "react-router-dom";
 import { Layout } from "@/components/Layout";
@@ -20,6 +21,9 @@ import Index from "@/pages/Index";
 import FeatureFlags from "@/pages/FeatureFlags";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import WalletOverview from "@/pages/Wallet/WalletOverview";
+import RestaurantMenu from "@/pages/RestaurantMenu";
+import RestaurantManagementPage from "@/pages/restaurant/ManagementPage";
+import RestaurantDashboard from "@/pages/restaurant/Dashboard";
 
 export const mainRoutes: RouteObject[] = [
   {
@@ -77,6 +81,26 @@ export const mainRoutes: RouteObject[] = [
       {
         path: "restaurants",
         element: <Restaurants />
+      },
+      {
+        path: "restaurant/:restaurantId/menu",
+        element: <RestaurantMenu />
+      },
+      {
+        path: "restaurant/management/:id",
+        element: (
+          <ProtectedRoute>
+            <RestaurantManagementPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "restaurant/dashboard",
+        element: (
+          <ProtectedRoute>
+            <RestaurantDashboard />
+          </ProtectedRoute>
+        )
       },
       {
         path: "about",

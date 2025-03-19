@@ -10,10 +10,15 @@ interface CartSummaryProps {
   onCheckout: () => void;
   onRemoveItem?: (itemId: string) => void;
   onUpdateQuantity?: (itemId: string, quantity: number) => void;
+  discount?: number;
 }
 
-const CartSummary = ({ items, onCheckout, onRemoveItem, onUpdateQuantity }: CartSummaryProps) => {
-  const getTotalAmount = () => items.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
+const CartSummary = ({ items, onCheckout, onRemoveItem, onUpdateQuantity, discount = 0 }: CartSummaryProps) => {
+  const getSubtotal = () => items.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
+  const getTotalAmount = () => {
+    const subtotal = getSubtotal();
+    return subtotal - discount;
+  };
 
   return (
     <Card className="p-6 bg-white/5 backdrop-blur-sm border-gray-800">
@@ -75,7 +80,19 @@ const CartSummary = ({ items, onCheckout, onRemoveItem, onUpdateQuantity }: Cart
               ))}
             </div>
           </ScrollArea>
-          <div className="border-t border-gray-700 pt-4 mt-4">
+          <div className="border-t border-gray-700 pt-4 mt-4 space-y-2">
+            <div className="flex justify-between text-gray-300">
+              <span>Sous-total</span>
+              <span>{getSubtotal().toLocaleString()} XAF</span>
+            </div>
+            
+            {discount > 0 && (
+              <div className="flex justify-between text-green-400">
+                <span>Réduction</span>
+                <span>-{discount.toLocaleString()} XAF</span>
+              </div>
+            )}
+            
             <div className="flex justify-between font-bold text-lg text-white">
               <span>Total</span>
               <span>{getTotalAmount().toLocaleString()} XAF</span>

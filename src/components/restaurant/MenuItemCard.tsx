@@ -1,209 +1,139 @@
 
-import { ShoppingCart, Star, Info, Clock, Leaf } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { type CartItem } from "@/types/cart";
-import { type MenuItem } from "@/types/restaurant";
+import { Plus, Minus, Percent } from "lucide-react";
+import type { MenuItem } from '@/types/restaurant';
 
-export interface MenuItemCardProps {
+interface MenuItemCardProps {
   item: MenuItem;
-  onAddToCart: (item: CartItem) => void;
-  onRemoveFromCart?: (id: string) => void;
-  quantity?: number;
+  onAddToCart: () => void;
+  onRemoveFromCart: (itemId: string) => void;
+  quantity: number;
   showNutritionalInfo?: boolean;
 }
 
 const MenuItemCard = ({ 
   item, 
-  onAddToCart, 
-  onRemoveFromCart, 
-  quantity = 0, 
-  showNutritionalInfo = false 
+  onAddToCart,
+  onRemoveFromCart,
+  quantity,
+  showNutritionalInfo = false
 }: MenuItemCardProps) => {
-  const handleAddToCart = () => {
-    const cartItem: CartItem = {
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      menu_item_id: item.id,
-      quantity: 1,
-      image_url: item.image_url,
-      special_instructions: "",
-      options: []
-    };
-    
-    onAddToCart(cartItem);
-  };
+  const [expanded, setExpanded] = useState(false);
+  
+  const hasPromotion = item.promotional_data && item.promotional_data.is_on_promotion;
+  const originalPrice = item.price;
+  const discountedPrice = hasPromotion && item.promotional_data?.discount_type === 'percentage'
+    ? originalPrice * (1 - (item.promotional_data.discount_value / 100))
+    : hasPromotion && item.promotional_data?.discount_type === 'fixed_amount'
+      ? originalPrice - item.promotional_data.discount_value
+      : originalPrice;
 
   return (
-    <Card className="overflow-hidden group hover:shadow-xl transition-all duration-300 bg-white/5 backdrop-blur-sm border-gray-800">
+    <Card className="overflow-hidden hover:shadow-md transition-shadow bg-white/5 backdrop-blur-sm border-gray-800">
       <div className="relative">
-        {item.image_url ? (
-          <AspectRatio ratio={16 / 9}>
-            <img
-              src={item.image_url}
-              alt={item.name}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        {item.image_url && (
+          <div className="h-40 w-full">
+            <img 
+              src={item.image_url} 
+              alt={item.name} 
+              className="h-full w-full object-cover"
             />
-          </AspectRatio>
-        ) : (
-          <AspectRatio ratio={16 / 9}>
-            <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
-              Image non disponible
-            </div>
-          </AspectRatio>
+          </div>
         )}
         
-        {item.popularity_score && item.popularity_score > 80 && (
-          <Badge 
-            className="absolute top-2 left-2 bg-orange-500"
-            variant="secondary"
-          >
-            Populaire
+        {hasPromotion && (
+          <Badge className="absolute top-2 right-2 bg-orange-500">
+            <Percent className="h-3 w-3 mr-1" />
+            {item.promotional_data?.discount_type === 'percentage' 
+              ? `-${item.promotional_data.discount_value}%` 
+              : `-${item.promotional_data.discount_value} XAF`}
           </Badge>
         )}
       </div>
-
-      <div className="p-4 space-y-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-semibold text-lg text-white">{item.name}</h3>
-            <p className="text-sm text-gray-300 line-clamp-2">
-              {item.description}
-            </p>
+      
+      <div className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="font-semibold text-white text-lg">{item.name}</h3>
+          {hasPromotion ? (
+            <div className="text-right">
+              <span className="text-gray-400 line-through text-sm mr-2">{originalPrice.toLocaleString()} XAF</span>
+              <span className="text-white font-bold">{Math.round(discountedPrice).toLocaleString()} XAF</span>
+            </div>
+          ) : (
+            <span className="text-white font-bold">{originalPrice.toLocaleString()} XAF</span>
+          )}
+        </div>
+        
+        {item.description && (
+          <p className={`text-gray-300 text-sm mb-2 ${!expanded && 'line-clamp-2'}`}>
+            {item.description}
+          </p>
+        )}
+        
+        {item.description && item.description.length > 100 && (
+          <button 
+            className="text-xs text-gray-400 hover:text-white mb-2" 
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? 'Voir moins' : 'Voir plus'}
+          </button>
+        )}
+        
+        {showNutritionalInfo && item.nutritional_info && (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 mb-3 text-xs text-gray-300">
+            {item.nutritional_info.calories && (
+              <div>Calories: {item.nutritional_info.calories}</div>
+            )}
+            {item.nutritional_info.protein && (
+              <div>Protéines: {item.nutritional_info.protein}g</div>
+            )}
+            {item.nutritional_info.carbs && (
+              <div>Glucides: {item.nutritional_info.carbs}g</div>
+            )}
+            {item.nutritional_info.fat && (
+              <div>Lipides: {item.nutritional_info.fat}g</div>
+            )}
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-gray-300">
-                <Info className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{item.name}</DialogTitle>
-                <DialogDescription>{item.description}</DialogDescription>
-              </DialogHeader>
-              {showNutritionalInfo && item.nutritional_info && (
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">Information nutritionnelle</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {item.nutritional_info.calories && (
-                        <div>Calories: {item.nutritional_info.calories}</div>
-                      )}
-                      {item.nutritional_info.protein && (
-                        <div>Protéines: {item.nutritional_info.protein}g</div>
-                      )}
-                      {item.nutritional_info.carbs && (
-                        <div>Glucides: {item.nutritional_info.carbs}g</div>
-                      )}
-                      {item.nutritional_info.fat && (
-                        <div>Lipides: {item.nutritional_info.fat}g</div>
-                      )}
-                      {item.nutritional_info.fiber && (
-                        <div>Fibres: {item.nutritional_info.fiber}g</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {item.ingredients && item.ingredients.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mb-2">Ingrédients</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {item.ingredients.map((ingredient, index) => (
-                      <Badge key={index} variant="outline">
-                        {ingredient}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {item.allergens && item.allergens.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mb-2">Allergènes</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {item.allergens.map((allergen, index) => (
-                      <Badge key={index} variant="destructive">
-                        {allergen}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="flex items-center gap-4 text-sm">
-          {item.preparation_time && (
-            <div className="flex items-center gap-1 text-gray-400">
-              <Clock className="h-4 w-4" />
-              <span>{item.preparation_time} min</span>
-            </div>
-          )}
-          {item.rating && (
-            <div className="flex items-center gap-1 text-yellow-500">
-              <Star className="h-4 w-4 fill-current" />
-              <span>{item.rating}/5</span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {item.dietary_preferences?.map((pref, index) => (
-            <TooltipProvider key={index}>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Badge variant="outline" className="flex items-center gap-1 text-gray-300">
-                    <Leaf className="h-3 w-3" />
-                    {pref}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Préférence alimentaire: {pref}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between pt-2">
-          <span className="font-bold text-lg text-white">
-            {item.price.toLocaleString('fr-FR')} XAF
-          </span>
-          
+        )}
+        
+        <div className="flex justify-between items-center mt-4">
           {quantity > 0 ? (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => onRemoveFromCart && onRemoveFromCart(item.id)}
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8 text-orange-500 border-orange-500"
+                onClick={() => onRemoveFromCart(item.id)}
               >
-                -
+                <Minus className="h-4 w-4" />
               </Button>
-              <span className="text-white">{quantity}</span>
+              <span className="text-white font-medium">{quantity}</span>
               <Button 
-                size="sm" 
-                className="bg-orange-500 hover:bg-orange-600"
-                onClick={handleAddToCart}
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8 text-orange-500 border-orange-500"
+                onClick={onAddToCart}
               >
-                +
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
           ) : (
             <Button 
-              onClick={handleAddToCart}
-              className="bg-orange-500 hover:bg-orange-600"
-              disabled={!item.available}
+              onClick={onAddToCart}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+              size="sm"
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              {item.available ? "Ajouter" : "Indisponible"}
+              Ajouter
             </Button>
+          )}
+          
+          {item.preparation_time && (
+            <div className="text-xs text-gray-400">
+              {item.preparation_time} min
+            </div>
           )}
         </div>
       </div>

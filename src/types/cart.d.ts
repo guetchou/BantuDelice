@@ -1,61 +1,41 @@
 
-export interface CartItemOption {
-  name: string;
-  value: string;
-  price: number;
-}
-
-export interface CartItemCombo {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
 export interface CartItem {
   id: string;
   name: string;
   price: number;
-  restaurant_id: string;
-  image_url?: string;
   quantity: number;
-  category?: string;
+  image_url?: string;
   description?: string;
-  options?: CartItemOption[];
+  restaurant_id: string;
+  options?: Array<{
+    name: string;
+    value: string;
+    price: number;
+  }>;
   special_instructions?: string;
-  customization_options?: Record<string, any>;
-  combo_item?: CartItemCombo;
-  dietary_preferences?: string[];
-  nutritional_info?: {
-    calories?: number;
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-    fiber?: number;
-  };
-  allergens?: string[];
 }
 
 export interface Cart {
   items: CartItem[];
-  subtotal: number;
-  discount?: {
-    code: string;
-    amount: number;
-    type: 'percentage' | 'fixed' | 'free_delivery';
-  };
-  deliveryFee: number;
-  tax: number;
-  tip?: number;
+  totalItems: number;
+  totalAmount: number;
   total: number;
+  discountAmount?: number;
 }
 
-export interface PromotionCode {
-  code: string;
-  discount: number;
-  type: 'percentage' | 'fixed' | 'free_delivery';
-  min_order_amount?: number;
-  max_discount?: number;
-  isValid: boolean;
-  validationMessage?: string;
+export type CartAction = 
+  | { type: 'ADD_ITEM'; payload: CartItem }
+  | { type: 'REMOVE_ITEM'; payload: string }
+  | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
+  | { type: 'CLEAR_CART' }
+  | { type: 'APPLY_DISCOUNT'; payload: number }
+  | { type: 'REMOVE_DISCOUNT' };
+
+export interface CartContextType {
+  cart: Cart;
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (itemId: string) => void;
+  clearCart: () => void;
+  applyDiscount: (amount: number) => void;
+  removeDiscount: () => void;
 }
