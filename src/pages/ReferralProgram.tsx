@@ -1,102 +1,63 @@
 
-import { useEffect } from 'react';
+import React from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus } from "lucide-react";
-import ReferralProgram from '@/components/marketing/ReferralProgram';
-import { SponsoredRestaurants } from '@/components/marketing/SponsoredRestaurants';
-import { InfluencerCampaigns } from '@/components/marketing/InfluencerCampaigns';
+import { useUser } from '@/hooks/useUser';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ReferralProgramComponent from '@/components/marketing/ReferralProgram';
+import InfluencerCampaigns from '@/components/marketing/InfluencerCampaigns';
+import { useFeature } from '@/utils/featureFlags';
+import { NavigationLink } from '@/utils/navigation';
 
-export default function ReferralProgramPage() {
-  usePageTitle({ title: "Programme de Parrainage" });
+const ReferralProgram = () => {
+  // Configurer le titre de la page
+  usePageTitle({ title: "Programme de parrainage" });
+  
+  // Obtenir l'utilisateur actuel
+  const { user } = useUser();
+  
+  // Vérifier si les fonctionnalités sont activées
+  const referralEnabled = useFeature('referral_program');
+  const influencerEnabled = useFeature('influencer_campaigns');
   
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <UserPlus className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Programme de Parrainage</h1>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <ReferralProgram />
-        </div>
-        
-        <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Statistiques de parrainage</CardTitle>
-              <CardDescription>Suivez vos performances de parrainage</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between p-4 bg-muted rounded-lg">
-                  <div className="text-sm font-medium">Amis parrainés</div>
-                  <div className="font-bold">0</div>
-                </div>
-                <div className="flex justify-between p-4 bg-muted rounded-lg">
-                  <div className="text-sm font-medium">Livreurs parrainés</div>
-                  <div className="font-bold">0</div>
-                </div>
-                <div className="flex justify-between p-4 bg-muted rounded-lg">
-                  <div className="text-sm font-medium">Récompenses gagnées</div>
-                  <div className="font-bold">0 FCFA</div>
-                </div>
-                <div className="flex justify-between p-4 bg-muted rounded-lg">
-                  <div className="text-sm font-medium">Récompenses en attente</div>
-                  <div className="font-bold">0 FCFA</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Parrainage de restaurants</CardTitle>
-              <CardDescription>Êtes-vous un restaurateur? Parrainez d'autres restaurants</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm mb-4">
-                Si vous êtes déjà restaurateur partenaire, vous pouvez parrainer d'autres restaurants et gagner des commissions pendant 3 mois!
-              </p>
-              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
-                <h4 className="text-sm font-medium text-amber-700">Bonus restaurateurs</h4>
-                <ul className="mt-2 space-y-2 text-sm">
-                  <li className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                    <span className="text-amber-800">10 000 FCFA par restaurant parrainé</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                    <span className="text-amber-800">2% des commissions pendant 3 mois</span>
-                  </li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+    <div className="container mx-auto p-6 max-w-7xl">
+      <h1 className="text-3xl font-bold mb-8">Programmes de Recommandation</h1>
       
-      <div className="mt-12 mb-6">
-        <h2 className="text-2xl font-bold mb-6">Découvrez également</h2>
-        <Tabs defaultValue="sponsored" className="w-full">
-          <TabsList className="w-full max-w-md mx-auto grid grid-cols-2 mb-8">
-            <TabsTrigger value="sponsored">Restaurants en vedette</TabsTrigger>
-            <TabsTrigger value="influencers">Influenceurs partenaires</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="sponsored">
-            <SponsoredRestaurants />
-          </TabsContent>
-          
-          <TabsContent value="influencers">
-            <InfluencerCampaigns />
-          </TabsContent>
-        </Tabs>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {referralEnabled && (
+          <Card className="shadow-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl">Programme de Parrainage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReferralProgramComponent />
+            </CardContent>
+          </Card>
+        )}
+        
+        {influencerEnabled && (
+          <Card className="shadow-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl">Campagnes d'Influence</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <InfluencerCampaigns />
+            </CardContent>
+          </Card>
+        )}
+        
+        {!referralEnabled && !influencerEnabled && (
+          <div className="col-span-2 text-center py-12">
+            <p className="text-gray-500 mb-4">Aucun programme de recommandation n'est actuellement disponible.</p>
+            <Button asChild>
+              <NavigationLink to="/">Retourner à l'accueil</NavigationLink>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default ReferralProgram;

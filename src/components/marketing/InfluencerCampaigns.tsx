@@ -23,7 +23,8 @@ const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default function InfluencerCampaigns() {
+// Assure qu'il y a un export default pour ce composant
+const InfluencerCampaigns = () => {
   const { toast } = useToast();
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
 
@@ -162,4 +163,6 @@ export default function InfluencerCampaigns() {
       </div>
     </div>
   );
-}
+};
+
+export default InfluencerCampaigns;
