@@ -1,142 +1,117 @@
 
-import React, { createContext, useReducer, ReactNode } from 'react';
-import { CartItem, Cart, CartAction, CartContextType } from '@/types/cart';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
-const initialCart: Cart = {
-  items: [],
-  totalItems: 0,
-  totalAmount: 0,
-  total: 0,
-  discountAmount: 0
-};
-
-const cartReducer = (state: Cart, action: CartAction): Cart => {
-  switch (action.type) {
-    case 'ADD_ITEM': {
-      const existingItemIndex = state.items.findIndex(item => item.id === action.payload.id);
-      let updatedItems;
-
-      if (existingItemIndex >= 0) {
-        // L'item existe déjà, on met à jour la quantité
-        updatedItems = [...state.items];
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity: (updatedItems[existingItemIndex].quantity || 1) + (action.payload.quantity || 1)
-        };
-      } else {
-        // Nouvel item à ajouter
-        updatedItems = [...state.items, { ...action.payload, quantity: action.payload.quantity || 1 }];
-      }
-
-      const totalItems = updatedItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
-      const totalAmount = updatedItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-
-      return {
-        ...state,
-        items: updatedItems,
-        totalItems,
-        totalAmount,
-        total: totalAmount - (state.discountAmount || 0)
-      };
-    }
-
-    case 'REMOVE_ITEM': {
-      const updatedItems = state.items.filter(item => item.id !== action.payload);
-      const totalItems = updatedItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
-      const totalAmount = updatedItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-
-      return {
-        ...state,
-        items: updatedItems,
-        totalItems,
-        totalAmount,
-        total: totalAmount - (state.discountAmount || 0)
-      };
-    }
-
-    case 'UPDATE_QUANTITY': {
-      const { id, quantity } = action.payload;
-      const updatedItems = state.items.map(item => 
-        item.id === id ? { ...item, quantity } : item
-      );
-      const totalItems = updatedItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
-      const totalAmount = updatedItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-
-      return {
-        ...state,
-        items: updatedItems,
-        totalItems,
-        totalAmount,
-        total: totalAmount - (state.discountAmount || 0)
-      };
-    }
-
-    case 'CLEAR_CART':
-      return {
-        ...initialCart,
-        discountAmount: 0 // Réinitialiser aussi la réduction
-      };
-
-    case 'APPLY_DISCOUNT': {
-      const discountAmount = action.payload;
-      return {
-        ...state,
-        discountAmount,
-        total: state.totalAmount - discountAmount
-      };
-    }
-
-    case 'REMOVE_DISCOUNT': {
-      return {
-        ...state,
-        discountAmount: 0,
-        total: state.totalAmount
-      };
-    }
-
-    default:
-      return state;
-  }
-};
-
-export const CartContext = createContext<CartContextType | null>(null);
-
-interface CartProviderProps {
-  children: ReactNode;
+// Types
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image_url?: string;
+  description?: string;
+  restaurant_id: string;
+  customizations?: Record<string, any>;
 }
 
-export const CartProvider = ({ children }: CartProviderProps) => {
-  const [cart, dispatch] = useReducer(cartReducer, initialCart);
+interface CartContextType {
+  items: CartItem[];
+  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
+  removeItem: (itemId: string) => void;
+  updateItemQuantity: (itemId: string, quantity: number) => void;
+  clearCart: () => void;
+  itemCount: number;
+  subtotal: number;
+  restaurantId: string | null;
+}
 
-  const addToCart = (item: CartItem) => {
-    dispatch({ type: 'ADD_ITEM', payload: item });
-  };
+// Create context
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
-  const removeFromCart = (itemId: string) => {
-    dispatch({ type: 'REMOVE_ITEM', payload: itemId });
-  };
+// Provider component
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [items, setItems] = useState<CartItem[]>([]);
 
-  const clearCart = () => {
-    dispatch({ type: 'CLEAR_CART' });
-  };
+  const addItem = useCallback((newItem: Omit<CartItem, 'quantity'>, quantity = 1) => {
+    setItems(currentItems => {
+      // Check if cart is empty or if item is from the same restaurant
+      if (currentItems.length > 0) {
+        const firstItemRestaurantId = currentItems[0].restaurant_id;
+        if (newItem.restaurant_id !== firstItemRestaurantId) {
+          toast.error("Vous ne pouvez commander que d'un restaurant à la fois", {
+            description: "Videz votre panier avant d'ajouter des articles d'un autre restaurant."
+          });
+          return currentItems;
+        }
+      }
 
-  const applyDiscount = (amount: number) => {
-    dispatch({ type: 'APPLY_DISCOUNT', payload: amount });
-  };
+      // Check if item already exists in cart
+      const existingItemIndex = currentItems.findIndex(item => item.id === newItem.id);
+      
+      if (existingItemIndex > -1) {
+        // Update quantity of existing item
+        const updatedItems = [...currentItems];
+        updatedItems[existingItemIndex].quantity += quantity;
+        return updatedItems;
+      } else {
+        // Add new item
+        return [...currentItems, { ...newItem, quantity }];
+      }
+    });
+    
+    toast.success(`${newItem.name} ajouté au panier`);
+  }, []);
 
-  const removeDiscount = () => {
-    dispatch({ type: 'REMOVE_DISCOUNT' });
-  };
+  const removeItem = useCallback((itemId: string) => {
+    setItems(currentItems => currentItems.filter(item => item.id !== itemId));
+    toast.info("Article retiré du panier");
+  }, []);
 
-  const value: CartContextType = {
-    cart,
-    addToCart,
-    removeFromCart,
-    clearCart,
-    applyDiscount,
-    removeDiscount
-  };
+  const updateItemQuantity = useCallback((itemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeItem(itemId);
+      return;
+    }
+    
+    setItems(currentItems => 
+      currentItems.map(item => 
+        item.id === itemId ? { ...item, quantity } : item
+      )
+    );
+  }, [removeItem]);
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  const clearCart = useCallback(() => {
+    setItems([]);
+    toast.info("Panier vidé");
+  }, []);
+
+  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+  
+  const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  
+  const restaurantId = items.length > 0 ? items[0].restaurant_id : null;
+
+  return (
+    <CartContext.Provider value={{
+      items,
+      addItem,
+      removeItem,
+      updateItemQuantity,
+      clearCart,
+      itemCount,
+      subtotal,
+      restaurantId
+    }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
+// Custom hook to use the cart context
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (context === undefined) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
 };
