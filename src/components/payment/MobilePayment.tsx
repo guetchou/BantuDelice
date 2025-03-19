@@ -16,9 +16,10 @@ interface MobilePaymentProps {
   amount: number;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  savePaymentMethod?: boolean;
 }
 
-const MobilePayment = ({ amount, onSuccess, onError }: MobilePaymentProps) => {
+const MobilePayment = ({ amount, onSuccess, onError, savePaymentMethod }: MobilePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [operator, setOperator] = useState('');
