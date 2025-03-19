@@ -34,6 +34,7 @@ export interface MobilePaymentProps {
   onError?: (error: Error) => void;
   onPaymentComplete?: () => void;
   savePaymentMethod?: boolean;
+  description?: string; // Ajout de la prop description qui était manquante
 }
 
 // Mobile network operators
