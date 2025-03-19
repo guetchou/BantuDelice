@@ -20,6 +20,16 @@ export interface RidesharingTrip {
   created_at: string;
   updated_at?: string;
   preferences: RidesharingPreferences;
+  is_recurring?: boolean;
+  recurrence_pattern?: RecurrencePattern;
+}
+
+export interface RecurrencePattern {
+  frequency: 'daily' | 'weekly' | 'weekdays' | 'custom';
+  days_of_week?: Array<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'>;
+  start_date: string;
+  end_date?: string;
+  auto_accept_riders?: boolean;
 }
 
 export interface RidesharingPreferences {
@@ -45,6 +55,8 @@ export interface RidesharingBooking {
   special_requests?: string;
   cancellation_reason?: string;
   payment_method?: string;
+  is_recurring?: boolean;
+  recurrence_id?: string;
 }
 
 export interface RidesharingReview {
@@ -96,4 +108,33 @@ export interface RidesharingSearchFilters {
   maxPrice?: number;
   minDriverRating?: number;
   preferenceFilters?: Partial<RidesharingPreferences>;
+  recurringTrip?: boolean;
+}
+
+export interface RecurringTripMatch {
+  trip_id: string;
+  driver_id: string;
+  driver_name: string;
+  driver_rating: number;
+  similarity_score: number;
+  matched_route: boolean;
+  matched_schedule: boolean;
+  matched_preferences: boolean;
+  previous_trips_together: number;
+}
+
+export interface RidesharingRecurringBooking {
+  id: string;
+  passenger_id: string;
+  trip_id: string;
+  status: 'active' | 'paused' | 'cancelled';
+  booking_days: Array<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'>;
+  start_date: string;
+  end_date?: string;
+  created_at: string;
+  updated_at?: string;
+  auto_confirm: boolean;
+  payment_method: string;
+  seats_booked: number;
+  special_requests?: string;
 }

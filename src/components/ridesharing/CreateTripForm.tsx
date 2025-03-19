@@ -1,317 +1,398 @@
 
 import React, { useState } from 'react';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { MapPin, Calendar as CalendarIcon, Clock, Car, CreditCard, Users } from "lucide-react";
-import { RidesharingTrip, RidesharingPreferences } from '@/types/ridesharing';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RecurrencePattern } from '@/types/ridesharing';
+import RecurringTripsForm from './RecurringTripsForm';
 
 interface CreateTripFormProps {
-  onCreateTrip: (tripData: Omit<RidesharingTrip, 'id' | 'driver_id' | 'status' | 'created_at'>) => void;
-  isLoading?: boolean;
+  onCreateTrip: (tripData: any) => Promise<void>;
+  isLoading: boolean;
 }
 
-const CreateTripForm: React.FC<CreateTripFormProps> = ({ onCreateTrip, isLoading = false }) => {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
-  const [departureDate, setDepartureDate] = useState<Date | undefined>(undefined);
-  const [departureTime, setDepartureTime] = useState("08:00");
-  const [availableSeats, setAvailableSeats] = useState(3);
-  const [pricePerSeat, setPricePerSeat] = useState(15000);
-  const [vehicleModel, setVehicleModel] = useState("");
-  const [vehicleColor, setVehicleColor] = useState("");
-  const [licensePlate, setLicensePlate] = useState("");
-  const [specialNotes, setSpecialNotes] = useState("");
+const CreateTripForm: React.FC<CreateTripFormProps> = ({
+  onCreateTrip,
+  isLoading
+}) => {
+  const [activeTab, setActiveTab] = useState<string>('single');
   
-  const [preferences, setPreferences] = useState<RidesharingPreferences>({
-    smoking_allowed: false,
-    pets_allowed: false,
-    music_allowed: true,
-    air_conditioning: true,
-    luggage_allowed: true,
+  // Form state for single trip
+  const [formState, setFormState] = useState({
+    origin_address: '',
+    origin_latitude: 0,
+    origin_longitude: 0,
+    destination_address: '',
+    destination_latitude: 0,
+    destination_longitude: 0,
+    departure_date: format(new Date(), 'yyyy-MM-dd'),
+    departure_time: '08:00',
+    available_seats: 3,
+    price_per_seat: 1500,
+    vehicle_model: '',
+    vehicle_color: '',
+    license_plate: '',
+    preferences: {
+      smoking_allowed: false,
+      pets_allowed: false,
+      music_allowed: true,
+      air_conditioning: true,
+      luggage_allowed: true,
+      max_luggage_size: 'medium',
+      chatty_driver: true
+    }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Form validation state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Handle single trip form input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormState((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle number inputs
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormState((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
+  };
+
+  // Handle checkbox changes for preferences
+  const handleCheckboxChange = (name: string, checked: boolean) => {
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormState((prev) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: checked
+        }
+      }));
+    } else {
+      setFormState((prev) => ({ ...prev, [name]: checked }));
+    }
+  };
+
+  // Validate form for single trip
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formState.origin_address) {
+      newErrors.origin_address = 'Le point de départ est requis';
+    }
+    
+    if (!formState.destination_address) {
+      newErrors.destination_address = 'La destination est requise';
+    }
+    
+    if (!formState.departure_date) {
+      newErrors.departure_date = 'La date de départ est requise';
+    }
+    
+    if (!formState.departure_time) {
+      newErrors.departure_time = "L'heure de départ est requise";
+    }
+    
+    if (formState.available_seats < 1) {
+      newErrors.available_seats = 'Au moins 1 place disponible est requise';
+    }
+    
+    if (formState.price_per_seat < 0) {
+      newErrors.price_per_seat = 'Le prix doit être positif';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submission for single trip
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!departureDate) {
-      alert("Veuillez sélectionner une date de départ");
+    if (!validateForm()) {
       return;
     }
     
-    // Simulation des coordonnées (dans une application réelle, nous utiliserions un service de géocodage)
-    const originCoords = { lat: 4.2634, lng: 15.2429 }; // Brazzaville
-    const destCoords = { lat: 4.7889, lng: 11.8653 }; // Pointe-Noire
-    
-    // Estimer l'heure d'arrivée (dans une application réelle, nous utiliserions une API de calcul d'itinéraire)
-    const estimatedHours = 6; // 6 heures de trajet estimées
-    const [hours, minutes] = departureTime.split(':').map(Number);
-    const arrivalHours = (hours + estimatedHours) % 24;
-    const estimatedArrivalTime = `${String(arrivalHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-    
-    // Formater la date
-    const formattedDate = format(departureDate, 'yyyy-MM-dd');
-    
-    const tripData: Omit<RidesharingTrip, 'id' | 'driver_id' | 'status' | 'created_at'> = {
-      origin_address: origin,
-      origin_latitude: originCoords.lat,
-      origin_longitude: originCoords.lng,
-      destination_address: destination,
-      destination_latitude: destCoords.lat,
-      destination_longitude: destCoords.lng,
-      departure_date: formattedDate,
-      departure_time: departureTime,
-      estimated_arrival_time: estimatedArrivalTime,
-      available_seats: availableSeats,
-      price_per_seat: pricePerSeat,
-      vehicle_model: vehicleModel,
-      vehicle_color: vehicleColor,
-      license_plate: licensePlate,
-      preferences,
-      updated_at: new Date().toISOString()
-    };
-    
-    onCreateTrip(tripData);
+    try {
+      const tripData = {
+        ...formState,
+        is_recurring: false
+      };
+      await onCreateTrip(tripData);
+    } catch (error) {
+      console.error('Error creating trip:', error);
+    }
   };
 
-  const handlePreferenceChange = (key: keyof RidesharingPreferences, value: boolean) => {
-    setPreferences(prev => ({ ...prev, [key]: value }));
+  // Handle single trip address search 
+  const handleAddressSearch = (type: 'origin' | 'destination', address: string) => {
+    // Simulate geocoding with random coordinates (for demo purposes)
+    const randomOffset = () => (Math.random() - 0.5) * 0.1;
+    const baseLatitude = 4.3947; // Brazzaville
+    const baseLongitude = 15.0557;
+    
+    if (type === 'origin') {
+      setFormState((prev) => ({
+        ...prev,
+        origin_address: address,
+        origin_latitude: baseLatitude + randomOffset(),
+        origin_longitude: baseLongitude + randomOffset()
+      }));
+    } else {
+      setFormState((prev) => ({
+        ...prev,
+        destination_address: address,
+        destination_latitude: baseLatitude + randomOffset(),
+        destination_longitude: baseLongitude + randomOffset()
+      }));
+    }
+  };
+
+  // Handle recurring trip creation
+  const handleCreateRecurringTrip = async (tripData: any) => {
+    try {
+      await onCreateTrip({
+        ...tripData,
+        is_recurring: true
+      });
+    } catch (error) {
+      console.error('Error creating recurring trip:', error);
+    }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Proposer un trajet</CardTitle>
-        <CardDescription>
-          Partagez votre trajet et réduisez vos frais de déplacement
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Départ & Destination */}
+    <div className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-2 mb-6 w-full">
+          <TabsTrigger value="single">Trajet unique</TabsTrigger>
+          <TabsTrigger value="recurring">Trajet régulier</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="single">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="origin">Lieu de départ</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input 
-                    id="origin"
-                    className="pl-10"
-                    placeholder="Adresse de départ précise" 
-                    value={origin}
-                    onChange={(e) => setOrigin(e.target.value)}
-                    required
+                <Label htmlFor="origin_address">Point de départ</Label>
+                <Input
+                  id="origin_address"
+                  name="origin_address"
+                  value={formState.origin_address}
+                  onChange={handleInputChange}
+                  onBlur={(e) => handleAddressSearch('origin', e.target.value)}
+                  placeholder="Ex: 123 Avenue de l'Indépendance, Brazzaville"
+                  className={errors.origin_address ? "border-red-500" : ""}
+                />
+                {errors.origin_address && <p className="text-red-500 text-sm">{errors.origin_address}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="destination_address">Destination</Label>
+                <Input
+                  id="destination_address"
+                  name="destination_address"
+                  value={formState.destination_address}
+                  onChange={handleInputChange}
+                  onBlur={(e) => handleAddressSearch('destination', e.target.value)}
+                  placeholder="Ex: Université Marien Ngouabi, Brazzaville"
+                  className={errors.destination_address ? "border-red-500" : ""}
+                />
+                {errors.destination_address && <p className="text-red-500 text-sm">{errors.destination_address}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="departure_date">Date de départ</Label>
+                  <Input
+                    id="departure_date"
+                    name="departure_date"
+                    type="date"
+                    value={formState.departure_date}
+                    onChange={handleInputChange}
+                    min={format(new Date(), 'yyyy-MM-dd')}
+                    className={errors.departure_date ? "border-red-500" : ""}
                   />
+                  {errors.departure_date && <p className="text-red-500 text-sm">{errors.departure_date}</p>}
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="destination">Destination</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input 
-                    id="destination"
-                    className="pl-10"
-                    placeholder="Adresse d'arrivée précise" 
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="departure-date">Date de départ</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="departure-date"
-                      variant="outline"
-                      className="w-full pl-3 text-left font-normal justify-start"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {departureDate ? format(departureDate, "EEEE d MMMM yyyy", { locale: fr }) : "Sélectionner une date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={departureDate}
-                      onSelect={setDepartureDate}
-                      initialFocus
-                      disabled={(date) => date < new Date()}
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="departure-time">Heure de départ</Label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input 
-                    id="departure-time"
-                    className="pl-10"
+
+                <div className="space-y-2">
+                  <Label htmlFor="departure_time">Heure de départ</Label>
+                  <Input
+                    id="departure_time"
+                    name="departure_time"
                     type="time"
-                    value={departureTime}
-                    onChange={(e) => setDepartureTime(e.target.value)}
-                    required
+                    value={formState.departure_time}
+                    onChange={handleInputChange}
+                    className={errors.departure_time ? "border-red-500" : ""}
+                  />
+                  {errors.departure_time && <p className="text-red-500 text-sm">{errors.departure_time}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="available_seats">Places disponibles</Label>
+                  <Input
+                    id="available_seats"
+                    name="available_seats"
+                    type="number"
+                    min="1"
+                    max="8"
+                    value={formState.available_seats}
+                    onChange={handleNumberChange}
+                    className={errors.available_seats ? "border-red-500" : ""}
+                  />
+                  {errors.available_seats && <p className="text-red-500 text-sm">{errors.available_seats}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price_per_seat">Prix par place (FCFA)</Label>
+                  <Input
+                    id="price_per_seat"
+                    name="price_per_seat"
+                    type="number"
+                    min="0"
+                    step="100"
+                    value={formState.price_per_seat}
+                    onChange={handleNumberChange}
+                    className={errors.price_per_seat ? "border-red-500" : ""}
+                  />
+                  {errors.price_per_seat && <p className="text-red-500 text-sm">{errors.price_per_seat}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="vehicle_model">Modèle du véhicule</Label>
+                  <Input
+                    id="vehicle_model"
+                    name="vehicle_model"
+                    placeholder="Ex: Toyota Corolla"
+                    value={formState.vehicle_model}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="vehicle_color">Couleur</Label>
+                  <Input
+                    id="vehicle_color"
+                    name="vehicle_color"
+                    placeholder="Ex: Blanc"
+                    value={formState.vehicle_color}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="license_plate">Plaque d'immatriculation</Label>
+                  <Input
+                    id="license_plate"
+                    name="license_plate"
+                    placeholder="Ex: 123-ABC"
+                    value={formState.license_plate}
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
-            </div>
-            
-            {/* Vehicle & Price */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="vehicle-model">Modèle de voiture</Label>
-                <div className="relative">
-                  <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input 
-                    id="vehicle-model"
-                    className="pl-10"
-                    placeholder="Ex: Toyota Corolla" 
-                    value={vehicleModel}
-                    onChange={(e) => setVehicleModel(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="vehicle-color">Couleur</Label>
-                  <Input 
-                    id="vehicle-color"
-                    placeholder="Ex: Bleu" 
-                    value={vehicleColor}
-                    onChange={(e) => setVehicleColor(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="license-plate">Plaque d'immatriculation</Label>
-                  <Input 
-                    id="license-plate"
-                    placeholder="Ex: XY-123-ZA" 
-                    value={licensePlate}
-                    onChange={(e) => setLicensePlate(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Prix par passager (FCFA)</Label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <Input 
-                      id="price"
-                      className="pl-10"
-                      type="number"
-                      min="1000"
-                      step="500"
-                      value={pricePerSeat}
-                      onChange={(e) => setPricePerSeat(Number(e.target.value))}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="seats">Places disponibles</Label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                    <Input 
-                      id="seats"
-                      className="pl-10"
-                      type="number"
-                      min="1"
-                      max="7"
-                      value={availableSeats}
-                      onChange={(e) => setAvailableSeats(Number(e.target.value))}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-              
+
               <div className="space-y-2">
                 <Label>Préférences</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4">
                   <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={!preferences.smoking_allowed} 
-                      onCheckedChange={(checked) => handlePreferenceChange('smoking_allowed', !checked)}
-                      id="preference-smoking"
+                    <Checkbox 
+                      id="preferences.smoking_allowed"
+                      checked={formState.preferences.smoking_allowed}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferences.smoking_allowed", !!checked)
+                      }
                     />
-                    <Label htmlFor="preference-smoking">Non-fumeur</Label>
+                    <Label htmlFor="preferences.smoking_allowed">Fumeur autorisé</Label>
                   </div>
+                  
                   <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.air_conditioning} 
-                      onCheckedChange={(checked) => handlePreferenceChange('air_conditioning', checked)}
-                      id="preference-ac"
+                    <Checkbox 
+                      id="preferences.pets_allowed"
+                      checked={formState.preferences.pets_allowed}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferences.pets_allowed", !!checked)
+                      }
                     />
-                    <Label htmlFor="preference-ac">Climatisé</Label>
+                    <Label htmlFor="preferences.pets_allowed">Animaux autorisés</Label>
                   </div>
+                  
                   <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.music_allowed} 
-                      onCheckedChange={(checked) => handlePreferenceChange('music_allowed', checked)}
-                      id="preference-music"
+                    <Checkbox 
+                      id="preferences.music_allowed"
+                      checked={formState.preferences.music_allowed}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferences.music_allowed", !!checked)
+                      }
                     />
-                    <Label htmlFor="preference-music">Musique</Label>
+                    <Label htmlFor="preferences.music_allowed">Musique autorisée</Label>
                   </div>
+                  
                   <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.pets_allowed} 
-                      onCheckedChange={(checked) => handlePreferenceChange('pets_allowed', checked)}
-                      id="preference-pets"
+                    <Checkbox 
+                      id="preferences.air_conditioning"
+                      checked={formState.preferences.air_conditioning}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferences.air_conditioning", !!checked)
+                      }
                     />
-                    <Label htmlFor="preference-pets">Animaux autorisés</Label>
+                    <Label htmlFor="preferences.air_conditioning">Climatisation</Label>
                   </div>
+                  
                   <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.luggage_allowed} 
-                      onCheckedChange={(checked) => handlePreferenceChange('luggage_allowed', checked)}
-                      id="preference-luggage"
+                    <Checkbox 
+                      id="preferences.luggage_allowed"
+                      checked={formState.preferences.luggage_allowed}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferences.luggage_allowed", !!checked)
+                      }
                     />
-                    <Label htmlFor="preference-luggage">Bagages autorisés</Label>
+                    <Label htmlFor="preferences.luggage_allowed">Bagages autorisés</Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="preferences.chatty_driver"
+                      checked={formState.preferences.chatty_driver}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferences.chatty_driver", !!checked)
+                      }
+                    />
+                    <Label htmlFor="preferences.chatty_driver">Conducteur bavard</Label>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="notes">Informations supplémentaires</Label>
-            <Textarea 
-              id="notes"
-              placeholder="Précisions sur le lieu de rendez-vous, bagages autorisés, etc."
-              value={specialNotes}
-              onChange={(e) => setSpecialNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-          
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            Publier le trajet
-            {isLoading && <span className="ml-2 animate-spin">⏳</span>}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Traitement...
+                </>
+              ) : (
+                'Proposer le trajet'
+              )}
+            </Button>
+          </form>
+        </TabsContent>
+        
+        <TabsContent value="recurring">
+          <RecurringTripsForm 
+            onCreateRecurringTrip={handleCreateRecurringTrip}
+            isLoading={isLoading}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

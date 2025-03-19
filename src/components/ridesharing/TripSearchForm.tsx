@@ -1,233 +1,310 @@
 
 import React, { useState } from 'react';
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { MapPin, Calendar as CalendarIcon, Search, Users, CreditCard } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Calendar } from "@/components/ui/calendar";
+import { Search, Calendar as CalendarIcon, MapPin, CreditCard, Star, Repeat } from "lucide-react";
 import { RidesharingSearchFilters } from '@/types/ridesharing';
 
 interface TripSearchFormProps {
-  onSearch: (filters: RidesharingSearchFilters) => void;
-  isLoading?: boolean;
+  onSearch: (filters: RidesharingSearchFilters) => Promise<void>;
+  isLoading: boolean;
 }
 
-const TripSearchForm: React.FC<TripSearchFormProps> = ({ onSearch, isLoading = false }) => {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [passengers, setPassengers] = useState(1);
-  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [preferences, setPreferences] = useState({
-    nonSmoking: false,
-    petsAllowed: false,
-    musicAllowed: false,
-    airConditioning: false,
-    luggageAllowed: false
+const TripSearchForm: React.FC<TripSearchFormProps> = ({
+  onSearch,
+  isLoading
+}) => {
+  const [filters, setFilters] = useState<RidesharingSearchFilters>({
+    origin: '',
+    destination: '',
+    date: new Date(),
+    minSeats: 1,
+    maxPrice: 10000,
+    minDriverRating: 3.0,
+    preferenceFilters: {
+      smoking_allowed: false,
+      pets_allowed: false,
+      music_allowed: false,
+      air_conditioning: false,
+      luggage_allowed: false
+    },
+    recurringTrip: false
   });
+  
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSearch = () => {
-    // Convertir les préférences au format attendu
-    const preferenceFilters = showAdvanced ? {
-      smoking_allowed: !preferences.nonSmoking,
-      pets_allowed: preferences.petsAllowed,
-      music_allowed: preferences.musicAllowed,
-      air_conditioning: preferences.airConditioning,
-      luggage_allowed: preferences.luggageAllowed
-    } : undefined;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (name: string, checked: boolean) => {
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFilters((prev) => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent as keyof RidesharingSearchFilters] as Record<string, any>,
+          [child]: checked
+        }
+      }));
+    } else {
+      setFilters((prev) => ({ ...prev, [name]: checked }));
+    }
+  };
+
+  const handleSliderChange = (name: string, value: number[]) => {
+    setFilters((prev) => ({ ...prev, [name]: value[0] }));
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
     
-    // Construire les filtres
-    const filters: RidesharingSearchFilters = {
-      origin: origin || undefined,
-      destination: destination || undefined,
-      date: date,
-      minSeats: passengers,
-      maxPrice: maxPrice,
-      preferenceFilters
-    };
+    if (!filters.origin) {
+      newErrors.origin = 'Le point de départ est requis';
+    }
     
-    onSearch(filters);
+    if (!filters.destination) {
+      newErrors.destination = 'La destination est requise';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    try {
+      await onSearch(filters);
+    } catch (error) {
+      console.error('Error searching for trips:', error);
+    }
   };
 
   return (
-    <Card className="bg-white border border-gray-200 mb-6">
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Départ */}
-          <div className="space-y-2">
-            <Label>Départ</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input 
-                className="pl-10"
-                placeholder="Lieu de départ" 
-                value={origin}
-                onChange={(e) => setOrigin(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          {/* Destination */}
-          <div className="space-y-2">
-            <Label>Destination</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input 
-                className="pl-10"
-                placeholder="Lieu d'arrivée" 
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          {/* Date */}
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full pl-3 text-left font-normal justify-start"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "EEEE d MMMM", { locale: fr }) : "Sélectionner une date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          {/* Passagers */}
-          <div className="space-y-2">
-            <Label>Passagers</Label>
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="h-10 w-10"
-                onClick={() => setPassengers(Math.max(1, passengers - 1))}
-              >
-                -
-              </Button>
-              <div className="flex-1 text-center font-medium">{passengers}</div>
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="h-10 w-10"
-                onClick={() => setPassengers(Math.min(4, passengers + 1))}
-              >
-                +
-              </Button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Advanced options */}
-        <div className="mt-4">
-          <div className="flex items-center space-x-2 mb-4">
-            <Switch 
-              checked={showAdvanced} 
-              onCheckedChange={setShowAdvanced} 
-              id="advanced-options"
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="origin">Départ</Label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <Input
+              id="origin"
+              name="origin"
+              value={filters.origin}
+              onChange={handleInputChange}
+              placeholder="Ville ou adresse de départ"
+              className={`pl-10 ${errors.origin ? "border-red-500" : ""}`}
             />
-            <Label htmlFor="advanced-options">Options avancées</Label>
           </div>
-          
-          {showAdvanced && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-              {/* Price slider */}
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <Label>Prix maximum (FCFA)</Label>
-                  <span className="font-medium">{maxPrice?.toLocaleString() || "Non défini"}</span>
+          {errors.origin && <p className="text-red-500 text-sm">{errors.origin}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="destination">Destination</Label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <Input
+              id="destination"
+              name="destination"
+              value={filters.destination}
+              onChange={handleInputChange}
+              placeholder="Ville ou adresse d'arrivée"
+              className={`pl-10 ${errors.destination ? "border-red-500" : ""}`}
+            />
+          </div>
+          {errors.destination && <p className="text-red-500 text-sm">{errors.destination}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="date">Date</Label>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {filters.date ? (
+                  format(filters.date, 'EEEE d MMMM', { locale: fr })
+                ) : (
+                  <span>Sélectionner une date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={filters.date}
+                onSelect={(date) => {
+                  setFilters((prev) => ({ ...prev, date: date as Date }));
+                  setCalendarOpen(false);
+                }}
+                initialFocus
+                locale={fr}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="minSeats">Nombre de places</Label>
+          <div className="flex items-center">
+            <Input
+              id="minSeats"
+              type="number"
+              min="1"
+              max="8"
+              value={filters.minSeats}
+              onChange={(e) => setFilters((prev) => ({ ...prev, minSeats: parseInt(e.target.value) || 1 }))}
+              className="w-full"
+            />
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="recurringTrip"
+            checked={filters.recurringTrip}
+            onCheckedChange={(checked) => 
+              handleCheckboxChange("recurringTrip", !!checked)
+            }
+          />
+          <div>
+            <Label htmlFor="recurringTrip" className="flex items-center">
+              <Repeat className="h-4 w-4 mr-1" />
+              Trajet régulier
+            </Label>
+            <p className="text-sm text-gray-500">Trajets domicile-travail, école, etc.</p>
+          </div>
+        </div>
+      </div>
+
+      <Accordion type="single" collapsible>
+        <AccordionItem value="advanced-filters">
+          <AccordionTrigger>
+            <span className="text-sm font-medium">Filtres avancés</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>
+                      <CreditCard className="h-4 w-4 inline mr-2" />
+                      Prix maximum
+                    </Label>
+                    <span className="text-sm font-medium">{filters.maxPrice?.toLocaleString()} FCFA</span>
+                  </div>
+                  <Slider
+                    defaultValue={[10000]}
+                    max={20000}
+                    step={500}
+                    value={[filters.maxPrice || 10000]}
+                    onValueChange={(value) => handleSliderChange("maxPrice", value)}
+                  />
                 </div>
-                <Slider
-                  value={maxPrice ? [maxPrice] : [20000]}
-                  min={5000}
-                  max={50000}
-                  step={1000}
-                  onValueChange={(values) => setMaxPrice(values[0])}
-                />
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>
+                      <Star className="h-4 w-4 inline mr-2" />
+                      Note minimale conducteur
+                    </Label>
+                    <span className="text-sm font-medium">{filters.minDriverRating} / 5</span>
+                  </div>
+                  <Slider
+                    defaultValue={[3.0]}
+                    min={1}
+                    max={5}
+                    step={0.5}
+                    value={[filters.minDriverRating || 3.0]}
+                    onValueChange={(value) => handleSliderChange("minDriverRating", value)}
+                  />
+                </div>
               </div>
-              
-              {/* Preferences */}
-              <div className="space-y-3">
+
+              <div className="space-y-2">
                 <Label>Préférences</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.nonSmoking} 
-                      onCheckedChange={(checked) => setPreferences({...preferences, nonSmoking: checked})}
-                      id="non-smoking"
+                    <Checkbox 
+                      id="preferenceFilters.smoking_allowed"
+                      checked={filters.preferenceFilters?.smoking_allowed}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferenceFilters.smoking_allowed", !checked as boolean)
+                      }
                     />
-                    <Label htmlFor="non-smoking">Non-fumeur</Label>
+                    <Label htmlFor="preferenceFilters.smoking_allowed">Non-fumeur uniquement</Label>
                   </div>
+                  
                   <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.airConditioning} 
-                      onCheckedChange={(checked) => setPreferences({...preferences, airConditioning: checked})}
-                      id="air-conditioning"
+                    <Checkbox 
+                      id="preferenceFilters.air_conditioning"
+                      checked={filters.preferenceFilters?.air_conditioning}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferenceFilters.air_conditioning", !!checked)
+                      }
                     />
-                    <Label htmlFor="air-conditioning">Climatisé</Label>
+                    <Label htmlFor="preferenceFilters.air_conditioning">Climatisation</Label>
                   </div>
+                  
                   <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.musicAllowed} 
-                      onCheckedChange={(checked) => setPreferences({...preferences, musicAllowed: checked})}
-                      id="music"
+                    <Checkbox 
+                      id="preferenceFilters.luggage_allowed"
+                      checked={filters.preferenceFilters?.luggage_allowed}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange("preferenceFilters.luggage_allowed", !!checked)
+                      }
                     />
-                    <Label htmlFor="music">Musique</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.petsAllowed} 
-                      onCheckedChange={(checked) => setPreferences({...preferences, petsAllowed: checked})}
-                      id="pets"
-                    />
-                    <Label htmlFor="pets">Animaux autorisés</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch 
-                      checked={preferences.luggageAllowed} 
-                      onCheckedChange={(checked) => setPreferences({...preferences, luggageAllowed: checked})}
-                      id="luggage"
-                    />
-                    <Label htmlFor="luggage">Bagages autorisés</Label>
+                    <Label htmlFor="preferenceFilters.luggage_allowed">Bagages autorisés</Label>
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        </div>
-        
-        {/* Search button */}
-        <Button 
-          className="w-full mt-6"
-          onClick={handleSearch}
-          disabled={isLoading}
-        >
-          <Search className="mr-2 h-5 w-5" />
-          Rechercher
-          {isLoading && <span className="ml-2 animate-spin">⏳</span>}
-        </Button>
-      </CardContent>
-    </Card>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      <Button type="submit" disabled={isLoading} className="w-full">
+        {isLoading ? (
+          <>
+            <span className="animate-spin mr-2">⏳</span>
+            Recherche en cours...
+          </>
+        ) : (
+          <>
+            <Search className="mr-2 h-4 w-4" />
+            Rechercher un trajet
+          </>
+        )}
+      </Button>
+    </form>
   );
 };
 

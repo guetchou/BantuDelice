@@ -6,13 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Car, User, MapPin, Clock, Users, CreditCard, Search, Star, Plus, Minus, Route, TrendingUp, Leaf } from "lucide-react";
+import { Car, User, MapPin, Clock, Users, CreditCard, Search, Star, Plus, Minus, Route, TrendingUp, Leaf, Repeat } from "lucide-react";
 import { useRidesharing } from "@/hooks/useRidesharing";
 import { RidesharingSearchFilters, RidesharingTrip } from "@/types/ridesharing";
 import TripCard from "@/components/ridesharing/TripCard";
 import TripSearchForm from "@/components/ridesharing/TripSearchForm";
 import CreateTripForm from "@/components/ridesharing/CreateTripForm";
 import BookingModal from "@/components/ridesharing/BookingModal";
+import RecurringTripsTab from "@/components/ridesharing/RecurringTripsTab";
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useUser } from '@/hooks/useUser';
 
@@ -35,15 +36,26 @@ export default function Covoiturage() {
 
   // Handle search
   const handleSearch = async (filters: RidesharingSearchFilters) => {
-    await ridesharing.searchTrips(filters);
-    setActiveTab("results");
+    // Si l'utilisateur recherche des trajets récurrents, aller à l'onglet récurrent
+    if (filters.recurringTrip) {
+      setActiveTab("recurring");
+      await ridesharing.findRecurringTripMatches(filters);
+    } else {
+      // Sinon, rechercher des trajets normaux
+      await ridesharing.searchTrips(filters);
+      setActiveTab("results");
+    }
   };
   
   // Handle trip creation
   const handleCreateTrip = async (tripData: Omit<RidesharingTrip, 'id' | 'driver_id' | 'status' | 'created_at'>) => {
     const trip = await ridesharing.createTrip(tripData);
     if (trip) {
-      setActiveTab("myTrips");
+      if (trip.is_recurring) {
+        setActiveTab("recurring");
+      } else {
+        setActiveTab("myTrips");
+      }
       await ridesharing.fetchMyTrips();
     }
   };
@@ -117,12 +129,16 @@ export default function Covoiturage() {
                 }
               }}
             >
-              <TabsList className="grid grid-cols-4 mb-6">
+              <TabsList className="grid grid-cols-5 mb-6">
                 <TabsTrigger value="search">
                   Rechercher
                 </TabsTrigger>
                 <TabsTrigger value="offer">
                   Proposer
+                </TabsTrigger>
+                <TabsTrigger value="recurring" className="flex items-center gap-1">
+                  <Repeat className="h-4 w-4" />
+                  <span>Trajets réguliers</span>
                 </TabsTrigger>
                 <TabsTrigger value="myTrips">
                   Mes trajets
@@ -143,6 +159,13 @@ export default function Covoiturage() {
                 <CreateTripForm 
                   onCreateTrip={handleCreateTrip} 
                   isLoading={ridesharing.isLoading}
+                />
+              </TabsContent>
+              
+              <TabsContent value="recurring" className="mt-0">
+                <RecurringTripsTab 
+                  onNavigateToSearch={() => setActiveTab("search")}
+                  onNavigateToCreate={() => setActiveTab("offer")}
                 />
               </TabsContent>
 
@@ -207,6 +230,12 @@ export default function Covoiturage() {
                                 <Badge variant={trip.status === 'active' ? 'default' : 'destructive'}>
                                   {trip.status === 'active' ? 'Actif' : trip.status === 'completed' ? 'Terminé' : 'Annulé'}
                                 </Badge>
+                                {trip.is_recurring && (
+                                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                                    <Repeat className="mr-1 h-3 w-3" />
+                                    Récurrent
+                                  </Badge>
+                                )}
                                 <span className="text-sm text-gray-500">
                                   ID: {trip.id}
                                 </span>
@@ -234,7 +263,13 @@ export default function Covoiturage() {
                                 <div>
                                   <div className="flex items-center mb-1">
                                     <Clock className="h-5 w-5 text-gray-500 mr-2" />
-                                    <span>{trip.departure_date} à {trip.departure_time}</span>
+                                    {trip.is_recurring ? (
+                                      <span>
+                                        {trip.recurrence_pattern?.days_of_week?.map(day => day.substring(0, 3)).join(', ')} à {trip.departure_time}
+                                      </span>
+                                    ) : (
+                                      <span>{trip.departure_date} à {trip.departure_time}</span>
+                                    )}
                                   </div>
                                   
                                   <div className="flex items-center mb-1">
@@ -330,6 +365,13 @@ export default function Covoiturage() {
                                   <Badge variant={booking.payment_status === 'completed' ? 'outline' : 'secondary'}>
                                     {booking.payment_status === 'pending' ? 'Paiement en attente' : booking.payment_status === 'partial' ? 'Partiellement payé' : booking.payment_status === 'completed' ? 'Payé' : 'Remboursé'}
                                   </Badge>
+                                  
+                                  {booking.is_recurring && (
+                                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                                      <Repeat className="mr-1 h-3 w-3" />
+                                      Récurrent
+                                    </Badge>
+                                  )}
                                 </div>
                                 
                                 <div className="flex items-center mt-2 mb-4">
@@ -365,7 +407,13 @@ export default function Covoiturage() {
                                   <div>
                                     <div className="flex items-center mb-1">
                                       <Clock className="h-5 w-5 text-gray-500 mr-2" />
-                                      <span>{trip.departure_date} à {trip.departure_time}</span>
+                                      {booking.is_recurring ? (
+                                        <span>
+                                          {booking.booking_days?.map((day: string) => day.substring(0, 3)).join(', ')} à {trip.departure_time}
+                                        </span>
+                                      ) : (
+                                        <span>{trip.departure_date} à {trip.departure_time}</span>
+                                      )}
                                     </div>
                                     
                                     <div className="flex items-center mb-1">
@@ -377,7 +425,7 @@ export default function Covoiturage() {
                               </div>
                               
                               <div className="flex flex-col justify-between mt-4 md:mt-0 md:ml-6">
-                                <p className="text-lg font-semibold">{booking.total_price.toLocaleString()} FCFA</p>
+                                <p className="text-lg font-semibold">{booking.total_price?.toLocaleString()} FCFA</p>
                                 
                                 <div className="flex flex-col space-y-2 mt-2">
                                   <Button
