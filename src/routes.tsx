@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, Outlet } from "react-router-dom";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
@@ -19,6 +20,7 @@ import Help from "@/pages/Help";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Legal from "@/pages/Legal";
+import RestaurantManagementPage from "@/pages/restaurant/ManagementPage";
 
 const RootLayout = () => {
   return (
@@ -134,6 +136,15 @@ export const router = createBrowserRouter([
       {
         path: "legal",
         element: <Legal />,
+      },
+      // Routes pour la gestion du restaurant
+      {
+        path: "restaurant/manage/:id",
+        element: (
+          <ProtectedRoute>
+            <RestaurantManagementPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
