@@ -1,6 +1,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import MobilePayment from "@/components/payment/MobilePayment";
+import { MobilePayment } from "@/components/payment";
 
 interface OrderConfirmationProps {
   open: boolean;

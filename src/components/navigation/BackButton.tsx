@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useAppNavigation } from "@/utils/navigation";
@@ -5,8 +6,8 @@ import { useAppNavigation } from "@/utils/navigation";
 export const BackButton = () => {
   const { goBack, currentPath } = useAppNavigation();
 
-  // Don't show back button on main pages
-  if (currentPath === "/" || currentPath === "/auth") {
+  // Ne pas afficher le bouton retour sur les pages principales
+  if (currentPath === "/" || currentPath === "/index" || currentPath === "/auth") {
     return null;
   }
 
@@ -22,3 +23,5 @@ export const BackButton = () => {
     </Button>
   );
 };
+
+export default BackButton;

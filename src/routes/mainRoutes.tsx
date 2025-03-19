@@ -1,4 +1,3 @@
-
 import { lazy } from "react";
 import { RouteObject } from "react-router-dom";
 import { Layout } from "@/components/Layout";
@@ -20,6 +19,7 @@ import Legal from "@/pages/Legal";
 import Index from "@/pages/Index";
 import FeatureFlags from "@/pages/FeatureFlags";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import WalletOverview from "@/pages/Wallet/WalletOverview";
 
 export const mainRoutes: RouteObject[] = [
   {
@@ -123,6 +123,14 @@ export const mainRoutes: RouteObject[] = [
         element: (
           <ProtectedRoute adminOnly>
             <FeatureFlags />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "wallet",
+        element: (
+          <ProtectedRoute>
+            <WalletOverview />
           </ProtectedRoute>
         )
       },
