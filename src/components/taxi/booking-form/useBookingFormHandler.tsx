@@ -7,7 +7,7 @@ import { useBookingForm } from './BookingFormContext';
 
 export function useBookingFormHandler() {
   const navigate = useNavigate();
-  const { formState, estimatedPrice } = useBookingForm();
+  const { formState, estimatedPrice, updateFormState } = useBookingForm();
   
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -58,7 +58,6 @@ export function useBookingFormHandler() {
       };
       
       const coords = simulateGeocode();
-      const { updateFormState } = useBookingForm();
       
       if (isPickup) {
         updateFormState({
@@ -84,7 +83,6 @@ export function useBookingFormHandler() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          const { updateFormState } = useBookingForm();
           
           // In a real app, we would use reverse geocoding here
           // For this demo, we'll set a placeholder address

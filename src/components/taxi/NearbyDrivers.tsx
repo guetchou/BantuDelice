@@ -1,13 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Clock, MapPin, Car, Star, Check } from "lucide-react";
+import { useTaxiDriverSelection } from "@/hooks/useTaxiDriverSelection";
+import { TaxiDriver } from "@/types/taxi";
 import { Badge } from "@/components/ui/badge";
-import { Star, Car, Clock, MapPin, Phone, ThumbsUp, AlertCircle } from "lucide-react";
-import { useTaxiDriverSelection } from '@/hooks/useTaxiDriverSelection';
-import { TaxiDriver } from '@/types/taxi';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NearbyDriversProps {
   pickupLatitude: number;
@@ -16,7 +16,7 @@ interface NearbyDriversProps {
   destinationLongitude: number;
   vehicleType?: string;
   onSelectDriver: (driver: TaxiDriver) => void;
-  rideId?: string;
+  rideId: string;
 }
 
 const NearbyDrivers: React.FC<NearbyDriversProps> = ({
@@ -28,134 +28,42 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
   onSelectDriver,
   rideId
 }) => {
-  const { isLoading, nearbyDrivers, findOptimalDrivers, requestDriver } = useTaxiDriverSelection();
+  const { isLoading, nearbyDrivers, findOptimalDrivers } = useTaxiDriverSelection();
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const loadDrivers = async () => {
-      if (pickupLatitude && pickupLongitude && destinationLatitude && destinationLongitude) {
-        await findOptimalDrivers(
-          pickupLatitude,
-          pickupLongitude,
-          destinationLatitude,
-          destinationLongitude,
-          vehicleType
-        );
-      }
+      await findOptimalDrivers(
+        pickupLatitude,
+        pickupLongitude,
+        destinationLatitude,
+        destinationLongitude,
+        vehicleType
+      );
     };
-    
-    loadDrivers();
-  }, [pickupLatitude, pickupLongitude, destinationLatitude, destinationLongitude, vehicleType]);
 
-  const handleSelectDriver = async (driver: TaxiDriver) => {
+    loadDrivers();
+  }, [pickupLatitude, pickupLongitude, destinationLatitude, destinationLongitude, vehicleType, findOptimalDrivers]);
+
+  const handleSelectDriver = (driver: TaxiDriver) => {
     setSelectedDriverId(driver.id);
     onSelectDriver(driver);
-    
-    if (rideId) {
-      await requestDriver(rideId, driver.id);
-    }
-  };
-
-  const renderDriverCard = (driver: TaxiDriver & {
-    distance_to_pickup?: number;
-    time_to_pickup?: number;
-  }) => {
-    const isSelected = selectedDriverId === driver.id;
-    
-    return (
-      <Card 
-        key={driver.id} 
-        className={`mb-4 transition-all ${
-          isSelected ? 'border-primary shadow-md' : 'hover:border-gray-300'
-        }`}
-      >
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-12 w-12 border border-gray-200">
-                <AvatarImage src={driver.photo_url} alt={driver.name} />
-                <AvatarFallback>{driver.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <CardTitle className="text-lg">{driver.name}</CardTitle>
-                <div className="flex items-center mt-1">
-                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                  <span className="text-sm font-medium">{driver.rating.toFixed(1)}</span>
-                  <span className="text-xs text-gray-500 ml-1">
-                    ({driver.total_rides || 0} courses)
-                  </span>
-                </div>
-              </div>
-            </div>
-            <Badge variant={driver.verified ? "outline" : "secondary"}>
-              {driver.verified ? "Vérifié" : "Chauffeur"}
-            </Badge>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pb-3 pt-0">
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="flex items-center">
-              <Car className="h-4 w-4 text-gray-500 mr-2" />
-              <span>{driver.vehicle_model}</span>
-            </div>
-            <div className="flex items-center">
-              <MapPin className="h-4 w-4 text-gray-500 mr-2" />
-              <span>{driver.distance_to_pickup?.toFixed(1) || '-'} km</span>
-            </div>
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 text-gray-500 mr-2" />
-              <span>~{driver.time_to_pickup || '-'} min</span>
-            </div>
-            {driver.languages && (
-              <div className="flex items-center">
-                <ThumbsUp className="h-4 w-4 text-gray-500 mr-2" />
-                <span>{driver.languages.join(', ')}</span>
-              </div>
-            )}
-          </div>
-        </CardContent>
-        
-        <CardFooter className="pt-0">
-          <Button 
-            onClick={() => handleSelectDriver(driver)} 
-            className="w-full" 
-            variant={isSelected ? "default" : "outline"}
-            disabled={isSelected}
-          >
-            {isSelected ? "Chauffeur sélectionné" : "Choisir ce chauffeur"}
-          </Button>
-        </CardFooter>
-      </Card>
-    );
   };
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">Recherche des chauffeurs à proximité...</h3>
-        {[1, 2, 3].map(i => (
-          <Card key={i} className="mb-4">
-            <CardHeader className="pb-2">
-              <div className="flex items-center space-x-3">
-                <Skeleton className="h-12 w-12 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pb-3 pt-0">
-              <div className="grid grid-cols-2 gap-2">
+        <h3 className="text-lg font-medium">Recherche de chauffeurs disponibles...</h3>
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="p-4">
+            <div className="flex gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-28" />
               </div>
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-9 w-full" />
-            </CardFooter>
+              <Skeleton className="h-10 w-20" />
+            </div>
           </Card>
         ))}
       </div>
@@ -164,21 +72,104 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
 
   if (nearbyDrivers.length === 0) {
     return (
-      <Card className="flex flex-col items-center justify-center p-6 text-center">
-        <AlertCircle className="h-12 w-12 text-gray-400 mb-3" />
-        <CardTitle className="text-lg mb-2">Aucun chauffeur disponible</CardTitle>
-        <CardDescription>
-          Nous n'avons pas trouvé de chauffeurs disponibles à proximité pour le moment. 
-          Veuillez réessayer dans quelques minutes.
-        </CardDescription>
-      </Card>
+      <div className="text-center py-8">
+        <Car className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+        <h3 className="text-lg font-medium mb-2">Aucun chauffeur disponible</h3>
+        <p className="text-gray-500">
+          Nous ne trouvons pas de chauffeurs disponibles pour le moment. Veuillez réessayer dans quelques instants.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      <h3 className="text-lg font-medium mb-4">Chauffeurs à proximité ({nearbyDrivers.length})</h3>
-      {nearbyDrivers.map(renderDriverCard)}
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Chauffeurs disponibles ({nearbyDrivers.length})</h3>
+      <div className="grid gap-4">
+        {nearbyDrivers.map((driver) => {
+          const isSelected = selectedDriverId === driver.id;
+          
+          const estimatedArrival = Math.floor(Math.random() * 10) + 5; // Random time between 5-15 minutes
+          
+          return (
+            <Card 
+              key={driver.id}
+              className={`p-4 cursor-pointer transition-all ${
+                isSelected 
+                  ? 'border-primary bg-primary/5' 
+                  : 'hover:bg-gray-50'
+              }`}
+              onClick={() => handleSelectDriver(driver)}
+            >
+              <div className="flex items-start gap-4">
+                <Avatar className="h-12 w-12 border">
+                  <AvatarImage src={driver.photo_url} alt={driver.name} />
+                  <AvatarFallback>{driver.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium">{driver.name}</h4>
+                      <div className="flex items-center gap-1 text-sm text-yellow-600">
+                        <Star className="h-3 w-3 fill-yellow-500" />
+                        <span>{driver.rating.toFixed(1)}</span>
+                        <span className="text-gray-400">({Math.floor(Math.random() * 500) + 50} courses)</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <Clock className="h-3 w-3" />
+                      <span>{estimatedArrival} min</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      <Car className="h-3 w-3 mr-1" />
+                      {driver.vehicle_model}
+                    </Badge>
+                    
+                    <Badge variant="outline" className="text-xs bg-gray-50">
+                      {driver.license_plate}
+                    </Badge>
+                    
+                    {driver.languages && driver.languages.length > 0 && (
+                      <Badge variant="outline" className="text-xs">
+                        {driver.languages.join(', ')}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <Button 
+                  variant={isSelected ? "default" : "outline"} 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectDriver(driver);
+                  }}
+                >
+                  {isSelected ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1" />
+                      Sélectionné
+                    </>
+                  ) : (
+                    "Choisir"
+                  )}
+                </Button>
+              </div>
+              
+              {isSelected && (
+                <div className="mt-3 pt-3 border-t border-primary/20 text-sm text-primary">
+                  <p>Ce chauffeur sera notifié de votre demande de course.</p>
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 };

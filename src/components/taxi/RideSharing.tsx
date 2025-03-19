@@ -1,99 +1,108 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Users } from "lucide-react";
-import { toast } from 'sonner';
-import { NearbyRidesList } from './ride-sharing/NearbyRidesList';
-import { PriceDiscount } from './ride-sharing/PriceDiscount';
-import { RideSharingBenefits } from './ride-sharing/RideSharingBenefits';
-import { PassengerSelector } from './ride-sharing/PassengerSelector';
-import { useSharedRides } from '@/hooks/useSharedRides';
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Users, Banknote } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface RideSharingProps {
-  rideId?: string;
+  rideId: string | null;
   onSharingEnabled: (enabled: boolean, maxPassengers: number) => void;
   initialPrice: number;
 }
 
-const RideSharing: React.FC<RideSharingProps> = ({ 
-  rideId, 
-  onSharingEnabled, 
-  initialPrice 
+const RideSharing: React.FC<RideSharingProps> = ({
+  rideId,
+  onSharingEnabled,
+  initialPrice
 }) => {
-  const [isSharingEnabled, setIsSharingEnabled] = useState(false);
+  const [isShared, setIsShared] = useState(false);
   const [maxPassengers, setMaxPassengers] = useState(2);
-  const [discountPercent, setDiscountPercent] = useState(15);
   
-  const { nearbySharedRides, loading, joinSharedRide } = useSharedRides(
-    rideId, 
-    isSharingEnabled
-  );
-
   const handleSharingToggle = (enabled: boolean) => {
-    setIsSharingEnabled(enabled);
-    if (enabled) {
-      onSharingEnabled(true, maxPassengers);
-      toast.success("Covoiturage activé", {
-        description: `Vous pourrez partager votre trajet avec jusqu'à ${maxPassengers} autres passagers`
-      });
-    } else {
-      onSharingEnabled(false, 0);
-    }
+    setIsShared(enabled);
+    onSharingEnabled(enabled, maxPassengers);
   };
-
-  const handleMaxPassengersChange = (passengers: number) => {
+  
+  const handlePassengersChange = (value: number[]) => {
+    const passengers = value[0];
     setMaxPassengers(passengers);
-    if (isSharingEnabled) {
-      onSharingEnabled(true, passengers);
+    if (isShared) {
+      onSharingEnabled(isShared, passengers);
     }
   };
-
-  const calculateDiscountedPrice = () => {
-    return initialPrice * (1 - (discountPercent / 100));
+  
+  // Calculate discount based on sharing settings
+  const calculateDiscount = () => {
+    if (!isShared) return 0;
+    
+    // Base discount is 15% + 5% per additional passenger
+    const discountPercentage = 15 + ((maxPassengers - 1) * 5);
+    return discountPercentage;
   };
-
+  
+  const discount = calculateDiscount();
+  const discountedPrice = isShared ? Math.round(initialPrice * (1 - (discount / 100))) : initialPrice;
+  const savings = initialPrice - discountedPrice;
+  
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Users className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Covoiturage</CardTitle>
-          </div>
-          <Switch 
-            checked={isSharingEnabled}
-            onCheckedChange={handleSharingToggle}
-          />
+    <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-primary" />
+          <Label htmlFor="shared-ride" className="font-medium cursor-pointer">
+            Covoiturage
+          </Label>
         </div>
-        <CardDescription>
-          Partagez votre trajet avec d'autres passagers et économisez jusqu'à {discountPercent}%
-        </CardDescription>
-      </CardHeader>
+        <Switch 
+          id="shared-ride" 
+          checked={isShared}
+          onCheckedChange={handleSharingToggle}
+        />
+      </div>
       
-      {isSharingEnabled && (
-        <CardContent className="space-y-4">
-          <PassengerSelector 
-            maxPassengers={maxPassengers} 
-            onChange={handleMaxPassengersChange} 
-          />
+      {isShared && (
+        <div className="space-y-4 pt-3 border-t border-gray-200">
+          <div>
+            <div className="flex justify-between mb-2">
+              <Label htmlFor="max-passengers">Nombre maximum de passagers supplémentaires</Label>
+              <span className="font-medium">{maxPassengers}</span>
+            </div>
+            <Slider
+              id="max-passengers"
+              value={[maxPassengers]}
+              min={1}
+              max={5}
+              step={1}
+              onValueChange={handlePassengersChange}
+            />
+          </div>
           
-          <PriceDiscount 
-            initialPrice={initialPrice} 
-            discountedPrice={calculateDiscountedPrice()} 
-          />
-          
-          <RideSharingBenefits />
-          
-          <NearbyRidesList 
-            rides={nearbySharedRides} 
-            loading={loading} 
-            onJoinRide={joinSharedRide} 
-          />
-        </CardContent>
+          <div className="bg-green-50 p-3 rounded-md border border-green-200">
+            <div className="flex items-start gap-2">
+              <Banknote className="h-5 w-5 text-green-600 mt-0.5" />
+              <div>
+                <p className="text-sm text-green-700 font-medium">
+                  Économisez jusqu'à {savings.toLocaleString()} FCFA ({discount}%)
+                </p>
+                <p className="text-xs text-green-600">
+                  Le prix final dépend du nombre de personnes qui partageront le trajet avec vous
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <Badge variant="outline" className="text-xs border-green-200 text-green-700 bg-green-50">
+                    Économique
+                  </Badge>
+                  <Badge variant="outline" className="text-xs border-green-200 text-green-700 bg-green-50">
+                    Écologique
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    </Card>
+    </div>
   );
 };
 

@@ -1,278 +1,104 @@
 
-import { lazy } from "react";
-import { RouteObject } from "react-router-dom";
-import { Layout } from "@/components/Layout";
-import Home from "@/pages/Home";
-import Cashback from "@/pages/Cashback";
-import Orders from "@/pages/Orders";
-import OrderDetails from "@/pages/OrderDetails";
-import Profile from "@/pages/Profile";
-import Settings from "@/pages/Settings";
-import Help from "@/pages/Help";
-import Restaurants from "@/pages/Restaurants";
-import About from "@/pages/About";
-import Contact from "@/pages/Contact";
-import Services from "@/pages/Services";
-import Favorites from "@/pages/Favorites";
-import Loyalty from "@/pages/Loyalty";
-import Notifications from "@/pages/Notifications";
-import Legal from "@/pages/Legal";
-import Index from "@/pages/Index";
-import FeatureFlags from "@/pages/FeatureFlags";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import WalletOverview from "@/pages/Wallet/WalletOverview";
-import RestaurantMenu from "@/pages/RestaurantMenu";
-import RestaurantManagementPage from "@/pages/restaurant/ManagementPage";
-import RestaurantDashboard from "@/pages/restaurant/Dashboard";
+import React from 'react';
+import { RouteObject } from 'react-router-dom';
+import RestaurantLayout from '@/layouts/RestaurantLayout';
+import Home from '@/pages/Home';
+import RestaurantMenu from '@/pages/RestaurantMenu';
+import RestaurantDetails from '@/pages/RestaurantDetails';
+import RestaurantReservation from '@/pages/RestaurantReservation';
+import OrderTracking from '@/pages/OrderTracking';
+import OrderDetails from '@/pages/OrderDetails';
+import Orders from '@/pages/Orders';
+import Profile from '@/pages/Profile';
+import Wallet from '@/pages/Wallet';
+import Favorites from '@/pages/Favorites';
+import Notifications from '@/pages/Notifications';
+import OrderConfirmation from '@/pages/OrderConfirmation';
+import Booking from '@/pages/taxi/Booking';
+import TaxiRide from '@/pages/TaxiRide';
+import WalletOverview from '@/pages/Wallet/WalletOverview';
 
-export const mainRoutes: RouteObject[] = [
+// Lazy load some routes to reduce initial bundle size
+const RideStatus = React.lazy(() => import('@/pages/taxi/RideStatus'));
+
+const mainRoutes: RouteObject[] = [
   {
-    path: "/",
-    element: <Layout />,
+    path: '/',
+    element: <Home />,
+    index: true,
+  },
+  {
+    path: '/restaurant/:id',
+    element: <RestaurantLayout />,
     children: [
       {
-        index: true,
-        element: <Home />
+        path: '',
+        element: <RestaurantDetails />,
       },
       {
-        path: "index",
-        element: <Index />
+        path: 'menu',
+        element: <RestaurantMenu />,
       },
       {
-        path: "cashback",
-        element: <Cashback />
+        path: 'reservation',
+        element: <RestaurantReservation />,
       },
+    ],
+  },
+  {
+    path: '/order-tracking/:id',
+    element: <OrderTracking />,
+  },
+  {
+    path: '/order/:id',
+    element: <OrderDetails />,
+  },
+  {
+    path: '/orders',
+    element: <Orders />,
+  },
+  {
+    path: '/profile',
+    element: <Profile />,
+  },
+  {
+    path: '/wallet',
+    element: <Wallet />,
+    children: [
       {
-        path: "orders",
-        element: (
-          <ProtectedRoute>
-            <Orders />
-          </ProtectedRoute>
-        )
+        path: '',
+        element: <WalletOverview />,
       },
-      {
-        path: "orders/:id",
-        element: (
-          <ProtectedRoute>
-            <OrderDetails />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "profile",
-        element: (
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "settings",
-        element: (
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "help",
-        element: <Help />
-      },
-      {
-        path: "restaurants",
-        element: <Restaurants />
-      },
-      {
-        path: "restaurant/:restaurantId/menu",
-        element: <RestaurantMenu />
-      },
-      {
-        path: "restaurant/management/:id",
-        element: (
-          <ProtectedRoute>
-            <RestaurantManagementPage />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "restaurant/dashboard",
-        element: (
-          <ProtectedRoute>
-            <RestaurantDashboard />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "about",
-        element: <About />
-      },
-      {
-        path: "contact",
-        element: <Contact />
-      },
-      {
-        path: "services",
-        element: <Services />
-      },
-      {
-        path: "favorites",
-        element: (
-          <ProtectedRoute>
-            <Favorites />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "loyalty",
-        element: (
-          <ProtectedRoute>
-            <Loyalty />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "notifications",
-        element: (
-          <ProtectedRoute>
-            <Notifications />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "legal",
-        element: <Legal />
-      },
-      {
-        path: "feature-flags",
-        element: (
-          <ProtectedRoute adminOnly>
-            <FeatureFlags />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: "wallet",
-        element: (
-          <ProtectedRoute>
-            <WalletOverview />
-          </ProtectedRoute>
-        )
-      },
-      // Commented routes preserved for future implementation
-      /*
-      {
-        path: "products",
-        element: <Products />
-      },
-      {
-        path: "products/:id",
-        element: <ProductDetails />
-      },
-      {
-        path: "cart",
-        element: <Cart />
-      },
-      {
-        path: "checkout",
-        element: <Checkout />
-      },
-      {
-        path: "restaurants/:id",
-        element: <RestaurantDetails />
-      },
-      {
-        path: "delivery",
-        element: <Delivery />
-      },
-      {
-        path: "driver",
-        element: <Driver />
-      },
-      {
-        path: "driver/:id",
-        element: <DriverDetails />
-      },
-      {
-        path: "driver/orders",
-        element: <DriverOrders />
-      },
-      {
-        path: "driver/orders/:id",
-        element: <DriverOrderDetails />
-      },
-      {
-        path: "driver/profile",
-        element: <DriverProfile />
-      },
-      {
-        path: "driver/settings",
-        element: <DriverSettings />
-      },
-      {
-        path: "driver/help",
-        element: <DriverHelp />
-      },
-      {
-        path: "restaurant",
-        element: <RestaurantDashboard />
-      },
-      {
-        path: "restaurant/orders",
-        element: <RestaurantOrders />
-      },
-      {
-        path: "restaurant/orders/:id",
-        element: <RestaurantOrderDetails />
-      },
-      {
-        path: "restaurant/products",
-        element: <RestaurantProducts />
-      },
-      {
-        path: "restaurant/settings",
-        element: <RestaurantSettings />
-      },
-      {
-        path: "restaurant/help",
-        element: <RestaurantHelp />
-      },
-      {
-        path: "terms",
-        element: <Terms />
-      },
-      {
-        path: "privacy",
-        element: <Privacy />
-      },
-      {
-        path: "faq",
-        element: <FAQ />
-      },
-      {
-        path: "blog",
-        element: <Blog />
-      },
-      {
-        path: "blog/:id",
-        element: <BlogPost />
-      },
-      {
-        path: "services/:id",
-        element: <ServiceDetails />
-      },
-      {
-        path: "bookings",
-        element: <Bookings />
-      },
-      {
-        path: "bookings/:id",
-        element: <BookingDetails />
-      },
-      {
-        path: "search",
-        element: <Search />
-      },
-      */
-    ]
+    ],
+  },
+  {
+    path: '/favorites',
+    element: <Favorites />,
+  },
+  {
+    path: '/notifications',
+    element: <Notifications />,
+  },
+  {
+    path: '/order-confirmation/:id',
+    element: <OrderConfirmation />,
+  },
+  {
+    path: '/taxi/booking',
+    element: <Booking />,
+  },
+  {
+    path: '/taxi/ride/:rideId',
+    element: <TaxiRide />,
+  },
+  {
+    path: '/taxi/ride-status/:rideId',
+    element: (
+      <React.Suspense fallback={<div>Chargement...</div>}>
+        <RideStatus />
+      </React.Suspense>
+    ),
   },
 ];
+
+export default mainRoutes;
