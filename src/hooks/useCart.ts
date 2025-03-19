@@ -1,24 +1,72 @@
 
 import { useContext } from 'react';
 import { CartContext } from '@/contexts/CartContext';
+import type { CartItem } from '@/types/cart';
 
-export function useCart() {
-  const cartContext = useContext(CartContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
   
-  if (!cartContext) {
+  if (!context) {
     throw new Error('useCart must be used within a CartProvider');
   }
-
-  const { state, addToCart, removeFromCart, updateQuantity, updateOptions, clearCart } = cartContext;
-
-  return {
-    cart: state,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    updateOptions,
-    clearCart,
-    items: state.items,
-    total: state.total
+  
+  const { 
+    state, 
+    addItem, 
+    removeItem, 
+    clearItems, 
+    updateDeliveryAddress, 
+    updatePaymentMethod,
+    updateDeliveryFee,
+    updateSpecialInstructions
+  } = context;
+  
+  // Calculer le montant total du panier
+  const calculateTotalAmount = () => {
+    return state.items.reduce((total, item) => {
+      return total + (item.price * item.quantity);
+    }, 0);
   };
-}
+  
+  // Calculer le nombre total d'articles dans le panier
+  const calculateTotalItems = () => {
+    return state.items.reduce((total, item) => {
+      return total + item.quantity;
+    }, 0);
+  };
+  
+  // Appliquer une réduction au panier
+  const applyDiscount = (amount: number) => {
+    const updatedState = {
+      ...state,
+      discountAmount: amount
+    };
+    context.setState(updatedState);
+  };
+  
+  // Supprimer une réduction du panier
+  const removeDiscount = () => {
+    const updatedState = {
+      ...state,
+      discountAmount: 0
+    };
+    context.setState(updatedState);
+  };
+  
+  return {
+    cart: {
+      ...state,
+      totalAmount: calculateTotalAmount(),
+      totalItems: calculateTotalItems()
+    },
+    addToCart: (item: CartItem) => addItem(item),
+    removeFromCart: (itemId: string) => removeItem(itemId),
+    clearCart: () => clearItems(),
+    updateDeliveryAddress,
+    updatePaymentMethod,
+    updateDeliveryFee,
+    updateSpecialInstructions,
+    applyDiscount,
+    removeDiscount
+  };
+};
