@@ -4,7 +4,7 @@ import { lazy, Suspense } from "react";
 import { Layout } from "./components/Layout";
 import Home from "./pages/Home";
 import Cashback from "./pages/Cashback";
-// Remove imports for files that don't exist
+// Importations seulement pour les composants qui existent
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import Profile from "./pages/Profile";
@@ -21,7 +21,7 @@ import NotFound from "./pages/NotFound";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    element: <Layout children={undefined} />,
     children: [
       {
         index: true,
@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
         path: "cashback",
         element: <Cashback />
       },
-      // Comment out routes with components that don't exist
+      // Routes commentées pour les composants qui n'existent pas encore
       /*
       {
         path: "products",

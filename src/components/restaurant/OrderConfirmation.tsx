@@ -19,6 +19,7 @@ const OrderConfirmation = ({ open, onOpenChange, onPaymentComplete, amount }: Or
         <MobilePayment 
           amount={amount} 
           onSuccess={onPaymentComplete}
+          onPaymentComplete={onPaymentComplete}
           description="Paiement de commande"
         />
       </DialogContent>

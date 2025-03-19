@@ -17,9 +17,10 @@ interface MobilePaymentProps {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
   savePaymentMethod?: boolean;
+  description?: string;
 }
 
-const MobilePayment = ({ amount, onSuccess, onError, savePaymentMethod }: MobilePaymentProps) => {
+const MobilePayment = ({ amount, onSuccess, onError, savePaymentMethod, description }: MobilePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [operator, setOperator] = useState('');
@@ -44,7 +45,7 @@ const MobilePayment = ({ amount, onSuccess, onError, savePaymentMethod }: Mobile
 
       toast({
         title: "Paiement réussi",
-        description: "Votre paiement a été traité avec succès",
+        description: description || "Votre paiement a été traité avec succès",
       });
 
       onSuccess?.();

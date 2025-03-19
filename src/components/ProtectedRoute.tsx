@@ -23,7 +23,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!user) {
-    return <Navigate to="/auth" state={{ from: window.location }} replace />;
+    return <Navigate to="/auth" state={{ from: window.location.pathname }} replace />;
   }
 
   if (adminOnly && !isAdmin()) {
@@ -33,5 +33,4 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   return <>{children}</>;
 };
 
-// Add a default export as well
 export default ProtectedRoute;

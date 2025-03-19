@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +48,8 @@ const MobilePayment = ({
   onSuccess, 
   onError,
   onPaymentComplete,
-  savePaymentMethod
+  savePaymentMethod,
+  description
 }: MobilePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -66,14 +66,12 @@ const MobilePayment = ({
   };
 
   const formatPhoneNumber = (number: string) => {
-    // Format en groupes de 3 chiffres
     if (number.length <= 3) return number;
     if (number.length <= 6) return `${number.slice(0, 3)} ${number.slice(3)}`;
     return `${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)}`;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Garder seulement les chiffres
     const rawValue = e.target.value.replace(/\D/g, '');
     if (rawValue.length <= 9) {
       setPhoneNumber(rawValue);
@@ -85,25 +83,19 @@ const MobilePayment = ({
       setError(null);
       setIsProcessing(true);
 
-      // Validation for mobile payment
       if (paymentMethod === 'mobile') {
         if (!phoneNumber || !operator) {
           throw new Error('Veuillez remplir tous les champs');
         }
 
-        if (!validatePhoneNumber(phoneNumber)) {
+        if (!/^[0-9]{9}$/.test(phoneNumber)) {
           throw new Error('Numéro de téléphone invalide (9 chiffres requis)');
         }
       }
 
-      // In a real application, here you would call your backend API
-      // to process the payment. For now, we'll simulate that with a timeout.
-      
-      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simulate payment processing for non-mobile money methods
-      const userId = "user123"; // This would come from authentication
+      const userId = "user123";
       const paymentId = "payment-" + Date.now();
       const paymentMethodId = paymentMethod === 'mobile' 
         ? `mobile_${operator}`
@@ -111,7 +103,6 @@ const MobilePayment = ({
           ? 'card'
           : 'cash_delivery';
       
-      // If the user wants to save the payment method (for a real app, save to your database)
       if (saveMethod && paymentMethod === 'mobile') {
         console.log('Saving payment method:', {
           user_id: userId,
@@ -126,7 +117,7 @@ const MobilePayment = ({
 
       toast({
         title: "Paiement réussi",
-        description: "Votre paiement a été traité avec succès",
+        description: `${description || "Votre paiement a été traité avec succès"}`,
       });
 
       if (onSuccess) onSuccess();
@@ -151,7 +142,7 @@ const MobilePayment = ({
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Paiement</h3>
         <p className="text-sm text-muted-foreground">
-          Choisissez votre méthode de paiement préférée
+          {description || "Choisissez votre méthode de paiement préférée"}
         </p>
       </div>
 
@@ -254,7 +245,7 @@ const MobilePayment = ({
                 value={formatPhoneNumber(phoneNumber)}
                 onChange={handleInputChange}
                 className="w-full"
-                maxLength={13} // 9 chiffres + espaces
+                maxLength={13}
               />
               <p className="text-xs text-gray-500 mt-1">Format: XXX XXX XXX</p>
             </div>

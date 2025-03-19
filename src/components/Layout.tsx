@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   backLink?: string;
   backText?: string;
   hideBackButton?: boolean;
@@ -33,7 +33,7 @@ export function Layout({
       )}
       
       <main>
-        {children}
+        {children || <Outlet />}
       </main>
     </div>
   );
