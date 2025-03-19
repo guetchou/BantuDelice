@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { formatCurrency } from "@/utils/formatCurrency";
 import { Wallet, CreditCard, ReceiptText, PlusCircle, ArrowRightLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import MobilePayment from "../MobilePayment";
+import MobilePayment from '@/components/payment/MobilePayment';
 import { Transaction } from "@/types/wallet";
 
 const WalletManager = () => {

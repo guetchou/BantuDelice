@@ -1,109 +1,169 @@
 
-import { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from 'lucide-react';
 
-interface MobilePaymentProps {
+// Import new component files
+import PaymentMethodSelector from './PaymentMethodSelector';
+import PhoneNumberInput from './PhoneNumberInput';
+import CardPaymentForm from './CardPaymentForm';
+import CashDeliveryInfo from './CashDeliveryInfo';
+import PaymentSummary from './PaymentSummary';
+import PaymentButton from './PaymentButton';
+
+export interface MobilePaymentProps {
   amount: number;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  onPaymentComplete?: () => void;
   savePaymentMethod?: boolean;
   description?: string;
 }
 
-const MobilePayment = ({ amount, onSuccess, onError, savePaymentMethod, description }: MobilePaymentProps) => {
+// Mobile network operators
+const operators = [
+  { value: "mtn", label: "MTN Mobile Money", icon: "🟡" },
+  { value: "airtel", label: "Airtel Money", icon: "🔴" },
+  { value: "orange", label: "Orange Money", icon: "🟠" },
+];
+
+const MobilePayment = ({ 
+  amount, 
+  onSuccess, 
+  onError,
+  onPaymentComplete,
+  savePaymentMethod,
+  description
+}: MobilePaymentProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [operator, setOperator] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [saveMethod, setSaveMethod] = useState(savePaymentMethod || false);
+  const [paymentMethod, setPaymentMethod] = useState<'mobile' | 'card' | 'cashdelivery'>('mobile');
+  const [openOperatorSelect, setOpenOperatorSelect] = useState(false);
   const { toast } = useToast();
+
+  const validatePhoneNumber = (number: string) => {
+    const regex = /^[0-9]{9}$/;
+    return regex.test(number);
+  };
+
+  const formatPhoneNumber = (number: string) => {
+    if (number.length <= 3) return number;
+    if (number.length <= 6) return `${number.slice(0, 3)} ${number.slice(3)}`;
+    return `${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)}`;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (rawValue.length <= 9) {
+      setPhoneNumber(rawValue);
+    }
+  };
 
   const handlePayment = async () => {
     try {
+      setError(null);
       setIsProcessing(true);
 
-      // Validation
-      if (!phoneNumber || !operator) {
-        throw new Error('Veuillez remplir tous les champs');
+      if (paymentMethod === 'mobile') {
+        if (!phoneNumber || !operator) {
+          throw new Error('Veuillez remplir tous les champs');
+        }
+
+        if (!/^[0-9]{9}$/.test(phoneNumber)) {
+          throw new Error('Numéro de téléphone invalide (9 chiffres requis)');
+        }
       }
 
-      if (!/^[0-9]{9}$/.test(phoneNumber)) {
-        throw new Error('Numéro de téléphone invalide');
-      }
-
-      // Mock API call - in a real app this would be an API call to your backend
-      // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const userId = "user123";
+      const paymentId = "payment-" + Date.now();
+      const paymentMethodId = paymentMethod === 'mobile' 
+        ? `mobile_${operator}`
+        : paymentMethod === 'card'
+          ? 'card'
+          : 'cash_delivery';
+      
+      if (saveMethod && paymentMethod === 'mobile') {
+        console.log('Saving payment method:', {
+          user_id: userId,
+          payment_type: paymentMethod,
+          provider: operator,
+          last_four: phoneNumber.slice(-4),
+          is_default: false,
+          metadata: { phone_number: phoneNumber },
+          last_used: new Date().toISOString()
+        });
+      }
 
       toast({
         title: "Paiement réussi",
-        description: description || "Votre paiement a été traité avec succès",
+        description: `${description || "Votre paiement a été traité avec succès"}`,
       });
 
-      onSuccess?.();
+      if (onSuccess) onSuccess();
+      if (onPaymentComplete) onPaymentComplete();
 
     } catch (error) {
       console.error('Erreur de paiement:', error);
+      setError(error instanceof Error ? error.message : "Une erreur est survenue");
       toast({
         title: "Erreur de paiement",
         description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive",
       });
-      onError?.(error instanceof Error ? error : new Error('Unknown error'));
+      if (onError) onError(error instanceof Error ? error : new Error('Unknown error'));
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <Select
-        value={operator}
-        onValueChange={setOperator}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Sélectionnez un opérateur" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="mtn">MTN Mobile Money</SelectItem>
-          <SelectItem value="airtel">Airtel Money</SelectItem>
-        </SelectContent>
-      </Select>
+    <div className="space-y-6">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-      <Input
-        type="tel"
-        placeholder="Numéro de téléphone (9 chiffres)"
-        value={phoneNumber}
-        onChange={(e) => setPhoneNumber(e.target.value)}
-        maxLength={9}
-      />
+      <div className="space-y-4">
+        <PaymentMethodSelector 
+          paymentMethod={paymentMethod} 
+          setPaymentMethod={setPaymentMethod} 
+        />
 
-      <div className="text-sm text-gray-500 mb-4">
-        Montant à payer: {amount} FCFA
-      </div>
-
-      <Button
-        className="w-full"
-        onClick={handlePayment}
-        disabled={isProcessing}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Traitement en cours...
-          </>
-        ) : (
-          'Payer maintenant'
+        {paymentMethod === 'mobile' && (
+          <PhoneNumberInput
+            phoneNumber={formatPhoneNumber(phoneNumber)}
+            operator={operator}
+            handleInputChange={handleInputChange}
+            openOperatorSelect={openOperatorSelect}
+            setOpenOperatorSelect={setOpenOperatorSelect}
+            setOperator={setOperator}
+            operators={operators}
+          />
         )}
-      </Button>
+
+        {paymentMethod === 'card' && <CardPaymentForm />}
+
+        {paymentMethod === 'cashdelivery' && <CashDeliveryInfo />}
+
+        <PaymentSummary 
+          amount={amount} 
+          saveMethod={saveMethod} 
+          setSaveMethod={setSaveMethod} 
+        />
+
+        <PaymentButton 
+          isProcessing={isProcessing} 
+          handlePayment={handlePayment} 
+        />
+      </div>
     </div>
   );
 };

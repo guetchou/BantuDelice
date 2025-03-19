@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from '@/contexts/CartContext';
-import MobilePayment from '@/components/MobilePayment';
+import MobilePayment from '@/components/payment/MobilePayment';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, AlertCircle, Check, Truck, Package } from 'lucide-react';
 import { Steps, Step } from "@/components/ui/steps";

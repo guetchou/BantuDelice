@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Loader2, AlertCircle, X, Plus, Minus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
-import MobilePayment from '@/components/MobilePayment';
+import MobilePayment from '@/components/payment/MobilePayment';
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -37,14 +36,12 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
   const { state, removeFromCart, updateQuantity } = useCart();
   const { toast } = useToast();
 
-  // Écoute des changements de stock en temps réel
   useEffect(() => {
     const itemIds = state.items.map(item => item.id);
     if (itemIds.length === 0) return;
 
     console.log('Initializing stock monitoring for items:', itemIds);
 
-    // Récupération initiale du stock
     const fetchStockLevels = async () => {
       const { data, error } = await supabase
         .from('inventory_levels')
@@ -69,7 +66,6 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
 
     fetchStockLevels();
 
-    // Abonnement aux changements de stock en temps réel
     const channel = supabase
       .channel('inventory-changes')
       .on(
@@ -146,7 +142,6 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
         throw new Error('Votre panier est vide');
       }
 
-      // Validation du stock avant la commande
       const isStockValid = await validateStock();
       if (!isStockValid) {
         throw new Error('Problème de stock, veuillez vérifier votre panier');
@@ -185,7 +180,6 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
         throw new Error('La quantité ne peut pas être négative');
       }
 
-      // Vérification du stock disponible
       const stockInfo = stockStatus[itemId];
       if (stockInfo && (stockInfo.currentStock - stockInfo.reservedStock) < newQuantity) {
         throw new Error('Stock insuffisant pour cette quantité');
