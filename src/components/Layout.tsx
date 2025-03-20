@@ -11,12 +11,12 @@ interface LayoutProps {
   hideBackButton?: boolean;
 }
 
-export function Layout({ 
+const Layout = ({ 
   children, 
   backLink = "/", 
   backText = "Retour",
   hideBackButton = false 
-}: LayoutProps) {
+}: LayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {!hideBackButton && (
@@ -37,4 +37,6 @@ export function Layout({
       </main>
     </div>
   );
-}
+};
+
+export default Layout;
