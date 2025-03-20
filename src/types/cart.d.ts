@@ -13,6 +13,7 @@ export interface CartItem {
     price: number;
   }>;
   special_instructions?: string;
+  combo_item?: boolean;
 }
 
 export interface Cart {
@@ -38,4 +39,6 @@ export interface CartContextType {
   clearCart: () => void;
   applyDiscount: (amount: number) => void;
   removeDiscount: () => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
+  state: Cart;
 }

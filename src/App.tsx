@@ -1,31 +1,30 @@
 
-import React from 'react';
-import { RouterProvider } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
-import router from './routes';
-import { NavigationProvider } from './contexts/NavigationContext';
-import { ThemeProvider } from './components/ThemeProvider';
-import { Toaster } from './components/ui/toaster';
+import { Suspense, lazy } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { Toaster } from 'sonner'
+import Layout from './components/Layout'
+import { NavigationProvider } from './contexts/NavigationContext'
+import Loading from './components/Loading'
+
+// Lazy load pages for better performance
+const HomePage = lazy(() => import('./pages/Home'))
+const AuthPage = lazy(() => import('./pages/Auth'))
 
 function App() {
-  const { isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
-    <ThemeProvider defaultTheme="system" storageKey="eazy-congo-theme">
-      <NavigationProvider>
-        <RouterProvider router={router} />
-        <Toaster />
-      </NavigationProvider>
-    </ThemeProvider>
-  );
+    <NavigationProvider>
+      <Suspense fallback={<Loading />}>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<HomePage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            {/* Autres routes seront ajoutées ici */}
+          </Route>
+        </Routes>
+      </Suspense>
+      <Toaster position="top-right" />
+    </NavigationProvider>
+  )
 }
 
-export default App;
+export default App
