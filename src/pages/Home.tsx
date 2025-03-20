@@ -1,219 +1,170 @@
 
-import { useState } from 'react';
-import { 
-  BarChart3, 
-  Users, 
-  ShoppingCart, 
-  Calendar, 
-  TrendingUp, 
-  ArrowRight,
-  ArrowUp,
-  ArrowDown,
-  Clock,
-  CreditCard,
-  CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { toast } from 'sonner';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRight, MapPin, Route, Clock, CreditCard, Car } from "lucide-react";
+import { usePageTitle } from '@/hooks/usePageTitle';
 
-export default function Home() {
-  const [selectedTab, setSelectedTab] = useState('all');
-
-  const statsCards = [
-    { title: 'Clients', value: '3,456', icon: Users, change: '+12%', color: 'text-blue.DEFAULT', up: true },
-    { title: 'Revenus', value: '24,530 €', icon: CreditCard, change: '+8%', color: 'text-green.DEFAULT', up: true },
-    { title: 'Commandes', value: '1,245', icon: ShoppingCart, change: '-3%', color: 'text-orange.DEFAULT', up: false },
-    { title: 'Taux de conversion', value: '3.2%', icon: TrendingUp, change: '+2%', color: 'text-blue.DEFAULT', up: true },
-  ];
-
-  const recentOrders = [
-    { id: '#4532', client: 'Martin Dupont', status: 'Complété', date: '15 Oct 2023', amount: '123.45 €' },
-    { id: '#4533', client: 'Sophie Martin', status: 'En attente', date: '15 Oct 2023', amount: '345.00 €' },
-    { id: '#4534', client: 'Thomas Bernard', status: 'Traitement', date: '14 Oct 2023', amount: '212.00 €' },
-    { id: '#4535', client: 'Claire Leroy', status: 'Complété', date: '14 Oct 2023', amount: '159.90 €' },
-    { id: '#4536', client: 'Lucas Moreau', status: 'Annulé', date: '13 Oct 2023', amount: '99.99 €' },
-  ];
-
-  const upcomingTasks = [
-    { id: 1, title: 'Réunion marketing', due: '14:00', priority: 'Haute' },
-    { id: 2, title: 'Appel client Durand', due: '15:30', priority: 'Moyenne' },
-    { id: 3, title: 'Révision des factures', due: '16:45', priority: 'Basse' },
-    { id: 4, title: 'Rapport hebdomadaire', due: 'Demain', priority: 'Haute' },
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Complété': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'En attente': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-      case 'Traitement': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'Annulé': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
-    }
-  };
-
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'Haute': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'Moyenne': return <Clock className="h-4 w-4 text-orange-500" />;
-      case 'Basse': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      default: return null;
-    }
-  };
+export const Home = () => {
+  usePageTitle({ title: "Accueil" });
 
   return (
-    <DashboardLayout>
-      <div className="grid gap-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Tableau de bord</h1>
-          <div className="flex space-x-2">
-            <button 
-              className="fancy-button"
-              onClick={() => toast.success('Action rapide déclenchée')}
-            >
-              Action rapide
-            </button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50">
+      {/* Hero Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto text-center max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Simplifiez vos déplacements au Congo
+            </h1>
+            <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
+              Trouvez des taxis, partagez vos trajets ou faites-vous livrer en quelques clics !
+            </p>
+          </motion.div>
 
-        {/* Cartes statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statsCards.map((card, index) => (
-            <div 
-              key={index} 
-              className="dashboard-card animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                  <h3 className="text-2xl font-bold mt-2">{card.value}</h3>
-                  <div className="flex items-center mt-1">
-                    <span className={`${card.up ? 'text-green-500' : 'text-red-500'} text-sm flex items-center`}>
-                      {card.up ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
-                      {card.change}
-                    </span>
-                    <span className="text-muted-foreground text-xs ml-1">ce mois</span>
-                  </div>
-                </div>
-                <div className={`p-3 rounded-full ${card.up ? 'bg-green-100 dark:bg-green-900/30' : 'bg-orange-100 dark:bg-orange-900/30'}`}>
-                  <card.icon className={`h-5 w-5 ${card.color}`} />
-                </div>
-              </div>
-            </div>
-          ))}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="flex flex-wrap justify-center gap-4"
+          >
+            <Button size="lg" asChild className="bg-primary hover:bg-primary/90">
+              <Link to="/taxi">Réserver un taxi</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/covoiturage">Trouver un covoiturage</Link>
+            </Button>
+          </motion.div>
         </div>
+      </section>
 
-        {/* Activité récente et tâches */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Commandes récentes */}
-          <div className="lg:col-span-2">
-            <div className="dashboard-card h-full">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold">Commandes récentes</h2>
-                <div className="flex space-x-1 bg-secondary rounded-lg p-1">
-                  {['all', 'pending', 'completed', 'cancelled'].map((tab) => (
-                    <button
-                      key={tab}
-                      className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                        selectedTab === tab 
-                          ? 'bg-card shadow-sm' 
-                          : 'hover:bg-card/60'
-                      }`}
-                      onClick={() => setSelectedTab(tab)}
-                    >
-                      {tab === 'all' ? 'Toutes' : 
-                       tab === 'pending' ? 'En attente' : 
-                       tab === 'completed' ? 'Complétées' : 'Annulées'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="interactive-table">
-                  <thead>
-                    <tr>
-                      <th>Commande</th>
-                      <th>Client</th>
-                      <th>Statut</th>
-                      <th>Date</th>
-                      <th>Montant</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentOrders.map((order) => (
-                      <tr key={order.id}>
-                        <td className="font-medium">{order.id}</td>
-                        <td>{order.client}</td>
-                        <td>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="text-muted-foreground">{order.date}</td>
-                        <td className="font-medium">{order.amount}</td>
-                        <td>
-                          <button className="text-primary hover:text-primary/80 p-1 rounded">
-                            <ArrowRight className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="mt-4 text-center">
-                <button className="text-primary hover:text-primary/80 text-sm font-medium inline-flex items-center">
-                  Voir toutes les commandes
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* Services Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-12">Nos services</h2>
           
-          {/* Tâches à venir */}
-          <div className="lg:col-span-1">
-            <div className="dashboard-card h-full">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold">Tâches à venir</h2>
-                <button className="text-primary hover:text-primary/80">
-                  <Calendar className="h-5 w-5" />
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mb-4">
+                  <Car className="h-6 w-6 text-yellow-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Taxis</h3>
+                <p className="text-gray-600 mb-4">
+                  Réservez un taxi en quelques clics pour vous déplacer en ville de manière fiable et sécurisée.
+                </p>
+                <Button variant="ghost" asChild className="group">
+                  <Link to="/taxi">
+                    En savoir plus <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                  <Route className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Covoiturage</h3>
+                <p className="text-gray-600 mb-4">
+                  Partagez vos trajets quotidiens ou occasionnels pour économiser et réduire l'impact environnemental.
+                </p>
+                <Button variant="ghost" asChild className="group">
+                  <Link to="/covoiturage">
+                    En savoir plus <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                  <MapPin className="h-6 w-6 text-green-600" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Livraison</h3>
+                <p className="text-gray-600 mb-4">
+                  Faites-vous livrer vos repas, courses et colis partout en ville rapidement et facilement.
+                </p>
+                <Button variant="ghost" asChild className="group">
+                  <Link to="/delivery">
+                    En savoir plus <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-12">Comment ça marche</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <MapPin className="h-8 w-8 text-primary" />
               </div>
-              
-              <div className="space-y-4">
-                {upcomingTasks.map((task) => (
-                  <div 
-                    key={task.id} 
-                    className="p-3 rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer"
-                    onClick={() => toast.info(`Tâche "${task.title}" sélectionnée`)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">{task.title}</h3>
-                        <p className="text-sm text-muted-foreground flex items-center mt-1">
-                          <Clock className="h-3 w-3 mr-1" /> {task.due}
-                        </p>
-                      </div>
-                      {getPriorityIcon(task.priority)}
-                    </div>
-                  </div>
-                ))}
+              <h3 className="text-lg font-semibold mb-2">Choisissez votre destination</h3>
+              <p className="text-gray-600">
+                Indiquez votre point de départ et d'arrivée pour votre trajet
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Car className="h-8 w-8 text-primary" />
               </div>
-              
-              <button 
-                className="w-full mt-4 py-2 border border-dashed border-border rounded-lg text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                onClick={() => toast.success('Nouvelle tâche ajoutée')}
-              >
-                + Ajouter une tâche
-              </button>
+              <h3 className="text-lg font-semibold mb-2">Sélectionnez votre service</h3>
+              <p className="text-gray-600">
+                Choisissez entre taxi, covoiturage ou autres options disponibles
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Confirmez votre réservation</h3>
+              <p className="text-gray-600">
+                Vérifiez les détails et confirmez votre trajet en quelques secondes
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Payez et profitez</h3>
+              <p className="text-gray-600">
+                Payez en toute sécurité et profitez de votre trajet sereinement
+              </p>
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 bg-primary/5">
+        <div className="container mx-auto text-center max-w-3xl">
+          <h2 className="text-3xl font-bold mb-6">Prêt à simplifier vos déplacements ?</h2>
+          <p className="text-xl text-gray-600 mb-10">
+            Rejoignez des milliers d'utilisateurs qui se déplacent facilement à travers le Congo
+          </p>
+          <Button size="lg" asChild>
+            <Link to="/auth/register">Créer un compte gratuitement</Link>
+          </Button>
+        </div>
+      </section>
+    </div>
   );
-}
+};

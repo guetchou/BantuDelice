@@ -56,22 +56,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Nouvelles couleurs vives pour l'ERP
-        orange: {
-          light: "#FFD8A8",
-          DEFAULT: "#F97316",
-          dark: "#C2410C",
-        },
-        green: {
-          light: "#BBF7D0",
-          DEFAULT: "#22C55E",
-          dark: "#15803D",
-        },
-        blue: {
-          light: "#BAE6FD",
-          DEFAULT: "#0EA5E9",
-          dark: "#0369A1",
-        },
         neon: {
           blue: '#00f3ff',
           purple: '#8a2be2',
