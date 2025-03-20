@@ -85,8 +85,9 @@
     @apply transition-transform duration-200 hover:scale-105;
   }
   
+  /* Fixed the circular dependency by using direct CSS properties */
   .animate-fade-in {
-    @apply opacity-0;
+    opacity: 0;
     animation: fadeIn 0.3s ease-out forwards;
   }
 

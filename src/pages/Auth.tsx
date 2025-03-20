@@ -13,6 +13,7 @@ import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { nestJsAuthAdapter } from "@/adapters/nestJsAuthAdapter";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -180,11 +181,15 @@ const Auth = () => {
               toast.success("Inscription réussie ! Veuillez vérifier votre email.");
               setIsRegistering(false);
             }}
+            // Optional: use the NestJS adapter for registration
+            // nestJsAdapter={nestJsAuthAdapter}
           />
         ) : (
           <LoginForm 
             onRegister={() => setIsRegistering(true)}
             onForgotPassword={() => setIsForgotPassword(true)}
+            // Optional: use the NestJS adapter for login
+            // nestJsAdapter={nestJsAuthAdapter}
           />
         )}
       </AnimatePresence>
