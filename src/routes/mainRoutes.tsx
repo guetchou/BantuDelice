@@ -2,6 +2,7 @@
 import React from 'react';
 import { RouteObject } from "react-router-dom";
 import { Home } from '@/pages/Home';
+import Index from '@/pages/Index';
 import Covoiturage from '@/pages/Covoiturage';
 import OrderConfirmation from '@/pages/OrderConfirmation';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -20,6 +21,10 @@ import Dashboard from '@/pages/Dashboard';
 const mainRoutes: RouteObject[] = [
   {
     path: '/',
+    element: <MainLayout><Index /></MainLayout>,
+  },
+  {
+    path: '/home',
     element: <MainLayout><Home /></MainLayout>,
   },
   {

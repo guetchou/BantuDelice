@@ -1,3 +1,4 @@
+
 import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,11 @@ const Header = ({ searchQuery, setSearchQuery }: HeaderProps) => {
       <div className="container mx-auto px-6 py-6">
         <div className="flex items-center justify-between gap-8">
           <div className="flex items-center gap-12">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+            <h1 
+              className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent"
+              onClick={() => navigate("/")}
+              style={{ cursor: "pointer" }}
+            >
               Buntudelice
             </h1>
             <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -57,8 +62,11 @@ const Header = ({ searchQuery, setSearchQuery }: HeaderProps) => {
                 <DropdownMenuItem onClick={() => navigate('/restaurants')} className="text-white hover:bg-white/10">
                   Restaurants
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/services')} className="text-white hover:bg-white/10">
-                  Services
+                <DropdownMenuItem onClick={() => navigate('/taxis')} className="text-white hover:bg-white/10">
+                  Taxis
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/covoiturage')} className="text-white hover:bg-white/10">
+                  Covoiturage
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/contact')} className="text-white hover:bg-white/10">
                   Contact

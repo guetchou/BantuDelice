@@ -20,7 +20,7 @@ export default function Index() {
       title: "Taxi",
       description: "Réservez un taxi rapidement et en toute sécurité",
       icon: Car,
-      action: () => navigate("/taxi"),
+      action: () => navigate("/taxis"),
       color: "bg-gradient-to-br from-blue-400 to-blue-600"
     },
     {
@@ -93,7 +93,7 @@ export default function Index() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent animate-gradient-x">
+            <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
               EazyCongo
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
@@ -109,7 +109,7 @@ export default function Index() {
                 Commander
               </Button>
               <Button 
-                onClick={() => navigate("/taxi")} 
+                onClick={() => navigate("/taxis")} 
                 className="bg-blue-500 hover:bg-blue-600 text-white"
                 size="lg"
               >

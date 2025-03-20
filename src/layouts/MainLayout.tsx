@@ -9,15 +9,15 @@ import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 export const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeSwitcher />
-      </div>
       <Header />
       <main className="flex-1">
         {children || <Outlet />}
       </main>
       <Footer />
       <Toaster />
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeSwitcher />
+      </div>
     </div>
   );
 };

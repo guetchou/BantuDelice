@@ -1,10 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import router from './routes';
 import { NavigationProvider } from './contexts/NavigationContext';
 import { ThemeProvider } from './components/ThemeProvider';
+import { Toaster } from './components/ui/toaster';
 
 function App() {
   const { isLoading } = useAuth();
@@ -21,6 +22,7 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="eazy-congo-theme">
       <NavigationProvider>
         <RouterProvider router={router} />
+        <Toaster />
       </NavigationProvider>
     </ThemeProvider>
   );
