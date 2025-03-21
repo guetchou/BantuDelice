@@ -26,6 +26,8 @@ import TaxiRideDetails from '@/pages/TaxiRideDetails';
 // Restaurant management pages
 import RestaurantManagementPage from '@/pages/restaurant/ManagementPage';
 import RestaurantDashboard from '@/pages/restaurant/Dashboard';
+// Import TaxiBooking page
+import RideStatusPage from '@/pages/taxi/RideStatus';
 
 const mainRoutes: RouteObject[] = [
   {
@@ -74,6 +76,10 @@ const mainRoutes: RouteObject[] = [
       {
         path: '/taxi/details/:rideId',
         element: <ProtectedRoute><TaxiRideDetails /></ProtectedRoute>
+      },
+      {
+        path: '/taxi/status',
+        element: <ProtectedRoute><RideStatusPage /></ProtectedRoute>
       },
       // Covoiturage
       {

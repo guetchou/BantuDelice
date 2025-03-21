@@ -3,7 +3,5 @@ import { useContext } from 'react';
 import { useCart as useCartFromContext } from '@/contexts/CartContext';
 import type { CartItem } from '@/types/cart';
 
-// Réexporter l'interface du contexte
-export const useCart = useCartFromContext;
-
-export default useCart;
+// Exporter le hook de contexte
+export default useCartFromContext;
