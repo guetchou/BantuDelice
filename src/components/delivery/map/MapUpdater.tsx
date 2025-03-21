@@ -4,14 +4,18 @@ import { useMap } from 'react-leaflet';
 
 interface MapUpdaterProps {
   center: [number, number];
+  zoom?: number;
 }
 
-function MapUpdater({ center }: MapUpdaterProps) {
+function MapUpdater({ center, zoom }: MapUpdaterProps) {
   const map = useMap();
   
   useEffect(() => {
-    map.setView(center, map.getZoom());
-  }, [center, map]);
+    if (center && center.length === 2) {
+      const currentZoom = zoom || map.getZoom();
+      map.setView(center, currentZoom);
+    }
+  }, [center, zoom, map]);
   
   return null;
 }

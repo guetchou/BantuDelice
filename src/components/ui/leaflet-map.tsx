@@ -1,45 +1,36 @@
 
-import React from 'react';
-import { 
-  MapContainer as LeafletMapContainer, 
-  TileLayer as LeafletTileLayer, 
-  Marker as LeafletMarker, 
-  Popup as LeafletPopup,
-  Polyline as LeafletPolyline
-} from 'react-leaflet';
-import { 
-  MapContainerProps, 
-  TileLayerProps, 
-  MarkerProps, 
-  PopupProps, 
-  PolylineProps 
-} from 'react-leaflet';
-import { LeafletMouseEvent, Icon } from 'leaflet';
+import React, { ReactNode, CSSProperties } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, Polyline } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Wrapper components to ensure compatibility with the latest react-leaflet
-export interface ExtendedMapContainerProps extends MapContainerProps {
-  center?: [number, number];
+// Define props types
+interface LeafletMapProps {
+  center: [number, number];
   zoom?: number;
-  children: React.ReactNode;
   scrollWheelZoom?: boolean;
+  className?: string;
+  style?: CSSProperties;
+  children?: ReactNode;
 }
 
-export interface ExtendedTileLayerProps extends TileLayerProps {
-  attribution?: string;
-  url: string;
-}
-
-export interface ExtendedMarkerProps extends Omit<MarkerProps, 'position'> {
+interface MarkerProps {
   position: [number, number];
-  icon?: Icon;
-  eventHandlers?: {
-    click?: (e: LeafletMouseEvent) => void;
-    [key: string]: any;
-  };
-  children?: React.ReactNode;
+  icon?: any;
+  children?: ReactNode;
+  onClick?: (e: L.LeafletMouseEvent) => void;
 }
 
-export interface ExtendedPolylineProps extends PolylineProps {
+interface CircleMarkerProps {
+  center: [number, number];
+  radius: number;
+  color?: string;
+  fillColor?: string;
+  fillOpacity?: number;
+  children?: ReactNode;
+}
+
+interface PolylineProps {
   positions: [number, number][];
   color?: string;
   weight?: number;
@@ -47,88 +38,105 @@ export interface ExtendedPolylineProps extends PolylineProps {
   dashArray?: string;
 }
 
-export const MapContainer: React.FC<ExtendedMapContainerProps> = ({ 
-  center, 
-  zoom, 
-  children,
-  scrollWheelZoom,
-  ...props 
+// Default icons
+const defaultIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Map component
+export const LeafletMap: React.FC<LeafletMapProps> = ({
+  center,
+  zoom = 13,
+  scrollWheelZoom = true,
+  className = '',
+  style = {},
+  children
 }) => {
   return (
-    <LeafletMapContainer 
-      {...props}
+    <MapContainer
       center={center}
       zoom={zoom}
       scrollWheelZoom={scrollWheelZoom}
+      className={`h-[50vh] w-full rounded-md ${className}`}
+      style={style}
     >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
       {children}
-    </LeafletMapContainer>
+    </MapContainer>
   );
 };
 
-export const TileLayer: React.FC<ExtendedTileLayerProps> = ({ 
-  attribution, 
-  url,
-  ...props 
-}) => {
-  return (
-    <LeafletTileLayer 
-      {...props}
-      attribution={attribution}
-      url={url}
-    />
-  );
-};
-
-export const Marker: React.FC<ExtendedMarkerProps> = ({ 
-  icon, 
-  position, 
-  eventHandlers, 
+// Marker component
+export const LeafletMarker: React.FC<MarkerProps> = ({
+  position,
+  icon = defaultIcon,
   children,
-  ...props 
+  onClick
 }) => {
   return (
-    <LeafletMarker 
-      {...props}
-      position={position}
-      icon={icon}
-      eventHandlers={eventHandlers}
+    <Marker 
+      position={position} 
+      icon={icon} 
+      eventHandlers={{ click: onClick }}
     >
-      {children}
-    </LeafletMarker>
+      {children && <Popup>{children}</Popup>}
+    </Marker>
   );
 };
 
-export const Popup: React.FC<PopupProps & {
-  children: React.ReactNode;
-}> = ({ children, ...props }) => {
-  return (
-    <LeafletPopup {...props}>
-      {children}
-    </LeafletPopup>
-  );
-};
-
-export const Polyline: React.FC<ExtendedPolylineProps> = ({ 
-  positions, 
-  color, 
-  weight, 
-  opacity, 
-  dashArray,
-  ...props 
+// Circle component
+export const LeafletCircle: React.FC<CircleMarkerProps> = ({
+  center,
+  radius,
+  color = 'blue',
+  fillColor = 'blue',
+  fillOpacity = 0.2,
+  children
 }) => {
-  const pathOptions = {
-    color,
-    weight,
-    opacity,
-    dashArray
-  };
-  
   return (
-    <LeafletPolyline 
-      {...props}
+    <Circle
+      center={center}
+      radius={radius}
+      pathOptions={{ color, fillColor, fillOpacity }}
+    >
+      {children && <Popup>{children}</Popup>}
+    </Circle>
+  );
+};
+
+// Polyline component
+export const LeafletPolyline: React.FC<PolylineProps> = ({
+  positions,
+  color = 'blue',
+  weight = 3,
+  opacity = 0.7,
+  dashArray = ''
+}) => {
+  return (
+    <Polyline
       positions={positions}
-      pathOptions={pathOptions}
+      pathOptions={{ color, weight, opacity, dashArray }}
     />
   );
 };
+
+// MapController for updating view
+export const MapController: React.FC<{ center: [number, number]; zoom?: number }> = ({ center, zoom }) => {
+  const map = useMap();
+  
+  React.useEffect(() => {
+    map.setView(center, zoom || map.getZoom());
+  }, [center, zoom, map]);
+  
+  return null;
+};
+
+export default LeafletMap;

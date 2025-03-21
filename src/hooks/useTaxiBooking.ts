@@ -1,4 +1,6 @@
 
-import { useTaxiBooking } from './taxi';
+import { useTaxiBookingSystem } from "./taxi";
 
-export { useTaxiBooking };
+export const useTaxiBooking = () => {
+  return useTaxiBookingSystem();
+};
