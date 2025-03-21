@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { RouteObject } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import Home from '@/pages/Home';
 import Restaurants from '@/pages/Restaurants';
@@ -16,34 +16,38 @@ import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import NotFound from '@/pages/NotFound';
 
-const mainRoutes = (
-  <Route path="/" element={<MainLayout />}>
-    <Route index element={<Home />} />
-    
-    {/* Restaurant Routes */}
-    <Route path="restaurants" element={<Restaurants />} />
-    <Route path="restaurants/:id" element={<RestaurantDetails />} />
-    
-    {/* Taxi Routes */}
-    <Route path="taxi/booking" element={<TaxiBooking />} />
-    <Route path="taxi/ride/:id" element={<TaxiRideStatus />} />
-    
-    {/* Covoiturage Routes */}
-    <Route path="covoiturage" element={<Covoiturage />} />
-    
-    {/* Order Routes */}
-    <Route path="orders" element={<Orders />} />
-    <Route path="orders/:id" element={<OrderDetails />} />
-    
-    {/* User Routes */}
-    <Route path="profile" element={<Profile />} />
-    <Route path="favorites" element={<Favorites />} />
-    <Route path="messages" element={<Messages />} />
-    <Route path="notifications" element={<Notifications />} />
-    
-    {/* 404 Route */}
-    <Route path="*" element={<NotFound />} />
-  </Route>
-);
+const mainRoutes: RouteObject[] = [
+  {
+    path: "/",
+    element: <MainLayout />,
+    children: [
+      { index: true, element: <Home /> },
+      
+      // Restaurant Routes
+      { path: "restaurants", element: <Restaurants /> },
+      { path: "restaurants/:id", element: <RestaurantDetails /> },
+      
+      // Taxi Routes
+      { path: "taxi/booking", element: <TaxiBooking /> },
+      { path: "taxi/ride/:id", element: <TaxiRideStatus /> },
+      
+      // Covoiturage Routes
+      { path: "covoiturage", element: <Covoiturage /> },
+      
+      // Order Routes
+      { path: "orders", element: <Orders /> },
+      { path: "orders/:id", element: <OrderDetails /> },
+      
+      // User Routes
+      { path: "profile", element: <Profile /> },
+      { path: "favorites", element: <Favorites /> },
+      { path: "messages", element: <Messages /> },
+      { path: "notifications", element: <Notifications /> },
+      
+      // 404 Route - this will handle anything that doesn't match above within the MainLayout
+      { path: "*", element: <NotFound /> }
+    ]
+  }
+];
 
 export default mainRoutes;
