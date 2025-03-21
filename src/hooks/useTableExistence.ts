@@ -2,47 +2,47 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Hook to check if a table exists in the database
- * @param tableName Name of the table to check
- * @returns Object containing existence state and loading state
- */
-export function useTableExistence(tableName: string) {
-  const [exists, setExists] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+interface TableExistenceOptions {
+  tables: string[];
+}
+
+export function useTableExistence({ tables }: TableExistenceOptions) {
+  const [tableExists, setTableExists] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkTableExistence = async () => {
+    const checkTables = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Attempt to query the table with a limit of 0 to just check existence
-        const { count, error } = await supabase
-          .from(tableName)
-          .select('*', { count: 'exact', head: true });
-          
-        // If there's no error, the table exists
-        setExists(error ? false : true);
-        
-        if (error && error.code !== 'PGRST116') {
-          console.error(`Error checking table ${tableName}:`, error);
-          setError(error.message);
+        setLoading(true);
+        const results: Record<string, boolean> = {};
+
+        for (const table of tables) {
+          try {
+            const { count, error } = await supabase
+              .from(table)
+              .select('*', { count: 'exact', head: true });
+              
+            results[table] = !error;
+          } catch (err) {
+            console.error(`Error checking table ${table}:`, err);
+            results[table] = false;
+          }
         }
-      } catch (err) {
-        console.error(`Error checking table ${tableName}:`, err);
-        setError('Failed to check table existence');
-        setExists(false);
+
+        setTableExists(results);
+      } catch (error) {
+        console.error('Error checking tables:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
     
-    checkTableExistence();
-  }, [tableName]);
+    checkTables();
+  }, [tables]);
 
-  return { exists, isLoading, error };
+  return {
+    tableExists,
+    loading,
+    isTableLoading: loading
+  };
 }
-
-export default useTableExistence;
