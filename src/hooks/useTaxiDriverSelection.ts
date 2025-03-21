@@ -1,15 +1,16 @@
 
-import { useState } from 'react';
-import { TaxiDriver } from '@/types/taxi';
 import { useDriverFinder } from './taxi/useDriverFinder';
 import { useDriverDetails } from './taxi/useDriverDetails';
 import { useDriverRequests } from './taxi/useDriverRequests';
+import { useTaxiDriverAvailability } from './taxi/useTaxiDriverAvailability';
+import { useDriverSelectionState } from './taxi/useDriverSelectionState';
 
 /**
  * Combines driver selection hooks into a single interface
  */
 export function useTaxiDriverSelection() {
-  const [nearbyDrivers, setNearbyDrivers] = useState<TaxiDriver[]>([]);
+  const { nearbyDrivers, setNearbyDrivers } = useTaxiDriverAvailability();
+  const { selectedDriver, handleSelectDriver } = useDriverSelectionState();
   
   const { isLoading: isDriverFinderLoading, findOptimalDrivers } = useDriverFinder();
   const { isLoading: isDriverDetailsLoading, getDriverDetails } = useDriverDetails();
@@ -40,8 +41,10 @@ export function useTaxiDriverSelection() {
   return {
     isLoading,
     nearbyDrivers,
+    selectedDriver,
     findOptimalDrivers: findDrivers,
     getDriverDetails,
-    requestDriver
+    requestDriver,
+    handleSelectDriver
   };
 }
