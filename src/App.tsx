@@ -1,6 +1,6 @@
 
-import { Suspense, lazy } from 'react'
-import { Routes, Route, useRoutes } from 'react-router-dom'
+import { Suspense } from 'react'
+import { useRoutes } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { NavigationProvider } from './contexts/NavigationContext'
 import Loading from './components/Loading'

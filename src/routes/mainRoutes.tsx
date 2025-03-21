@@ -2,7 +2,7 @@
 import React from 'react';
 import { RouteObject } from "react-router-dom";
 import Layout from '@/components/Layout';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { CartProvider } from '@/contexts/CartContext';
 
 // Pages

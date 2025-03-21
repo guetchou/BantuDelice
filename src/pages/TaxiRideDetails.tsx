@@ -1,8 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { TaxiRide, TaxiDriver } from '@/types/taxi';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Card, 
   CardContent, 
@@ -10,53 +9,49 @@ import {
   CardFooter, 
   CardHeader, 
   CardTitle 
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { 
-  MapPin, 
   Clock, 
-  Car, 
+  MapPin, 
   User, 
   Phone, 
   CreditCard, 
-  ArrowLeft,
-  AlertCircle
-} from 'lucide-react';
+  Star, 
+  Car, 
+  ArrowRight,
+  Calendar
+} from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
-import { Layout } from '@/components/Layout';
+import { TaxiRide, TaxiDriver } from '@/types/taxi';
+import Layout from '@/components/Layout';
 
 const TaxiRideDetails = () => {
   const { rideId } = useParams<{ rideId: string }>();
   const [ride, setRide] = useState<TaxiRide | null>(null);
   const [driver, setDriver] = useState<TaxiDriver | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
 
   useEffect(() => {
     const fetchRideDetails = async () => {
-      if (!rideId) {
-        setError('Identifiant de course invalide');
-        setLoading(false);
-        return;
-      }
-
+      setLoading(true);
       try {
+        // Fetch ride details
         const { data: rideData, error: rideError } = await supabase
           .from('taxi_rides')
           .select('*')
           .eq('id', rideId)
           .single();
 
-        if (rideError) {
-          throw rideError;
-        }
-
+        if (rideError) throw rideError;
         setRide(rideData as TaxiRide);
 
-        // Fetch driver info if available
+        // Fetch driver details if available
         if (rideData.driver_id) {
           const { data: driverData, error: driverError } = await supabase
             .from('taxi_drivers')
@@ -68,235 +63,258 @@ const TaxiRideDetails = () => {
             setDriver(driverData as TaxiDriver);
           }
         }
-      } catch (err) {
-        console.error('Error fetching ride details:', err);
-        setError('Erreur lors du chargement des détails de la course');
+      } catch (error) {
+        console.error('Error fetching ride details:', error);
+        toast.error('Impossible de récupérer les détails de la course');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRideDetails();
+    if (rideId) {
+      fetchRideDetails();
+    }
   }, [rideId]);
-
-  const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return 'En attente';
-      case 'accepted': return 'Acceptée';
-      case 'en_route': return 'En route';
-      case 'arrived': return 'Arrivée';
-      case 'in_progress': return 'En cours';
-      case 'completed': return 'Terminée';
-      case 'cancelled': return 'Annulée';
-      default: return 'Statut inconnu';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'accepted': return 'bg-blue-100 text-blue-800';
-      case 'en_route': return 'bg-blue-100 text-blue-800';
-      case 'arrived': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-green-100 text-green-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const cancelRide = async () => {
-    if (!ride) return;
-
-    try {
-      const { error } = await supabase
-        .from('taxi_rides')
-        .update({ status: 'cancelled' })
-        .eq('id', ride.id);
-
-      if (error) throw error;
-
-      setRide({ ...ride, status: 'cancelled' } as TaxiRide);
-      toast.success('Votre course a été annulée');
-    } catch (err) {
-      console.error('Error cancelling ride:', err);
-      toast.error('Erreur lors de l\'annulation de la course');
-    }
-  };
 
   if (loading) {
     return (
       <Layout>
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
         </div>
       </Layout>
     );
   }
 
-  if (error || !ride) {
+  if (!ride) {
     return (
       <Layout>
-        <Card className="max-w-3xl mx-auto mt-8">
-          <CardHeader>
-            <CardTitle className="text-red-500 flex items-center">
-              <AlertCircle className="mr-2" /> Erreur
-            </CardTitle>
-            <CardDescription>
-              {error || "Impossible de trouver les détails de cette course"}
-            </CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button asChild>
-              <Link to="/taxis">Retour à la réservation</Link>
-            </Button>
-          </CardFooter>
-        </Card>
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-gray-500">Course non trouvée</p>
+            </CardContent>
+          </Card>
+        </div>
       </Layout>
     );
   }
 
-  return (
-    <Layout>
-      <div className="max-w-3xl mx-auto py-8 px-4">
-        <Link to="/taxis" className="inline-flex items-center text-primary mb-6 hover:underline">
-          <ArrowLeft className="h-4 w-4 mr-2" /> Retour aux réservations
-        </Link>
+  // Helper function to display status badge
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="secondary">En attente</Badge>;
+      case 'accepted':
+        return <Badge variant="outline">Acceptée</Badge>;
+      case 'in_progress':
+        return <Badge variant="default">En cours</Badge>;
+      case 'completed':
+        return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Terminée</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Annulée</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
-        <Card>
+  return (
+    <Layout backLink="/taxis" backText="Retour aux courses">
+      <div className="container mx-auto px-4 py-8">
+        <Card className="mb-6">
           <CardHeader>
-            <div className="flex justify-between items-start">
+            <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Détails de la course</CardTitle>
+                <CardTitle className="text-xl">Course #{ride.id.substring(0, 8)}</CardTitle>
                 <CardDescription>
-                  Réservée le {formatDate(ride.created_at)}
+                  {new Date(ride.created_at).toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </CardDescription>
               </div>
-              <Badge className={getStatusColor(ride.status)}>
-                {getStatusText(ride.status)}
-              </Badge>
+              {getStatusBadge(ride.status)}
             </div>
           </CardHeader>
-
+          
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <h3 className="font-medium text-gray-800">Détails du trajet</h3>
+                
+                <div className="flex items-start">
+                  <MapPin className="h-5 w-5 text-gray-500 mt-0.5 mr-3" />
                   <div>
-                    <h3 className="font-medium text-sm">Point de départ</h3>
-                    <p>{ride.pickup_address}</p>
+                    <p className="font-medium">Point de départ</p>
+                    <p className="text-gray-600">{ride.pickup_address}</p>
                   </div>
                 </div>
-
-                <div className="flex items-start space-x-3">
-                  <MapPin className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                
+                <div className="flex items-start">
+                  <MapPin className="h-5 w-5 text-primary mt-0.5 mr-3" />
                   <div>
-                    <h3 className="font-medium text-sm">Destination</h3>
-                    <p>{ride.destination_address}</p>
+                    <p className="font-medium">Destination</p>
+                    <p className="text-gray-600">{ride.destination_address}</p>
                   </div>
                 </div>
-
-                <div className="flex items-start space-x-3">
-                  <Clock className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                
+                <div className="flex items-center">
+                  <Clock className="h-5 w-5 text-gray-500 mr-3" />
                   <div>
-                    <h3 className="font-medium text-sm">Heure de prise en charge</h3>
-                    <p>{formatDate(ride.pickup_time)}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <Car className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-medium text-sm">Type de véhicule</h3>
-                    <p className="capitalize">{ride.vehicle_type}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <CreditCard className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-medium text-sm">Paiement</h3>
-                    <p>
-                      {ride.payment_method === 'card' ? 'Carte bancaire' : 
-                        ride.payment_method === 'cash' ? 'Espèces' : 'Mobile money'}
+                    <p className="font-medium">Heure de prise en charge</p>
+                    <p className="text-gray-600">
+                      {new Date(ride.pickup_time).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                      {ride.pickup_time_type === 'scheduled' ? ' (programmée)' : ' (immédiate)'}
                     </p>
                   </div>
                 </div>
-
-                <div className="flex items-start space-x-3">
-                  <CreditCard className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                
+                <div className="flex items-center">
+                  <Calendar className="h-5 w-5 text-gray-500 mr-3" />
                   <div>
-                    <h3 className="font-medium text-sm">Prix</h3>
-                    <p>{ride.estimated_price} FCFA{ride.actual_price ? ` (Final: ${ride.actual_price} FCFA)` : ''}</p>
+                    <p className="font-medium">Date de réservation</p>
+                    <p className="text-gray-600">
+                      {formatDistanceToNow(new Date(ride.created_at), { 
+                        addSuffix: true,
+                        locale: fr
+                      })}
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {ride.special_instructions && (
-              <div className="bg-gray-50 p-4 rounded-md">
-                <h3 className="font-medium mb-2">Instructions spéciales</h3>
-                <p className="text-gray-700">{ride.special_instructions}</p>
-              </div>
-            )}
-
-            {driver && (
-              <div className="bg-primary/5 p-4 rounded-md">
-                <h3 className="font-medium mb-3">Détails du chauffeur</h3>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center">
-                      {driver.photo_url ? (
-                        <img src={driver.photo_url} alt={driver.name} className="h-12 w-12 rounded-full object-cover" />
-                      ) : (
-                        <User className="h-6 w-6 text-gray-400" />
-                      )}
+              
+              <div className="space-y-4">
+                <h3 className="font-medium text-gray-800">Détails du paiement</h3>
+                
+                <div className="flex items-center">
+                  <Car className="h-5 w-5 text-gray-500 mr-3" />
+                  <div>
+                    <p className="font-medium">Type de véhicule</p>
+                    <p className="text-gray-600">
+                      {ride.vehicle_type === 'standard' ? 'Standard' : 
+                       ride.vehicle_type === 'premium' ? 'Premium' : 
+                       ride.vehicle_type === 'electric' ? 'Électrique' : 
+                       ride.vehicle_type}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center">
+                  <CreditCard className="h-5 w-5 text-gray-500 mr-3" />
+                  <div>
+                    <p className="font-medium">Méthode de paiement</p>
+                    <p className="text-gray-600">
+                      {ride.payment_method === 'cash' ? 'Espèces' : 
+                       ride.payment_method === 'card' ? 'Carte' : 
+                       ride.payment_method === 'mobile_money' ? 'Mobile Money' : 
+                       ride.payment_method}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center">
+                  <div className="h-5 w-5 flex items-center justify-center text-gray-500 mr-3">
+                    <span className="font-bold">€</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">Prix estimé</p>
+                    <p className="text-gray-600">{ride.estimated_price.toLocaleString('fr-FR')} XAF</p>
+                  </div>
+                </div>
+                
+                {ride.actual_price && (
+                  <div className="flex items-center">
+                    <div className="h-5 w-5 flex items-center justify-center text-primary mr-3">
+                      <span className="font-bold">€</span>
                     </div>
                     <div>
-                      <p className="font-medium">{driver.name}</p>
-                      <p className="text-sm text-gray-500">{driver.vehicle_model} - {driver.license_plate}</p>
+                      <p className="font-medium">Prix final</p>
+                      <p className="text-gray-600">{ride.actual_price.toLocaleString('fr-FR')} XAF</p>
                     </div>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => window.open(`tel:${driver.phone}`)}
-                    className="flex items-center gap-2"
-                  >
-                    <Phone className="h-4 w-4" />
-                    Appeler
-                  </Button>
-                </div>
+                )}
               </div>
+            </div>
+            
+            {driver && (
+              <>
+                <Separator />
+                
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-800">Détails du chauffeur</h3>
+                  
+                  <div className="flex items-center">
+                    <div className="mr-4">
+                      {driver.profile_picture ? (
+                        <div className="h-12 w-12 rounded-full overflow-hidden">
+                          <img 
+                            src={driver.profile_picture} 
+                            alt={driver.name} 
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                          <User className="h-6 w-6 text-gray-500" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium">{driver.name}</p>
+                      <div className="flex items-center text-gray-600">
+                        <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                        <span>{driver.average_rating.toFixed(1)}</span>
+                        <span className="mx-2">•</span>
+                        <span>{driver.vehicle_type}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <Phone className="h-5 w-5 text-gray-500 mr-3" />
+                    <div>
+                      <p className="font-medium">Contact</p>
+                      <p className="text-gray-600">{driver.phone}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
-
-          <CardFooter className="flex justify-between border-t pt-6">
-            <Button asChild variant="outline">
-              <Link to={`/taxi/ride/${ride.id}`}>
-                Suivre en temps réel
-              </Link>
-            </Button>
-            
-            {ride.status === 'pending' && (
-              <Button 
-                variant="destructive" 
-                onClick={cancelRide}
-              >
-                Annuler la course
+          
+          <CardFooter className="flex justify-between pt-2">
+            {ride.status === 'completed' ? (
+              <Button variant="outline" asChild>
+                <Link to={`/taxi/rating/${ride.id}`}>
+                  Évaluer cette course
+                </Link>
+              </Button>
+            ) : ride.status === 'in_progress' ? (
+              <Button asChild>
+                <Link to={`/taxi/ride/${ride.id}`}>
+                  Suivre en temps réel <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : ride.status === 'pending' || ride.status === 'accepted' ? (
+              <Button asChild>
+                <Link to={`/taxi/ride/${ride.id}`}>
+                  Voir le statut <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="outline" asChild>
+                <Link to="/taxis">
+                  Réserver une nouvelle course
+                </Link>
               </Button>
             )}
           </CardFooter>

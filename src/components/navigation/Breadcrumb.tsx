@@ -4,22 +4,29 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useNavigation } from '@/contexts/NavigationContext';
 
-interface BreadcrumbProps {
-  className?: string;
+interface BreadcrumbItem {
+  label: string;
+  path: string;
 }
 
-export const Breadcrumb: React.FC<BreadcrumbProps> = ({ className }) => {
-  const { breadcrumbs } = useNavigation();
+interface BreadcrumbProps {
+  className?: string;
+  items?: BreadcrumbItem[];
+}
 
-  if (breadcrumbs.length <= 1) {
+export const Breadcrumb: React.FC<BreadcrumbProps> = ({ className, items }) => {
+  const { currentPath } = useNavigation();
+  
+  // Si aucun élément n'est fourni, retourner null
+  if (!items || items.length <= 1) {
     return null;
   }
 
   return (
     <nav className={`flex text-sm ${className}`} aria-label="Fil d'Ariane">
       <ol className="flex items-center space-x-1">
-        {breadcrumbs.map((crumb, index) => {
-          const isLast = index === breadcrumbs.length - 1;
+        {items.map((crumb, index) => {
+          const isLast = index === items.length - 1;
           
           return (
             <li key={crumb.path} className="flex items-center">
