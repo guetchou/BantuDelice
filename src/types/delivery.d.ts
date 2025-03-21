@@ -6,12 +6,12 @@ export interface DeliveryDriver {
   current_latitude?: number;
   current_longitude?: number;
   is_available: boolean;
-  status: string;
+  status: DeliveryDriverStatus;
   average_rating: number;
   total_deliveries: number;
   total_earnings: number;
   last_location_update?: string;
-  vehicle_type?: string;
+  vehicle_type?: DeliveryVehicleType;
   profile_picture?: string;
   commission_rate?: number;
   created_at: string;
@@ -21,6 +21,11 @@ export interface DeliveryDriver {
     latitude: number;
     longitude: number;
   };
+  is_external?: boolean;
+  distance?: number;
+  verification_status?: 'pending' | 'approved' | 'rejected';
+  current_deliveries?: string[];
+  max_concurrent_deliveries?: number;
 }
 
 export interface DeliveryRequest {
@@ -28,12 +33,12 @@ export interface DeliveryRequest {
   order_id: string;
   restaurant_id: string;
   assigned_driver_id?: string;
-  status: 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'cancelled';
+  status: DeliveryStatus;
   delivery_address: string;
   delivery_latitude?: number;
   delivery_longitude?: number;
   delivery_instructions?: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: DeliveryPriority;
   delivery_fee: number;
   estimated_delivery_time?: string;
   actual_delivery_time?: string;
@@ -46,7 +51,7 @@ export interface DeliveryRequest {
   cancellation_reason?: string;
   contact_phone?: string;
   contact_name?: string;
-  delivery_type: 'standard' | 'express' | 'scheduled';
+  delivery_type: DeliveryType;
   estimated_distance_km?: number;
   is_contactless_delivery?: boolean;
   verification_code?: string;
@@ -54,6 +59,15 @@ export interface DeliveryRequest {
   tip_amount?: number;
   total_amount: number;
   accepted_at?: string;
+  pickup_address?: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  is_priority?: boolean;
+  distance?: number;
+  estimated_duration?: number;
+  requested_at?: string;
+  completed_at?: string;
+  is_external?: boolean;
 }
 
 export interface DeliveryVerification {
@@ -70,6 +84,7 @@ export interface DeliveryVerification {
   updated_at?: string;
   reviewer_id?: string;
   reviewed_at?: string;
+  rejection_reason?: string;
 }
 
 export interface DeliverySettings {
@@ -86,6 +101,15 @@ export interface DeliverySettings {
   delivery_time_estimate_minutes: number;
   created_at: string;
   updated_at: string;
+  allow_restaurant_delivery?: boolean;
+  allow_external_delivery?: boolean;
+  default_delivery_fee?: number;
+  free_delivery_threshold?: number;
+  max_delivery_distance?: number;
+  estimated_delivery_time?: number;
+  auto_accept_orders?: boolean;
+  auto_assign_drivers?: boolean;
+  accepted_external_services?: string[];
 }
 
 export interface DeliveryRoute {
@@ -96,12 +120,13 @@ export interface DeliveryRoute {
   estimated_end_time?: string;
   actual_end_time?: string;
   total_distance_km?: number;
+  total_distance?: number;
   total_time_minutes?: number;
   waypoints?: {
     latitude: number;
     longitude: number;
-    type: 'pickup' | 'delivery';
-    request_id: string;
+    type?: 'pickup' | 'delivery';
+    request_id?: string;
     is_priority?: boolean;
   }[];
   delivery_requests?: string[];
@@ -109,8 +134,46 @@ export interface DeliveryRoute {
   updated_at?: string;
 }
 
+export interface DeliveryMessage {
+  id: string;
+  delivery_request_id: string;
+  sender_id: string;
+  sender_type: 'driver' | 'customer' | 'restaurant';
+  message: string;
+  sent_at: string;
+  read_at?: string;
+  media_url?: string;
+}
+
+export interface DeliveryDriverRating {
+  id: string;
+  driver_id: string;
+  order_id: string;
+  user_id: string;
+  rating: number;
+  comment?: string;
+  timeliness_rating?: number;
+  courtesy_rating?: number;
+  order_handling_rating?: number;
+  created_at: string;
+}
+
+export interface ExternalDeliveryService {
+  id: string;
+  name: string;
+  logo_url?: string;
+  api_key?: string;
+  active: boolean;
+  base_fee: number;
+  fee_per_km: number;
+  is_integrated: boolean;
+  service_areas: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 export type DeliveryDriverStatus = 'available' | 'busy' | 'offline' | 'on_break';
 export type DeliveryVehicleType = 'bike' | 'scooter' | 'car' | 'walk';
-export type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'cancelled';
+export type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'delivering' | 'delivered' | 'cancelled' | 'accepted' | 'failed';
 export type DeliveryPriority = 'high' | 'medium' | 'low';
-export type DeliveryType = 'standard' | 'express' | 'scheduled';
+export type DeliveryType = 'standard' | 'express' | 'scheduled' | 'restaurant';

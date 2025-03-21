@@ -7,38 +7,47 @@ export interface CartItem {
   image_url?: string;
   description?: string;
   restaurant_id: string;
-  options?: Array<{
-    name: string;
-    value: string;
-    price: number;
-  }>;
+  options?: CartItemOption[];
   special_instructions?: string;
-  combo_item?: boolean;
+}
+
+export interface CartItemOption {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
 }
 
 export interface Cart {
   items: CartItem[];
-  totalItems: number;
-  totalAmount: number;
-  total: number;
-  discountAmount?: number;
+  restaurant_id?: string;
+  discount_code?: string;
+  discount_amount?: number;
+  delivery_address?: string;
+  delivery_fee?: number;
+  payment_method?: string;
+  special_instructions?: string;
 }
 
-export type CartAction = 
-  | { type: 'ADD_ITEM'; payload: CartItem }
-  | { type: 'REMOVE_ITEM'; payload: string }
-  | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
-  | { type: 'CLEAR_CART' }
-  | { type: 'APPLY_DISCOUNT'; payload: number }
-  | { type: 'REMOVE_DISCOUNT' };
+export interface CartState {
+  isOpen: boolean;
+  items: CartItem[];
+  restaurant_id?: string;
+  discount_code?: string;
+  discount_amount?: number;
+}
 
 export interface CartContextType {
   cart: Cart;
-  addToCart: (item: CartItem) => void;
+  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
-  applyDiscount: (amount: number) => void;
+  applyDiscount: (code: string, amount: number) => void;
   removeDiscount: () => void;
   updateQuantity: (itemId: string, quantity: number) => void;
-  state: Cart;
+  subtotal: number;
+  totalItems: number;
+  discount: number;
+  discountCode: string | null;
+  state: CartState;
 }

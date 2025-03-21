@@ -1,225 +1,162 @@
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
-import { nestAuthApi } from '@/integrations/api/nestjs-client';
-import { toast } from 'sonner';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { 
+  useSessionContext, 
+  useSupabaseClient, 
+  Session,
+  User
+} from '@supabase/auth-helpers-react';
+import type { Provider, WeakPassword } from '@supabase/supabase-js';
 
-// Définition du context pour l'authentification
-interface AuthContextProps {
+// Context type definition
+export interface AuthContextProps {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  nestToken: string | null;
+  isLoading: boolean; // Added for backward compatibility
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, metadata?: any) => Promise<any>;
   signOut: () => Promise<void>;
+  signInWithProvider: (provider: Provider) => Promise<any>;
   resetPassword: (email: string) => Promise<any>;
-  updateProfile: (data: any) => Promise<any>;
+  updatePassword: (newPassword: string) => Promise<any>;
+  nestToken: string;
 }
 
-export const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+// Create context
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+// Provider component
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { session, isLoading } = useSessionContext();
+  const supabase = useSupabaseClient();
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [nestToken, setNestToken] = useState<string | null>(null);
+  const [nestToken, setNestToken] = useState('');
 
+  // Effect to set user when session changes
   useEffect(() => {
-    // Vérifier si un token NestJS existe dans le localStorage
-    const savedNestToken = localStorage.getItem('nest_auth_token');
-    if (savedNestToken) {
-      setNestToken(savedNestToken);
+    if (session?.user) {
+      setUser(session.user);
+    } else {
+      setUser(null);
     }
+    setLoading(isLoading);
+  }, [session, isLoading]);
 
-    // Configurer l'écouteur d'authentification de Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user || null);
-      setLoading(false);
-
-      // Si l'utilisateur est connecté à Supabase mais pas à NestJS, essayons de récupérer un utilisateur depuis NestJS
-      if (session?.user && !savedNestToken) {
-        try {
-          const userEmail = session.user.email;
-          if (userEmail) {
-            // Dans un cas réel, il faudrait probablement utiliser un token commun ou une autre méthode
-            // Mais pour la démonstration, on tente simplement de récupérer l'état de l'utilisateur
-            const nestUser = await nestAuthApi.getUser();
-            if (nestUser) {
-              // Stockage du token NestJS s'il est disponible
-              const nestToken = localStorage.getItem('nest_auth_token');
-              if (nestToken) {
-                setNestToken(nestToken);
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Erreur lors de la synchronisation NestJS:", error);
-        }
-      }
-    });
-
-    // Initial session check
-    checkSession();
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  async function checkSession() {
+  // Sign in function
+  const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        throw error;
-      }
-      setSession(data.session);
-      setUser(data.session?.user || null);
-    } catch (error) {
-      console.error("Erreur lors de la vérification de la session:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function signIn(email: string, password: string) {
-    try {
-      setLoading(true);
-      
-      // Authentification avec NestJS d'abord
-      const nestResult = await nestAuthApi.login(email, password);
-      if (nestResult.token) {
-        setNestToken(nestResult.token);
-        localStorage.setItem('nest_auth_token', nestResult.token);
-      }
-      
-      // Puis avec Supabase (pour la rétrocompatibilité)
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
       if (error) throw error;
-      
-      setUser(data.user);
-      setSession(data.session);
-      
       return { data, error: null };
     } catch (error) {
-      console.error("Erreur lors de la connexion:", error);
+      console.error('Error signing in:', error);
       return { data: null, error };
-    } finally {
-      setLoading(false);
     }
-  }
+  };
 
-  async function signUp(email: string, password: string, metadata?: any) {
+  // Sign up function
+  const signUp = async (email: string, password: string, metadata?: any) => {
     try {
-      setLoading(true);
-      
-      // Enregistrement avec NestJS d'abord
-      const nestResult = await nestAuthApi.register(email, password, metadata?.first_name, metadata?.last_name);
-      if (nestResult.token) {
-        setNestToken(nestResult.token);
-        localStorage.setItem('nest_auth_token', nestResult.token);
-      }
-      
-      // Puis avec Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: metadata }
+        options: {
+          data: metadata,
+        },
       });
       
       if (error) throw error;
-      
-      setUser(data.user);
-      setSession(data.session);
-      
       return { data, error: null };
     } catch (error) {
-      console.error("Erreur lors de l'inscription:", error);
+      console.error('Error signing up:', error);
       return { data: null, error };
-    } finally {
-      setLoading(false);
     }
-  }
+  };
 
-  async function signOut() {
+  // Sign out function
+  const signOut = async (): Promise<void> => {
     try {
-      // Déconnexion de NestJS
-      nestAuthApi.logout();
-      setNestToken(null);
-      localStorage.removeItem('nest_auth_token');
-      
-      // Déconnexion de Supabase
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      
-      return { error: null };
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-      return { error };
+      console.error('Error signing out:', error);
     }
-  }
+  };
 
-  async function resetPassword(email: string) {
+  // Sign in with provider
+  const signInWithProvider = async (provider: Provider) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
       });
       
       if (error) throw error;
-      
-      toast.success("Instructions de réinitialisation envoyées par email");
-      return { error: null };
+      return { data, error: null };
     } catch (error) {
-      console.error("Erreur lors de la réinitialisation du mot de passe:", error);
-      return { error };
+      console.error('Error signing in with provider:', error);
+      return { data: null, error };
     }
-  }
+  };
 
-  async function updateProfile(data: any) {
+  // Reset password
+  const resetPassword = async (email: string) => {
     try {
-      // Mettre à jour le profil dans Supabase
-      const { error } = await supabase.auth.updateUser({
-        data
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+      
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      return { data: null, error };
+    }
+  };
+
+  // Update password
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,
       });
       
       if (error) throw error;
-      
-      // Rafraîchir l'utilisateur
-      await checkSession();
-      
-      // Dans un cas réel, il faudrait également mettre à jour le profil dans NestJS
-      // si nécessaire
-      
-      return { error: null };
+      return { data, error: null };
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du profil:", error);
-      return { error };
+      console.error('Error updating password:', error);
+      return { data: null, error };
     }
-  }
+  };
 
-  const value = {
+  // Context value
+  const value: AuthContextProps = {
     user,
     session,
     loading,
-    nestToken,
+    isLoading: loading, // Added for backward compatibility
     signIn,
     signUp,
     signOut,
+    signInWithProvider,
     resetPassword,
-    updateProfile
+    updatePassword,
+    nestToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+};
 
-export const useAuth = () => {
+// Hook to use auth context
+export const useAuth = (): AuthContextProps => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
+
+export default useAuth;

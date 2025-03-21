@@ -38,7 +38,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           )}
           
           <div className="absolute top-2 right-2 flex flex-col items-end space-y-1">
-            <Badge variant={restaurant.is_open ? "success" : "destructive"} className="text-xs">
+            <Badge variant={restaurant.is_open ? "default" : "destructive"} className="text-xs">
               {restaurant.is_open ? 'Ouvert' : 'Fermé'}
             </Badge>
             

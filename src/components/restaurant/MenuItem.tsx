@@ -24,7 +24,6 @@ const MenuItemComponent: React.FC<MenuItemProps> = ({ item, restaurantId }) => {
         id: item.id,
         name: item.name,
         price: item.price,
-        quantity: 1,
         image_url: item.image_url,
         description: item.description,
         restaurant_id: restaurantId

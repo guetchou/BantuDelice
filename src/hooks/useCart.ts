@@ -1,31 +1,61 @@
 
 import { useContext } from 'react';
-import { CartContext, CartContextType } from '@/contexts/CartContext';
+import { CartContext } from '@/contexts/CartContext';
+import type { CartItem } from '@/types/cart';
 
-/**
- * Hook to access the cart context
- * @returns The cart context
- */
-export const useCart = (): CartContextType => {
+interface UseCartReturn {
+  cart: {
+    items: CartItem[];
+    restaurant_id?: string;
+    discount_code?: string;
+    discount_amount?: number;
+  };
+  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  removeFromCart: (itemId: string) => void;
+  clearCart: () => void;
+  applyDiscount: (code: string, amount: number) => void;
+  removeDiscount: () => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
+  subtotal: number;
+  totalItems: number;
+  discount: number;
+  discountCode: string | null;
+}
+
+export const useCart = (): UseCartReturn => {
   const context = useContext(CartContext);
   
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useCart must be used within a CartProvider');
   }
   
+  const { 
+    cart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    applyDiscount,
+    removeDiscount,
+    updateQuantity,
+    subtotal,
+    totalItems,
+    discount,
+    discountCode,
+    state
+  } = context;
+  
   return {
-    cart: context.cart,
-    addToCart: context.addToCart,
-    removeFromCart: context.removeFromCart,
-    clearCart: context.clearCart,
-    applyDiscount: context.applyDiscount,
-    removeDiscount: context.removeDiscount,
-    updateQuantity: context.updateQuantity,
-    subtotal: context.subtotal,
-    totalItems: context.totalItems,
-    discount: context.discount,
-    discountCode: context.discountCode,
-    state: context.state
+    cart,
+    addToCart,
+    removeFromCart,
+    clearCart,
+    applyDiscount,
+    removeDiscount,
+    updateQuantity,
+    subtotal,
+    totalItems,
+    discount,
+    discountCode,
   };
 };
 
