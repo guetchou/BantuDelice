@@ -1,117 +1,182 @@
 
-import { useNavigate } from 'react-router-dom';
-import { useFavorites } from '@/hooks/useFavorites';
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, ShoppingCart } from "lucide-react";
-import { useCart } from "@/hooks/useCart";
-import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Star, StarOff, ShoppingBag } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import useCart from '@/hooks/useCart';
 
-const FavoritesList = () => {
-  const navigate = useNavigate();
-  const { favorites, isLoading, removeFavorite } = useFavorites();
+interface Restaurant {
+  id: string;
+  name: string;
+  description: string;
+  address: string;
+  image_url: string;
+  cuisine_type: string;
+  average_rating: number;
+}
+
+interface FavoritesListProps {
+  userId: string;
+}
+
+const FavoritesList: React.FC<FavoritesListProps> = ({ userId }) => {
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   const { addToCart } = useCart();
 
-  const handleAddToCart = (favorite: any) => {
-    const menuItem = favorite.menu_items;
-
-    addToCart({
-      id: menuItem.id,
-      name: menuItem.name,
-      price: menuItem.price,
-      image_url: menuItem.image_url || '',
-      quantity: 1,
-      restaurant_id: menuItem.restaurant_id
-    });
+  useEffect(() => {
+    if (!userId) return;
     
-    toast.success(`${menuItem.name} a été ajouté à votre panier`);
+    fetchFavorites();
+  }, [userId]);
+
+  const fetchFavorites = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select(`
+          id,
+          restaurant_id,
+          user_id,
+          created_at,
+          restaurants:restaurant_id (id, name)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setFavorites(data || []);
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+      toast({
+        title: "Error",
+        description: "Could not load favorites",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <div className="aspect-video">
-                <Skeleton className="h-full w-full" />
-              </div>
-              <CardContent className="p-4">
-                <Skeleton className="h-4 w-3/4 mb-2" />
-                <Skeleton className="h-3 w-full mb-4" />
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-9 w-24" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
+  const removeFavorite = async (favoriteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('id', favoriteId);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setFavorites(favorites.filter(fav => fav.id !== favoriteId));
+      
+      toast({
+        title: "Success",
+        description: "Restaurant removed from favorites",
+      });
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+      toast({
+        title: "Error",
+        description: "Could not remove from favorites",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return <FavoritesListSkeleton />;
   }
 
-  if (!favorites?.length) {
+  if (favorites.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-          <Heart className="h-8 w-8 text-gray-400" />
-        </div>
-        <h3 className="text-lg font-medium mb-2">Vous n'avez pas encore de favoris</h3>
-        <p className="text-gray-500 mb-6">Explorez nos restaurants et ajoutez vos plats préférés à votre liste de favoris</p>
-        <Button onClick={() => navigate('/restaurants')}>
-          Explorer les restaurants
+      <div className="text-center py-10">
+        <StarOff className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h3 className="text-lg font-medium">No favorites yet</h3>
+        <p className="text-muted-foreground mt-2">
+          Browse restaurants and add them to your favorites
+        </p>
+        <Button className="mt-4" asChild>
+          <Link to="/restaurants">Browse Restaurants</Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {favorites.map((favorite) => (
-          <Card key={favorite.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="aspect-video relative">
-              <img 
-                src={favorite.menu_items.image_url || '/images/default-food.jpg'} 
-                alt={favorite.menu_items.name}
-                className="w-full h-full object-cover"
-              />
-              {favorite.restaurants?.name && (
-                <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                  {favorite.restaurants.name}
-                </div>
-              )}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {favorites.map((favorite) => (
+        <Card key={favorite.id} className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="relative">
+              <Link to={`/restaurant/${favorite.restaurant_id}`}>
+                <img 
+                  src={`https://source.unsplash.com/random/400x300/?restaurant,${favorite.restaurants.name}`}
+                  alt={favorite.restaurants.name}
+                  className="w-full h-48 object-cover"
+                />
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 bg-white bg-opacity-80 rounded-full"
+                onClick={() => removeFavorite(favorite.id)}
+              >
+                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+              </Button>
             </div>
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-lg mb-2">{favorite.menu_items.name}</h3>
-              <p className="text-sm text-gray-600 mb-4">{favorite.menu_items.description}</p>
-              <div className="flex justify-between items-center">
-                <span className="font-bold">
-                  {favorite.menu_items.price.toLocaleString()} FCFA
-                </span>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeFavorite(favorite.id)}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    <Heart className="h-4 w-4 fill-current" />
-                  </Button>
-                  <Button 
-                    onClick={() => handleAddToCart(favorite)}
-                    size="icon"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            <div className="p-4">
+              <Link to={`/restaurant/${favorite.restaurant_id}`}>
+                <h3 className="text-lg font-medium hover:text-primary transition-colors">
+                  {favorite.restaurants.name}
+                </h3>
+              </Link>
+              <p className="text-muted-foreground text-sm mt-1">
+                Added on {new Date(favorite.created_at).toLocaleDateString()}
+              </p>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between p-4 pt-0">
+            <Button asChild variant="outline">
+              <Link to={`/restaurant/${favorite.restaurant_id}`}>
+                View Menu
+              </Link>
+            </Button>
+            <Button variant="secondary" className="gap-2">
+              <ShoppingBag className="h-4 w-4" />
+              Order Now
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
+const FavoritesListSkeleton = () => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3, 4, 5, 6].map((item) => (
+        <Card key={item} className="overflow-hidden">
+          <CardContent className="p-0">
+            <Skeleton className="w-full h-48" />
+            <div className="p-4">
+              <Skeleton className="h-6 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between p-4 pt-0">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-28" />
+          </CardFooter>
+        </Card>
+      ))}
     </div>
   );
 };

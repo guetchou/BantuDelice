@@ -1,395 +1,283 @@
+
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Layout } from '@/components/Layout';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/hooks/useUser';
-import { CreditCard, ArrowLeft, Check, AlertCircle, Smartphone } from 'lucide-react';
-import { MobilePayment } from '@/components/payment';
-import { SubscriptionPlan, PartnerSubscription } from '@/types/subscription';
+import { useToast } from '@/hooks/use-toast';
+import { CreditCard, Building2, ChevronLeft, Shield, Check } from 'lucide-react';
+import Layout from '@/components/Layout';
+import { SubscriptionInterval } from '@/types/subscription';
 
-export default function SubscriptionCheckout() {
-  const { planId } = useParams<{ planId: string }>();
-  const navigate = useNavigate();
-  const { user } = useUser();
-  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'mobile_money' | 'card'>('mobile_money');
-  const [partnerType, setPartnerType] = useState<'restaurant' | 'driver'>('restaurant');
-  const [partnerId, setPartnerId] = useState<string | null>(null);
+const planDetails = {
+  starter: {
+    name: 'Starter',
+    monthly: 29,
+    yearly: 290,
+    features: [
+      'Basic restaurant profile',
+      'Menu management',
+      'Up to 50 orders per month',
+      'Standard support'
+    ]
+  },
+  professional: {
+    name: 'Professional',
+    monthly: 79,
+    yearly: 790,
+    features: [
+      'Everything in Starter',
+      'Unlimited orders',
+      'Priority placement',
+      'Priority support',
+      'Advanced analytics'
+    ]
+  },
+  enterprise: {
+    name: 'Enterprise',
+    monthly: 199,
+    yearly: 1990,
+    features: [
+      'Everything in Professional',
+      'Dedicated account manager',
+      'Premium placement',
+      'VIP support',
+      'Custom integrations'
+    ]
+  }
+};
+
+const Checkout = () => {
+  const [searchParams] = useSearchParams();
+  const planId = searchParams.get('plan') || 'starter';
+  const interval = (searchParams.get('interval') || 'monthly') as SubscriptionInterval;
   
+  const [paymentMethod, setPaymentMethod] = useState('credit-card');
+  const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState<any>(null);
+  
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   useEffect(() => {
-    const fetchPlanData = async () => {
-      if (!user) {
-        navigate('/auth');
-        return;
-        }
-        
-        try {
-          setLoading(true);
-          
-          // Determine the partner type from the planId
-          const isDriverPlan = planId?.includes('driver');
-          setPartnerType(isDriverPlan ? 'driver' : 'restaurant');
-          
-          // For now, we use dummy data since tables might not exist yet
-          // In production:
-          // const { data: planData, error } = await supabase
-          //   .from('subscription_plans')
-          //   .select('*')
-          //   .eq('id', planId)
-          //   .single();
-          
-          // if (error) throw error;
-          
-          // Dummy plan data based on planId
-          let planData: SubscriptionPlan;
-          
-          if (planId?.includes('standard')) {
-            planData = {
-              id: planId,
-              name: 'Standard',
-              tier: 'standard',
-              description: 'Plan de base',
-              price: 0,
-              interval: planId?.includes('yearly') ? 'yearly' : 'monthly',
-              partner_type: isDriverPlan ? 'driver' : 'restaurant',
-              features: ['Fonctionnalités de base'],
-              created_at: new Date().toISOString()
-            };
-          } else if (planId?.includes('premium')) {
-            planData = {
-              id: planId,
-              name: 'Premium',
-              tier: 'premium',
-              description: 'Plan avancé avec plus de visibilité',
-              price: isDriverPlan ? 7500 : 25000,
-              interval: planId?.includes('yearly') ? 'yearly' : 'monthly',
-              partner_type: isDriverPlan ? 'driver' : 'restaurant',
-              features: ['Tout du plan Standard', 'Visibilité améliorée', 'Commission réduite'],
-              commission_rate: isDriverPlan ? 10 : 15,
-              created_at: new Date().toISOString()
-            };
-          } else {
-            planData = {
-              id: planId || 'unknown',
-              name: 'Elite',
-              tier: 'elite',
-              description: 'Plan premium avec tout inclus',
-              price: isDriverPlan ? 15000 : 50000,
-              interval: planId?.includes('yearly') ? 'yearly' : 'monthly',
-              partner_type: isDriverPlan ? 'driver' : 'restaurant',
-              features: ['Tout du plan Premium', 'Visibilité maximale', 'Commission minimale'],
-              commission_rate: isDriverPlan ? 8 : 10,
-              created_at: new Date().toISOString()
-            };
-          }
-          
-          // If yearly, apply discount
-          if (planData.interval === 'yearly' && planData.price > 0) {
-            planData.price = Math.round(planData.price * 10.8); // 10% discount
-          }
-          
-          setPlan(planData);
-          
-          // Check if user has a restaurant or is a driver
-          if (isDriverPlan) {
-            // In production:
-            // const { data: driver } = await supabase
-            //   .from('delivery_drivers')
-            //   .select('id')
-            //   .eq('user_id', user.id)
-            //   .single();
-            
-            // if (driver) setPartnerId(driver.id);
-            setPartnerId('dummy-driver-id');
-          } else {
-            // In production:
-            // const { data: restaurant } = await supabase
-            //   .from('restaurants')
-            //   .select('id')
-            //   .eq('user_id', user.id)
-            //   .single();
-            
-            // if (restaurant) setPartnerId(restaurant.id);
-            setPartnerId('dummy-restaurant-id');
-          }
-        } catch (error) {
-          console.error('Error fetching plan data:', error);
-          toast.error('Erreur lors du chargement du plan');
-        } finally {
-          setLoading(false);
-        }
-      };
-      
-      fetchPlanData();
-    }, [planId, user, navigate]);
+    if (planId && planDetails[planId as keyof typeof planDetails]) {
+      setPlan(planDetails[planId as keyof typeof planDetails]);
+    } else {
+      setPlan(planDetails.starter);
+    }
+  }, [planId]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     
-    const handleSubscribe = async () => {
-      if (!user || !plan || !partnerId) {
-        toast.error('Informations manquantes pour finaliser l\'abonnement');
-        return;
-      }
+    // Simulate payment processing
+    setTimeout(() => {
+      setLoading(false);
+      toast({
+        title: "Subscription Successful",
+        description: `You have successfully subscribed to the ${plan?.name} plan.`,
+      });
+      navigate('/restaurant/dashboard');
+    }, 2000);
+  };
+
+  if (!plan) return <div>Loading...</div>;
+
+  const amount = interval === 'monthly' ? plan.monthly : plan.yearly;
+  const tax = amount * 0.05; // 5% tax
+  const total = amount + tax;
+
+  return (
+    <div className="container max-w-6xl mx-auto py-10 px-4 sm:px-6">
+      <Button variant="ghost" className="mb-6" onClick={() => navigate(-1)}>
+        <ChevronLeft className="mr-2 h-4 w-4" /> Back to Plans
+      </Button>
       
-      try {
-        setProcessing(true);
-        
-        // In production, create subscription records
-        // const { data: subscription, error } = await supabase
-        //   .from('partner_subscriptions')
-        //   .insert({
-        //     user_id: user.id,
-        //     partner_id: partnerId,
-        //     partner_type: partnerType,
-        //     plan_id: plan.id,
-        //     status: 'active',
-        //     current_period_start: new Date().toISOString(),
-        //     current_period_end: new Date(Date.now() + (plan.interval === 'monthly' ? 30 : 365) * 24 * 60 * 60 * 1000).toISOString(),
-        //     cancel_at_period_end: false,
-        //   })
-        //   .select()
-        //   .single();
-        
-        // if (error) throw error;
-        
-        // Create a transaction record
-        // await supabase.from('subscription_transactions').insert({
-        //   subscription_id: subscription.id,
-        //   amount: plan.price,
-        //   status: 'completed',
-        //   payment_method: paymentMethod,
-        // });
-        
-        // For demo purposes, simulate a successful subscription
-        setTimeout(() => {
-          toast.success('Abonnement activé avec succès!');
-          navigate(`/${partnerType}/dashboard`);
-        }, 2000);
-      } catch (error) {
-        console.error('Error creating subscription:', error);
-        toast.error('Erreur lors de la création de l\'abonnement');
-      } finally {
-        setProcessing(false);
-      }
-    };
-    
-    if (loading) {
-      return (
-        <Layout>
-          <div className="container max-w-3xl mx-auto px-4 py-12">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-64 bg-gray-200 rounded mt-8"></div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Complete Your Subscription</h1>
+              <p className="text-muted-foreground mt-2">
+                You're subscribing to the {plan.name} plan, billed {interval}.
+              </p>
             </div>
-          </div>
-        </Layout>
-      );
-    }
-    
-    if (!plan) {
-      return (
-        <Layout>
-          <div className="container max-w-3xl mx-auto px-4 py-12">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Plan non trouvé</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Le plan d'abonnement demandé n'a pas été trouvé.</p>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate(`/${partnerType}/subscription/plans`)}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Retour aux plans
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-        </Layout>
-      );
-    }
-    
-    return (
-      <Layout>
-        <div className="container max-w-3xl mx-auto px-4 py-12">
-          <Button 
-            variant="ghost" 
-            className="mb-6" 
-            onClick={() => navigate(`/${partnerType}/subscription/plans`)}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour aux plans
-          </Button>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
+            
+            <form onSubmit={handleSubmit}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Finaliser votre abonnement</CardTitle>
+                  <CardTitle>Billing Information</CardTitle>
                   <CardDescription>
-                    {plan.interval === 'monthly' ? 'Abonnement mensuel' : 'Abonnement annuel'}
+                    Enter your billing details to complete your subscription
                   </CardDescription>
                 </CardHeader>
-                
                 <CardContent className="space-y-6">
-                  {plan.price > 0 ? (
-                    <>
-                      <div>
-                        <h3 className="text-lg font-medium mb-4">Méthode de paiement</h3>
-                        <RadioGroup 
-                          value={paymentMethod} 
-                          onValueChange={(v) => setPaymentMethod(v as 'mobile_money' | 'card')}
-                          className="space-y-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="mobile_money" id="mobile_money" />
-                            <Label htmlFor="mobile_money" className="flex items-center">
-                              <Smartphone className="h-5 w-5 mr-2 text-orange-500" />
-                              Mobile Money (Orange Money, MTN MoMo)
-                            </Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input id="firstName" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input id="lastName" required />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input id="email" type="email" required />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Billing Address</Label>
+                    <Input id="address" required />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input id="city" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="postalCode">Postal Code</Label>
+                      <Input id="postalCode" required />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Input id="country" required />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-3">
+                    <Label>Payment Method</Label>
+                    <RadioGroup 
+                      defaultValue="credit-card" 
+                      value={paymentMethod}
+                      onValueChange={setPaymentMethod}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-muted/50">
+                        <RadioGroupItem value="credit-card" id="credit-card" />
+                        <Label htmlFor="credit-card" className="flex-1 cursor-pointer">
+                          <div className="flex items-center">
+                            <CreditCard className="mr-2 h-5 w-5" />
+                            <span>Credit Card</span>
                           </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="card" id="card" />
-                            <Label htmlFor="card" className="flex items-center">
-                              <CreditCard className="h-5 w-5 mr-2 text-blue-500" />
-                              Carte Bancaire (Visa, Mastercard)
-                            </Label>
-                          </div>
-                        </RadioGroup>
+                        </Label>
                       </div>
                       
-                      <Separator />
+                      <div className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-muted/50">
+                        <RadioGroupItem value="invoice" id="invoice" />
+                        <Label htmlFor="invoice" className="flex-1 cursor-pointer">
+                          <div className="flex items-center">
+                            <Building2 className="mr-2 h-5 w-5" />
+                            <span>Pay by Invoice</span>
+                          </div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  {paymentMethod === 'credit-card' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="cardNumber">Card Number</Label>
+                        <Input id="cardNumber" placeholder="1234 5678 9012 3456" required />
+                      </div>
                       
-                      {paymentMethod === 'mobile_money' ? (
-                        <MobilePayment 
-                          amount={plan.price} 
-                          description={`Abonnement ${plan.name} - ${plan.interval === 'monthly' ? 'Mensuel' : 'Annuel'}`}
-                          onSuccess={handleSubscribe}
-                          onError={() => toast.error('Erreur de paiement')}
-                        />
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="card_number">Numéro de carte</Label>
-                            <Input id="card_number" placeholder="1234 5678 9012 3456" />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="expiry">Date d'expiration</Label>
-                              <Input id="expiry" placeholder="MM/AA" />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label htmlFor="cvc">CVC</Label>
-                              <Input id="cvc" placeholder="123" />
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="name">Nom sur la carte</Label>
-                            <Input id="name" placeholder="Jean Dupont" />
-                          </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="expiryDate">Expiry Date</Label>
+                          <Input id="expiryDate" placeholder="MM/YY" required />
                         </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="p-4 bg-green-50 border border-green-100 rounded-lg text-green-800">
-                      <div className="flex items-start">
-                        <Check className="h-5 w-5 mr-2 mt-1 text-green-600" />
-                        <div>
-                          <h3 className="font-medium">Plan gratuit</h3>
-                          <p className="text-sm">Aucun paiement requis pour activer ce plan</p>
+                        <div className="space-y-2">
+                          <Label htmlFor="cvv">CVV</Label>
+                          <Input id="cvv" placeholder="123" required />
                         </div>
                       </div>
                     </div>
                   )}
                   
-                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-blue-800">
-                    <div className="flex items-start">
-                      <AlertCircle className="h-5 w-5 mr-2 mt-0.5 text-blue-600" />
-                      <div>
-                        <h3 className="font-medium">Information importante</h3>
-                        <p className="text-sm">
-                          {plan.interval === 'monthly'
-                            ? 'Votre abonnement sera renouvelé automatiquement chaque mois. Vous pouvez annuler à tout moment depuis votre tableau de bord.'
-                            : 'Votre abonnement sera renouvelé automatiquement chaque année. Vous pouvez annuler à tout moment depuis votre tableau de bord.'
-                          }
-                        </p>
-                      </div>
+                  {paymentMethod === 'invoice' && (
+                    <div className="rounded-md bg-muted p-4">
+                      <p className="text-sm">
+                        We'll send an invoice to your email address. Payment is due within 15 days.
+                      </p>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
-                
                 <CardFooter>
-                  <Button 
-                    className="w-full" 
-                    onClick={handleSubscribe}
-                    disabled={processing || (plan.price > 0 && paymentMethod === 'card')}
-                  >
-                    {processing ? 'Traitement en cours...' : plan.price > 0 ? 'Payer et s\'abonner' : 'Activer l\'abonnement'}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Processing..." : `Complete Subscription - $${total.toFixed(2)}`}
                   </Button>
                 </CardFooter>
               </Card>
-            </div>
-            
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Récapitulatif</CardTitle>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <div>
-                    <h3 className="font-medium text-lg">{plan.name}</h3>
-                    <p className="text-muted-foreground text-sm">{plan.description}</p>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Prix</span>
-                      <span>{plan.price > 0 ? `${plan.price.toLocaleString()} FCFA` : 'Gratuit'}</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span>Période</span>
-                      <span>{plan.interval === 'monthly' ? 'Mensuel' : 'Annuel'}</span>
-                    </div>
-                    
-                    {plan.commission_rate && (
-                      <div className="flex justify-between">
-                        <span>Commission</span>
-                        <span>{plan.commission_rate}%</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex justify-between font-medium">
-                    <span>Total</span>
-                    <span>{plan.price > 0 ? `${plan.price.toLocaleString()} FCFA` : 'Gratuit'}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            </form>
           </div>
         </div>
-      </Layout>
-    );
-  }
-  
+        
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between">
+                <span>{plan.name} Plan ({interval})</span>
+                <span>${amount.toFixed(2)}</span>
+              </div>
+              
+              <div className="flex justify-between text-muted-foreground">
+                <span>Tax (5%)</span>
+                <span>${tax.toFixed(2)}</span>
+              </div>
+              
+              <Separator />
+              
+              <div className="flex justify-between font-medium">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              
+              <div className="bg-primary/5 rounded-md p-3 text-sm">
+                <p className="font-medium flex items-center">
+                  <Shield className="h-4 w-4 mr-2 text-primary" />
+                  What's included:
+                </p>
+                <ul className="mt-2 space-y-1.5">
+                  {plan.features.map((feature: string, index: number) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-4 w-4 text-primary mr-2 mt-0.5 shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="text-xs text-muted-foreground">
+                <p>
+                  By completing your purchase, you agree to our{' '}
+                  <a href="#" className="underline underline-offset-2">Terms of Service</a>{' '}
+                  and{' '}
+                  <a href="#" className="underline underline-offset-2">Privacy Policy</a>.
+                </p>
+                <p className="mt-1">
+                  You can cancel your subscription at any time from your dashboard.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Checkout;
