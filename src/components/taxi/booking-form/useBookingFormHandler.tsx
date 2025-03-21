@@ -5,6 +5,7 @@ import { useLocationHandler } from '@/hooks/taxi/useLocationHandler';
 import { useDriverSelection } from '@/hooks/taxi/useDriverSelection';
 import { useRideCreation } from '@/hooks/taxi/useRideCreation';
 import { useFormValidation } from '@/hooks/taxi/useFormValidation';
+import { toast } from 'sonner';
 
 export function useBookingFormHandler() {
   const { formState, estimatedPrice, updateFormState } = useBookingForm();
