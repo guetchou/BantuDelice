@@ -2,7 +2,10 @@
 import { useContext } from 'react';
 import { CartContext } from '@/contexts/CartContext';
 
-// Hook personnalisé pour accéder au contexte du panier
+/**
+ * Hook personnalisé pour accéder au contexte du panier
+ * @returns Le contexte du panier avec toutes ses fonctions et données
+ */
 const useCart = () => {
   const context = useContext(CartContext);
   
