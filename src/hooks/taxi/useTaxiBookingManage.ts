@@ -1,32 +1,35 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { TaxiRideStatus } from '@/types/taxi';
 
+/**
+ * Hook to manage existing taxi bookings
+ */
 export function useTaxiBookingManage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Cancel a booking
-  const cancelBooking = async (rideId: string) => {
+  const cancelBooking = async (rideId: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsLoading(true);
-
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('taxi_rides')
-        .update({ status: 'cancelled' })
+        .update({ 
+          status: TaxiRideStatus.CANCELLED,
+          cancelled_at: new Date().toISOString()
+        })
         .eq('id', rideId);
-
-      if (error) throw error;
-
-      toast.success("Réservation annulée", {
-        description: "Votre réservation a été annulée avec succès",
-      });
-
+        
+      if (updateError) throw updateError;
+      
       return true;
-    } catch (error: any) {
-      toast.error("Erreur d'annulation", {
-        description: error.message || "Une erreur est survenue lors de l'annulation",
-      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to cancel booking';
+      setError(errorMessage);
+      console.error('Error cancelling booking:', err);
       return false;
     } finally {
       setIsLoading(false);
@@ -35,6 +38,7 @@ export function useTaxiBookingManage() {
 
   return {
     isLoading,
+    error,
     cancelBooking
   };
 }

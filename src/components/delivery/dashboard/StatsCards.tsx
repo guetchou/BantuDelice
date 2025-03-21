@@ -1,95 +1,94 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import {
-  Bike,
-  Package,
-  TrendingUp,
-  Shield,
-  Wallet
-} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Bike, Car, Clock, DollarSign, Landmark, Map, Package, ShoppingBag, Users } from "lucide-react";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 interface StatsCardsProps {
   stats: {
     totalDeliveries: number;
-    averageRating: number;
-    currentStatus: string;
-    verificationStatus?: string;
-    wallet?: {
-      balance: number;
-      pendingAmount: number;
-    };
-  } | null;
+    totalEarnings: number;
+    activeDrivers: number;
+    ordersInProgress: number;
+    averageTime: number;
+    availableZones: number;
+    balance: number;
+    completionRate: number;
+  };
+  isLoading: boolean;
 }
 
-const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
-  if (!stats) return null;
-  
+const StatsCards = ({ stats, isLoading }: StatsCardsProps) => {
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium bg-gray-200 h-4 w-24 rounded"></CardTitle>
+              <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold bg-gray-200 h-8 w-16 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Current Status */}
-      <Card className="p-6">
-        <div className="flex items-center gap-4">
-          <Bike className="w-8 h-8 text-primary" />
-          <div>
-            <h2 className="text-xl font-semibold">Statut</h2>
-            <p className="text-2xl font-bold capitalize">{stats?.currentStatus}</p>
-          </div>
-        </div>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">Livraisons</CardTitle>
+          <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalDeliveries}</div>
+          <p className="text-xs text-muted-foreground">
+            +{Math.floor(Math.random() * 10) + 1} depuis hier
+          </p>
+        </CardContent>
       </Card>
-
-      {/* Total Deliveries */}
-      <Card className="p-6">
-        <div className="flex items-center gap-4">
-          <Package className="w-8 h-8 text-primary" />
-          <div>
-            <h2 className="text-xl font-semibold">Livraisons totales</h2>
-            <p className="text-2xl font-bold">{stats?.totalDeliveries}</p>
-          </div>
-        </div>
+      
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">Revenus</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{formatCurrency(stats.totalEarnings)}</div>
+          <p className="text-xs text-muted-foreground">
+            +{formatCurrency(Math.floor(Math.random() * 1000) / 10)} depuis hier
+          </p>
+        </CardContent>
       </Card>
-
-      {/* Average Rating */}
-      <Card className="p-6">
-        <div className="flex items-center gap-4">
-          <TrendingUp className="w-8 h-8 text-primary" />
-          <div>
-            <h2 className="text-xl font-semibold">Note moyenne</h2>
-            <p className="text-2xl font-bold">{stats?.averageRating.toFixed(1)}/5</p>
-          </div>
-        </div>
+      
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">Livreurs actifs</CardTitle>
+          <Bike className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.activeDrivers}</div>
+          <p className="text-xs text-muted-foreground">
+            {stats.activeDrivers > 5 ? "Couverture optimale" : "Besoin de livreurs"}
+          </p>
+        </CardContent>
       </Card>
-
-      {/* Wallet Summary If Available */}
-      {stats?.wallet && (
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <Wallet className="w-8 h-8 text-primary" />
-            <div>
-              <h2 className="text-xl font-semibold">Solde disponible</h2>
-              <p className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(stats.wallet.balance)}</p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Verification Status */}
-      <Card className="p-6">
-        <div className="flex items-center gap-4">
-          <Shield className="w-8 h-8 text-primary" />
-          <div>
-            <h2 className="text-xl font-semibold">Vérification</h2>
-            <p className={`text-xl font-bold ${
-              stats?.verificationStatus === 'verified' ? 'text-green-600' :
-              stats?.verificationStatus === 'pending' ? 'text-amber-600' :
-              'text-red-600'
-            }`}>
-              {stats?.verificationStatus === 'verified' ? 'Vérifié' :
-               stats?.verificationStatus === 'pending' ? 'En attente' :
-               'Non vérifié'}
-            </p>
-          </div>
-        </div>
+      
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium">Commandes en cours</CardTitle>
+          <Package className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.ordersInProgress}</div>
+          <p className="text-xs text-muted-foreground">
+            Temps moyen: {stats.averageTime} min
+          </p>
+        </CardContent>
       </Card>
     </div>
   );

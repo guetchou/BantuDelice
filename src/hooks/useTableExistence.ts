@@ -1,63 +1,48 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Hook to check if a table exists in the Supabase database
+ * Hook to check if a table exists in the database
+ * @param tableName Name of the table to check
+ * @returns Object containing existence state and loading state
  */
-export const useTableExistence = (tableName: string) => {
-  const [exists, setExists] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export function useTableExistence(tableName: string) {
+  const [exists, setExists] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkTableExists = async () => {
+    const checkTableExistence = async () => {
       try {
-        setLoading(true);
-        // First try using RPC function if it exists
-        try {
-          const { data, error: rpcError } = await supabase.rpc('check_table_exists', {
-            table_name: tableName
-          });
-          
-          if (!rpcError && data !== null) {
-            setExists(data > 0);
-            return;
-          }
-        } catch (rpcErr) {
-          // RPC function doesn't exist, continue with fallback approach
-          console.log('RPC check_table_exists not available, using fallback approach');
-        }
+        setIsLoading(true);
+        setError(null);
         
-        // Fallback approach: Check if a query to the table works
-        try {
-          // This approach will only work if the table has an 'id' column
-          const { error: fallbackError } = await supabase
-            .from(tableName as any)
-            .select('id')
-            .limit(1);
-
-          if (fallbackError && fallbackError.code === '42P01') {
-            // Error code for undefined_table
-            setExists(false);
-          } else {
-            setExists(true);
-          }
-        } catch (fallbackErr) {
-          console.error(`Fallback check for table '${tableName}' failed:`, fallbackErr);
-          setExists(false);
+        // Attempt to query the table with a limit of 0 to just check existence
+        const { count, error } = await supabase
+          .from(tableName)
+          .select('*', { count: 'exact', head: true });
+          
+        // If there's no error, the table exists
+        setExists(error ? false : true);
+        
+        if (error && error.code !== 'PGRST116') {
+          console.error(`Error checking table ${tableName}:`, error);
+          setError(error.message);
         }
       } catch (err) {
-        console.error(`Error checking if table '${tableName}' exists:`, err);
-        setError(err instanceof Error ? err : new Error(String(err)));
+        console.error(`Error checking table ${tableName}:`, err);
+        setError('Failed to check table existence');
         setExists(false);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
-    checkTableExists();
+    
+    checkTableExistence();
   }, [tableName]);
 
-  return { exists, loading, error };
-};
+  return { exists, isLoading, error };
+}
+
+export default useTableExistence;

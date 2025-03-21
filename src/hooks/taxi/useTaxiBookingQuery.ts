@@ -1,53 +1,62 @@
 
 import { useState } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { TaxiRide } from '@/types/taxi';
 
+/**
+ * Hook to query taxi booking data
+ */
 export function useTaxiBookingQuery() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Get user's rides
-  const getUserRides = async () => {
+  const getUserRides = async (): Promise<TaxiRide[]> => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsLoading(true);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Utilisateur non connecté');
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('User not authenticated');
       }
-
-      const { data, error } = await supabase
+      
+      const { data, error: fetchError } = await supabase
         .from('taxi_rides')
         .select('*')
-        .eq('user_id', user.id)
-        .order('pickup_time', { ascending: false });
-
-      if (error) throw error;
-
-      return data;
-    } catch (error: any) {
-      console.error('Error fetching user rides:', error);
+        .eq('user_id', userData.user.id)
+        .order('created_at', { ascending: false });
+        
+      if (fetchError) throw fetchError;
+      
+      return data as TaxiRide[] || [];
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user rides';
+      setError(errorMessage);
+      console.error('Error fetching user rides:', err);
       return [];
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Get ride details
-  const getRideDetails = async (rideId: string) => {
+  const getRideDetails = async (rideId: string): Promise<TaxiRide | null> => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsLoading(true);
-
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('taxi_rides')
         .select('*')
         .eq('id', rideId)
         .single();
-
-      if (error) throw error;
-
-      return data;
-    } catch (error: any) {
-      console.error('Error fetching ride details:', error);
+        
+      if (fetchError) throw fetchError;
+      
+      return data as TaxiRide;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch ride details';
+      setError(errorMessage);
+      console.error('Error fetching ride details:', err);
       return null;
     } finally {
       setIsLoading(false);
@@ -56,6 +65,7 @@ export function useTaxiBookingQuery() {
 
   return {
     isLoading,
+    error,
     getUserRides,
     getRideDetails
   };

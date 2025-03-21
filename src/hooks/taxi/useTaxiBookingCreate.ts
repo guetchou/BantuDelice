@@ -1,45 +1,46 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { supabase } from "@/integrations/supabase/client";
-import { TaxiRide } from "@/types/taxi";
+import { supabase } from '@/integrations/supabase/client';
+import { TaxiRide, TaxiRideStatus, PaymentMethod, TaxiVehicleType } from '@/types/taxi';
 
+/**
+ * Hook to manage taxi booking creation
+ */
 export function useTaxiBookingCreate() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Create a new taxi booking
-  const createBooking = async (bookingData: Omit<TaxiRide, 'id' | 'user_id' | 'status'>) => {
+  const createBooking = async (bookingData: Partial<TaxiRide>): Promise<string | null> => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsLoading(true);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('Vous devez être connecté pour réserver un taxi');
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('User not authenticated');
       }
-
-      const { data, error } = await supabase
+      
+      const newRide = {
+        user_id: userData.user.id,
+        status: TaxiRideStatus.REQUESTED,
+        created_at: new Date().toISOString(),
+        ...bookingData
+      };
+      
+      // Create the taxi ride
+      const { data, error: insertError } = await supabase
         .from('taxi_rides')
-        .insert([
-          {
-            ...bookingData,
-            user_id: user.id,
-            status: 'pending'
-          }
-        ])
+        .insert(newRide)
         .select()
         .single();
-
-      if (error) throw error;
-
-      toast.success("Réservation confirmée", {
-        description: "Votre taxi a été réservé avec succès",
-      });
-
-      return data;
-    } catch (error: any) {
-      toast.error("Erreur de réservation", {
-        description: error.message || "Une erreur est survenue lors de la réservation",
-      });
+        
+      if (insertError) throw insertError;
+      
+      return data?.id || null;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create booking';
+      setError(errorMessage);
+      console.error('Error creating booking:', err);
       return null;
     } finally {
       setIsLoading(false);
@@ -48,6 +49,7 @@ export function useTaxiBookingCreate() {
 
   return {
     isLoading,
+    error,
     createBooking
   };
 }

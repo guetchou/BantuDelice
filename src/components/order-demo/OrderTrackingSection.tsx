@@ -1,73 +1,96 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Check, Package, Truck } from 'lucide-react';
-import { Steps, Step } from "@/components/ui/steps";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, CheckCircle, Clock, Package, Truck, UtensilsCrossed } from "lucide-react";
 
-interface DeliveryInfo {
-  driver: string;
-  estimatedTime: string;
-  status: string;
+interface OrderStatus {
+  step: number;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  time?: string;
+  completed: boolean;
+  inProgress: boolean;
 }
 
 interface OrderTrackingSectionProps {
-  orderId: string | null;
-  currentStep: number;
-  deliveryInfo: DeliveryInfo;
-  onReset: () => void;
+  orderId: string;
+  restaurantName: string;
+  statuses: OrderStatus[];
+  estimatedDeliveryTime?: string;
 }
 
-const OrderTrackingSection: React.FC<OrderTrackingSectionProps> = ({ 
-  orderId, 
-  currentStep, 
-  deliveryInfo, 
-  onReset 
+const OrderTrackingSection: React.FC<OrderTrackingSectionProps> = ({
+  orderId,
+  restaurantName,
+  statuses,
+  estimatedDeliveryTime
 }) => {
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Suivi de commande #{orderId}</h2>
-      
-      <Steps activeStep={currentStep} className="mb-6">
-        <Step icon={Check}>Commande confirmée</Step>
-        <Step icon={Package}>Préparation</Step>
-        <Step icon={Truck}>En livraison</Step>
-        <Step icon={Check}>Livrée</Step>
-      </Steps>
-      
-      {currentStep > 1 && (
-        <div className="mt-4 p-4 border rounded-lg">
-          <div className="flex items-center gap-4 mb-2">
-            <Avatar>
-              <AvatarFallback>MD</AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-semibold">Livreur: {deliveryInfo.driver}</h3>
-              <p className="text-sm">Estimation: {deliveryInfo.estimatedTime}</p>
+    <Card className="col-span-3">
+      <CardHeader>
+        <CardTitle>Suivi de commande</CardTitle>
+        <CardDescription>
+          Commande #{orderId.substring(0, 6)} - {restaurantName}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {estimatedDeliveryTime && (
+          <div className="bg-muted/40 p-4 rounded-lg mb-6">
+            <div className="font-medium flex items-center">
+              <Clock className="mr-2 h-5 w-5 text-primary" />
+              Livraison estimée
             </div>
+            <div className="text-lg font-bold">{estimatedDeliveryTime}</div>
           </div>
-          <p className="text-sm">Statut: <span className="font-semibold">{deliveryInfo.status}</span></p>
+        )}
+
+        <div className="space-y-6">
+          {statuses.map((status, index) => (
+            <div key={index} className="flex">
+              <div className="flex flex-col items-center mr-4">
+                <div
+                  className={`rounded-full p-2 ${
+                    status.completed
+                      ? "bg-green-100 text-green-600"
+                      : status.inProgress
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {status.icon}
+                </div>
+                {index < statuses.length - 1 && (
+                  <div
+                    className={`h-full w-0.5 ${
+                      status.completed ? "bg-green-600" : "bg-gray-200"
+                    }`}
+                  ></div>
+                )}
+              </div>
+              <div className="flex-1 pb-8">
+                <div className="flex items-center justify-between">
+                  <h3
+                    className={`font-medium ${
+                      status.completed || status.inProgress
+                        ? "text-gray-900"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {status.title}
+                  </h3>
+                  {status.time && (
+                    <span className="text-sm text-gray-500">{status.time}</span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {status.description}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
-      )}
-      
-      {currentStep === 4 && (
-        <Alert className="mt-4 bg-green-50 border-green-200">
-          <Check className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-700">
-            Votre commande a été livrée avec succès!
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <Button 
-        onClick={onReset} 
-        className="mt-6 w-full"
-        variant="outline"
-      >
-        Recommencer la démo
-      </Button>
+      </CardContent>
     </Card>
   );
 };

@@ -1,98 +1,101 @@
 
-import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from 'lucide-react';
-import MobilePayment from '@/components/payment/MobilePayment';
-
-interface CartItem {
-  id: string;
-  quantity: number;
-  name: string;
-  price: number;
-  restaurant_id: string;
-}
+import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { CartItem } from "@/types/cart";
 
 interface CartSectionProps {
   items: CartItem[];
-  loading: boolean;
-  error: string | null;
-  currentStep: number;
-  onOrder: () => void;
-  onPaymentComplete: () => void;
+  onUpdateQuantity: (itemId: string, quantity: number) => void;
+  onRemoveFromCart: (itemId: string) => void;
+  onPlaceOrder: () => void;
+  totalPrice: number;
 }
 
-const CartSection: React.FC<CartSectionProps> = ({ 
-  items, 
-  loading, 
-  error, 
-  currentStep, 
-  onOrder, 
-  onPaymentComplete 
+const CartSection: React.FC<CartSectionProps> = ({
+  items,
+  onUpdateQuantity,
+  onRemoveFromCart,
+  onPlaceOrder,
+  totalPrice
 }) => {
-  const [showPayment, setShowPayment] = useState(false);
-  
-  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  
-  const handleOrder = () => {
-    setShowPayment(true);
-    onOrder();
-  };
-  
-  const handlePaymentComplete = () => {
-    setShowPayment(false);
-    onPaymentComplete();
-  };
-  
   return (
-    <Card className="p-6 sticky top-4">
-      <h2 className="text-xl font-bold mb-4">Votre Panier</h2>
-      
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {items.length === 0 ? (
-        <p className="text-center text-gray-500 my-8">Votre panier est vide</p>
-      ) : (
-        <div className="space-y-4">
-          {items.map((item) => (
-            <div key={item.id} className="flex justify-between">
-              <span>{item.quantity}x {item.name}</span>
-              <span>{item.price * item.quantity} FCFA</span>
-            </div>
-          ))}
-          
-          <div className="border-t pt-4">
-            <div className="flex justify-between font-bold">
-              <span>Total</span>
-              <span>{total} FCFA</span>
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <ShoppingCart className="mr-2 h-5 w-5" />
+          Votre panier
+        </CardTitle>
+        <CardDescription>
+          {items.length === 0
+            ? "Votre panier est vide"
+            : `${items.length} article${items.length > 1 ? "s" : ""}`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Ajoutez des articles du menu pour commencer
           </div>
-
-          <Button 
-            className="w-full"
-            onClick={handleOrder}
-            disabled={loading || currentStep > 0}
-          >
-            Commander
-          </Button>
+        ) : (
+          <div className="space-y-4">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="flex justify-between items-center border-b pb-2"
+              >
+                <div>
+                  <div className="font-medium">{item.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {item.price.toFixed(2)} €
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="w-4 text-center">{item.quantity}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-500 hover:text-red-600"
+                    onClick={() => onRemoveFromCart(item.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="flex-col items-stretch">
+        <div className="flex justify-between py-2 font-medium">
+          <span>Total</span>
+          <span>{totalPrice.toFixed(2)} €</span>
         </div>
-      )}
-      
-      {showPayment && (
-        <div className="mt-4 border-t pt-4">
-          <h3 className="font-semibold mb-2">Paiement</h3>
-          <MobilePayment
-            amount={total}
-            onPaymentComplete={handlePaymentComplete}
-          />
-        </div>
-      )}
+        <Button
+          className="w-full mt-2"
+          disabled={items.length === 0}
+          onClick={onPlaceOrder}
+        >
+          Commander
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

@@ -1,16 +1,5 @@
 
-import { createBrowserRouter } from "react-router-dom";
-import { adminRoutes } from "./adminRoutes";
-import { authRoutes } from "./authRoutes";
-import mainRoutes from "./mainRoutes";
-import { errorRoutes } from "./errorRoutes";
+import { createBrowserRouter } from 'react-router-dom';
+import mainRoutes from './mainRoutes';
 
-// Combine all route groups into a single router
-export const router = createBrowserRouter([
-  ...mainRoutes,
-  ...authRoutes,
-  ...adminRoutes,
-  ...errorRoutes,
-]);
-
-export default router;
+export const router = createBrowserRouter(mainRoutes);

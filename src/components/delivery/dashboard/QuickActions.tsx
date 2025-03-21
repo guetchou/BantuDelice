@@ -1,43 +1,61 @@
 
 import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { History, Clock, MapIcon } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { MapPin, MessageSquare, Phone, Plus, Settings, UserPlus } from "lucide-react";
 
 interface QuickActionsProps {
-  onOptimizationClick: () => void;
+  onAddDriver: () => void;
+  onSetupZones: () => void;
+  onViewRequests: () => void;
 }
 
-const QuickActions: React.FC<QuickActionsProps> = ({ onOptimizationClick }) => {
-  const navigate = useNavigate();
-  
+const QuickActions = ({ onAddDriver, onSetupZones, onViewRequests }: QuickActionsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-      <Button
-        variant="outline"
-        className="h-auto py-6"
-        onClick={() => navigate("/delivery/history")}
-      >
-        <History className="w-6 h-6 mr-2" />
-        Historique des livraisons
-      </Button>
-      <Button
-        variant="outline"
-        className="h-auto py-6"
-        onClick={() => navigate("/delivery/schedule")}
-      >
-        <Clock className="w-6 h-6 mr-2" />
-        Planning des livraisons
-      </Button>
-      <Button
-        variant="outline"
-        className="h-auto py-6"
-        onClick={onOptimizationClick}
-      >
-        <MapIcon className="w-6 h-6 mr-2" />
-        Optimisation des itinéraires
-      </Button>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Actions rapides</CardTitle>
+        <CardDescription>
+          Accédez rapidement aux outils de gestion
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <Button 
+          variant="outline" 
+          className="justify-start" 
+          onClick={onAddDriver}
+        >
+          <UserPlus className="mr-2 h-4 w-4" />
+          Ajouter un livreur
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          className="justify-start"
+          onClick={onSetupZones}
+        >
+          <MapPin className="mr-2 h-4 w-4" />
+          Configurer les zones
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          className="justify-start"
+          onClick={onViewRequests}
+        >
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Voir les demandes en attente
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          className="justify-start"
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          Paramètres
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 
