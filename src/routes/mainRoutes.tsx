@@ -6,7 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { CartProvider } from '@/contexts/CartContext';
 
 // Pages
-import Home from '@/pages/Home';
+import { Home } from '@/pages/Home';
 import Dashboard from '@/pages/Dashboard';
 import OrderConfirmation from '@/pages/OrderConfirmation';
 import Orders from '@/pages/Orders';
