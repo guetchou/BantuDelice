@@ -1,356 +1,488 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from "framer-motion";
-import { Car, Clock, Wallet, MapPin, ChevronsUpDown, Info, ShieldCheck, TrendingUp, Users } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useTaxiBooking } from "@/hooks/useTaxiBooking";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import LocationSection from "@/components/taxi/LocationSection";
-import PickupTimeSection from "@/components/taxi/PickupTimeSection";
-import VehicleSection from "@/components/taxi/VehicleSection";
-import PaymentSection from "@/components/taxi/PaymentSection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { 
+  MapPin, 
+  Calendar, 
+  Clock, 
+  CreditCard, 
+  Car, 
+  ChevronRight,
+  Search,
+  UserCheck,
+  User,
+  Users,
+  Briefcase,
+  Navigation,
+  MapPinned
+} from 'lucide-react';
 
-const vehicleInfo = {
-  standard: {
-    name: "Standard",
-    description: "Véhicule confortable pour 4 personnes maximum",
-    price: "Prix de base",
-    features: ["Climatisation", "4 places", "2 bagages"],
-    estimatedTime: "15-20 min"
-  },
-  premium: {
-    name: "Premium",
-    description: "Berline haut de gamme avec plus d'espace",
-    price: "+25% du tarif standard",
-    features: ["Climatisation", "4 places", "4 bagages", "Wifi", "Eau minérale"],
-    estimatedTime: "10-15 min"
-  },
-  van: {
-    name: "Van",
-    description: "Parfait pour les groupes ou les gros bagages",
-    price: "+50% du tarif standard",
-    features: ["Climatisation", "7 places", "6 bagages", "Wifi"],
-    estimatedTime: "20-25 min"
-  }
-};
-
-const TaxiBookingPage = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { createBooking, isLoading } = useTaxiBooking();
-
-  const [pickupAddress, setPickupAddress] = useState('');
-  const [destinationAddress, setDestinationAddress] = useState('');
-  const [pickupTime, setPickupTime] = useState('');
+const BookingPage = () => {
+  const [bookingStep, setBookingStep] = useState(1);
   const [vehicleType, setVehicleType] = useState('standard');
-  const [paymentMethod, setPaymentMethod] = useState('mobile_money');
-  const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
-
-  useEffect(() => {
-    // Calculer un prix estimé basé sur les adresses (simulation)
-    if (pickupAddress && destinationAddress) {
-      const basePrice = 2000; // Prix de base en FCFA
-      const multiplier = vehicleType === 'premium' ? 1.25 : vehicleType === 'van' ? 1.5 : 1;
-      setEstimatedPrice(basePrice * multiplier);
-    }
-  }, [pickupAddress, destinationAddress, vehicleType]);
-
-  const onUseCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const { data: { token }, error: tokenError } = await supabase.functions.invoke('get_mapbox_token');
-            if (tokenError) throw new Error('Could not get Mapbox token');
-
-            const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${token}`
-            );
-            const data = await response.json();
-            if (data.features?.[0]) {
-              setPickupAddress(data.features[0].place_name);
-              toast({
-                title: "Position actuelle détectée",
-                description: "Votre position a été automatiquement remplie",
-              });
-            }
-          } catch (error) {
-            console.error('Error getting address:', error);
-            toast({
-              title: "Erreur",
-              description: "Impossible de récupérer votre position actuelle",
-              variant: "destructive",
-            });
-          }
-        },
-        () => {
-          toast({
-            title: "Erreur",
-            description: "La géolocalisation n'est pas disponible",
-            variant: "destructive",
-          });
-        }
-      );
-    }
+  const [pickupTime, setPickupTime] = useState('now');
+  const [isSharedRide, setIsSharedRide] = useState(false);
+  
+  const handleNextStep = () => {
+    setBookingStep(prev => Math.min(prev + 1, 4));
   };
-
-  const onLocationSelect = async (address: string, isPickup: boolean) => {
-    if (!address) return;
-    
-    try {
-      const { data: { token }, error: tokenError } = await supabase.functions.invoke('get_mapbox_token');
-      if (tokenError) throw new Error('Could not get Mapbox token');
-
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${token}`
-      );
-      const data = await response.json();
-      if (data.features?.[0]) {
-        const [longitude, latitude] = data.features[0].center;
-        if (isPickup) {
-          setPickupAddress(data.features[0].place_name);
-          toast({
-            title: "Adresse validée",
-            description: "L'adresse de départ a été validée",
-          });
-        } else {
-          setDestinationAddress(data.features[0].place_name);
-          toast({
-            title: "Adresse validée",
-            description: "L'adresse de destination a été validée",
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error validating address:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de valider l'adresse",
-        variant: "destructive",
-      });
-    }
+  
+  const handlePrevStep = () => {
+    setBookingStep(prev => Math.max(prev - 1, 1));
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!pickupAddress || !destinationAddress) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez renseigner l'adresse de départ et de destination",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!pickupTime) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner une heure de prise en charge",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const booking = await createBooking({
-        pickup_address: pickupAddress,
-        destination_address: destinationAddress,
-        pickup_time: new Date(pickupTime).toISOString(),
-        vehicle_type: vehicleType,
-        payment_method: paymentMethod,
-        payment_status: 'pending',
-        estimated_price: estimatedPrice || 0,
-      });
-
-      if (booking) {
-        toast({
-          title: "Réservation confirmée",
-          description: "Votre taxi arrive bientôt!",
-        });
-        navigate(`/taxi/ride/${booking.id}`);
-      }
-    } catch (error) {
-      console.error('Error creating booking:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la réservation",
-        variant: "destructive",
-      });
-    }
-  };
-
+  
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card className="p-6 bg-white/5 backdrop-blur-sm border-gray-800">
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Réserver un taxi</h1>
-                <p className="text-gray-400">Remplissez les informations ci-dessous pour réserver votre course</p>
-              </div>
-              <Car className="w-12 h-12 text-orange-500" />
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <LocationSection
-                pickupAddress={pickupAddress}
-                setPickupAddress={setPickupAddress}
-                destinationAddress={destinationAddress}
-                setDestinationAddress={setDestinationAddress}
-                onLocationSelect={onLocationSelect}
-                onUseCurrentLocation={onUseCurrentLocation}
-              />
-
-              <Separator />
-
-              <PickupTimeSection
-                pickupTime={pickupTime}
-                setPickupTime={setPickupTime}
-              />
-
-              <Separator />
-
-              <VehicleSection
-                vehicleType={vehicleType}
-                setVehicleType={setVehicleType}
-              />
-
-              {/* Informations détaillées sur le véhicule sélectionné */}
-              <div className="bg-gray-800/50 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">
-                    {vehicleInfo[vehicleType as keyof typeof vehicleInfo].name}
-                  </h3>
-                  <div className="flex items-center space-x-2 text-sm text-gray-400">
-                    <Clock className="w-4 h-4" />
-                    <span>Temps d'attente estimé: {vehicleInfo[vehicleType as keyof typeof vehicleInfo].estimatedTime}</span>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Réservation de taxi</h1>
+        
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <Progress value={bookingStep * 25} className="h-2" />
+          <div className="flex justify-between mt-2 text-sm text-gray-600">
+            <span>Trajet</span>
+            <span>Véhicule</span>
+            <span>Détails</span>
+            <span>Paiement</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            {/* Step 1: Location */}
+            {bookingStep === 1 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Votre trajet</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="relative">
+                    <div className="absolute left-4 inset-y-0 flex flex-col items-center">
+                      <div className="w-2 h-2 rounded-full bg-green-500 mt-4"></div>
+                      <div className="w-0.5 h-full bg-gray-200 -mt-2"></div>
+                    </div>
+                    <Input
+                      placeholder="Point de départ"
+                      className="pl-10"
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                    >
+                      <MapPinned className="h-4 w-4 text-blue-500" />
+                    </Button>
+                  </div>
+                  
+                  <div className="relative">
+                    <div className="absolute left-4 inset-y-0 flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                    </div>
+                    <Input
+                      placeholder="Destination"
+                      className="pl-10"
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h3 className="font-medium mb-2">Type de trajet</h3>
+                    <RadioGroup 
+                      defaultValue="individual" 
+                      className="flex gap-4"
+                      onValueChange={(value) => setIsSharedRide(value === 'shared')}
+                    >
+                      <div className="flex items-start gap-2">
+                        <RadioGroupItem value="individual" id="individual" />
+                        <div>
+                          <Label htmlFor="individual" className="font-medium">Individuel</Label>
+                          <p className="text-sm text-gray-500">Seulement vous</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-2">
+                        <RadioGroupItem value="shared" id="shared" />
+                        <div>
+                          <Label htmlFor="shared" className="font-medium">Partagé</Label>
+                          <p className="text-sm text-gray-500">Économisez en partageant</p>
+                        </div>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <Button onClick={handleNextStep} className="w-full bg-orange-500 hover:bg-orange-600">
+                      Continuer <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Step 2: Vehicle Type */}
+            {bookingStep === 2 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Choisissez votre véhicule</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <VehicleOption
+                      id="standard"
+                      title="Standard"
+                      price="1 500 FCFA"
+                      description="Berline confortable pour 4 personnes"
+                      icon={<Car className="h-8 w-8" />}
+                      isSelected={vehicleType === 'standard'}
+                      onSelect={() => setVehicleType('standard')}
+                    />
+                    
+                    <VehicleOption
+                      id="comfort"
+                      title="Confort"
+                      price="2 500 FCFA"
+                      description="Plus d'espace, climatisation, eau offerte"
+                      icon={<Car className="h-8 w-8" />}
+                      isSelected={vehicleType === 'comfort'}
+                      onSelect={() => setVehicleType('comfort')}
+                    />
+                    
+                    <VehicleOption
+                      id="premium"
+                      title="Premium"
+                      price="4 000 FCFA"
+                      description="Service haut de gamme, véhicule de luxe"
+                      icon={<Car className="h-8 w-8" />}
+                      isSelected={vehicleType === 'premium'}
+                      onSelect={() => setVehicleType('premium')}
+                    />
+                    
+                    <VehicleOption
+                      id="van"
+                      title="Van"
+                      price="5 000 FCFA"
+                      description="Parfait pour les groupes jusqu'à 6 personnes"
+                      icon={<Users className="h-8 w-8" />}
+                      isSelected={vehicleType === 'van'}
+                      onSelect={() => setVehicleType('van')}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between pt-6">
+                    <Button variant="outline" onClick={handlePrevStep}>
+                      Retour
+                    </Button>
+                    <Button onClick={handleNextStep} className="bg-orange-500 hover:bg-orange-600">
+                      Continuer <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Step 3: Time & Details */}
+            {bookingStep === 3 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Détails de la course</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-medium mb-3">Quand souhaitez-vous partir?</h3>
+                      <Tabs defaultValue="now" onValueChange={setPickupTime}>
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="now">Maintenant</TabsTrigger>
+                          <TabsTrigger value="scheduled">Planifier</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="now" className="pt-4">
+                          <p className="text-sm text-gray-600">
+                            Votre chauffeur arrivera dans les 5-10 minutes après la confirmation.
+                          </p>
+                        </TabsContent>
+                        <TabsContent value="scheduled" className="pt-4 space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="date">Date</Label>
+                              <div className="relative mt-1">
+                                <Input id="date" type="date" />
+                                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                              </div>
+                            </div>
+                            <div>
+                              <Label htmlFor="time">Heure</Label>
+                              <div className="relative mt-1">
+                                <Input id="time" type="time" />
+                                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div>
+                      <h3 className="font-medium mb-3">Raison du voyage</h3>
+                      <RadioGroup defaultValue="personal">
+                        <div className="flex space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="personal" id="personal" />
+                            <Label htmlFor="personal">Personnel</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="business" id="business" />
+                            <Label htmlFor="business">Professionnel</Label>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div>
+                      <Label htmlFor="special-instructions">Instructions spéciales (facultatif)</Label>
+                      <Input
+                        id="special-instructions"
+                        placeholder="Informations pour le chauffeur"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between pt-6">
+                    <Button variant="outline" onClick={handlePrevStep}>
+                      Retour
+                    </Button>
+                    <Button onClick={handleNextStep} className="bg-orange-500 hover:bg-orange-600">
+                      Continuer <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Step 4: Payment */}
+            {bookingStep === 4 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Paiement</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-medium mb-3">Méthode de paiement</h3>
+                      <RadioGroup defaultValue="cash">
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3 border rounded-lg p-3">
+                            <RadioGroupItem value="cash" id="cash" />
+                            <Label htmlFor="cash" className="flex items-center">
+                              <CreditCard className="h-5 w-5 mr-2 text-gray-600" />
+                              Paiement en espèces
+                            </Label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3 border rounded-lg p-3">
+                            <RadioGroupItem value="mobile_money" id="mobile_money" />
+                            <Label htmlFor="mobile_money" className="flex items-center">
+                              <CreditCard className="h-5 w-5 mr-2 text-gray-600" />
+                              Mobile Money
+                            </Label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3 border rounded-lg p-3">
+                            <RadioGroupItem value="card" id="card" />
+                            <Label htmlFor="card" className="flex items-center">
+                              <CreditCard className="h-5 w-5 mr-2 text-gray-600" />
+                              Carte bancaire
+                            </Label>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div>
+                      <Label htmlFor="promo">Code promotionnel (facultatif)</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input id="promo" placeholder="Entrez un code" />
+                        <Button variant="outline">Appliquer</Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between pt-6">
+                    <Button variant="outline" onClick={handlePrevStep}>
+                      Retour
+                    </Button>
+                    <Button className="bg-orange-500 hover:bg-orange-600">
+                      Réserver maintenant
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+          
+          {/* Ride Summary */}
+          <div className="md:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Résumé</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm text-gray-500">Point de départ</p>
+                      <p className="font-medium">Centre-ville, Brazzaville</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <Navigation className="h-5 w-5 text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm text-gray-500">Destination</p>
+                      <p className="font-medium">Aéroport international</p>
+                    </div>
                   </div>
                 </div>
-                <p className="text-gray-400 mb-4">
-                  {vehicleInfo[vehicleType as keyof typeof vehicleInfo].description}
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  {vehicleInfo[vehicleType as keyof typeof vehicleInfo].features.map((feature, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-gray-300">
-                      <ShieldCheck className="w-4 h-4 text-green-500" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              <PaymentSection
-                paymentMethod={paymentMethod}
-                setPaymentMethod={setPaymentMethod}
-              />
-
-              {/* Prix estimé */}
-              {estimatedPrice && (
-                <div className="bg-orange-500/10 rounded-lg p-4">
+                
+                <Separator />
+                
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="w-5 h-5 text-orange-500" />
-                      <span className="text-lg font-semibold text-white">Prix estimé</span>
+                    <div className="flex items-center gap-2">
+                      <Car className="h-5 w-5 text-gray-500" />
+                      <span>Type de véhicule</span>
                     </div>
-                    <span className="text-2xl font-bold text-orange-500">
-                      {estimatedPrice.toLocaleString()} FCFA
+                    <span className="font-medium capitalize">{vehicleType}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-gray-500" />
+                      <span>Heure de départ</span>
+                    </div>
+                    <span className="font-medium">
+                      {pickupTime === 'now' ? 'Maintenant' : 'Planifiée'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-gray-500" />
+                      <span>Type de trajet</span>
+                    </div>
+                    <span className="font-medium">
+                      {isSharedRide ? 'Partagé' : 'Individuel'}
                     </span>
                   </div>
                 </div>
-              )}
-
-              {/* FAQ et informations supplémentaires */}
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="cancellation">
-                  <AccordionTrigger className="text-white">
-                    Politique d'annulation
-                  </AccordionTrigger>
-                  <AccordionContent className="text-gray-400">
-                    Annulation gratuite jusqu'à 5 minutes avant le départ. Des frais peuvent s'appliquer après ce délai.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="luggage">
-                  <AccordionTrigger className="text-white">
-                    Bagages autorisés
-                  </AccordionTrigger>
-                  <AccordionContent className="text-gray-400">
-                    Le nombre de bagages dépend du type de véhicule sélectionné. Consultez les détails de chaque véhicule.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="payment">
-                  <AccordionTrigger className="text-white">
-                    Modes de paiement
-                  </AccordionTrigger>
-                  <AccordionContent className="text-gray-400">
-                    Nous acceptons les paiements par mobile money, carte bancaire et espèces.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-
-              <div className="pt-4">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-orange-500 hover:bg-orange-600 h-12 text-lg"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <div className="flex items-center gap-2">
-                            <ChevronsUpDown className="h-4 w-4 animate-spin" />
-                            Réservation en cours...
-                          </div>
-                        ) : (
-                          'Réserver maintenant'
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Cliquez pour confirmer votre réservation</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </form>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Prix de base</span>
+                    <span>2 500 FCFA</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Frais de service</span>
+                    <span>300 FCFA</span>
+                  </div>
+                  <div className="flex justify-between font-medium pt-2">
+                    <span>Total</span>
+                    <span>2 800 FCFA</span>
+                  </div>
+                </div>
+                
+                <div className="pt-2">
+                  <p className="text-xs text-gray-500">
+                    En confirmant, vous acceptez nos Conditions Générales et notre Politique de confidentialité.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </Card>
-
-        <div className="mt-6 text-sm text-muted-foreground">
-          <p className="text-center">
-            En réservant, vous acceptez nos{' '}
-            <a href="/legal" className="text-orange-500 hover:underline">
-              conditions générales
-            </a>
-          </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
 
-export default TaxiBookingPage;
+// Helper component for vehicle selection
+const VehicleOption = ({ 
+  id, 
+  title, 
+  price, 
+  description, 
+  icon, 
+  isSelected, 
+  onSelect 
+}: { 
+  id: string; 
+  title: string; 
+  price: string; 
+  description: string; 
+  icon: React.ReactNode; 
+  isSelected: boolean; 
+  onSelect: () => void;
+}) => {
+  return (
+    <div 
+      className={`border rounded-lg p-4 cursor-pointer transition-all ${
+        isSelected ? 'border-orange-500 bg-orange-50' : 'hover:border-gray-400'
+      }`}
+      onClick={onSelect}
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex-shrink-0">
+          <div className={`p-3 rounded-full ${
+            isSelected ? 'bg-orange-100' : 'bg-gray-100'
+          }`}>
+            {icon}
+          </div>
+        </div>
+        
+        <div className="flex-grow">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium">{title}</h3>
+            <span className="font-bold">{price}</span>
+          </div>
+          <p className="text-sm text-gray-600 mt-1">{description}</p>
+        </div>
+        
+        <div className="flex-shrink-0 ml-2">
+          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+            isSelected 
+              ? 'border-orange-500 bg-orange-500 text-white' 
+              : 'border-gray-300'
+          }`}>
+            {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BookingPage;

@@ -1,23 +1,19 @@
 
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Footer from '@/components/Footer';
-import Header from '@/components/layout/Header';
-import { Toaster } from '@/components/ui/toaster';
-import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import MainNavbar from '@/components/layout/MainNavbar';
+import { Footer } from '@/components/layout/Footer';
+import { Toaster } from 'sonner';
 
-export const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+const MainLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1">
-        {children || <Outlet />}
+    <div className="flex flex-col min-h-screen">
+      <MainNavbar />
+      <main className="flex-grow">
+        <Outlet />
       </main>
       <Footer />
-      <Toaster />
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeSwitcher />
-      </div>
+      <Toaster position="top-right" />
     </div>
   );
 };
