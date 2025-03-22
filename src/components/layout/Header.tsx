@@ -1,94 +1,84 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { apiClient } from '@/integrations/api/client';
-import { useUser } from '@/hooks/useUser';
-import { ThemeSwitcher } from '@/components/ThemeSwitcher';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import MobileMenu from './header/MobileMenu';
-import UserMenu from './header/UserMenu';
-import DesktopNav from './header/DesktopNav';
-import SearchBar from './header/SearchBar';
+import { authApi } from '@/integrations/api/client';
+import { useAuth } from '@/hooks/useAuth';
+import SearchBar from './SearchBar';
+import UserProfileMenu from './UserProfileMenu';
+import { ShoppingCart, Menu } from 'lucide-react';
+import MobileMenu from './MobileMenu';
 
-const Header = () => {
-  const navigate = useNavigate();
-  const { user, isAdmin } = useUser();
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+const Header: React.FC = () => {
+  const { user, isLoading } = useAuth();
 
   const handleLogout = async () => {
-    try {
-      await apiClient.auth.signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/restaurants?search=${encodeURIComponent(searchQuery)}`);
-      setOpen(false);
-    }
+    await authApi.logout();
+    // Redirect to home page or login page
+    window.location.href = '/';
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        {/* Mobile Menu */}
-        <MobileMenu 
-          isAdmin={isAdmin()} 
-          open={open} 
-          setOpen={setOpen} 
-          searchQuery={searchQuery} 
-          setSearchQuery={setSearchQuery} 
-          handleSearch={handleSearch}
-        />
+    <header className="bg-background sticky top-0 z-50 border-b border-border shadow-sm">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="flex items-center">
+          <Link to="/" className="text-xl font-bold text-primary mr-8">
+            Buntudelice
+          </Link>
+          
+          <div className="hidden md:flex space-x-4">
+            <Link to="/restaurants" className="text-sm hover:text-primary transition-colors">
+              Restaurants
+            </Link>
+            <Link to="/specialties" className="text-sm hover:text-primary transition-colors">
+              Spécialités
+            </Link>
+            <Link to="/about" className="text-sm hover:text-primary transition-colors">
+              À propos
+            </Link>
+          </div>
+        </div>
         
-        {/* Logo */}
-        <Link to="/" className="mr-6 flex items-center space-x-2">
-          <span className="hidden font-bold sm:inline-block">EazyCongo</span>
-        </Link>
+        <div className="hidden md:flex items-center flex-1 justify-center max-w-xl">
+          <SearchBar />
+        </div>
         
-        {/* Desktop Navigation */}
-        <DesktopNav isAdmin={isAdmin()} />
-        
-        <div className="flex-1" />
-        
-        {/* Desktop Search */}
-        <SearchBar 
-          searchQuery={searchQuery} 
-          setSearchQuery={setSearchQuery} 
-          handleSearch={handleSearch}
-        />
-        
-        {/* Theme Switcher */}
-        <ThemeSwitcher />
-        
-        {/* User Menu or Login Button */}
-        <AnimatePresence>
-          {user ? (
-            <UserMenu 
-              user={user} 
-              isAdmin={isAdmin()} 
-              handleLogout={handleLogout}
-            />
+        <div className="flex items-center space-x-2">
+          <Link to="/cart" className="p-2 rounded-full hover:bg-muted transition-colors relative">
+            <ShoppingCart className="h-5 w-5" />
+            {/* Notification badge would go here */}
+          </Link>
+          
+          {isLoading ? (
+            <div className="h-10 w-24 animate-pulse bg-muted rounded"></div>
+          ) : user ? (
+            <UserProfileMenu user={user} onLogout={handleLogout} />
           ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Button onClick={() => navigate('/auth')} variant="default">
-                Connexion
-              </Button>
-            </motion.div>
+            <div className="hidden sm:flex space-x-2">
+              <Link to="/auth/login">
+                <Button variant="outline" size="sm">Connexion</Button>
+              </Link>
+              <Link to="/auth/register">
+                <Button size="sm">Inscription</Button>
+              </Link>
+            </div>
           )}
-        </AnimatePresence>
+          
+          <div className="md:hidden">
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
       </div>
+      
+      {/* Mobile search bar */}
+      <div className="md:hidden px-4 pb-3">
+        <SearchBar />
+      </div>
+      
+      {/* Mobile menu would be here */}
+      <MobileMenu className="md:hidden" />
     </header>
   );
 };

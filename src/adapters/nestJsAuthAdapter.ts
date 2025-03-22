@@ -13,7 +13,7 @@ export const nestJsAuthAdapter = {
       
       return { 
         data: {
-          user: mockData.auth.user,
+          user: mockData.mockApi.auth.signInWithPassword({ email, password }).then((res: any) => res.data.user),
           nestToken: 'mock-backend-token-xyz'
         },
         error: null 
@@ -35,13 +35,16 @@ export const nestJsAuthAdapter = {
       
       return { 
         data: {
-          user: {
-            ...mockData.auth.user,
-            user_metadata: {
-              first_name: firstName,
-              last_name: lastName
+          user: mockData.mockApi.auth.signUp({
+            email, 
+            password,
+            options: {
+              data: {
+                first_name: firstName,
+                last_name: lastName
+              }
             }
-          },
+          }).then((res: any) => res.data.user),
           nestToken: 'mock-backend-token-xyz'
         },
         error: null
