@@ -1,39 +1,34 @@
 
-/**
- * Module pour les statistiques de menu
- */
-
 import { MenuItem } from '@/types/menu';
 
 /**
- * Calcule les statistiques de prix pour un ensemble d'articles de menu
+ * Calculate price statistics for a set of menu items
  */
 export const calculatePriceStats = (items: MenuItem[]) => {
   if (!items.length) {
     return { min: 0, max: 0, average: 0, median: 0 };
   }
 
-  const prices = items.map(item => item.price).sort((a, b) => a - b);
-  const min = prices[0];
-  const max = prices[prices.length - 1];
-  const sum = prices.reduce((acc, price) => acc + price, 0);
-  const average = sum / prices.length;
+  const prices = items.map(item => item.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const average = prices.reduce((sum, price) => sum + price, 0) / prices.length;
   
-  // Calcul de la médiane
-  const middle = Math.floor(prices.length / 2);
-  const median = prices.length % 2 === 0
-    ? (prices[middle - 1] + prices[middle]) / 2
-    : prices[middle];
+  // Calculate median
+  const sortedPrices = [...prices].sort((a, b) => a - b);
+  const middle = Math.floor(sortedPrices.length / 2);
+  const median = sortedPrices.length % 2 === 0
+    ? (sortedPrices[middle - 1] + sortedPrices[middle]) / 2
+    : sortedPrices[middle];
 
   return { min, max, average, median };
 };
 
 /**
- * Calcule les statistiques diététiques pour un ensemble d'articles de menu
+ * Calculate dietary statistics for a set of menu items
  */
 export const calculateDietaryStats = (items: MenuItem[]) => {
-  const totalItems = items.length;
-  if (!totalItems) {
+  if (!items.length) {
     return {
       vegetarianCount: 0,
       vegetarianPercentage: 0,
@@ -44,22 +39,24 @@ export const calculateDietaryStats = (items: MenuItem[]) => {
     };
   }
 
+  // This implementation assumes the items have dietary properties
+  // If not, we need to add them to the MenuItem type
   const vegetarianCount = items.filter(item => item.is_vegetarian).length;
   const veganCount = items.filter(item => item.is_vegan).length;
   const glutenFreeCount = items.filter(item => item.is_gluten_free).length;
 
   return {
     vegetarianCount,
-    vegetarianPercentage: (vegetarianCount / totalItems) * 100,
+    vegetarianPercentage: (vegetarianCount / items.length) * 100,
     veganCount,
-    veganPercentage: (veganCount / totalItems) * 100,
+    veganPercentage: (veganCount / items.length) * 100,
     glutenFreeCount,
-    glutenFreePercentage: (glutenFreeCount / totalItems) * 100
+    glutenFreePercentage: (glutenFreeCount / items.length) * 100
   };
 };
 
 /**
- * Calcule les statistiques de popularité pour un ensemble d'articles de menu
+ * Calculate popularity statistics for a set of menu items
  */
 export const calculatePopularityStats = (items: MenuItem[]) => {
   if (!items.length) {
@@ -70,30 +67,27 @@ export const calculatePopularityStats = (items: MenuItem[]) => {
     };
   }
 
-  // Trier par popularité (la plus élevée en premier)
+  // Sort by popularity (we assume there's a popularity score on the items)
   const sortedByPopularity = [...items].sort((a, b) => 
     (b.popularity_score || 0) - (a.popularity_score || 0)
   );
 
-  const mostPopular = sortedByPopularity.slice(0, 3);
-  const leastPopular = [...sortedByPopularity].reverse().slice(0, 3);
-  
-  const totalPopularity = items.reduce((sum, item) => sum + (item.popularity_score || 0), 0);
-  const averagePopularity = totalPopularity / items.length;
+  const topItems = sortedByPopularity.slice(0, 3);
+  const bottomItems = sortedByPopularity.slice(-3).reverse();
+  const averagePopularity = items.reduce((sum, item) => sum + (item.popularity_score || 0), 0) / items.length;
 
   return {
-    mostPopular,
-    leastPopular,
+    mostPopular: topItems,
+    leastPopular: bottomItems,
     averagePopularity
   };
 };
 
 /**
- * Calcule les statistiques de disponibilité pour un ensemble d'articles de menu
+ * Calculate availability statistics for a set of menu items
  */
 export const calculateAvailabilityStats = (items: MenuItem[]) => {
-  const totalItems = items.length;
-  if (!totalItems) {
+  if (!items.length) {
     return {
       availableCount: 0,
       availablePercentage: 0
@@ -101,10 +95,9 @@ export const calculateAvailabilityStats = (items: MenuItem[]) => {
   }
 
   const availableCount = items.filter(item => item.available).length;
-  const availablePercentage = (availableCount / totalItems) * 100;
-
+  
   return {
     availableCount,
-    availablePercentage
+    availablePercentage: (availableCount / items.length) * 100
   };
 };

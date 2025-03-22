@@ -1,8 +1,9 @@
+
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { NotificationProvider, useNotifications } from '../NotificationContext';
 
-// Mock Supabase client
+// Mock API client
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {

@@ -1,8 +1,11 @@
+
 import { motion } from "framer-motion";
-import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface LoginFormProps {
   onRegister: () => void;
@@ -10,6 +13,36 @@ interface LoginFormProps {
 }
 
 export const LoginForm = ({ onRegister, onForgotPassword }: LoginFormProps) => {
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Error logging in:', error);
+      toast({
+        title: "Erreur de connexion",
+        description: error instanceof Error ? error.message : "Une erreur s'est produite",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -27,33 +60,47 @@ export const LoginForm = ({ onRegister, onForgotPassword }: LoginFormProps) => {
         </ul>
       </div>
 
-      <SupabaseAuth 
-        supabaseClient={supabase}
-        appearance={{
-          theme: ThemeSupa,
-          variables: {
-            default: {
-              colors: {
-                brand: '#10b981',
-                brandAccent: '#059669',
-              }
-            }
-          }
-        }}
-        providers={[]}
-        localization={{
-          variables: {
-            sign_in: {
-              email_label: 'Adresse email',
-              password_label: 'Mot de passe',
-              button_label: 'Se connecter',
-              loading_button_label: 'Connexion en cours...',
-              email_input_placeholder: 'Votre adresse email',
-              password_input_placeholder: 'Votre mot de passe',
-            }
-          }
-        }}
-      />
+      <Card className="p-6">
+        <form onSubmit={handleLogin}>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium">
+                Adresse email
+              </label>
+              <Input
+                id="email"
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Votre adresse email"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium">
+                Mot de passe
+              </label>
+              <Input
+                id="password"
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Votre mot de passe"
+                required
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? 'Connexion en cours...' : 'Se connecter'}
+            </Button>
+          </div>
+        </form>
+      </Card>
 
       <div className="space-y-2 mt-4">
         <Button

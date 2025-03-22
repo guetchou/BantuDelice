@@ -1,12 +1,9 @@
 
 /**
- * Supabase client replacement with mock functionality
- * 
- * This is a replacement for the Supabase client that uses our own API client
- * This maintains the same interface while switching the implementation
+ * Backend API client for the application
  */
 
-import { mockApi } from '../api/client';
+import { createMockApi } from '@/utils/mockApi';
 
-// Export the mock implementation with the same interface as Supabase
-export const supabase = mockApi;
+// Export the mock API implementation to be used throughout the application
+export const supabase = createMockApi();

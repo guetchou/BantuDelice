@@ -1,116 +1,68 @@
+
 export interface MenuItem {
   id: string;
   name: string;
-  description?: string;
   price: number;
-  image_url?: string;
-  category: string;
+  description: string;
   restaurant_id: string;
   available: boolean;
-  ingredients?: string[];
+  category: string;
+  image_url?: string;
+  created_at: string;
+  
+  // Additional fields used in algorithms
+  popularity_score?: number;
+  profit_margin?: number;
+  
+  // Dietary information
   is_vegetarian?: boolean;
   is_vegan?: boolean;
   is_gluten_free?: boolean;
-  allergens?: string[];
-  nutritional_info?: {
-    calories?: number;
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-  };
-  preparation_time?: number;
-  popularity_score?: number;
-  pairs_well_with?: string[];
-  nutritional_score?: number;
-  created_at?: string;
-  updated_at?: string;
+  is_spicy?: boolean;
+}
+
+export interface MenuItemOption {
+  id: string;
+  name: string;
+  choices: MenuItemOptionChoice[];
+  required: boolean;
+  multiple: boolean;
+}
+
+export interface MenuItemOptionChoice {
+  id: string;
+  name: string;
+  price_adjustment: number;
 }
 
 export interface MenuCategory {
   id: string;
   name: string;
   description?: string;
-  items: MenuItem[];
-}
-
-export interface MenuAnalytics {
-  totalItems: number;
-  categories: Record<string, number>;
-  mostPopularCategory: string;
-  priceStats: {
-    average: number;
-    min: number;
-    max: number;
-    range: number;
-  };
-  dietaryOptions: {
-    vegetarianPercentage: number;
-    veganPercentage: number;
-    glutenFreePercentage: number;
-  };
-  menuSuggestions?: Array<{
-    type: string;
-    message: string;
-    importance: 'low' | 'medium' | 'high';
-  }>;
-}
-
-export interface MenuFilter {
-  categories: string[];
-  dietary: {
-    vegetarian: boolean;
-    vegan: boolean;
-    glutenFree: boolean;
-  };
-  priceRange: {
-    min: number | undefined;
-    max: number | undefined;
-  };
-  keyword: string;
-  includeUnavailable: boolean;
-}
-
-export interface MenuSuggestion {
-  type: string;
-  message: string;
-  importance: 'low' | 'medium' | 'high';
+  image_url?: string;
 }
 
 export interface MenuPromotion {
   id: string;
   restaurant_id: string;
-  title: string;
+  name: string;
   description: string;
-  discount_type: 'percentage' | 'fixed_amount' | 'free_delivery';
+  discount_type: "percentage" | "fixed_amount" | "free_delivery";
   discount_value: number;
-  min_order_amount: number;
-  start_date: string;
-  end_date: string;
-  applied_to: 'menu_item' | 'category' | 'all';
-  target_id?: string;
-  created_at: string;
-}
-
-export interface MenuStatistics {
-  total_items: number;
-  categories_distribution: Record<string, number>;
-  price_points: {
-    average: number;
-    min: number;
-    max: number;
-    median: number;
+  active: boolean;
+  valid_from?: string;
+  valid_to?: string;
+  promotion_hours?: {
+    days: string[];
+    start_time: string;
+    end_time: string;
   };
-  dietary_options: {
-    vegetarian_count: number;
-    vegan_count: number;
-    gluten_free_count: number;
+  conditions?: {
+    min_order_value?: number;
+    applicable_items?: string[];
+    max_uses_per_customer?: number;
   };
-}
-
-export interface MenuRecommendation {
-  id: string;
-  menu_item_id: string;
-  recommendation_type: 'similar' | 'popular' | 'promotion' | 'upsell';
-  score: number;
-  reason?: string;
+  menu_item_ids?: string[];
+  coupon_code?: string;
+  is_active?: boolean;
 }

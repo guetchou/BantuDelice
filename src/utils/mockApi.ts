@@ -1,15 +1,12 @@
 
 import { mockData } from './mockData';
+import { MockApiClient } from '../integrations/api/client';
 
 /**
- * Creates a mock API client that mimics the Supabase client interface
+ * Creates a mock API client that mimics the database client interface
  * but uses local mock data instead of actual API calls.
- * This helps isolate the mock functionality from real implementations.
  */
-export function createMockApi() {
-  // Return the mock API from mockData
-  return mockData.mockApi;
+export function createMockApi(): MockApiClient {
+  // Create a new instance of the mock API client
+  return new MockApiClient();
 }
-
-// Export types for better TypeScript support
-export type MockApiClient = ReturnType<typeof createMockApi>;

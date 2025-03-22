@@ -1,65 +1,61 @@
 
-/**
- * Module pour les suggestions de menu
- */
-
 import { MenuItem } from '@/types/menu';
-import { calculatePriceStats } from './stats';
+import { MenuSuggestion } from './types';
 
 /**
- * Génère des suggestions pour les prix des articles
+ * Generate price-related suggestions for a menu
  */
-export const generatePriceSuggestions = (items: MenuItem[]) => {
-  const suggestions = [];
-  const priceStats = calculatePriceStats(items);
+export const generatePriceSuggestions = (items: MenuItem[]): MenuSuggestion[] => {
+  if (!items.length) return [];
+  
+  const suggestions: MenuSuggestion[] = [];
+  const pricePoints = items.map(item => item.price);
+  const avgPrice = pricePoints.reduce((sum, price) => sum + price, 0) / pricePoints.length;
 
-  // Analyse des prix pour les articles sur/sous-évalués
-  for (const item of items) {
-    // Articles significativement plus chers que la moyenne
-    if (item.price > priceStats.average * 1.5) {
-      suggestions.push({
-        id: `price-high-${item.id}`,
-        type: 'price' as const,
-        message: `"${item.name}" est 50% plus cher que la moyenne de sa catégorie. Envisagez de réduire le prix ou d'ajouter plus de valeur.`,
-        importance: 'medium' as const,
-        itemId: item.id
-      });
-    }
-    
-    // Articles significativement moins chers que la moyenne
-    if (item.price < priceStats.average * 0.7 && item.price > 0) {
-      suggestions.push({
-        id: `price-low-${item.id}`,
-        type: 'price' as const,
-        message: `"${item.name}" est 30% moins cher que la moyenne. Vous pourriez envisager d'augmenter légèrement le prix.`,
-        importance: 'low' as const,
-        itemId: item.id
-      });
-    }
+  // Find items that are significantly more expensive than average
+  const expensiveItems = items.filter(item => item.price > avgPrice * 1.5);
+  if (expensiveItems.length > 0) {
+    suggestions.push({
+      type: 'price',
+      priority: 'medium',
+      message: `${expensiveItems.length} items are priced significantly higher than your menu average. Consider creating special value propositions for these items.`,
+      affectedItems: expensiveItems.map(item => item.id)
+    });
   }
 
-  return suggestions;
-};
-
-/**
- * Génère des suggestions pour la disponibilité des articles
- */
-export const generateAvailabilitySuggestions = (items: MenuItem[]) => {
-  const suggestions = [];
-  
-  // Trouver les articles populaires mais non disponibles
-  const popularUnavailable = items.filter(item => 
-    !item.available && 
-    (item.popularity_score || 0) > 7
-  );
-  
-  for (const item of popularUnavailable) {
+  // Find items that are very inexpensive - potential for price increase
+  const cheapItems = items.filter(item => item.price < avgPrice * 0.5);
+  if (cheapItems.length > 0) {
     suggestions.push({
-      id: `availability-popular-${item.id}`,
-      type: 'availability' as const,
-      message: `"${item.name}" est très populaire mais actuellement indisponible. Envisagez de le rendre disponible pour augmenter les ventes.`,
-      importance: 'high' as const,
-      itemId: item.id
+      type: 'price',
+      priority: 'low',
+      message: `${cheapItems.length} items are priced significantly lower than your menu average. You might be underpricing these items.`,
+      affectedItems: cheapItems.map(item => item.id)
+    });
+  }
+
+  // Check for price clustering
+  const priceRanges = [0, 5000, 10000, 15000, 20000, Number.MAX_VALUE];
+  const priceCounts = Array(priceRanges.length - 1).fill(0);
+  
+  items.forEach(item => {
+    for (let i = 0; i < priceRanges.length - 1; i++) {
+      if (item.price >= priceRanges[i] && item.price < priceRanges[i + 1]) {
+        priceCounts[i]++;
+        break;
+      }
+    }
+  });
+  
+  // Check if more than 70% of items are in the same price range
+  const maxCount = Math.max(...priceCounts);
+  const maxIndex = priceCounts.indexOf(maxCount);
+  if (maxCount > items.length * 0.7) {
+    suggestions.push({
+      type: 'price',
+      priority: 'medium',
+      message: `${maxCount} items (${Math.round(maxCount / items.length * 100)}%) are in the same price range (${priceRanges[maxIndex]}-${priceRanges[maxIndex + 1]} XAF). Consider diversifying your price points.`,
+      affectedItems: []
     });
   }
 
@@ -67,33 +63,30 @@ export const generateAvailabilitySuggestions = (items: MenuItem[]) => {
 };
 
 /**
- * Génère des suggestions pour l'équilibre du menu
+ * Generate availability-related suggestions for a menu
  */
-export const generateBalanceSuggestions = (items: MenuItem[]) => {
-  const suggestions = [];
-  const categories = [...new Set(items.map(item => item.category))];
+export const generateAvailabilitySuggestions = (items: MenuItem[]): MenuSuggestion[] => {
+  if (!items.length) return [];
   
-  for (const category of categories) {
-    const categoryItems = items.filter(item => item.category === category);
+  const suggestions: MenuSuggestion[] = [];
+  const unavailableItems = items.filter(item => !item.available);
+  
+  if (unavailableItems.length > 0) {
+    const unavailablePercentage = (unavailableItems.length / items.length) * 100;
     
-    // Catégories avec trop peu d'options
-    if (categoryItems.length < 3) {
+    if (unavailablePercentage > 30) {
       suggestions.push({
-        id: `balance-few-${category}`,
-        type: 'add' as const,
-        message: `La catégorie "${category}" a seulement ${categoryItems.length} options. Envisagez d'ajouter plus de variété.`,
-        importance: 'medium' as const
+        type: 'availability',
+        priority: 'high',
+        message: `${unavailableItems.length} items (${Math.round(unavailablePercentage)}%) are currently unavailable. This high percentage may disappoint customers.`,
+        affectedItems: unavailableItems.map(item => item.id)
       });
-    }
-    
-    // Catégories sans options végétariennes
-    const hasVegetarian = categoryItems.some(item => item.is_vegetarian);
-    if (!hasVegetarian && categoryItems.length >= 4) {
+    } else if (unavailablePercentage > 15) {
       suggestions.push({
-        id: `balance-veg-${category}`,
-        type: 'add' as const,
-        message: `La catégorie "${category}" n'a pas d'options végétariennes. Envisagez d'ajouter au moins une option végétarienne.`,
-        importance: 'medium' as const
+        type: 'availability',
+        priority: 'medium',
+        message: `${unavailableItems.length} items (${Math.round(unavailablePercentage)}%) are currently unavailable. Consider updating your inventory or menu.`,
+        affectedItems: unavailableItems.map(item => item.id)
       });
     }
   }
@@ -102,26 +95,88 @@ export const generateBalanceSuggestions = (items: MenuItem[]) => {
 };
 
 /**
- * Génère des suggestions pour les articles peu performants
+ * Generate balance and diversity related suggestions for a menu
  */
-export const generatePerformanceSuggestions = (items: MenuItem[]) => {
-  const suggestions = [];
+export const generateBalanceSuggestions = (items: MenuItem[]): MenuSuggestion[] => {
+  if (!items.length) return [];
   
-  // Articles ayant à la fois un prix élevé et une popularité faible
-  const lowPerformers = items.filter(item => 
-    (item.popularity_score || 0) < 3 && 
-    item.price > calculatePriceStats(items).average
+  const suggestions: MenuSuggestion[] = [];
+  
+  // Check category balance
+  const categories = items.map(item => item.category);
+  const uniqueCategories = [...new Set(categories)];
+  const categoryCounts = uniqueCategories.map(category => 
+    categories.filter(cat => cat === category).length
   );
   
-  for (const item of lowPerformers) {
+  const maxCategoryCount = Math.max(...categoryCounts);
+  const maxCategory = uniqueCategories[categoryCounts.indexOf(maxCategoryCount)];
+  const maxCategoryPercentage = (maxCategoryCount / items.length) * 100;
+  
+  if (maxCategoryPercentage > 50 && items.length >= 10) {
     suggestions.push({
-      id: `performance-low-${item.id}`,
-      type: 'modify' as const,
-      message: `"${item.name}" a un prix supérieur à la moyenne mais une popularité faible. Envisagez de le modifier ou de le remplacer.`,
-      importance: 'high' as const,
-      itemId: item.id
+      type: 'balance',
+      priority: 'medium',
+      message: `${maxCategoryCount} out of ${items.length} items (${Math.round(maxCategoryPercentage)}%) are in the "${maxCategory}" category. Consider expanding other categories for better menu balance.`,
+      affectedItems: []
     });
   }
+  
+  // Check for dietary options
+  const vegetarianCount = items.filter(item => item.is_vegetarian).length;
+  const vegetarianPercentage = (vegetarianCount / items.length) * 100;
+  
+  if (vegetarianPercentage < 15 && items.length >= 10) {
+    suggestions.push({
+      type: 'balance',
+      priority: 'medium',
+      message: `Only ${vegetarianPercentage.toFixed(1)}% of your menu is vegetarian. Consider adding more vegetarian options to attract a wider customer base.`,
+      affectedItems: []
+    });
+  }
+  
+  return suggestions;
+};
 
+/**
+ * Generate performance-related suggestions for a menu
+ */
+export const generatePerformanceSuggestions = (items: MenuItem[]): MenuSuggestion[] => {
+  if (!items.length) return [];
+  
+  const suggestions: MenuSuggestion[] = [];
+  
+  // Identify low performing items
+  const lowPerforming = items
+    .filter(item => item.popularity_score !== undefined && item.popularity_score < 2)
+    .sort((a, b) => (a.popularity_score || 0) - (b.popularity_score || 0));
+  
+  if (lowPerforming.length > 0 && lowPerforming.length <= items.length * 0.2) {
+    suggestions.push({
+      type: 'performance',
+      priority: 'high',
+      message: `${lowPerforming.length} items have very low popularity scores. Consider revising these items or their placement on the menu.`,
+      affectedItems: lowPerforming.map(item => item.id)
+    });
+  }
+  
+  // Check for high profit but low popularity items
+  const highProfitLowPopularity = items
+    .filter(item => 
+      item.profit_margin !== undefined && 
+      item.popularity_score !== undefined && 
+      item.profit_margin > 0.4 && 
+      item.popularity_score < 3
+    );
+  
+  if (highProfitLowPopularity.length > 0) {
+    suggestions.push({
+      type: 'performance',
+      priority: 'high',
+      message: `${highProfitLowPopularity.length} high-profit items have low popularity. Consider featuring or repositioning these items to increase sales.`,
+      affectedItems: highProfitLowPopularity.map(item => item.id)
+    });
+  }
+  
   return suggestions;
 };
