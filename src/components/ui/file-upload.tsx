@@ -1,192 +1,191 @@
 
-import React, { useState, useRef } from 'react';
-import { Button } from './button';
-import { Upload, File, X } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Upload, X, FileText, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
+  onFileChange: (file: File) => void;
   accept?: string;
-  multiple?: boolean;
-  maxFiles?: number;
-  maxSize?: number; // in MB
-  onChange: (files: File[]) => void;
-  value?: File[];
+  maxSizeMB?: number;
   className?: string;
-  dropzoneText?: string;
+  label?: string;
   buttonText?: string;
+  value?: File | null;
+  error?: string;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({
-  accept = 'image/*',
-  multiple = false,
-  maxFiles = 5,
-  maxSize = 5, // 5MB default
-  onChange,
-  value = [],
-  className = '',
-  dropzoneText = 'Glissez-déposez vos fichiers ici ou',
-  buttonText = 'Parcourir'
-}) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [files, setFiles] = useState<File[]>(value);
-  const [errors, setErrors] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+const FileUpload = ({
+  onFileChange,
+  accept = "image/*",
+  maxSizeMB = 5,
+  className,
+  label = "Télécharger un fichier",
+  buttonText = "Parcourir",
+  value,
+  error
+}: FileUploadProps) => {
+  const [dragActive, setDragActive] = useState(false);
+  const [localFile, setLocalFile] = useState<File | null>(value || null);
+  const [localError, setLocalError] = useState<string | null>(error || null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+  const validateFile = (file: File): boolean => {
+    // Check file size
+    if (file.size > maxSizeBytes) {
+      setLocalError(`Le fichier dépasse la taille maximale de ${maxSizeMB}MB`);
+      return false;
+    }
+
+    // Check file type if accept is specified
+    if (accept !== "*") {
+      const fileType = file.type;
+      const acceptableTypes = accept.split(",").map(type => type.trim());
+      
+      // For image/* type validation
+      if (accept === "image/*" && !fileType.startsWith("image/")) {
+        setLocalError("Seules les images sont acceptées");
+        return false;
+      }
+      
+      // For specific types validation
+      if (accept !== "image/*" && !acceptableTypes.some(type => fileType === type)) {
+        setLocalError(`Les types de fichiers acceptés sont: ${accept}`);
+        return false;
+      }
+    }
+
+    setLocalError(null);
+    return true;
+  };
+
+  const handleFile = (file: File) => {
+    if (validateFile(file)) {
+      setLocalFile(file);
+      onFileChange(file);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    setIsDragging(true);
+    
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const validateFiles = (fileList: File[]): { valid: File[], errors: string[] } => {
-    const valid: File[] = [];
-    const errors: string[] = [];
+  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Check if too many files
-    if (fileList.length + files.length > maxFiles) {
-      errors.push(`Vous ne pouvez pas télécharger plus de ${maxFiles} fichiers.`);
-      return { valid, errors };
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
     }
-    
-    for (const file of fileList) {
-      // Check file size
-      if (file.size > maxSize * 1024 * 1024) {
-        errors.push(`${file.name} est trop volumineux. Taille maximum: ${maxSize}MB.`);
-        continue;
-      }
-      
-      // Check file type
-      if (accept !== '*' && !file.type.match(accept.replace(/\*/g, '.*'))) {
-        errors.push(`${file.name} n'est pas un type de fichier accepté.`);
-        continue;
-      }
-      
-      valid.push(file);
-    }
-    
-    return { valid, errors };
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    setIsDragging(false);
+    e.stopPropagation();
     
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    processFiles(droppedFiles);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
+    setDragActive(false);
     
-    const selectedFiles = Array.from(e.target.files);
-    processFiles(selectedFiles);
-    
-    // Reset input so the same file can be selected again
-    e.target.value = '';
-  };
-
-  const processFiles = (newFiles: File[]) => {
-    const { valid, errors } = validateFiles(newFiles);
-    
-    if (errors.length) {
-      setErrors(errors);
-    }
-    
-    if (valid.length) {
-      const updatedFiles = [...files, ...valid];
-      setFiles(updatedFiles);
-      onChange(updatedFiles);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
     }
   };
 
-  const removeFile = (index: number) => {
-    const updatedFiles = [...files];
-    updatedFiles.splice(index, 1);
-    setFiles(updatedFiles);
-    onChange(updatedFiles);
+  const handleButtonClick = () => {
+    if (inputRef.current) {
+      inputRef.current.click();
+    }
   };
 
-  const clearErrors = () => {
-    setErrors([]);
+  const removeFile = () => {
+    setLocalFile(null);
+    setLocalError(null);
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+    onFileChange(null as any);
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn("space-y-2", className)}>
+      {label && <label className="text-sm font-medium">{label}</label>}
+      
       <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
+        className={cn(
+          "border-2 border-dashed rounded-lg p-4 transition-colors flex flex-col items-center justify-center",
+          dragActive ? "border-primary bg-primary/5" : "border-gray-300",
+          localError ? "border-red-500 bg-red-50" : "",
+          localFile ? "border-green-500 bg-green-50" : "",
+          "cursor-pointer hover:border-primary hover:bg-primary/5"
+        )}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
-        }`}
+        onClick={handleButtonClick}
       >
-        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600">
-          {dropzoneText}{' '}
-          <Button
-            type="button"
-            variant="link"
-            className="p-0 h-auto text-primary"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {buttonText}
-          </Button>
-        </p>
-        <p className="mt-1 text-xs text-gray-500">
-          {accept.replace('*', '')} (Max: {maxSize}MB)
-        </p>
         <input
-          ref={fileInputRef}
+          ref={inputRef}
           type="file"
           className="hidden"
           accept={accept}
-          multiple={multiple}
-          onChange={handleFileChange}
+          onChange={handleChange}
         />
-      </div>
-
-      {errors.length > 0 && (
-        <div className="bg-red-50 text-red-800 p-3 rounded-md">
-          <div className="flex justify-between">
-            <h4 className="font-semibold text-sm">Erreurs</h4>
-            <button type="button" onClick={clearErrors} className="text-red-600">
-              <X className="h-4 w-4" />
-            </button>
+        
+        {localFile ? (
+          <div className="flex flex-col items-center space-y-2 py-4">
+            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+              <Check className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="flex items-center">
+              <FileText className="mr-2 h-5 w-5 text-gray-500" />
+              <span className="text-sm font-medium text-gray-900">{localFile.name}</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              {(localFile.size / 1024 / 1024).toFixed(2)} MB
+            </p>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="mt-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeFile();
+              }}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Supprimer
+            </Button>
           </div>
-          <ul className="mt-1 text-xs list-disc list-inside">
-            {errors.map((error, i) => (
-              <li key={i}>{error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {files.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium">Fichiers sélectionnés</h4>
-          <ul className="space-y-2">
-            {files.map((file, index) => (
-              <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-                <div className="flex items-center">
-                  <File className="h-4 w-4 mr-2 text-gray-500" />
-                  <span className="truncate max-w-[200px]">{file.name}</span>
-                  <span className="ml-2 text-gray-500 text-xs">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeFile(index)}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center space-y-2 py-4">
+            <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+              <Upload className="h-6 w-6 text-gray-600" />
+            </div>
+            <div className="flex flex-col items-center space-y-1 text-center">
+              <p className="text-sm font-medium text-gray-900">
+                Glissez-déposez ou cliquez pour télécharger
+              </p>
+              <p className="text-xs text-gray-500">
+                Taille maximale: {maxSizeMB} MB • {accept === "image/*" ? "Images" : accept}
+              </p>
+            </div>
+            <Button size="sm" className="mt-2">
+              {buttonText}
+            </Button>
+          </div>
+        )}
+      </div>
+      
+      {localError && (
+        <p className="text-sm text-red-500">{localError}</p>
       )}
     </div>
   );

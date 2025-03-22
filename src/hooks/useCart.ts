@@ -1,19 +1,13 @@
 
 import { useContext } from 'react';
-import { CartContext } from '@/contexts/CartContext';
+import { CartContext, CartContextType } from '@/contexts/CartContext';
 
-/**
- * Hook personnalisé pour accéder au contexte du panier
- * @returns Le contexte du panier avec toutes ses fonctions et données
- */
-const useCart = () => {
+export const useCart = (): CartContextType => {
   const context = useContext(CartContext);
   
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
   
   return context;
 };
-
-export default useCart;

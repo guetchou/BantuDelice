@@ -37,7 +37,10 @@ supabase.from = (table) => {
         in() { return this; },
         is() { return this; },
         contains() { return this; },
-        textSearch() { return this; },
+        textSearch(column, query, options) {
+          console.log(`Mocked textSearch on column ${column} with query ${query}`);
+          return this;
+        },
         filter() { return this; },
         or() { return this; },
         order() { return this; },
