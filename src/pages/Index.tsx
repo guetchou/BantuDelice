@@ -1,35 +1,29 @@
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowRight, 
   UtensilsCrossed, 
   Car, 
-  Wallet, 
+  MapPin,
   Package, 
   Users, 
   Map, 
-  MessageSquare, 
-  Compass, 
-  Calendar, 
-  Sparkles, 
-  Gift,
-  Bookmark,
-  Star
+  Sparkles,
+  Compass
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { useApiAuth } from "@/contexts/ApiAuthContext";
 
 export default function Index() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { user } = useApiAuth();
   const [nearbyRestaurants, setNearbyRestaurants] = useState<any[]>([]);
   const [userCoordinates, setUserCoordinates] = useState<[number, number] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     const getUserLocation = () => {
@@ -40,57 +34,48 @@ export default function Index() {
           },
           (error) => {
             console.error("Error getting location:", error);
-            // Utiliser des coordonnées par défaut pour Brazzaville
+            // Use default coordinates for Brazzaville
             setUserCoordinates([-4.2634, 15.2429]);
           }
         );
       }
     };
 
-    const fetchUserProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', user.id)
-            .single();
-          
-          if (profile) {
-            setUserName(profile.full_name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
-
     getUserLocation();
-    fetchUserProfile();
+    
+    // Mock nearby restaurants data
+    setNearbyRestaurants([
+      {
+        id: 'rest1',
+        name: 'Le Gourmet Congolais',
+        cuisine_type: 'Cuisine congolaise',
+        banner_image_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1974&auto=format&fit=crop',
+        average_rating: 4.7,
+        delivery_fee: 0,
+        average_prep_time: 25
+      },
+      {
+        id: 'rest2',
+        name: 'Saveurs d\'Afrique',
+        cuisine_type: 'Panafricaine',
+        banner_image_url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+        average_rating: 4.5,
+        delivery_fee: 1500,
+        average_prep_time: 35
+      },
+      {
+        id: 'rest3',
+        name: 'Chez Matou',
+        cuisine_type: 'Fast Food',
+        banner_image_url: 'https://images.unsplash.com/photo-1555992336-fb0d29498b13?q=80&w=1964&auto=format&fit=crop',
+        average_rating: 4.2,
+        delivery_fee: 2000,
+        average_prep_time: 20
+      },
+    ]);
+    
     setLoading(false);
   }, []);
-
-  // Récupérer les restaurants à proximité
-  useEffect(() => {
-    const fetchNearbyRestaurants = async () => {
-      if (!userCoordinates) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('restaurants')
-          .select('*')
-          .limit(3);
-        
-        if (error) throw error;
-        setNearbyRestaurants(data || []);
-      } catch (error) {
-        console.error("Error fetching nearby restaurants:", error);
-      }
-    };
-
-    fetchNearbyRestaurants();
-  }, [userCoordinates]);
 
   const services = [
     {
@@ -99,6 +84,13 @@ export default function Index() {
       icon: UtensilsCrossed,
       action: () => navigate("/restaurants"),
       color: "bg-gradient-to-br from-orange-400 to-red-500"
+    },
+    {
+      title: "Livraison",
+      description: "Suivez votre livraison en temps réel",
+      icon: Package,
+      action: () => navigate("/delivery"),
+      color: "bg-gradient-to-br from-green-400 to-green-600"
     },
     {
       title: "Taxi",
@@ -115,53 +107,11 @@ export default function Index() {
       color: "bg-gradient-to-br from-teal-400 to-teal-600"
     },
     {
-      title: "Commandes",
-      description: "Suivez vos commandes en temps réel",
-      icon: Package,
-      action: () => navigate("/orders"),
-      color: "bg-gradient-to-br from-green-400 to-green-600"
-    },
-    {
-      title: "Wallet",
-      description: "Gérez vos paiements et transactions",
-      icon: Wallet,
-      action: () => navigate("/wallet"),
-      color: "bg-gradient-to-br from-purple-400 to-purple-600"
-    },
-    {
-      title: "Messages",
-      description: "Communiquez avec les chauffeurs et livreurs",
-      icon: MessageSquare,
-      action: () => navigate("/messages"),
-      color: "bg-gradient-to-br from-pink-400 to-pink-600"
-    },
-    {
       title: "Explorer",
       description: "Découvrez les lieux populaires à proximité",
       icon: Compass,
       action: () => navigate("/explorer"),
       color: "bg-gradient-to-br from-amber-400 to-amber-600"
-    },
-    {
-      title: "Événements",
-      description: "Trouvez des événements locaux et culturels",
-      icon: Calendar,
-      action: () => navigate("/events"),
-      color: "bg-gradient-to-br from-indigo-400 to-indigo-600"
-    },
-    {
-      title: "Favoris",
-      description: "Accédez à vos restaurants et services préférés",
-      icon: Bookmark,
-      action: () => navigate("/favorites"),
-      color: "bg-gradient-to-br from-rose-400 to-rose-600"
-    },
-    {
-      title: "Récompenses",
-      description: "Gagnez et utilisez vos points de fidélité",
-      icon: Gift,
-      action: () => navigate("/rewards"),
-      color: "bg-gradient-to-br from-emerald-400 to-emerald-600"
     }
   ];
 
@@ -179,7 +129,7 @@ export default function Index() {
 
   return (
     <div className="relative min-h-screen">
-      {/* Fond d'écran avec superposition */}
+      {/* Hero Background with blur overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center z-0" 
         style={{ 
@@ -187,7 +137,7 @@ export default function Index() {
           backgroundAttachment: "fixed"
         }}
       >
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90 backdrop-blur-sm"></div>
       </div>
 
       <div className="relative z-10 min-h-screen py-12">
@@ -198,18 +148,18 @@ export default function Index() {
             transition={{ duration: 0.8 }}
             className="text-center mb-12"
           >
-            <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-              EazyCongo
+            <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+              Buntudelice
             </h1>
             
-            {userName ? (
+            {user ? (
               <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-2">
-                Bienvenue, {userName}!
+                Bienvenue, {user.email}!
               </p>
             ) : null}
             
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Votre plateforme tout-en-un pour vos besoins quotidiens au Congo
+              Votre plateforme de livraison de repas, transport et services au Congo
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 mt-8">
@@ -221,16 +171,16 @@ export default function Index() {
                 Commander
               </Button>
               <Button 
-                onClick={() => navigate("/taxis")} 
-                className="bg-blue-500 hover:bg-blue-600 text-white"
+                onClick={() => navigate("/delivery")} 
+                className="bg-green-500 hover:bg-green-600 text-white"
                 size="lg"
               >
-                Réserver un Taxi
+                Suivre ma Livraison
               </Button>
             </div>
           </motion.div>
 
-          {/* Section des restaurants à proximité */}
+          {/* Nearby Restaurants Section */}
           {nearbyRestaurants.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -245,7 +195,7 @@ export default function Index() {
                 </h2>
                 <Button 
                   variant="link" 
-                  className="text-blue-400 hover:text-blue-300"
+                  className="text-orange-400 hover:text-orange-300"
                   onClick={() => navigate("/restaurants")}
                 >
                   Voir plus <ArrowRight className="ml-1 h-4 w-4" />
@@ -259,14 +209,14 @@ export default function Index() {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Card 
-                      className="overflow-hidden bg-black/40 backdrop-blur-md border-gray-800 
-                              hover:bg-black/50 transition-all cursor-pointer"
+                    <div 
+                      className="overflow-hidden rounded-xl bg-black/40 backdrop-blur-md border border-white/10 
+                              hover:bg-black/50 transition-all cursor-pointer h-full"
                       onClick={() => navigate(`/restaurants/${restaurant.id}`)}
                     >
                       <div className="h-40 w-full relative">
                         <img 
-                          src={restaurant.banner_image_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"} 
+                          src={restaurant.banner_image_url} 
                           alt={restaurant.name} 
                           className="w-full h-full object-cover"
                         />
@@ -275,19 +225,19 @@ export default function Index() {
                           <span className="text-xs">{restaurant.average_rating?.toFixed(1) || "Nouveau"}</span>
                         </div>
                       </div>
-                      <CardContent className="p-4">
+                      <div className="p-4">
                         <h3 className="font-bold text-white">{restaurant.name}</h3>
                         <p className="text-gray-300 text-sm">{restaurant.cuisine_type || "Restaurant local"}</p>
                         <div className="mt-2 flex justify-between items-center">
                           <span className="text-xs text-gray-400">
                             {restaurant.average_prep_time ? `${restaurant.average_prep_time} min` : "~30 min"}
                           </span>
-                          <Badge className="bg-green-100 text-green-800">
+                          <Badge className={restaurant.delivery_fee === 0 ? "bg-green-600" : "bg-blue-600"}>
                             {restaurant.delivery_fee === 0 ? "Livraison gratuite" : `${restaurant.delivery_fee} XAF`}
                           </Badge>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -305,7 +255,7 @@ export default function Index() {
             Nos services
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-16">
             {services.map((service, index) => (
               <motion.div
                 key={service.title}
@@ -316,18 +266,18 @@ export default function Index() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Card 
-                  className="bg-black/40 backdrop-blur-md border-gray-800 hover:bg-black/50 
-                           transition-all h-full text-white cursor-pointer"
+                <div 
+                  className="bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/50 
+                           transition-all h-full text-white cursor-pointer rounded-xl overflow-hidden"
                   onClick={service.action}
                 >
-                  <CardHeader className={`${service.color} rounded-t-lg pb-2`}>
+                  <div className={`${service.color} rounded-t-lg py-6 px-4`}>
                     <div className="flex justify-between items-center">
                       <service.icon className="w-8 h-8" />
-                      <CardTitle className="text-lg font-bold">{service.title}</CardTitle>
+                      <h3 className="text-lg font-bold">{service.title}</h3>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-3 pb-4">
+                  </div>
+                  <div className="pt-3 pb-4 px-4">
                     <p className="text-gray-300 text-sm mb-4">{service.description}</p>
                     <Button 
                       onClick={service.action}
@@ -337,8 +287,8 @@ export default function Index() {
                       Découvrir
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -359,7 +309,7 @@ export default function Index() {
               <Button 
                 onClick={() => navigate("/order-demo")} 
                 size="lg"
-                className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white"
+                className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white"
               >
                 Tester la démo
               </Button>
@@ -368,7 +318,6 @@ export default function Index() {
                   toast({
                     title: "Offre spéciale",
                     description: "Utilisez le code WELCOME15 pour obtenir 15% de réduction sur votre première commande!",
-                    variant: "default"
                   });
                 }} 
                 size="lg"
@@ -384,4 +333,46 @@ export default function Index() {
       </div>
     </div>
   );
+}
+
+function Star(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  )
+}
+
+function Gift(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 12 20 22 4 22 4 12" />
+      <rect width="20" height="5" x="2" y="7" />
+      <line x1="12" x2="12" y1="22" y2="7" />
+      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+    </svg>
+  )
 }

@@ -63,6 +63,9 @@ export interface DeliveryRequest {
   restaurant_id?: string;
   is_priority?: boolean;
   distance?: number;
+  is_external?: boolean;
+  requested_at?: string;
+  delivery_fee?: number;
 }
 
 export interface DeliveryRoute {
@@ -77,6 +80,13 @@ export interface DeliveryRoute {
   }[];
   created_at: string;
   updated_at: string;
+  
+  // Additional properties needed by components
+  delivery_requests?: DeliveryRequest[];
+  total_distance?: number;
+  start_time?: string;
+  estimated_end_time?: string;
+  waypoints?: any[];
 }
 
 export interface DeliveryVerification {
@@ -89,6 +99,8 @@ export interface DeliveryVerification {
   rejection_reason?: string;
   created_at: string;
   verified_at?: string;
+  verification_status?: string;
+  document_url?: string;
 }
 
 export type DeliveryDriverStatus = 
@@ -124,6 +136,16 @@ export interface DeliverySettings {
   max_distance: number;
   external_service_enabled: boolean;
   service_fee_percentage: number;
+  restaurant_id?: string;
+  accepted_external_services?: string[];
+  allow_restaurant_delivery?: boolean;
+  allow_external_delivery?: boolean;
+  default_delivery_fee?: number;
+  free_delivery_threshold?: number;
+  max_delivery_distance?: number;
+  estimated_delivery_time?: number;
+  auto_accept_orders?: boolean;
+  auto_assign_drivers?: boolean;
 }
 
 export interface ExternalDeliveryService {
@@ -132,6 +154,8 @@ export interface ExternalDeliveryService {
   base_url: string;
   api_key: string;
   enabled: boolean;
+  base_fee?: number;
+  fee_per_km?: number;
 }
 
 export type DeliveryType = 'internal' | 'external' | 'self_pickup';

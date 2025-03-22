@@ -15,6 +15,7 @@ import Favorites from '@/pages/Favorites';
 import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import NotFound from '@/pages/NotFound';
+import DeliveryDashboard from '@/pages/delivery/Dashboard';
 
 const mainRoutes: RouteObject[] = [
   {
@@ -26,6 +27,9 @@ const mainRoutes: RouteObject[] = [
       // Restaurant Routes
       { path: "restaurants", element: <Restaurants /> },
       { path: "restaurants/:id", element: <RestaurantDetails /> },
+      
+      // Delivery Routes
+      { path: "delivery", element: <DeliveryDashboard /> },
       
       // Taxi Routes
       { path: "taxi/booking", element: <TaxiBooking /> },
