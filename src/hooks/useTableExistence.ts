@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface TableExistenceOptions {
+export interface TableExistenceOptions {
   tables: string[];
 }
 
@@ -18,7 +18,8 @@ export function useTableExistence({ tables }: TableExistenceOptions) {
 
         for (const table of tables) {
           try {
-            const { count, error } = await supabase
+            // Vérifier simplement si on peut accéder à la table, sans s'inquiéter du résultat exact
+            const { error } = await supabase
               .from(table)
               .select('*', { count: 'exact', head: true });
               
@@ -43,6 +44,7 @@ export function useTableExistence({ tables }: TableExistenceOptions) {
   return {
     tableExists,
     loading,
-    isTableLoading: loading
+    isTableLoading: loading,
+    exists: (table: string) => tableExists[table] || false
   };
 }

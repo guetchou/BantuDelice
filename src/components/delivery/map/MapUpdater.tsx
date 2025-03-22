@@ -11,9 +11,9 @@ function MapUpdater({ center, zoom }: MapUpdaterProps) {
   const map = useMap();
   
   useEffect(() => {
-    if (center && center.length === 2) {
+    if (center && center.length === 2 && map) {
       const currentZoom = zoom || map.getZoom();
-      map.setView(center, currentZoom);
+      map.setView(center, currentZoom, { animate: true });
     }
   }, [center, zoom, map]);
   

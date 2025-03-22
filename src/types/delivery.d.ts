@@ -136,13 +136,15 @@ export interface DeliveryRoute {
 
 export interface DeliveryMessage {
   id: string;
-  delivery_request_id: string;
+  order_id: string;
   sender_id: string;
   sender_type: 'driver' | 'customer' | 'restaurant';
   message: string;
-  sent_at: string;
+  created_at: string;
   read_at?: string;
   media_url?: string;
+  delivery_request_id?: string;
+  sent_at?: string;
 }
 
 export interface DeliveryDriverRating {

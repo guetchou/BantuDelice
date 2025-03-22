@@ -1,6 +1,11 @@
 
-import { useTaxiBookingSystem } from "./taxi";
-
 export const useTaxiBooking = () => {
-  return useTaxiBookingSystem();
+  return {
+    drivers: {
+      // Placeholders pour éviter les dépendances circulaires
+    },
+    rides: {
+      // Placeholders pour éviter les dépendances circulaires
+    }
+  };
 };
