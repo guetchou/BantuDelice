@@ -1,24 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useToast } from '@/hooks/use-toast';
-import { SearchIcon, AlertCircle, Plus, Clock, Tag, Leaf, SlidersHorizontal } from "lucide-react";
-import { MenuItem } from '@/types/menu';
+import { MenuItem } from '@/types/menu'; // Import from types not from component
 import SmartFilters from './SmartFilters';
+import { AlertCircle } from "lucide-react";
+import CategorySection from './menu/CategorySection';
+import NoResults from './menu/NoResults';
 
 interface RestaurantMenuProps {
   restaurantId: string;
 }
 
 const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -55,7 +50,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
   }, [menuItems, minPrice, maxPrice, priceRange]);
   
   // Filtrage des éléments en fonction des critères
-  const filteredItems = React.useMemo(() => {
+  const filteredItems = useMemo(() => {
     if (!menuItems) return [];
     
     return menuItems.filter(item => {
@@ -82,7 +77,8 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
     });
   }, [menuItems, searchQuery, selectedCategories, dietaryFilters, priceRange]);
   
-  const groupedItems = React.useMemo(() => {
+  // Group items by category
+  const groupedItems = useMemo(() => {
     const grouped: Record<string, MenuItem[]> = {};
     
     filteredItems.forEach(item => {
@@ -95,6 +91,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
     return grouped;
   }, [filteredItems]);
   
+  // Handler functions
   const handleCategoryChange = (categories: string[]) => {
     setSelectedCategories(categories);
   };
@@ -127,6 +124,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
     (priceRange[0] > minPrice || priceRange[1] < maxPrice ? 1 : 0) +
     (searchQuery ? 1 : 0);
   
+  // Loading state
   if (isLoading) {
     return (
       <div className="p-4 text-center">
@@ -136,6 +134,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
     );
   }
   
+  // Error state
   if (error) {
     return (
       <Alert variant="destructive" className="my-4">
@@ -147,6 +146,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
     );
   }
   
+  // Empty menu state
   if (!menuItems || menuItems.length === 0) {
     return (
       <div className="p-4 text-center border rounded-md">
@@ -174,100 +174,15 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
       />
       
       {filteredItems.length === 0 ? (
-        <div className="text-center p-8 border rounded-md">
-          <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
-          <h3 className="font-medium mb-1">Aucun résultat</h3>
-          <p className="text-sm text-muted-foreground">
-            Aucun plat ne correspond à vos critères de recherche
-          </p>
-          <Button variant="outline" className="mt-4" onClick={clearFilters}>
-            Effacer les filtres
-          </Button>
-        </div>
+        <NoResults onClearFilters={clearFilters} />
       ) : (
         <div className="space-y-8">
           {Object.entries(groupedItems).map(([category, items]) => (
-            <div key={category} className="space-y-4">
-              <h2 className="text-xl font-semibold">{category}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {items.map(item => (
-                  <MenuItem key={item.id} item={item} />
-                ))}
-              </div>
-            </div>
+            <CategorySection key={category} category={category} items={items} />
           ))}
         </div>
       )}
     </div>
-  );
-};
-
-interface MenuItemProps {
-  item: MenuItem;
-}
-
-const MenuItem: React.FC<MenuItemProps> = ({ item }) => {
-  const { toast } = useToast();
-  
-  const handleAddToCart = () => {
-    toast({
-      title: "Ajouté au panier",
-      description: `${item.name} a été ajouté à votre panier`
-    });
-  };
-  
-  return (
-    <Card className="overflow-hidden flex flex-col h-full transition-all hover:shadow-md">
-      {item.image_url && (
-        <div className="relative h-36 overflow-hidden">
-          <img 
-            src={item.image_url} 
-            alt={item.name} 
-            className="w-full h-full object-cover"
-          />
-          {(item.is_vegetarian || item.is_vegan || item.is_gluten_free) && (
-            <div className="absolute top-2 right-2 flex flex-col gap-1">
-              {item.is_vegetarian && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
-                  <Leaf className="h-3 w-3" />
-                  <span className="text-xs">Végétarien</span>
-                </Badge>
-              )}
-              {item.is_vegan && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800">Vegan</Badge>
-              )}
-              {item.is_gluten_free && (
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Sans Gluten</Badge>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-      <CardContent className="p-4 flex-grow flex flex-col">
-        <div className="mb-auto">
-          <div className="flex justify-between items-start mb-1">
-            <h3 className="font-medium">{item.name}</h3>
-            <Badge variant="outline" className="font-semibold">
-              {item.price.toLocaleString('fr-FR')} FCFA
-            </Badge>
-          </div>
-          {item.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.description}</p>
-          )}
-        </div>
-        
-        <div className="flex items-center justify-between mt-3 pt-3 border-t">
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Clock className="h-3 w-3 mr-1" />
-            <span>{item.preparation_time || 15} min</span>
-          </div>
-          <Button size="sm" onClick={handleAddToCart}>
-            <Plus className="h-4 w-4 mr-1" />
-            Ajouter
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 
