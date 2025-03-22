@@ -1,5 +1,8 @@
 
-import { createMockApi } from '@/utils/mockApi';
+import { mockData } from '@/utils/mockData';
 
-// Create and export a mock API client
-export const supabase = createMockApi();
+/**
+ * Creates a mock API client that mimics the Supabase client interface
+ * This implementation allows us to work with a consistent API while using mock data
+ */
+export const supabase = mockData.mockApi;
