@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { User } from '@/types/user';
+import { userService } from '@/services/userService';
 import { toast } from 'sonner';
 
 export interface UserProfile {
@@ -8,9 +9,11 @@ export interface UserProfile {
   email: string;
   first_name?: string;
   last_name?: string;
-  role: 'user' | 'admin' | 'superadmin';
+  role: 'user' | 'admin' | 'superadmin' | 'restaurant_owner' | 'driver';
   created_at: string;
   avatar_url?: string;
+  status: string;
+  phone?: string;
 }
 
 export const useUser = () => {
@@ -20,43 +23,12 @@ export const useUser = () => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // Vérifier si l'utilisateur est déjà connecté
+        const storedUser = localStorage.getItem('user');
         
-        if (user) {
-          // Get the user profile
-          const { data, error } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          
-          if (error) {
-            console.error('Error fetching user profile:', error);
-            
-            // Create a profile if it doesn't exist
-            if (error.code === 'PGRST116') {
-              const { data: userData } = await supabase.auth.getUser();
-              const { data: insertData, error: insertError } = await supabase
-                .from('user_profiles')
-                .insert({
-                  id: user.id,
-                  email: userData.user?.email,
-                  role: 'user',
-                  first_name: userData.user?.user_metadata?.first_name,
-                  last_name: userData.user?.user_metadata?.last_name,
-                })
-                .select()
-                .single();
-              
-              if (insertError) {
-                console.error('Error creating user profile:', insertError);
-              } else {
-                setUser(insertData as UserProfile);
-              }
-            }
-          } else {
-            setUser(data as UserProfile);
-          }
+        if (storedUser) {
+          const userData = JSON.parse(storedUser) as User;
+          setUser(userData as UserProfile);
         }
       } catch (error) {
         console.error('Error in useUser hook:', error);
@@ -66,40 +38,29 @@ export const useUser = () => {
     };
 
     getUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          getUser();
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
+      const updatedUser = await userService.updateUser(user.id, updates);
+      
+      if (!updatedUser) {
+        throw new Error('Failed to update profile');
       }
 
-      setUser(prev => prev ? { ...prev, ...updates } : null);
+      setUser(prev => prev ? { ...prev, ...updatedUser } as UserProfile : null);
+      
+      // Mettre à jour également l'utilisateur dans le localStorage
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        localStorage.setItem('user', JSON.stringify({ ...userData, ...updatedUser }));
+      }
+      
       toast.success('Profil mis à jour avec succès');
-      return { data, error: null };
+      return { data: updatedUser, error: null };
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Erreur lors de la mise à jour du profil');
@@ -115,11 +76,21 @@ export const useUser = () => {
     return user?.role === 'superadmin';
   };
 
+  const isRestaurantOwner = () => {
+    return user?.role === 'restaurant_owner';
+  };
+
+  const isDriver = () => {
+    return user?.role === 'driver';
+  };
+
   return { 
     user, 
     loading, 
     updateProfile,
     isAdmin,
-    isSuperAdmin
+    isSuperAdmin,
+    isRestaurantOwner,
+    isDriver
   };
 };

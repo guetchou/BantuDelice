@@ -1,19 +1,14 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  avatar_url?: string;
-}
+import { userService } from '@/services/userService';
+import { User } from '@/types/user';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any } | undefined>;
-  signUp: (email: string, password: string) => Promise<{ error: any } | undefined>;
+  signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<{ error: any } | undefined>;
   signOut: () => Promise<void>;
 }
 
@@ -24,7 +19,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in from localStorage
+    // Vérifier si l'utilisateur est déjà connecté
     const checkUser = async () => {
       try {
         const storedUser = localStorage.getItem('user');
@@ -48,40 +43,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock sign in
-      if (email === 'demo@example.com' && password === 'password') {
-        const mockUser = {
-          id: '123',
-          email: email,
-          first_name: 'Demo',
-          last_name: 'User'
-        };
-        
-        setUser(mockUser);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        return undefined;
+      const authenticatedUser = await userService.authenticate(email, password);
+      
+      if (!authenticatedUser) {
+        toast.error("Identifiants invalides");
+        return { error: "Identifiants invalides" };
       }
       
-      return { error: 'Invalid credentials' };
+      setUser(authenticatedUser);
+      localStorage.setItem('user', JSON.stringify(authenticatedUser));
+      return undefined;
+    } catch (error) {
+      console.error('Login error:', error);
+      return { error };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, firstName?: string, lastName?: string) => {
     setIsLoading(true);
     try {
-      // Mock sign up
-      const mockUser = {
-        id: '123',
-        email: email,
-        first_name: 'New',
-        last_name: 'User'
+      const userData = {
+        email,
+        password,
+        first_name: firstName || '',
+        last_name: lastName || '',
+        role: 'user' as const
       };
       
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      const newUser = await userService.createUser(userData);
+      setUser(newUser);
+      localStorage.setItem('user', JSON.stringify(newUser));
       return undefined;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { error };
     } finally {
       setIsLoading(false);
     }

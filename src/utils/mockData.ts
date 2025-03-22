@@ -1,284 +1,432 @@
 
-// Mock data utility to replace Supabase
+// Mock data for development and testing
+
 export const mockData = {
-  // Mock authentication data
+  // Utilisateurs
+  users: [
+    {
+      id: 'user-1',
+      email: 'admin@example.com',
+      password: 'password123',
+      first_name: 'Admin',
+      last_name: 'User',
+      role: 'admin',
+      status: 'active',
+      created_at: '2023-01-01T00:00:00Z',
+      updated_at: '2023-01-01T00:00:00Z'
+    },
+    {
+      id: 'user-2',
+      email: 'user@example.com',
+      password: 'password123',
+      first_name: 'Normal',
+      last_name: 'User',
+      role: 'user',
+      status: 'active',
+      created_at: '2023-01-02T00:00:00Z',
+      updated_at: '2023-01-02T00:00:00Z'
+    },
+    {
+      id: 'user-3',
+      email: 'resto@example.com',
+      password: 'password123',
+      first_name: 'Restaurant',
+      last_name: 'Owner',
+      role: 'restaurant_owner',
+      status: 'active',
+      created_at: '2023-01-03T00:00:00Z',
+      updated_at: '2023-01-03T00:00:00Z'
+    },
+    {
+      id: 'user-4',
+      email: 'driver@example.com',
+      password: 'password123',
+      first_name: 'Delivery',
+      last_name: 'Driver',
+      role: 'driver',
+      status: 'active',
+      created_at: '2023-01-04T00:00:00Z',
+      updated_at: '2023-01-04T00:00:00Z'
+    },
+    {
+      id: 'user-5',
+      email: 'superadmin@example.com',
+      password: 'admin123',
+      first_name: 'Super',
+      last_name: 'Admin',
+      role: 'superadmin',
+      status: 'active',
+      created_at: '2023-01-05T00:00:00Z',
+      updated_at: '2023-01-05T00:00:00Z'
+    }
+  ],
+
+  // Identifiants de connexion pour l'authentification
   auth: {
     user: {
-      id: 'mock-user-id',
-      email: 'user@example.com',
+      id: 'user-1',
+      email: 'admin@example.com',
       user_metadata: {
-        full_name: 'Mock User'
+        full_name: 'Admin User'
       }
-    },
-    session: {
-      access_token: 'mock-token',
-      expires_at: Date.now() + 3600000
     }
   },
-  
-  // Mock restaurant data
-  restaurants: [
-    {
-      id: '1',
-      name: 'Restaurant Kinshasa',
-      description: 'Spécialités congolaises',
-      address: '123 Avenue Lumumba, Kinshasa',
-      image_url: '/images/restaurant1.jpg',
-      cuisine_type: 'Congolaise',
-      average_rating: 4.7,
-      open_time: '08:00',
-      close_time: '22:00',
-      latitude: -4.325,
-      longitude: 15.322,
-      phone: '+243123456789',
-      website: 'https://example.com',
-      is_featured: true
-    },
-    {
-      id: '2',
-      name: 'Saveurs du Congo',
-      description: 'Cuisine traditionnelle',
-      address: '45 Boulevard du 30 Juin, Kinshasa',
-      image_url: '/images/restaurant2.jpg',
-      cuisine_type: 'Congolaise',
-      average_rating: 4.5,
-      open_time: '10:00',
-      close_time: '23:00',
-      latitude: -4.326,
-      longitude: 15.315,
-      phone: '+243987654321',
-      website: 'https://example.com',
-      is_featured: true
-    }
-  ],
-  
-  // Mock delivery drivers
-  delivery_drivers: [
-    {
-      id: '1',
-      user_id: 'driver-1',
-      name: 'Jean Doe',
-      phone: '+243111222333',
-      current_latitude: -4.325,
-      current_longitude: 15.322,
-      is_available: true,
-      status: 'online',
-      average_rating: 4.8,
-      total_deliveries: 150,
-      total_earnings: 45000,
-      commission_rate: 10,
-      created_at: '2023-01-15T09:00:00Z',
-      updated_at: '2023-07-20T15:30:00Z',
-      last_location_update: '2023-07-20T15:30:00Z'
-    }
-  ],
-  
-  // Mock menu items
+
+  // Menu items for restaurants
   menu_items: [
     {
-      id: '1',
-      name: 'Fufu & Poisson',
-      description: 'Fufu traditionnel avec poisson braisé',
-      price: 5000,
-      image_url: '/images/fufu.jpg',
-      category: 'Plats principaux',
-      restaurant_id: '1',
+      id: "item-1",
+      name: "Pizza Margherita",
+      description: "Classic pizza with tomato sauce, mozzarella, and basil",
+      price: 12.99,
+      image_url: "https://picsum.photos/seed/pizza1/300/200",
+      category: "pizza",
+      restaurant_id: "resto-1",
       available: true,
-      created_at: new Date().toISOString()
+      created_at: "2023-01-01T10:00:00Z",
+      ingredients: ["tomato sauce", "mozzarella", "basil"],
+      rating: 4.5,
+      preparation_time: 15,
+      dietary_preferences: ["vegetarian"]
     },
     {
-      id: '2',
-      name: 'Saka Saka',
-      description: 'Plat de feuilles de manioc avec viande',
-      price: 4500,
-      image_url: '/images/saka-saka.jpg',
-      category: 'Plats principaux',
-      restaurant_id: '1',
+      id: "item-2",
+      name: "Spaghetti Carbonara",
+      description: "Pasta with egg, cheese, pancetta, and pepper",
+      price: 14.99,
+      image_url: "https://picsum.photos/seed/pasta1/300/200",
+      category: "pasta",
+      restaurant_id: "resto-1",
       available: true,
-      created_at: new Date().toISOString()
-    }
-  ],
-  
-  // Mock orders
-  orders: [
+      created_at: "2023-01-01T10:05:00Z",
+      ingredients: ["spaghetti", "egg", "pecorino cheese", "pancetta", "pepper"],
+      rating: 4.7,
+      preparation_time: 20,
+      dietary_preferences: []
+    },
     {
-      id: '1',
-      user_id: 'mock-user-id',
-      restaurant_id: '1',
-      status: 'pending',
-      total_amount: 9500,
-      items: [
-        { id: '1', quantity: 1, name: 'Fufu & Poisson', price: 5000 },
-        { id: '2', quantity: 1, name: 'Saka Saka', price: 4500 }
-      ],
-      created_at: new Date().toISOString(),
-      delivery_address: '123 Avenue de la Paix, Kinshasa'
-    }
-  ],
-  
-  // Mock favorites
-  favorites: [
+      id: "item-3",
+      name: "Caesar Salad",
+      description: "Romaine lettuce, croutons, parmesan, and Caesar dressing",
+      price: 9.99,
+      image_url: "https://picsum.photos/seed/salad1/300/200",
+      category: "salad",
+      restaurant_id: "resto-1",
+      available: true,
+      created_at: "2023-01-01T10:10:00Z",
+      ingredients: ["romaine lettuce", "croutons", "parmesan", "caesar dressing"],
+      rating: 4.3,
+      preparation_time: 10,
+      dietary_preferences: ["vegetarian"]
+    },
     {
-      id: '1',
-      user_id: 'mock-user-id',
-      restaurant_id: '1',
-      created_at: new Date().toISOString(),
-      restaurants: { id: '1', name: 'Restaurant Kinshasa' }
+      id: "item-4",
+      name: "Tiramisu",
+      description: "Coffee-flavored Italian dessert",
+      price: 7.99,
+      image_url: "https://picsum.photos/seed/dessert1/300/200",
+      category: "dessert",
+      restaurant_id: "resto-1",
+      available: true,
+      created_at: "2023-01-01T10:15:00Z",
+      ingredients: ["ladyfingers", "coffee", "mascarpone", "cocoa"],
+      rating: 4.9,
+      preparation_time: 30,
+      dietary_preferences: ["vegetarian"]
+    },
+    {
+      id: "item-5",
+      name: "Beef Burger",
+      description: "Premium beef patty with lettuce, tomato, and special sauce",
+      price: 13.99,
+      image_url: "https://picsum.photos/seed/burger1/300/200",
+      category: "burgers",
+      restaurant_id: "resto-2",
+      available: true,
+      created_at: "2023-01-02T09:00:00Z",
+      ingredients: ["beef patty", "lettuce", "tomato", "onion", "special sauce", "brioche bun"],
+      rating: 4.6,
+      preparation_time: 18,
+      dietary_preferences: []
+    },
+    {
+      id: "item-6",
+      name: "French Fries",
+      description: "Crispy golden fries with sea salt",
+      price: 4.99,
+      image_url: "https://picsum.photos/seed/fries1/300/200",
+      category: "sides",
+      restaurant_id: "resto-2",
+      available: true,
+      created_at: "2023-01-02T09:05:00Z",
+      ingredients: ["potatoes", "sea salt", "vegetable oil"],
+      rating: 4.4,
+      preparation_time: 12,
+      dietary_preferences: ["vegetarian", "vegan"]
+    },
+    {
+      id: "item-7",
+      name: "Chocolate Milkshake",
+      description: "Creamy chocolate shake with whipped cream",
+      price: 5.99,
+      image_url: "https://picsum.photos/seed/shake1/300/200",
+      category: "drinks",
+      restaurant_id: "resto-2",
+      available: true,
+      created_at: "2023-01-02T09:10:00Z",
+      ingredients: ["milk", "chocolate ice cream", "chocolate syrup", "whipped cream"],
+      rating: 4.8,
+      preparation_time: 5,
+      dietary_preferences: ["vegetarian"]
     }
   ],
-  
-  // Mock inventories
+
+  // Inventory levels
   inventory_levels: [
     {
-      id: '1',
-      menu_item_id: '1',
-      current_stock: 50,
-      reserved_stock: 5,
-      min_stock_level: 10
-    },
-    {
-      id: '2',
-      menu_item_id: '2',
+      id: "inv-1",
+      menu_item_id: "item-1",
       current_stock: 20,
       reserved_stock: 2,
       min_stock_level: 5
+    },
+    {
+      id: "inv-2",
+      menu_item_id: "item-2",
+      current_stock: 15,
+      reserved_stock: 0,
+      min_stock_level: 3
+    },
+    {
+      id: "inv-3",
+      menu_item_id: "item-3",
+      current_stock: 25,
+      reserved_stock: 1,
+      min_stock_level: 4
+    },
+    {
+      id: "inv-4",
+      menu_item_id: "item-4",
+      current_stock: 12,
+      reserved_stock: 0,
+      min_stock_level: 2
+    },
+    {
+      id: "inv-5",
+      menu_item_id: "item-5",
+      current_stock: 30,
+      reserved_stock: 3,
+      min_stock_level: 5
     }
-  ]
-};
+  ],
 
-// Mock API client to replace Supabase
-export const mockApi = {
-  auth: {
-    getUser: async () => ({ data: { user: mockData.auth.user }, error: null }),
-    getSession: async () => ({ data: { session: mockData.auth.session }, error: null }),
-    signInWithPassword: async (credentials: any) => ({
-      data: {
-        user: mockData.auth.user,
-        session: mockData.auth.session
+  // Fake api response
+  mockApi: {
+    auth: {
+      getUser: async () => {
+        return {
+          data: {
+            user: {
+              id: 'user-1',
+              email: 'admin@example.com',
+              user_metadata: {
+                full_name: 'Admin User'
+              }
+            }
+          },
+          error: null
+        };
       },
-      error: null
-    }),
-    signUp: async (credentials: any) => ({
-      data: {
-        user: mockData.auth.user,
-        session: mockData.auth.session
+      getSession: async () => {
+        return {
+          data: {
+            session: {
+              access_token: 'fake-token-xyz',
+              expires_at: new Date().getTime() + 3600000 // 1 hour from now
+            }
+          },
+          error: null
+        };
       },
-      error: null
-    }),
-    signOut: async () => ({ error: null }),
-    onAuthStateChange: (callback: any) => {
-      // Mock subscription
+      signInWithPassword: async (credentials: any) => {
+        // Simulate a successful login
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        return {
+          data: {
+            user: {
+              id: 'user-1',
+              email: credentials.email,
+              user_metadata: {
+                full_name: 'Admin User'
+              }
+            },
+            session: {
+              access_token: 'fake-token-xyz',
+              expires_at: new Date().getTime() + 3600000 // 1 hour from now
+            }
+          },
+          error: null
+        };
+      },
+      signUp: async (credentials: any) => {
+        // Simulate a successful registration
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        return {
+          data: {
+            user: {
+              id: 'user-new',
+              email: credentials.email,
+              user_metadata: {
+                full_name: credentials.options?.data?.first_name + ' ' + credentials.options?.data?.last_name
+              }
+            },
+            session: {
+              access_token: 'fake-token-xyz',
+              expires_at: new Date().getTime() + 3600000 // 1 hour from now
+            }
+          },
+          error: null
+        };
+      },
+      signOut: async () => {
+        // Simulate signout
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        return {
+          error: null
+        };
+      }
+    },
+    from: (table: string) => {
+      // Fake implementation for querying tables
       return {
-        data: {
-          subscription: {
-            unsubscribe: () => {}
-          }
+        select: (query?: string) => {
+          // Return different results based on the table
+          return {
+            eq: (field: string, value: any) => {
+              // Simulate filtering
+              const filtered = mockData.menu_items.filter(item => item[field] === value);
+              
+              return {
+                single: () => {
+                  return {
+                    data: filtered[0] || null,
+                    error: null
+                  };
+                },
+                order: (column: string, { ascending = true } = {}) => {
+                  // Simulate sorting
+                  return {
+                    limit: (limit: number) => {
+                      return {
+                        maybeSingle: () => {
+                          return {
+                            data: filtered.slice(0, limit)[0] || null,
+                            error: null
+                          };
+                        },
+                        data: () => {
+                          return {
+                            data: filtered.slice(0, limit),
+                            error: null
+                          };
+                        }
+                      };
+                    },
+                    data: () => {
+                      return {
+                        data: filtered,
+                        error: null
+                      };
+                    }
+                  };
+                },
+                data: () => {
+                  return {
+                    data: filtered,
+                    error: null
+                  };
+                },
+              };
+            },
+            in: (field: string, values: any[]) => {
+              // Simulate filtering with IN clause
+              const filtered = mockData.menu_items.filter(item => values.includes(item[field]));
+              
+              return {
+                single: () => {
+                  return {
+                    data: filtered[0] || null,
+                    error: null
+                  };
+                },
+                order: (column: string, { ascending = true } = {}) => {
+                  // Simulate sorting
+                  return {
+                    limit: (limit: number) => {
+                      return {
+                        data: () => {
+                          return {
+                            data: filtered.slice(0, limit),
+                            error: null
+                          };
+                        }
+                      };
+                    },
+                    data: () => {
+                      return {
+                        data: filtered,
+                        error: null
+                      };
+                    }
+                  };
+                },
+                data: () => {
+                  return {
+                    data: filtered,
+                    error: null
+                  };
+                }
+              };
+            }
+          };
+        },
+        order: (column: string, { ascending = true } = {}) => {
+          // Simulate ordering
+          return {
+            data: () => {
+              return {
+                data: mockData.menu_items,
+                error: null
+              };
+            }
+          };
+        },
+        limit: (limit: number) => {
+          return {
+            maybeSingle: () => {
+              return {
+                data: mockData.menu_items[0] || null,
+                error: null
+              };
+            },
+            data: () => {
+              return {
+                data: mockData.menu_items.slice(0, limit),
+                error: null
+              };
+            }
+          };
+        },
+        data: () => {
+          return {
+            data: mockData.menu_items,
+            error: null
+          };
         }
       };
     }
-  },
-  
-  from: (table: string) => ({
-    select: (query: string = '*') => ({
-      eq: (field: string, value: any) => ({
-        single: async () => {
-          const items = mockData[table as keyof typeof mockData] as any[];
-          const item = items?.find(item => item[field] === value);
-          return { data: item || null, error: null };
-        },
-        order: (column: string, { ascending = true } = {}) => ({
-          limit: (limit: number) => ({
-            maybeSingle: async () => {
-              const items = mockData[table as keyof typeof mockData] as any[];
-              const filtered = items?.filter(item => item[field] === value);
-              return { data: filtered?.[0] || null, error: null };
-            },
-            data: async () => {
-              const items = mockData[table as keyof typeof mockData] as any[];
-              const filtered = items?.filter(item => item[field] === value);
-              const sorted = [...filtered].sort((a, b) => {
-                return ascending 
-                  ? a[column] > b[column] ? 1 : -1 
-                  : a[column] < b[column] ? 1 : -1;
-              });
-              return { data: sorted.slice(0, limit), error: null };
-            }
-          }),
-          data: async () => {
-            const items = mockData[table as keyof typeof mockData] as any[];
-            const filtered = items?.filter(item => item[field] === value);
-            return { data: filtered, error: null };
-          }
-        }),
-        data: async () => {
-          const items = mockData[table as keyof typeof mockData] as any[];
-          const filtered = items?.filter(item => item[field] === value);
-          return { data: filtered, error: null };
-        }
-      }),
-      in: (field: string, values: any[]) => ({
-        order: (column: string, { ascending = true } = {}) => ({
-          data: async () => {
-            const items = mockData[table as keyof typeof mockData] as any[];
-            const filtered = items?.filter(item => values.includes(item[field]));
-            return { data: filtered, error: null };
-          }
-        }),
-        data: async () => {
-          const items = mockData[table as keyof typeof mockData] as any[];
-          const filtered = items?.filter(item => values.includes(item[field]));
-          return { data: filtered, error: null };
-        }
-      }),
-      order: (column: string, { ascending = true } = {}) => ({
-        limit: (limit: number) => ({
-          data: async () => {
-            const items = mockData[table as keyof typeof mockData] as any[];
-            const sorted = [...items].sort((a, b) => {
-              return ascending 
-                ? a[column] > b[column] ? 1 : -1 
-                : a[column] < b[column] ? 1 : -1;
-            });
-            return { data: sorted.slice(0, limit), error: null };
-          }
-        }),
-        data: async () => {
-          const items = mockData[table as keyof typeof mockData] as any[];
-          return { data: items, error: null };
-        }
-      }),
-      data: async () => {
-        return { 
-          data: mockData[table as keyof typeof mockData] || [], 
-          error: null 
-        };
-      }
-    }),
-    insert: async (data: any) => ({ data, error: null }),
-    update: (data: any) => ({
-      eq: (field: string, value: any) => ({
-        data: async () => {
-          return { data, error: null };
-        }
-      })
-    }),
-    delete: () => ({
-      eq: (field: string, value: any) => ({
-        data: async () => {
-          return { data: null, error: null };
-        }
-      })
-    })
-  }),
-  
-  channel: (name: string) => ({
-    on: (event: string, config: any, callback: any) => ({
-      subscribe: () => {}
-    })
-  }),
-  
-  removeChannel: (channel: any) => {}
+  }
 };
-
-// Replace Supabase client with mock API
-export const supabase = mockApi;

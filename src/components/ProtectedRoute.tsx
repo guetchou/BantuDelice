@@ -7,11 +7,20 @@ import { useUser } from '@/hooks/useUser';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   adminOnly?: boolean;
+  superAdminOnly?: boolean;
+  restaurantOwnerOnly?: boolean;
+  driverOnly?: boolean;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminOnly = false }) => {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  adminOnly = false,
+  superAdminOnly = false,
+  restaurantOwnerOnly = false,
+  driverOnly = false
+}) => {
   const { user, isLoading } = useAuth();
-  const { isAdmin } = useUser();
+  const { isAdmin, isSuperAdmin, isRestaurantOwner, isDriver } = useUser();
   const location = useLocation();
 
   if (isLoading) {
@@ -23,12 +32,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminO
   }
 
   if (!user) {
-    // Redirect to login page with return URL
+    // Rediriger vers la page de connexion avec l'URL de retour
     return <Navigate to={`/auth/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
+  // Vérifier les autorisations spécifiques
+  if (superAdminOnly && !isSuperAdmin()) {
+    return <Navigate to="/" replace />;
+  }
+
   if (adminOnly && !isAdmin()) {
-    // Redirect to homepage if user is not an admin
+    return <Navigate to="/" replace />;
+  }
+
+  if (restaurantOwnerOnly && !isRestaurantOwner()) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (driverOnly && !isDriver()) {
     return <Navigate to="/" replace />;
   }
 
