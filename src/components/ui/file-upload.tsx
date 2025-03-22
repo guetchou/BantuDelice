@@ -5,7 +5,7 @@ import { Upload, X, FileText, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
-  onFileChange: (file: File) => void;
+  onFileChange: (file: File | null) => void;
   accept?: string;
   maxSizeMB?: number;
   className?: string;
@@ -15,7 +15,7 @@ interface FileUploadProps {
   error?: string;
 }
 
-const FileUpload = ({
+const FileUpload: React.FC<FileUploadProps> = ({
   onFileChange,
   accept = "image/*",
   maxSizeMB = 5,
@@ -24,7 +24,7 @@ const FileUpload = ({
   buttonText = "Parcourir",
   value,
   error
-}: FileUploadProps) => {
+}) => {
   const [dragActive, setDragActive] = useState(false);
   const [localFile, setLocalFile] = useState<File | null>(value || null);
   const [localError, setLocalError] = useState<string | null>(error || null);
@@ -110,7 +110,7 @@ const FileUpload = ({
     if (inputRef.current) {
       inputRef.current.value = '';
     }
-    onFileChange(null as any);
+    onFileChange(null);
   };
 
   return (

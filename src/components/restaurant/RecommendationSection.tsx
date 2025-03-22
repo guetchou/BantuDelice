@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from '@/integrations/supabase/client';
 import { Star, ArrowRight, Plus } from 'lucide-react';
-import useCart from '@/hooks/useCart';
+import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import type { MenuItem } from '@/types/menu';
 
@@ -25,7 +25,7 @@ const RecommendationSection: React.FC<RecommendationSectionProps> = ({
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addItem } = useCart();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -116,13 +116,14 @@ const RecommendationSection: React.FC<RecommendationSectionProps> = ({
                 size="sm" 
                 className="w-full"
                 onClick={() => {
-                  addToCart({
+                  addItem({
                     id: item.id,
                     name: item.name,
                     price: item.price,
                     image_url: item.image_url,
                     description: item.description || '',
-                    restaurant_id: restaurantId
+                    restaurant_id: restaurantId,
+                    quantity: 1
                   });
                   
                   toast({

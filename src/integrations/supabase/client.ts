@@ -13,41 +13,115 @@ const originalFrom = supabase.from.bind(supabase);
 supabase.from = (table) => {
   const result = originalFrom(table);
   
-  // Add missing `select` method
+  // Add missing `select` method if it doesn't exist
   if (!result.select) {
     result.select = function(columns) {
-      return {
+      const baseResult = {
         ...this,
         data: null,
         error: null,
-        // Additional method that would be called after select + filters
+        
+        // Chaining methods
         single() {
-          return {
-            data: null,
-            error: null
-          };
+          console.log(`Mock single() called on table ${table}`);
+          return { data: null, error: null };
         },
-        // Mock other methods that might be called
-        eq() { return this; },
-        neq() { return this; },
-        gt() { return this; },
-        gte() { return this; },
-        lt() { return this; },
-        lte() { return this; },
-        in() { return this; },
-        is() { return this; },
-        contains() { return this; },
+        
+        eq(field, value) {
+          console.log(`Mock eq() called with ${field}=${value} on table ${table}`);
+          return this;
+        },
+        
+        neq(field, value) {
+          console.log(`Mock neq() called with ${field}!=${value} on table ${table}`);
+          return this;
+        },
+        
+        gt(field, value) {
+          console.log(`Mock gt() called with ${field}>${value} on table ${table}`);
+          return this;
+        },
+        
+        gte(field, value) {
+          console.log(`Mock gte() called with ${field}>=${value} on table ${table}`);
+          return this;
+        },
+        
+        lt(field, value) {
+          console.log(`Mock lt() called with ${field}<${value} on table ${table}`);
+          return this;
+        },
+        
+        lte(field, value) {
+          console.log(`Mock lte() called with ${field}<=${value} on table ${table}`);
+          return this;
+        },
+        
+        in(field, values) {
+          console.log(`Mock in() called with ${field} in [${values}] on table ${table}`);
+          return this;
+        },
+        
+        is(field, value) {
+          console.log(`Mock is() called with ${field} is ${value} on table ${table}`);
+          return this;
+        },
+        
+        contains(field, value) {
+          console.log(`Mock contains() called with ${field} contains ${value} on table ${table}`);
+          return this;
+        },
+        
         textSearch(column, query, options) {
           console.log(`Mocked textSearch on column ${column} with query ${query}`);
           return this;
         },
-        filter() { return this; },
-        or() { return this; },
-        order() { return this; },
-        limit() { return this; },
-        range() { return this; },
-        maybeSingle() { return this; }
+        
+        filter(column, operator, value) {
+          console.log(`Mock filter() called with ${column} ${operator} ${value} on table ${table}`);
+          return this;
+        },
+        
+        or(filters) {
+          console.log(`Mock or() called with filters on table ${table}`);
+          return this;
+        },
+        
+        order(column, options) {
+          console.log(`Mock order() called with ${column} on table ${table}`);
+          return this;
+        },
+        
+        limit(count) {
+          console.log(`Mock limit() called with ${count} on table ${table}`);
+          return this;
+        },
+        
+        range(from, to) {
+          console.log(`Mock range() called with ${from}-${to} on table ${table}`);
+          return this;
+        },
+        
+        maybeSingle() {
+          console.log(`Mock maybeSingle() called on table ${table}`);
+          return { data: null, error: null };
+        },
+        
+        then(callback) {
+          console.log(`Mock then() called on table ${table}`);
+          const result = { data: [], error: null };
+          return callback(result);
+        }
       };
+      
+      return baseResult;
+    };
+  }
+  
+  // Ensure the count method exists
+  if (!result.count) {
+    result.count = function() {
+      return Promise.resolve({ data: 0, error: null, count: 0 });
     };
   }
   
