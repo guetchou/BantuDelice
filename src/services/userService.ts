@@ -17,7 +17,10 @@ if (!users.some(user => user.role === 'superadmin')) {
     role: 'superadmin' as UserRole,
     status: 'active' as UserStatus,
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    avatar_url: 'https://i.pravatar.cc/150?img=5',
+    phone: '+242 567 890 123',
+    last_login: null
   });
 }
 
@@ -68,7 +71,9 @@ export const userService = {
       status: 'active' as UserStatus,
       created_at: now,
       updated_at: now,
-      phone: userData.phone || ''
+      phone: userData.phone || '',
+      avatar_url: userData.avatar_url || `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
+      last_login: null
     };
 
     users.push(newUser);
