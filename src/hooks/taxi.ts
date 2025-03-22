@@ -1,26 +1,38 @@
 
-// Utility functions to avoid circular imports
+// Mock taxi hook implementations
 const useDriverDetails = () => ({
   isLoading: false,
-  getDriverDetails: async () => null
+  getDriverDetails: async () => {
+    console.log('Getting driver details...');
+    return null;
+  }
 });
 
 const useDriverFinder = () => ({
   isLoading: false,
-  findOptimalDrivers: async () => []
+  findOptimalDrivers: async () => {
+    console.log('Finding optimal drivers...');
+    return [];
+  }
 });
 
 const useDriverRequests = () => ({
   isLoading: false,
-  requestDriver: async () => null
+  requestDriver: async () => {
+    console.log('Requesting driver...');
+    return null;
+  }
 });
 
 const useRideCreation = () => ({
   isLoading: false,
-  createRide: async () => null
+  createRide: async () => {
+    console.log('Creating ride...');
+    return null;
+  }
 });
 
-// Simplified version of the hook to avoid circular dependencies
+// Simplified version of the hook
 const useTaxiBooking = () => ({
   drivers: {
     findDrivers: async () => [],

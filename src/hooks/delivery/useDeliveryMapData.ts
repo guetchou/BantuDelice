@@ -1,15 +1,12 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { DeliveryDriver, DeliveryRequest, DeliveryDriverStatus, DeliveryVehicleType, DeliveryStatus, DeliveryPriority, DeliveryType } from '@/types/delivery';
-import { useToast } from '@/hooks/use-toast';
 
 export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [deliveries, setDeliveries] = useState<DeliveryRequest[]>([]);
   const [restaurantCoords, setRestaurantCoords] = useState<[number, number]>([-4.2634, 15.2429]); // Brazzaville default
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (restaurantId) {
@@ -21,119 +18,143 @@ export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
 
   const fetchRestaurantCoords = async () => {
     try {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('latitude, longitude')
-        .eq('id', restaurantId)
-        .single();
-
-      if (error) throw error;
-      
-      if (data) {
-        setRestaurantCoords([data.latitude, data.longitude]);
-      }
+      // Simulate fetching restaurant coordinates
+      console.log(`Fetching coordinates for restaurant ${restaurantId}`);
+      setTimeout(() => {
+        // Sample data for demonstration
+        setRestaurantCoords([-4.2634, 15.2429]);
+      }, 500);
     } catch (error) {
       console.error('Error fetching restaurant coordinates:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les coordonnées du restaurant',
-        variant: 'destructive',
-      });
     }
   };
 
   const fetchActiveDrivers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('delivery_drivers')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .in('status', ['available', 'busy']);
-
-      if (error) throw error;
-      
-      // Conversion vers le type DeliveryDriver
-      if (data) {
-        const formattedDrivers: DeliveryDriver[] = data.map(driver => ({
-          id: driver.id,
-          name: driver.name || 'Sans nom',
-          phone: driver.phone || '',
-          current_latitude: driver.current_latitude,
-          current_longitude: driver.current_longitude,
-          is_available: driver.is_available || true,
-          status: (driver.status || 'available') as DeliveryDriverStatus,
-          average_rating: driver.average_rating || 0,
-          total_deliveries: driver.total_deliveries || 0,
-          total_earnings: driver.total_earnings || 0,
-          created_at: driver.created_at,
-          updated_at: driver.updated_at || driver.created_at,
-          commission_rate: driver.commission_rate,
-          last_location_update: driver.last_location_update,
-          user_id: driver.user_id,
-          vehicle_type: (driver.vehicle_type || 'bike') as DeliveryVehicleType,
-          profile_picture: driver.profile_picture,
-          current_location: driver.current_location
-        }));
-        setDrivers(formattedDrivers);
-      } else {
-        setDrivers([]);
-      }
+      // Simulate fetching active drivers
+      console.log(`Fetching active drivers for restaurant ${restaurantId}`);
+      setTimeout(() => {
+        // Sample data for demonstration
+        const mockDrivers: DeliveryDriver[] = [
+          {
+            id: '1',
+            name: 'Jean Dupont',
+            phone: '+242 123456789',
+            current_latitude: -4.2634,
+            current_longitude: 15.2429,
+            is_available: true,
+            status: 'available' as DeliveryDriverStatus,
+            average_rating: 4.7,
+            total_deliveries: 128,
+            total_earnings: 1250000,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: 'user-1',
+            vehicle_type: 'bike' as DeliveryVehicleType,
+            profile_picture: '/assets/drivers/driver1.jpg',
+            commission_rate: 0.1,
+            last_location_update: new Date().toISOString(),
+            current_location: {
+              latitude: -4.2634,
+              longitude: 15.2429
+            }
+          },
+          {
+            id: '2',
+            name: 'Marie Kodia',
+            phone: '+242 987654321',
+            current_latitude: -4.2734,
+            current_longitude: 15.2529,
+            is_available: true,
+            status: 'available' as DeliveryDriverStatus,
+            average_rating: 4.5,
+            total_deliveries: 85,
+            total_earnings: 780000,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: 'user-2',
+            vehicle_type: 'scooter' as DeliveryVehicleType,
+            profile_picture: '/assets/drivers/driver2.jpg',
+            commission_rate: 0.1,
+            last_location_update: new Date().toISOString(),
+            current_location: {
+              latitude: -4.2734,
+              longitude: 15.2529
+            }
+          }
+        ];
+        setDrivers(mockDrivers);
+        setLoading(false);
+      }, 800);
     } catch (error) {
       console.error('Error fetching drivers:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les livreurs actifs',
-        variant: 'destructive',
-      });
-    } finally {
       setLoading(false);
     }
   };
 
   const fetchDeliveries = async () => {
     try {
-      let query = supabase
-        .from('delivery_requests')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .in('status', ['assigned', 'picked_up', 'delivering']);
-
-      if (deliveryId) {
-        query = query.eq('id', deliveryId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      
-      if (data) {
-        const formattedDeliveries: DeliveryRequest[] = data.map(d => ({
-          id: d.id,
-          order_id: d.order_id,
-          restaurant_id: d.restaurant_id,
-          assigned_driver_id: d.assigned_driver_id,
-          status: d.status as DeliveryStatus,
-          delivery_address: d.delivery_address || '',
-          delivery_latitude: d.delivery_latitude,
-          delivery_longitude: d.delivery_longitude,
-          delivery_instructions: d.delivery_instructions,
-          priority: (d.priority || 'medium') as DeliveryPriority,
-          delivery_fee: d.delivery_fee || 0,
-          total_amount: d.total_amount || 0,
-          created_at: d.created_at,
-          delivery_type: (d.delivery_type || 'standard') as DeliveryType
-        }));
-        setDeliveries(formattedDeliveries);
-      } else {
-        setDeliveries([]);
-      }
+      // Simulate fetching deliveries
+      console.log(`Fetching deliveries for restaurant ${restaurantId}`);
+      setTimeout(() => {
+        // Sample data for demonstration
+        const mockDeliveries: DeliveryRequest[] = deliveryId 
+          ? [
+              {
+                id: deliveryId,
+                order_id: 'order-123',
+                restaurant_id: restaurantId,
+                assigned_driver_id: '1',
+                status: 'assigned' as DeliveryStatus,
+                delivery_address: '123 Avenue de la Paix, Brazzaville',
+                delivery_latitude: -4.2834,
+                delivery_longitude: 15.2629,
+                delivery_instructions: 'Appartement au 3ème étage',
+                priority: 'medium' as DeliveryPriority,
+                delivery_fee: 2000,
+                total_amount: 15000,
+                created_at: new Date().toISOString(),
+                delivery_type: 'standard' as DeliveryType
+              }
+            ]
+          : [
+              {
+                id: 'delivery-1',
+                order_id: 'order-123',
+                restaurant_id: restaurantId,
+                assigned_driver_id: '1',
+                status: 'assigned' as DeliveryStatus,
+                delivery_address: '123 Avenue de la Paix, Brazzaville',
+                delivery_latitude: -4.2834,
+                delivery_longitude: 15.2629,
+                delivery_instructions: 'Appartement au 3ème étage',
+                priority: 'medium' as DeliveryPriority,
+                delivery_fee: 2000,
+                total_amount: 15000,
+                created_at: new Date().toISOString(),
+                delivery_type: 'standard' as DeliveryType
+              },
+              {
+                id: 'delivery-2',
+                order_id: 'order-456',
+                restaurant_id: restaurantId,
+                assigned_driver_id: '2',
+                status: 'picked_up' as DeliveryStatus,
+                delivery_address: '45 Rue des Flamboyants, Brazzaville',
+                delivery_latitude: -4.2934,
+                delivery_longitude: 15.2729,
+                delivery_instructions: 'Sonner à l\'interphone',
+                priority: 'high' as DeliveryPriority,
+                delivery_fee: 2500,
+                total_amount: 22000,
+                created_at: new Date().toISOString(),
+                delivery_type: 'express' as DeliveryType
+              }
+            ];
+        setDeliveries(mockDeliveries);
+      }, 600);
     } catch (error) {
       console.error('Error fetching deliveries:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les livraisons',
-        variant: 'destructive',
-      });
     }
   };
 

@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface TableExistenceOptions {
   tables: string[];
@@ -11,23 +10,14 @@ export function useTableExistence({ tables }: TableExistenceOptions) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkTables = async () => {
+    const simulateCheckTables = async () => {
       try {
         setLoading(true);
         const results: Record<string, boolean> = {};
 
+        // Just assume all tables exist in this mock implementation
         for (const table of tables) {
-          try {
-            // Vérifier simplement si on peut accéder à la table, sans s'inquiéter du résultat exact
-            const { error } = await supabase
-              .from(table)
-              .select('*', { count: 'exact', head: true });
-              
-            results[table] = !error;
-          } catch (err) {
-            console.error(`Error checking table ${table}:`, err);
-            results[table] = false;
-          }
+          results[table] = true;
         }
 
         setTableExists(results);
@@ -38,7 +28,7 @@ export function useTableExistence({ tables }: TableExistenceOptions) {
       }
     };
     
-    checkTables();
+    simulateCheckTables();
   }, [tables]);
 
   return {
