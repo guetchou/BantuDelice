@@ -1,40 +1,38 @@
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface TableExistenceOptions {
-  tables: string[];
+  tableName?: string;
 }
 
-export function useTableExistence({ tables }: TableExistenceOptions) {
-  const [tableExists, setTableExists] = useState<Record<string, boolean>>({});
+export const useTableExistence = (tableName: string) => {
+  const [exists, setExists] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkTables = async () => {
+    const checkTableExistence = async () => {
       try {
         setLoading(true);
-        const results: Record<string, boolean> = {};
-
-        // Mock implementation - assume all tables exist
-        for (const table of tables) {
-          results[table] = true;
-        }
-
-        setTableExists(results);
-      } catch (error) {
-        console.error('Error checking tables:', error);
+        
+        // Try to query the table with limit 0 just to check if it exists
+        const { error } = await supabase
+          .from(tableName)
+          .select('*', { count: 'exact', head: true })
+          .limit(0);
+          
+        // If no error, the table exists
+        setExists(!error);
+      } catch (err) {
+        console.error(`Error checking table ${tableName} existence:`, err);
+        setExists(false);
       } finally {
         setLoading(false);
       }
     };
     
-    checkTables();
-  }, [tables]);
+    checkTableExistence();
+  }, [tableName]);
 
-  return {
-    tableExists,
-    loading,
-    isTableLoading: loading,
-    exists: (table: string) => tableExists[table] || false
-  };
-}
+  return { exists, loading };
+};

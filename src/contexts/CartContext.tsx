@@ -114,6 +114,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
   }
 }
 
+// Export CartContext for use with useContext
 export const CartContext = createContext<CartContextType>({
   state: initialCartState,
   addItem: () => {},

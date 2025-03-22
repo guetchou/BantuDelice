@@ -160,11 +160,15 @@ const DeliveryDashboard = () => {
 
         <TabsContent value="overview">
           <StatsCards stats={stats} />
+          
           <LocationMap 
             currentLocation={currentLocation} 
             onUpdateLocation={updateLocation} 
           />
-          <QuickActions onOptimizationClick={() => setActiveTab('optimization')} />
+          
+          <QuickActions 
+            onOptimizationClick={() => setActiveTab('optimization')} 
+          />
         </TabsContent>
 
         <TabsContent value="wallet">

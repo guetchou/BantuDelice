@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Loader2, AlertCircle, X, Plus, Minus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
   const [stockStatus, setStockStatus] = useState<StockStatus>({});
   const [validatingStock, setValidatingStock] = useState(false);
   const [showMobilePayment, setShowMobilePayment] = useState(false);
-  const { state, removeFromCart, updateQuantity } = useCart();
+  const { state, removeItem: removeFromCart, updateQuantity } = useCart();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -237,7 +238,7 @@ const CartDrawer = ({ onOrderAmount }: CartDrawerProps) => {
       </Button>
 
       {isOpen && (
-        <div className="absolute bottom-full right-0 mb-2 w-80 bg-white rounded-lg shadow-xl p-4 border border-gray-200">
+        <div className="absolute bottom-full right-0 mb-2 w-80 bg-white rounded-lg shadow-xl p-4 border border-gray-200 z-50">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold">Votre Panier</h3>
             <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>

@@ -25,6 +25,7 @@ export interface DeliveryDriver {
   max_concurrent_deliveries?: number;
   languages?: string[];
   current_deliveries?: any[];
+  current_order_id?: string;
 }
 
 export interface DeliveryMessage {
@@ -38,19 +39,16 @@ export interface DeliveryMessage {
 
 export interface DeliveryRequest {
   id: string;
-  driver_id: string | null;
-  status: "pending" | "accepted" | "completed" | "cancelled" | "in_progress" | "assigned" | "picked_up" | "delivering" | "delivered" | "failed";
-  pickup_latitude: number;
-  pickup_longitude: number;
-  dropoff_latitude: number;
-  dropoff_longitude: number;
-  created_at: string;
-  accepted_at?: string;
-  completed_at?: string;
-  cancelled_at?: string;
-  notes?: string;
+  driver_id?: string | null;
+  status: DeliveryStatus;
   
-  // Additional properties needed by components
+  // Original properties
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  dropoff_latitude?: number;
+  dropoff_longitude?: number;
+  
+  // Additional properties needed for compatibility
   order_id?: string;
   pickup_address?: string;
   delivery_address?: string;
@@ -63,21 +61,26 @@ export interface DeliveryRequest {
   restaurant_id?: string;
   is_priority?: boolean;
   distance?: number;
+  distance_km?: number;
   is_external?: boolean;
   requested_at?: string;
+  accepted_at?: string;
+  completed_at?: string;
+  cancelled_at?: string;
   delivery_fee?: number;
+  notes?: string;
+  external_service_id?: string;
+  priority?: string;
+  estimated_distance?: number;
+  delivery_time?: string;
+  delivery_instructions?: string;
+  dropoff_address?: string;
 }
 
 export interface DeliveryRoute {
   id: string;
   driver_id: string;
-  stops: {
-    request_id: string;
-    order: number;
-    type: string;
-    latitude: number;
-    longitude: number;
-  }[];
+  stops: DeliveryRouteStop[];
   created_at: string;
   updated_at: string;
   
@@ -87,6 +90,15 @@ export interface DeliveryRoute {
   start_time?: string;
   estimated_end_time?: string;
   waypoints?: any[];
+}
+
+export interface DeliveryRouteStop {
+  request_id: string;
+  order: number;
+  type: string;
+  latitude: number;
+  longitude: number;
+  is_priority?: boolean;
 }
 
 export interface DeliveryVerification {
@@ -146,6 +158,7 @@ export interface DeliverySettings {
   estimated_delivery_time?: number;
   auto_accept_orders?: boolean;
   auto_assign_drivers?: boolean;
+  delivery_hours?: any;
 }
 
 export interface ExternalDeliveryService {
@@ -159,3 +172,16 @@ export interface ExternalDeliveryService {
 }
 
 export type DeliveryType = 'internal' | 'external' | 'self_pickup';
+
+export interface TableExistenceOptions {
+  tableName: string;
+}
+
+// Extension for route optimization
+export interface OptimizationWaypoint {
+  latitude: number;
+  longitude: number;
+  request_id?: string;
+  type?: string;
+  is_priority?: boolean;
+}

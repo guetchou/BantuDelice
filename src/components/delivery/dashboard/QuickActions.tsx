@@ -1,59 +1,60 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, MessageSquare, Phone, Plus, Settings, UserPlus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MapPin, Route, MessageSquare, Settings } from 'lucide-react';
 
 interface QuickActionsProps {
-  onAddDriver: () => void;
-  onSetupZones: () => void;
-  onViewRequests: () => void;
+  onOptimizationClick: () => void;
 }
 
-const QuickActions = ({ onAddDriver, onSetupZones, onViewRequests }: QuickActionsProps) => {
+const QuickActions = ({ onOptimizationClick }: QuickActionsProps) => {
   return (
-    <Card>
+    <Card className="mt-6">
       <CardHeader>
         <CardTitle>Actions rapides</CardTitle>
-        <CardDescription>
-          Accédez rapidement aux outils de gestion
-        </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <Button 
-          variant="outline" 
-          className="justify-start" 
-          onClick={onAddDriver}
-        >
-          <UserPlus className="mr-2 h-4 w-4" />
-          Ajouter un livreur
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="justify-start"
-          onClick={onSetupZones}
-        >
-          <MapPin className="mr-2 h-4 w-4" />
-          Configurer les zones
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="justify-start"
-          onClick={onViewRequests}
-        >
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Voir les demandes en attente
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="justify-start"
-        >
-          <Settings className="mr-2 h-4 w-4" />
-          Paramètres
-        </Button>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4">
+          <Button 
+            variant="outline" 
+            className="flex flex-col h-24 items-center justify-center"
+            onClick={onOptimizationClick}
+          >
+            <Route className="h-8 w-8 mb-2" />
+            <span>Optimisation</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex flex-col h-24 items-center justify-center"
+            onClick={() => window.location.href = '/delivery/messages'}
+          >
+            <MessageSquare className="h-8 w-8 mb-2" />
+            <span>Messages</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex flex-col h-24 items-center justify-center"
+            onClick={() => window.location.href = '/settings'}
+          >
+            <Settings className="h-8 w-8 mb-2" />
+            <span>Paramètres</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex flex-col h-24 items-center justify-center"
+            onClick={() => navigator.geolocation.getCurrentPosition(
+              position => alert(`Position: ${position.coords.latitude}, ${position.coords.longitude}`),
+              error => alert(`Erreur: ${error.message}`)
+            )}
+          >
+            <MapPin className="h-8 w-8 mb-2" />
+            <span>Position</span>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
