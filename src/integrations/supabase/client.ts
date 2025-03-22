@@ -1,5 +1,5 @@
 
-import { mockData } from '@/utils/mockData';
+import { createMockApi } from '@/utils/mockApi';
 
-// Export the mock API as Supabase
-export const supabase = mockData.mockApi;
+// Create and export a mock API client
+export const supabase = createMockApi();
