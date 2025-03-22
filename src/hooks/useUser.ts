@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { User } from '@/types/user';
+import { User, UserStatus, UserRole } from '@/types/user';
 import { userService } from '@/services/userService';
 import { toast } from 'sonner';
 
@@ -9,10 +9,10 @@ export interface UserProfile {
   email: string;
   first_name?: string;
   last_name?: string;
-  role: 'user' | 'admin' | 'superadmin' | 'restaurant_owner' | 'driver';
+  role: UserRole;
   created_at: string;
   avatar_url?: string;
-  status: string;
+  status: UserStatus;
   phone?: string;
 }
 
@@ -44,7 +44,17 @@ export const useUser = () => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
-      const updatedUser = await userService.updateUser(user.id, updates);
+      // Convertir les mises à jour au format attendu par userService
+      const userUpdates = {
+        first_name: updates.first_name,
+        last_name: updates.last_name,
+        role: updates.role,
+        status: updates.status,
+        phone: updates.phone,
+        avatar_url: updates.avatar_url
+      };
+
+      const updatedUser = await userService.updateUser(user.id, userUpdates);
       
       if (!updatedUser) {
         throw new Error('Failed to update profile');

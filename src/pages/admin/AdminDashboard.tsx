@@ -1,267 +1,218 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { userService } from '@/services/userService';
-import { User, UserRole } from '@/types/user';
-import {
-  Users, FileText, ShoppingBag, TrendingUp, User as UserIcon, 
-  ShieldCheck, Truck, Coffee
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import DashboardBarChart from '@/components/DashboardBarChart';
+import DashboardChart from '@/components/DashboardChart';
+import { Button } from '@/components/ui/button';
+import { 
+  Users, 
+  Store, 
+  ShoppingBag, 
+  Truck, 
+  ArrowUpRight, 
+  ArrowDownRight,
+  List,
+  KeyRound
 } from 'lucide-react';
-import { DashboardBarChart } from '@/components/DashboardBarChart';
-import { DashboardChart } from '@/components/DashboardChart';
 
 export default function AdminDashboard() {
-  const { user } = useAdminAuth();
-  const [users, setUsers] = React.useState<User[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const data = await userService.getUsers();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, []);
-
-  // Statistiques utilisateurs
-  const userStats = React.useMemo(() => {
-    const totalUsers = users.length;
-    const roleCount: Record<UserRole, number> = {
-      user: 0,
-      admin: 0,
-      superadmin: 0,
-      restaurant_owner: 0,
-      driver: 0
-    };
-
-    const statusCount = {
-      active: 0,
-      inactive: 0,
-      pending: 0,
-      suspended: 0
-    };
-
-    users.forEach(user => {
-      roleCount[user.role]++;
-      statusCount[user.status]++;
-    });
-
-    return {
-      totalUsers,
-      roleCount,
-      statusCount,
-      newUsersToday: 0, // Dans un vrai système, on calculerait cela
-      newUsersThisWeek: 2,
-      newUsersThisMonth: 5
-    };
-  }, [users]);
-
-  // Données fictives pour les graphiques
-  const orderData = [
-    { name: 'Lun', value: 12 },
-    { name: 'Mar', value: 19 },
-    { name: 'Mer', value: 15 },
-    { name: 'Jeu', value: 22 },
-    { name: 'Ven', value: 28 },
-    { name: 'Sam', value: 35 },
-    { name: 'Dim', value: 30 }
-  ];
-
-  const revenueData = [
-    { name: 'Jan', value: 4000 },
-    { name: 'Fév', value: 3000 },
-    { name: 'Mar', value: 5000 },
-    { name: 'Avr', value: 4500 },
-    { name: 'Mai', value: 6000 },
-    { name: 'Juin', value: 5500 }
-  ];
-
-  const userRoleData = [
-    { name: 'Utilisateurs', value: userStats.roleCount.user },
-    { name: 'Admins', value: userStats.roleCount.admin },
-    { name: 'Super Admins', value: userStats.roleCount.superadmin },
-    { name: 'Restaurants', value: userStats.roleCount.restaurant_owner },
-    { name: 'Chauffeurs', value: userStats.roleCount.driver }
-  ];
+  const { user, isSuperAdmin } = useAdminAuth();
+  const navigate = useNavigate();
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Tableau de bord</h1>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">
-            Bienvenue, {user?.first_name} {user?.last_name}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {user?.role === 'superadmin' ? 'Super Administrateur' : 'Administrateur'}
+        <div>
+          <h1 className="text-3xl font-bold">Tableau de bord</h1>
+          <p className="text-muted-foreground">
+            Bienvenue, {user?.first_name || 'Admin'} ! Voici vos statistiques d'aujourd'hui.
           </p>
         </div>
+        
+        {isSuperAdmin && (
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/admin/user-credentials')}
+              className="flex items-center gap-1"
+            >
+              <KeyRound size={18} />
+              <span>Identifiants de test</span>
+            </Button>
+          </div>
+        )}
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="users">Utilisateurs</TabsTrigger>
-          <TabsTrigger value="orders">Commandes</TabsTrigger>
-          <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <DashboardMetricCard 
+          title="Utilisateurs"
+          value="1,248"
+          trend="up"
+          trendValue="12%"
+          icon={<Users size={20} />}
+        />
+        <DashboardMetricCard 
+          title="Restaurants"
+          value="84"
+          trend="up"
+          trendValue="8%"
+          icon={<Store size={20} />}
+        />
+        <DashboardMetricCard 
+          title="Commandes"
+          value="536"
+          trend="down"
+          trendValue="3%"
+          icon={<ShoppingBag size={20} />}
+        />
+        <DashboardMetricCard 
+          title="Livraisons"
+          value="489"
+          trend="up"
+          trendValue="16%"
+          icon={<Truck size={20} />}
+        />
+      </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Utilisateurs</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.totalUsers}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  +{userStats.newUsersThisMonth} ce mois-ci
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Commandes</CardTitle>
-                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">245</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  +32 cette semaine
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Restaurants</CardTitle>
-                <Coffee className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">24</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  +2 ce mois-ci
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Revenus</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">12,458 €</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  +8.2% par rapport au mois dernier
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Commandes par jour</CardTitle>
+            <CardDescription>Évolution sur les 7 derniers jours</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DashboardBarChart />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Répartition par catégorie</CardTitle>
+            <CardDescription>Commandes par type de cuisine</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DashboardChart />
+          </CardContent>
+        </Card>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Activité des commandes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DashboardBarChart data={orderData} />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenus mensuels</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DashboardChart data={revenueData} />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Dernières inscriptions</CardTitle>
+            <CardDescription>10 derniers utilisateurs inscrits</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <li key={i} className="flex items-center justify-between border-b pb-2 last:border-0">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Users size={15} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Utilisateur #{i+1}</p>
+                      <p className="text-xs text-muted-foreground">Il y a {i+1} heures</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-8 gap-1">
+                    <span>Détails</span>
+                    <List size={14} />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button variant="outline" onClick={() => navigate('/admin/users')}>
+              Voir tous les utilisateurs
+            </Button>
+          </CardFooter>
+        </Card>
 
-        <TabsContent value="users" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Utilisateurs</CardTitle>
-                <UserIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.roleCount.user}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Admins</CardTitle>
-                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {userStats.roleCount.admin + userStats.roleCount.superadmin}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Restaurants</CardTitle>
-                <Coffee className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.roleCount.restaurant_owner}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Chauffeurs</CardTitle>
-                <Truck className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.roleCount.driver}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Répartition des utilisateurs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DashboardBarChart data={userRoleData} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="orders" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Statistiques des commandes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Contenu à venir...</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="restaurants" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Statistiques des restaurants</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Contenu à venir...</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        <Card>
+          <CardHeader>
+            <CardTitle>Dernières commandes</CardTitle>
+            <CardDescription>10 dernières commandes passées</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <li key={i} className="flex items-center justify-between border-b pb-2 last:border-0">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <ShoppingBag size={15} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Commande #{1000 + i}</p>
+                      <p className="text-xs text-muted-foreground">Restaurant {i+1} • {25 + i*2}€</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-8 gap-1">
+                    <span>Détails</span>
+                    <List size={14} />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button variant="outline">
+              Voir toutes les commandes
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }
+
+interface DashboardMetricCardProps {
+  title: string;
+  value: string;
+  trend: 'up' | 'down';
+  trendValue: string;
+  icon: React.ReactNode;
+}
+
+const DashboardMetricCard: React.FC<DashboardMetricCardProps> = ({ 
+  title, 
+  value, 
+  trend, 
+  trendValue,
+  icon 
+}) => {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+          </div>
+          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
+            {icon}
+          </div>
+        </div>
+        <div className="mt-4">
+          <div className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+            trend === 'up' 
+              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+          }`}>
+            {trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+            <span className="ml-1">{trendValue} depuis le mois dernier</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};

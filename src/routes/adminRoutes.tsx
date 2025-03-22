@@ -6,6 +6,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import Users from "@/pages/admin/Users";
 import Admin from "@/pages/Admin";
 import FeatureFlags from "@/pages/admin/FeatureFlags";
+import UserCredentials from "@/pages/admin/UserCredentials";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -27,6 +28,10 @@ export const adminRoutes: RouteObject[] = [
       {
         path: "users",
         element: <Users />
+      },
+      {
+        path: "user-credentials",
+        element: <UserCredentials />
       },
       {
         path: "feature-flags",

@@ -1,4 +1,3 @@
-
 // Mock data for development and testing
 
 export const mockData = {
@@ -7,46 +6,58 @@ export const mockData = {
     {
       id: 'user-1',
       email: 'admin@example.com',
-      password: 'password123',
+      password: 'admin123',
       first_name: 'Admin',
       last_name: 'User',
       role: 'admin',
       status: 'active',
       created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z'
+      updated_at: '2023-01-01T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=1',
+      phone: '+242 123 456 789',
+      last_login: '2023-07-01T10:15:00Z'
     },
     {
       id: 'user-2',
       email: 'user@example.com',
-      password: 'password123',
+      password: 'user123',
       first_name: 'Normal',
       last_name: 'User',
       role: 'user',
       status: 'active',
       created_at: '2023-01-02T00:00:00Z',
-      updated_at: '2023-01-02T00:00:00Z'
+      updated_at: '2023-01-02T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=2',
+      phone: '+242 234 567 890',
+      last_login: '2023-06-28T14:45:00Z'
     },
     {
       id: 'user-3',
       email: 'resto@example.com',
-      password: 'password123',
+      password: 'resto123',
       first_name: 'Restaurant',
       last_name: 'Owner',
       role: 'restaurant_owner',
       status: 'active',
       created_at: '2023-01-03T00:00:00Z',
-      updated_at: '2023-01-03T00:00:00Z'
+      updated_at: '2023-01-03T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=3',
+      phone: '+242 345 678 901',
+      last_login: '2023-06-30T09:20:00Z'
     },
     {
       id: 'user-4',
       email: 'driver@example.com',
-      password: 'password123',
+      password: 'driver123',
       first_name: 'Delivery',
       last_name: 'Driver',
       role: 'driver',
       status: 'active',
       created_at: '2023-01-04T00:00:00Z',
-      updated_at: '2023-01-04T00:00:00Z'
+      updated_at: '2023-01-04T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=4',
+      phone: '+242 456 789 012',
+      last_login: '2023-07-02T08:30:00Z'
     },
     {
       id: 'user-5',
@@ -57,7 +68,80 @@ export const mockData = {
       role: 'superadmin',
       status: 'active',
       created_at: '2023-01-05T00:00:00Z',
-      updated_at: '2023-01-05T00:00:00Z'
+      updated_at: '2023-01-05T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=5',
+      phone: '+242 567 890 123',
+      last_login: '2023-07-03T11:05:00Z'
+    },
+    {
+      id: 'user-6',
+      email: 'inactive@example.com',
+      password: 'user123',
+      first_name: 'Inactive',
+      last_name: 'User',
+      role: 'user',
+      status: 'inactive',
+      created_at: '2023-02-01T00:00:00Z',
+      updated_at: '2023-03-15T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=6',
+      phone: '+242 678 901 234',
+      last_login: '2023-03-15T16:30:00Z'
+    },
+    {
+      id: 'user-7',
+      email: 'pending@example.com',
+      password: 'user123',
+      first_name: 'Pending',
+      last_name: 'Approval',
+      role: 'restaurant_owner',
+      status: 'pending',
+      created_at: '2023-06-10T00:00:00Z',
+      updated_at: '2023-06-10T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=7',
+      phone: '+242 789 012 345',
+      last_login: null
+    },
+    {
+      id: 'user-8',
+      email: 'suspended@example.com',
+      password: 'user123',
+      first_name: 'Suspended',
+      last_name: 'Driver',
+      role: 'driver',
+      status: 'suspended',
+      created_at: '2023-03-20T00:00:00Z',
+      updated_at: '2023-06-25T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=8',
+      phone: '+242 890 123 456',
+      last_login: '2023-06-20T14:15:00Z'
+    },
+    {
+      id: 'user-9',
+      email: 'client1@example.com',
+      password: 'client123',
+      first_name: 'Jean',
+      last_name: 'Dupont',
+      role: 'user',
+      status: 'active',
+      created_at: '2023-04-15T00:00:00Z',
+      updated_at: '2023-04-15T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=9',
+      phone: '+242 901 234 567',
+      last_login: '2023-07-01T19:25:00Z'
+    },
+    {
+      id: 'user-10',
+      email: 'client2@example.com',
+      password: 'client123',
+      first_name: 'Marie',
+      last_name: 'Leclerc',
+      role: 'user',
+      status: 'active',
+      created_at: '2023-05-01T00:00:00Z',
+      updated_at: '2023-05-01T00:00:00Z',
+      avatar_url: 'https://i.pravatar.cc/150?img=10',
+      phone: '+242 012 345 678',
+      last_login: '2023-07-02T12:40:00Z'
     }
   ],
 

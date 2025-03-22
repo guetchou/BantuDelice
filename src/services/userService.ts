@@ -14,8 +14,8 @@ if (!users.some(user => user.role === 'superadmin')) {
     password: 'admin123', // Ne serait jamais stocké en clair dans un vrai système
     first_name: 'Super',
     last_name: 'Admin',
-    role: 'superadmin',
-    status: 'active',
+    role: 'superadmin' as UserRole,
+    status: 'active' as UserStatus,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   });
@@ -26,7 +26,11 @@ export const userService = {
   getUsers: async (): Promise<User[]> => {
     // Simulation d'appel API
     await new Promise(resolve => setTimeout(resolve, 500));
-    return users.map(({ password, ...user }) => user);
+    return users.map(({ password, ...user }) => ({
+      ...user,
+      role: user.role as UserRole,
+      status: user.status as UserStatus
+    }));
   },
 
   // Récupérer un utilisateur par ID
@@ -36,7 +40,11 @@ export const userService = {
     if (!user) return null;
     
     const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return {
+      ...userWithoutPassword,
+      role: userWithoutPassword.role as UserRole,
+      status: userWithoutPassword.status as UserStatus
+    };
   },
 
   // Créer un nouvel utilisateur
@@ -56,7 +64,7 @@ export const userService = {
       password: userData.password, // Dans un vrai système, ce serait hashé
       first_name: userData.first_name || '',
       last_name: userData.last_name || '',
-      role: userData.role || 'user',
+      role: userData.role || 'user' as UserRole,
       status: 'active' as UserStatus,
       created_at: now,
       updated_at: now,
@@ -66,7 +74,11 @@ export const userService = {
     users.push(newUser);
     
     const { password, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
+    return {
+      ...userWithoutPassword,
+      role: userWithoutPassword.role as UserRole,
+      status: userWithoutPassword.status as UserStatus
+    };
   },
 
   // Mettre à jour un utilisateur
@@ -88,7 +100,11 @@ export const userService = {
     users[index] = updatedUser;
     
     const { password, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
+    return {
+      ...userWithoutPassword,
+      role: userWithoutPassword.role as UserRole,
+      status: userWithoutPassword.status as UserStatus
+    };
   },
 
   // Supprimer un utilisateur
@@ -116,7 +132,11 @@ export const userService = {
     };
     
     const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return {
+      ...userWithoutPassword,
+      role: userWithoutPassword.role as UserRole,
+      status: userWithoutPassword.status as UserStatus
+    };
   },
 
   // Vérifier si un utilisateur est un superadmin
