@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
+import { DeliveryDriver, DeliveryRequest, DeliveryDriverStatus, DeliveryVehicleType, DeliveryStatus, DeliveryPriority, DeliveryType } from '@/types/delivery';
 import { useToast } from '@/hooks/use-toast';
 
 export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
@@ -61,7 +61,7 @@ export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
           current_latitude: driver.current_latitude,
           current_longitude: driver.current_longitude,
           is_available: driver.is_available || true,
-          status: driver.status as DeliveryDriverStatus,
+          status: (driver.status || 'available') as DeliveryDriverStatus,
           average_rating: driver.average_rating || 0,
           total_deliveries: driver.total_deliveries || 0,
           total_earnings: driver.total_earnings || 0,
@@ -70,7 +70,7 @@ export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
           commission_rate: driver.commission_rate,
           last_location_update: driver.last_location_update,
           user_id: driver.user_id,
-          vehicle_type: driver.vehicle_type as DeliveryVehicleType,
+          vehicle_type: (driver.vehicle_type || 'bike') as DeliveryVehicleType,
           profile_picture: driver.profile_picture,
           current_location: driver.current_location
         }));
@@ -117,11 +117,11 @@ export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
           delivery_latitude: d.delivery_latitude,
           delivery_longitude: d.delivery_longitude,
           delivery_instructions: d.delivery_instructions,
-          priority: d.priority as DeliveryPriority || 'medium',
+          priority: (d.priority || 'medium') as DeliveryPriority,
           delivery_fee: d.delivery_fee || 0,
           total_amount: d.total_amount || 0,
           created_at: d.created_at,
-          delivery_type: d.delivery_type as DeliveryType || 'standard'
+          delivery_type: (d.delivery_type || 'standard') as DeliveryType
         }));
         setDeliveries(formattedDeliveries);
       } else {

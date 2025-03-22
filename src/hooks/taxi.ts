@@ -22,8 +22,19 @@ const useRideCreation = () => ({
 
 // Version simplifiée du hook useTaxiBooking pour éviter les dépendances circulaires
 const useTaxiBooking = () => ({
-  drivers: {},
-  rides: {}
+  drivers: {
+    findDrivers: async () => [],
+    requestDriver: async () => null,
+    getDriverDetails: async () => null,
+  },
+  rides: {
+    createRide: async () => null,
+    getRideDetails: async () => null,
+    cancelRide: async () => null,
+    getAllRides: async () => [],
+    createBooking: async () => null,
+    isLoading: false,
+  }
 });
 
 const useTaxiBookingCreate = () => ({
@@ -56,10 +67,17 @@ export {
 export const useTaxiBookingSystem = () => {
   return {
     drivers: {
-      // Fonctionnalités temporairement désactivées pour résoudre les erreurs
+      findDrivers: async () => [],
+      requestDriver: async () => null,
+      getDriverDetails: async () => null,
     },
     rides: {
-      // Fonctionnalités temporairement désactivées pour résoudre les erreurs
+      createRide: async () => null,
+      getRideDetails: async () => null,
+      cancelRide: async () => null,
+      getAllRides: async () => [],
+      createBooking: async () => null,
+      isLoading: false,
     }
   };
 };

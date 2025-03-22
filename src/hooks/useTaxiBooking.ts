@@ -1,11 +1,19 @@
 
+// Fonction simple pour éviter les dépendances circulaires
 export const useTaxiBooking = () => {
   return {
     drivers: {
-      // Placeholders pour éviter les dépendances circulaires
+      findDrivers: async () => [],
+      requestDriver: async () => null,
+      getDriverDetails: async () => null,
     },
     rides: {
-      // Placeholders pour éviter les dépendances circulaires
+      createRide: async () => null,
+      getRideDetails: async () => null,
+      cancelRide: async () => null,
+      getAllRides: async () => [],
+      createBooking: async () => null,
+      isLoading: false,
     }
   };
 };

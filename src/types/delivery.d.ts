@@ -68,6 +68,8 @@ export interface DeliveryRequest {
   requested_at?: string;
   completed_at?: string;
   is_external?: boolean;
+  external_service_id?: string;
+  pickup_time?: string;
 }
 
 export interface DeliveryVerification {
@@ -110,6 +112,7 @@ export interface DeliverySettings {
   auto_accept_orders?: boolean;
   auto_assign_drivers?: boolean;
   accepted_external_services?: string[];
+  delivery_hours?: any;
 }
 
 export interface DeliveryRoute {
