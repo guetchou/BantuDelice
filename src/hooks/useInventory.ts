@@ -1,7 +1,5 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
 
 interface InventoryLevel {
   id: string;
@@ -12,56 +10,70 @@ interface InventoryLevel {
 }
 
 export const useInventory = (restaurantId: string) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [inventoryLevels, setInventoryLevels] = useState<InventoryLevel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: inventoryLevels, isLoading } = useQuery({
-    queryKey: ['inventory', restaurantId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('inventory_levels')
-        .select(`
-          *,
-          menu_items(id, name)
-        `)
-        .eq('menu_items.restaurant_id', restaurantId);
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Simulating API call with timeout
+        setTimeout(() => {
+          // Mock data
+          const mockInventory: InventoryLevel[] = [
+            {
+              id: '1',
+              menu_item_id: 'menu-1',
+              current_stock: 50,
+              reserved_stock: 5,
+              min_stock_level: 10
+            },
+            {
+              id: '2',
+              menu_item_id: 'menu-2',
+              current_stock: 20,
+              reserved_stock: 2,
+              min_stock_level: 5
+            }
+          ];
+          
+          setInventoryLevels(mockInventory);
+          setIsLoading(false);
+        }, 500);
+      } catch (error) {
+        console.error('Error fetching inventory:', error);
+        setIsLoading(false);
+      }
+    };
+    
+    fetchInventory();
+  }, [restaurantId]);
 
-      if (error) throw error;
-      return data;
+  const updateStock = async ({ itemId, quantity }: { itemId: string, quantity: number }) => {
+    try {
+      // Simulating API call
+      console.log(`Updating stock for item ${itemId} to ${quantity}`);
+      
+      // Update local state
+      setInventoryLevels(prev => 
+        prev.map(item => 
+          item.menu_item_id === itemId 
+            ? { ...item, current_stock: quantity }
+            : item
+        )
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      return false;
     }
-  });
-
-  const updateStockMutation = useMutation({
-    mutationFn: async ({ itemId, quantity }: { itemId: string, quantity: number }) => {
-      const { data, error } = await supabase
-        .from('inventory_levels')
-        .update({ current_stock: quantity })
-        .eq('menu_item_id', itemId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      toast({
-        title: "Stock mis à jour",
-        description: "Le niveau de stock a été mis à jour avec succès",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le stock",
-        variant: "destructive",
-      });
-    }
-  });
+  };
 
   return {
     inventoryLevels,
     isLoading,
-    updateStock: updateStockMutation.mutate,
+    updateStock,
   };
 };

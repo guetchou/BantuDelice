@@ -1,7 +1,13 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+
+interface User {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -18,16 +24,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in from localStorage
     const checkUser = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const storedUser = localStorage.getItem('user');
         
-        if (error) {
-          console.error('Error getting session:', error);
-          setUser(null);
-        } else if (data && data.session) {
-          setUser(data.session.user);
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
         } else {
           setUser(null);
         }
@@ -40,36 +43,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkUser();
-
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-      }
-    );
-
-    return () => {
-      // Clean up listener
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { error };
+      // Mock sign in
+      if (email === 'demo@example.com' && password === 'password') {
+        const mockUser = {
+          id: '123',
+          email: email,
+          first_name: 'Demo',
+          last_name: 'User'
+        };
+        
+        setUser(mockUser);
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        return undefined;
       }
-
-      return undefined;
+      
+      return { error: 'Invalid credentials' };
     } finally {
       setIsLoading(false);
     }
@@ -78,15 +71,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { error };
-      }
-
+      // Mock sign up
+      const mockUser = {
+        id: '123',
+        email: email,
+        first_name: 'New',
+        last_name: 'User'
+      };
+      
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
       return undefined;
     } finally {
       setIsLoading(false);
@@ -96,7 +90,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     setIsLoading(true);
     try {
-      await supabase.auth.signOut();
+      localStorage.removeItem('user');
+      setUser(null);
     } finally {
       setIsLoading(false);
     }

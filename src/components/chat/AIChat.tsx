@@ -1,8 +1,8 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, User } from 'lucide-react';
 
 interface Message {
@@ -38,22 +38,23 @@ const AIChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://frwviexczcdkpusrhjdc.supabase.co/functions/v1/chat-with-ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          message: userMessage.content,
-        }),
-      });
-
-      const data = await response.json();
+      // Simulate API response with timeout
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Mock response
+      const responses = [
+        "Je suis désolé, je ne peux pas vous aider avec cette demande pour le moment.",
+        "Merci pour votre message. Comment puis-je vous aider davantage?",
+        "Votre commande est en cours de traitement.",
+        "Nous avons bien reçu votre feedback, merci!",
+        "Avez-vous essayé de redémarrer l'application?"
+      ];
+      
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
 
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: data.response,
+        content: randomResponse,
         timestamp: new Date(),
       }]);
     } catch (error) {
@@ -83,13 +84,13 @@ const AIChat = () => {
                 message.role === 'user' ? 'flex-row-reverse' : ''
               }`}
             >
-              <Avatar>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100">
                 {message.role === 'assistant' ? (
                   <Bot className="h-5 w-5" />
                 ) : (
                   <User className="h-5 w-5" />
                 )}
-              </Avatar>
+              </div>
               <div className={`max-w-[80%] ${
                 message.role === 'user' ? 'text-right' : ''
               }`}>

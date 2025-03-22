@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 export interface Notification {
   id: string;
@@ -27,17 +25,32 @@ export const useRealTimeNotifications = (userId?: string) => {
 
     const fetchNotifications = async () => {
       try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(50);
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Mock notification data
+        const mockNotifications: Notification[] = [
+          {
+            id: '1',
+            user_id: userId,
+            message: 'Votre commande a été confirmée',
+            type: 'success',
+            read: false,
+            created_at: new Date(Date.now() - 5 * 60000).toISOString(), // 5 minutes ago
+          },
+          {
+            id: '2',
+            user_id: userId,
+            message: 'Nouvelle promotion disponible',
+            type: 'info',
+            read: true,
+            created_at: new Date(Date.now() - 60 * 60000).toISOString(), // 1 hour ago
+            action_link: '/promotions',
+          }
+        ];
 
-        if (error) throw error;
-
-        setNotifications(data as Notification[]);
-        setUnreadCount(data.filter((n: Notification) => !n.read).length);
+        setNotifications(mockNotifications);
+        setUnreadCount(mockNotifications.filter(n => !n.read).length);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       } finally {
@@ -47,45 +60,35 @@ export const useRealTimeNotifications = (userId?: string) => {
 
     fetchNotifications();
 
-    // Subscribe to real-time notifications
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${userId}`
-      }, (payload) => {
-        const newNotification = payload.new as Notification;
+    // Simulate real-time notifications with setInterval
+    const interval = setInterval(() => {
+      if (Math.random() > 0.8) { // 20% chance of new notification
+        const newNotification: Notification = {
+          id: `new-${Date.now()}`,
+          user_id: userId,
+          message: 'Nouvelle mise à jour système',
+          type: 'info',
+          read: false,
+          created_at: new Date().toISOString(),
+        };
         
-        // Show toast for new notification
-        toast[newNotification.type || 'info'](newNotification.message, {
-          action: newNotification.action_link ? {
-            label: 'Voir',
-            onClick: () => window.location.href = newNotification.action_link!
-          } : undefined
-        });
-        
-        // Update notifications state
         setNotifications(prev => [newNotification, ...prev]);
         setUnreadCount(prev => prev + 1);
-      })
-      .subscribe();
+        
+        console.log('New notification arrived');
+      }
+    }, 30000); // Check every 30 seconds
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [userId]);
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
@@ -102,14 +105,9 @@ export const useRealTimeNotifications = (userId?: string) => {
     if (!userId) return { success: false };
 
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('user_id', userId)
-        .eq('read', false);
-
-      if (error) throw error;
-
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
 
@@ -122,13 +120,9 @@ export const useRealTimeNotifications = (userId?: string) => {
 
   const deleteNotification = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .delete()
-        .eq('id', notificationId);
-
-      if (error) throw error;
-
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const deletedNotification = notifications.find(n => n.id === notificationId);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
       

@@ -1,7 +1,5 @@
+
 import { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { supabase } from '@/integrations/supabase/client';
 
 interface DeliveryMapProps {
   latitude: number;
@@ -11,54 +9,39 @@ interface DeliveryMapProps {
 
 const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-
+  
   useEffect(() => {
-    const initializeMap = async () => {
-      try {
-        // Get Mapbox token from edge function
-        const { data: { token }, error } = await supabase.functions.invoke('get_mapbox_token');
-
-        if (error) {
-          console.error('Error fetching Mapbox token:', error);
-          return;
+    // Mock map initialization - in a real app, would use Leaflet/Google Maps here
+    if (mapContainer.current) {
+      console.log(`Initializing map at coordinates: ${latitude}, ${longitude}`);
+      console.log(`Order ID: ${orderId || 'No order ID provided'}`);
+      
+      // Simulate map loading
+      const loadMap = () => {
+        if (mapContainer.current) {
+          mapContainer.current.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background-color: #e9ecef;">
+              <div style="text-align: center;">
+                <div>Map Preview</div>
+                <div>Latitude: ${latitude.toFixed(4)}</div>
+                <div>Longitude: ${longitude.toFixed(4)}</div>
+                ${orderId ? `<div>Order: ${orderId}</div>` : ''}
+              </div>
+            </div>
+          `;
         }
-
-        if (!token) {
-          console.error('No Mapbox token received');
-          return;
-        }
-
-        // Set access token
-        mapboxgl.accessToken = token;
-
-        if (!map.current && mapContainer.current) {
-          map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [longitude, latitude],
-            zoom: 12
-          });
-
-          // Add marker
-          new mapboxgl.Marker()
-            .setLngLat([longitude, latitude])
-            .addTo(map.current);
-        }
-      } catch (err) {
-        console.error('Error initializing map:', err);
-      }
-    };
-
-    initializeMap();
-
+      };
+      
+      loadMap();
+    }
+    
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
+      // Cleanup
+      if (mapContainer.current) {
+        mapContainer.current.innerHTML = '';
       }
     };
-  }, [latitude, longitude]);
+  }, [latitude, longitude, orderId]);
 
   return (
     <div 

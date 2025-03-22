@@ -15,7 +15,7 @@ export function useTableExistence({ tables }: TableExistenceOptions) {
         setLoading(true);
         const results: Record<string, boolean> = {};
 
-        // Just assume all tables exist in this mock implementation
+        // Assume all tables exist in this mock implementation
         for (const table of tables) {
           results[table] = true;
         }

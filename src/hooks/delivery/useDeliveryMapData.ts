@@ -1,6 +1,52 @@
 
 import { useState, useEffect } from 'react';
-import { DeliveryDriver, DeliveryRequest, DeliveryDriverStatus, DeliveryVehicleType, DeliveryStatus, DeliveryPriority, DeliveryType } from '@/types/delivery';
+
+// Types simplifiées
+type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'in_progress' | 'delivered' | 'cancelled';
+type DeliveryPriority = 'low' | 'medium' | 'high' | 'urgent';
+type DeliveryVehicleType = 'bike' | 'scooter' | 'car' | 'walk';
+type DeliveryType = 'standard' | 'express' | 'scheduled';
+
+interface DeliveryRequest {
+  id: string;
+  order_id: string;
+  restaurant_id: string;
+  assigned_driver_id?: string;
+  status: DeliveryStatus;
+  delivery_address: string;
+  delivery_latitude: number;
+  delivery_longitude: number;
+  delivery_instructions?: string;
+  priority: DeliveryPriority;
+  delivery_fee: number;
+  total_amount: number;
+  created_at: string;
+  delivery_type: DeliveryType;
+}
+
+interface DeliveryDriver {
+  id: string;
+  name: string;
+  phone: string;
+  current_latitude: number;
+  current_longitude: number;
+  is_available: boolean;
+  status: string;
+  average_rating: number;
+  total_deliveries: number;
+  total_earnings: number;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  vehicle_type: DeliveryVehicleType;
+  profile_picture?: string;
+  commission_rate: number;
+  last_location_update: string;
+  current_location: {
+    latitude: number;
+    longitude: number;
+  };
+}
 
 export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
@@ -43,14 +89,14 @@ export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
             current_latitude: -4.2634,
             current_longitude: 15.2429,
             is_available: true,
-            status: 'available' as DeliveryDriverStatus,
+            status: 'available',
             average_rating: 4.7,
             total_deliveries: 128,
             total_earnings: 1250000,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             user_id: 'user-1',
-            vehicle_type: 'bike' as DeliveryVehicleType,
+            vehicle_type: 'bike',
             profile_picture: '/assets/drivers/driver1.jpg',
             commission_rate: 0.1,
             last_location_update: new Date().toISOString(),
@@ -66,14 +112,14 @@ export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
             current_latitude: -4.2734,
             current_longitude: 15.2529,
             is_available: true,
-            status: 'available' as DeliveryDriverStatus,
+            status: 'available',
             average_rating: 4.5,
             total_deliveries: 85,
             total_earnings: 780000,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             user_id: 'user-2',
-            vehicle_type: 'scooter' as DeliveryVehicleType,
+            vehicle_type: 'scooter',
             profile_picture: '/assets/drivers/driver2.jpg',
             commission_rate: 0.1,
             last_location_update: new Date().toISOString(),
@@ -105,16 +151,16 @@ export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
                 order_id: 'order-123',
                 restaurant_id: restaurantId,
                 assigned_driver_id: '1',
-                status: 'assigned' as DeliveryStatus,
+                status: 'assigned',
                 delivery_address: '123 Avenue de la Paix, Brazzaville',
                 delivery_latitude: -4.2834,
                 delivery_longitude: 15.2629,
                 delivery_instructions: 'Appartement au 3ème étage',
-                priority: 'medium' as DeliveryPriority,
+                priority: 'medium',
                 delivery_fee: 2000,
                 total_amount: 15000,
                 created_at: new Date().toISOString(),
-                delivery_type: 'standard' as DeliveryType
+                delivery_type: 'standard'
               }
             ]
           : [
@@ -123,32 +169,32 @@ export function useDeliveryMapData(restaurantId: string, deliveryId?: string) {
                 order_id: 'order-123',
                 restaurant_id: restaurantId,
                 assigned_driver_id: '1',
-                status: 'assigned' as DeliveryStatus,
+                status: 'assigned',
                 delivery_address: '123 Avenue de la Paix, Brazzaville',
                 delivery_latitude: -4.2834,
                 delivery_longitude: 15.2629,
                 delivery_instructions: 'Appartement au 3ème étage',
-                priority: 'medium' as DeliveryPriority,
+                priority: 'medium',
                 delivery_fee: 2000,
                 total_amount: 15000,
                 created_at: new Date().toISOString(),
-                delivery_type: 'standard' as DeliveryType
+                delivery_type: 'standard'
               },
               {
                 id: 'delivery-2',
                 order_id: 'order-456',
                 restaurant_id: restaurantId,
                 assigned_driver_id: '2',
-                status: 'picked_up' as DeliveryStatus,
+                status: 'picked_up',
                 delivery_address: '45 Rue des Flamboyants, Brazzaville',
                 delivery_latitude: -4.2934,
                 delivery_longitude: 15.2729,
                 delivery_instructions: 'Sonner à l\'interphone',
-                priority: 'high' as DeliveryPriority,
+                priority: 'high',
                 delivery_fee: 2500,
                 total_amount: 22000,
                 created_at: new Date().toISOString(),
-                delivery_type: 'express' as DeliveryType
+                delivery_type: 'express'
               }
             ];
         setDeliveries(mockDeliveries);

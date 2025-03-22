@@ -1,9 +1,9 @@
+
 import { useState } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
 
 const ChatBubble = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,17 +16,11 @@ const ChatBubble = () => {
     if (!message.trim()) return;
 
     try {
-      const { error } = await supabase
-        .from('chat_messages')
-        .insert([
-          { 
-            message: message.trim(),
-            is_bot: false 
-          }
-        ]);
-
-      if (error) throw error;
-
+      // Simulate sending message
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('Message sent:', message);
+      
       toast({
         title: "Message envoyé",
         description: "Notre équipe vous répondra dans les plus brefs délais",
