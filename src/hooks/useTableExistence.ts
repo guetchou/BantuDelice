@@ -10,12 +10,12 @@ export function useTableExistence({ tables }: TableExistenceOptions) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const simulateCheckTables = async () => {
+    const checkTables = async () => {
       try {
         setLoading(true);
         const results: Record<string, boolean> = {};
 
-        // Assume all tables exist in this mock implementation
+        // Mock implementation - assume all tables exist
         for (const table of tables) {
           results[table] = true;
         }
@@ -28,7 +28,7 @@ export function useTableExistence({ tables }: TableExistenceOptions) {
       }
     };
     
-    simulateCheckTables();
+    checkTables();
   }, [tables]);
 
   return {

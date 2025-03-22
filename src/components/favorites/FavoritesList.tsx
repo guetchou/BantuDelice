@@ -3,11 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Star, StarOff, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import useCart from '@/hooks/useCart';
+import { mockData } from '@/utils/mockData';
 
 interface Restaurant {
   id: string;
@@ -27,7 +26,15 @@ const FavoritesList: React.FC<FavoritesListProps> = ({ userId }) => {
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { addToCart } = useCart();
+
+  // Mock cart functionality that can be expanded later
+  const addToCart = (item: any) => {
+    console.log("Adding to cart:", item);
+    toast({
+      title: "Ajouté au panier",
+      description: `${item.name} a été ajouté à votre panier`
+    });
+  };
 
   useEffect(() => {
     if (!userId) return;
@@ -37,21 +44,13 @@ const FavoritesList: React.FC<FavoritesListProps> = ({ userId }) => {
 
   const fetchFavorites = async () => {
     try {
-      const { data, error } = await supabase
-        .from('favorites')
-        .select(`
-          id,
-          restaurant_id,
-          user_id,
-          created_at,
-          restaurants:restaurant_id (id, name)
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      setFavorites(data || []);
+      // Get favorites from mock data
+      const userFavorites = mockData.favorites.filter(fav => fav.user_id === userId);
+      
+      setFavorites(userFavorites);
     } catch (error) {
       console.error('Error fetching favorites:', error);
       toast({
@@ -66,12 +65,8 @@ const FavoritesList: React.FC<FavoritesListProps> = ({ userId }) => {
 
   const removeFavorite = async (favoriteId: string) => {
     try {
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('id', favoriteId);
-        
-      if (error) throw error;
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Update local state
       setFavorites(favorites.filter(fav => fav.id !== favoriteId));

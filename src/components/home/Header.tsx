@@ -9,8 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import SearchBar from "./SearchBar";
-import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { mockData } from "@/utils/mockData";
 
 interface HeaderProps {
   searchQuery: string;
@@ -22,18 +22,15 @@ const Header = ({ searchQuery, setSearchQuery }: HeaderProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
+    // Mock authentication check
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
+      // Simulate backend call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      // For demo purposes, let's assume the user is not logged in initially
+      setIsLoggedIn(false);
     };
     
     checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   return (

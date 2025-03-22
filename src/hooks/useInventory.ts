@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { mockData } from '@/utils/mockData';
 
 interface InventoryLevel {
   id: string;
@@ -18,27 +19,9 @@ export const useInventory = (restaurantId: string) => {
       try {
         setIsLoading(true);
         
-        // Simulating API call with timeout
+        // Simulate API call with timeout
         setTimeout(() => {
-          // Mock data
-          const mockInventory: InventoryLevel[] = [
-            {
-              id: '1',
-              menu_item_id: 'menu-1',
-              current_stock: 50,
-              reserved_stock: 5,
-              min_stock_level: 10
-            },
-            {
-              id: '2',
-              menu_item_id: 'menu-2',
-              current_stock: 20,
-              reserved_stock: 2,
-              min_stock_level: 5
-            }
-          ];
-          
-          setInventoryLevels(mockInventory);
+          setInventoryLevels(mockData.inventory_levels as InventoryLevel[]);
           setIsLoading(false);
         }, 500);
       } catch (error) {

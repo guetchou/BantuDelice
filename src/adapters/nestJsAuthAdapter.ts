@@ -1,31 +1,20 @@
 
-import { nestAuthApi } from '@/integrations/api/nestjs-client';
-import { supabase } from '@/integrations/supabase/client';
+import { mockData } from '@/utils/mockData';
 
-// This adapter bridges the NestJS authentication with existing Supabase auth
+// This adapter bridges authentication with your custom backend
 export const nestJsAuthAdapter = {
   /**
-   * Authenticates with both NestJS and Supabase
+   * Authenticates with the backend
    */
   signIn: async (email: string, password: string) => {
     try {
-      // First try to authenticate with NestJS
-      const nestResult = await nestAuthApi.login(email, password);
-      
-      // Then authenticate with Supabase for backward compatibility
-      const supabaseResult = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
-      
-      if (supabaseResult.error) {
-        throw supabaseResult.error;
-      }
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       return { 
         data: {
-          user: supabaseResult.data.user,
-          nestToken: nestResult.token
+          user: mockData.auth.user,
+          nestToken: 'mock-backend-token-xyz'
         },
         error: null 
       };
@@ -37,33 +26,23 @@ export const nestJsAuthAdapter = {
   },
   
   /**
-   * Registers with both NestJS and Supabase
+   * Registers with the backend
    */
   signUp: async (email: string, password: string, firstName?: string, lastName?: string) => {
     try {
-      // Register with NestJS first
-      const nestResult = await nestAuthApi.register(email, password, firstName, lastName);
-      
-      // Then register with Supabase for backward compatibility
-      const supabaseResult = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName
-          }
-        }
-      });
-      
-      if (supabaseResult.error) {
-        throw supabaseResult.error;
-      }
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       return { 
         data: {
-          user: supabaseResult.data.user,
-          nestToken: nestResult.token
+          user: {
+            ...mockData.auth.user,
+            user_metadata: {
+              first_name: firstName,
+              last_name: lastName
+            }
+          },
+          nestToken: 'mock-backend-token-xyz'
         },
         error: null
       };
@@ -75,14 +54,11 @@ export const nestJsAuthAdapter = {
   },
   
   /**
-   * Signs out from both systems
+   * Signs out from the system
    */
   signOut: async () => {
-    // Sign out from NestJS
-    nestAuthApi.logout();
-    
-    // Sign out from Supabase
-    await supabase.auth.signOut();
+    // Simulate sign out
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     return { error: null };
   }
