@@ -10,6 +10,7 @@ import { ThemeProvider } from './components/ui/ThemeProvider';
 import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/ErrorBoundary';
 import mainRoutes from './routes/mainRoutes';
+import { AuthProvider } from './hooks/useAuth';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -29,8 +30,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-          <ReactQueryDevtools initialIsOpen={false} />
+          <AuthProvider>
+            <RouterProvider router={router} />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
