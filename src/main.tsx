@@ -6,11 +6,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import App from './App';
 import './index.css';
-import { ThemeProvider } from './components/ui/ThemeProvider';
+import { ThemeProvider } from './components/ThemeProvider';
 import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/ErrorBoundary';
 import mainRoutes from './routes/mainRoutes';
-import { AuthProvider } from './hooks/useAuth';
+import { ApiAuthProvider } from './contexts/ApiAuthContext';
+import { CartProvider } from './contexts/CartContext';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -30,10 +31,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <RouterProvider router={router} />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </AuthProvider>
+          <ApiAuthProvider>
+            <CartProvider>
+              <RouterProvider router={router} />
+              <Toaster />
+              <ReactQueryDevtools initialIsOpen={false} />
+            </CartProvider>
+          </ApiAuthProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>

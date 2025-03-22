@@ -1,5 +1,5 @@
 
-import React, { createContext, useReducer, useEffect } from 'react';
+import React, { createContext, useReducer, useEffect, useContext } from 'react';
 
 export interface CartItem {
   id: string;
@@ -124,6 +124,8 @@ export const CartContext = createContext<CartContextType>({
   getTotalPrice: () => 0,
   getTotalItems: () => 0
 });
+
+export const useCart = () => useContext(CartContext);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialCartState);
