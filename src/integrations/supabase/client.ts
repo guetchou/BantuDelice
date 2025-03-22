@@ -10,4 +10,3 @@ import { mockApi } from '../api/client';
 
 // Export the mock implementation with the same interface as Supabase
 export const supabase = mockApi;
-

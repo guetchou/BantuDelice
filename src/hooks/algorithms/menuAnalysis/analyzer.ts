@@ -1,82 +1,76 @@
 
 /**
- * Core menu analysis functionality
+ * Algorithme principal d'analyse de menu
  */
 
 import { MenuItem } from '@/types/menu';
-import { MenuAnalysisResult } from './types';
-import { getMedian, createEmptyAnalysis } from './utils';
-import { generateSuggestions } from './suggestions';
+import { MenuAnalysisResult, MenuAnalysisOptions } from './types';
+import { calculatePriceStats, calculateDietaryStats, calculatePopularityStats, calculateAvailabilityStats } from './stats';
+import { generatePriceSuggestions, generateAvailabilitySuggestions, generateBalanceSuggestions, generatePerformanceSuggestions } from './suggestions';
 
 /**
  * Analyse un menu et génère des statistiques et des suggestions
  * @param items Éléments du menu à analyser
+ * @param options Options d'analyse
  * @returns Résultat de l'analyse avec statistiques et suggestions
  */
-export const analyzeMenu = (items: MenuItem[]): MenuAnalysisResult => {
-  if (!items || items.length === 0) {
-    return createEmptyAnalysis();
+const analyzeMenu = (
+  items: MenuItem[],
+  options: MenuAnalysisOptions = {}
+): MenuAnalysisResult => {
+  // Filtre les articles selon les options
+  const itemsToAnalyze = options.includeUnavailable 
+    ? items
+    : items.filter(item => item.available);
+
+  if (!itemsToAnalyze.length) {
+    return {
+      totalItems: 0,
+      categoriesCount: 0,
+      categories: [],
+      priceStats: { min: 0, max: 0, average: 0, median: 0 },
+      dietaryOptions: {
+        vegetarianCount: 0,
+        vegetarianPercentage: 0,
+        veganCount: 0,
+        veganPercentage: 0,
+        glutenFreeCount: 0,
+        glutenFreePercentage: 0,
+      },
+      popularityStats: {
+        mostPopular: [],
+        leastPopular: [],
+        averagePopularity: 0
+      },
+      availability: {
+        availableCount: 0,
+        availablePercentage: 0
+      },
+      menuSuggestions: []
+    };
   }
 
-  // Données de base
-  const totalItems = items.length;
-  const categories = Array.from(new Set(items.map(item => item.category)));
-  const categoriesCount = categories.length;
+  // Calcul des statistiques de base
+  const categories = [...new Set(itemsToAnalyze.map(item => item.category))];
+  const priceStats = calculatePriceStats(itemsToAnalyze);
+  const dietaryOptions = calculateDietaryStats(itemsToAnalyze);
+  const popularityStats = calculatePopularityStats(itemsToAnalyze);
+  const availability = calculateAvailabilityStats(items); // Toujours sur tous les items
 
-  // Statistiques de prix
-  const prices = items.map(item => item.price).filter(price => price > 0);
-  const priceStats = {
-    min: Math.min(...prices),
-    max: Math.max(...prices),
-    average: prices.reduce((sum, price) => sum + price, 0) / prices.length,
-    median: getMedian(prices)
-  };
-
-  // Options diététiques
-  const vegetarianItems = items.filter(item => item.is_vegetarian);
-  const veganItems = items.filter(item => item.is_vegan);
-  const glutenFreeItems = items.filter(item => item.is_gluten_free);
-
-  const dietaryOptions = {
-    vegetarianCount: vegetarianItems.length,
-    vegetarianPercentage: (vegetarianItems.length / totalItems) * 100,
-    veganCount: veganItems.length,
-    veganPercentage: (veganItems.length / totalItems) * 100,
-    glutenFreeCount: glutenFreeItems.length,
-    glutenFreePercentage: (glutenFreeItems.length / totalItems) * 100
-  };
-
-  // Statistiques de popularité
-  const itemsWithPopularity = items.filter(item => item.popularity_score !== undefined);
-  const sortedByPopularity = [...itemsWithPopularity].sort((a, b) => 
-    (b.popularity_score || 0) - (a.popularity_score || 0)
-  );
-
-  const popularityStats = {
-    mostPopular: sortedByPopularity.slice(0, 5),
-    leastPopular: sortedByPopularity.slice(-5).reverse(),
-    averagePopularity: itemsWithPopularity.reduce((sum, item) => sum + (item.popularity_score || 0), 0) / 
-      (itemsWithPopularity.length || 1)
-  };
-
-  // Disponibilité
-  const availableItems = items.filter(item => item.available);
-  const availability = {
-    availableCount: availableItems.length,
-    availablePercentage: (availableItems.length / totalItems) * 100
-  };
-
-  // Générer des suggestions
-  const menuSuggestions = generateSuggestions(items, {
-    priceStats,
-    categories,
-    popularityStats,
-    dietaryOptions
-  });
+  // Génération des suggestions
+  let menuSuggestions = [];
+  if (options.detailedAnalysis) {
+    menuSuggestions = [
+      ...generatePriceSuggestions(itemsToAnalyze),
+      ...generateAvailabilitySuggestions(items),
+      ...generateBalanceSuggestions(itemsToAnalyze),
+      ...generatePerformanceSuggestions(itemsToAnalyze)
+    ];
+  }
 
   return {
-    totalItems,
-    categoriesCount,
+    totalItems: itemsToAnalyze.length,
+    categoriesCount: categories.length,
     categories,
     priceStats,
     dietaryOptions,
@@ -86,6 +80,9 @@ export const analyzeMenu = (items: MenuItem[]): MenuAnalysisResult => {
   };
 };
 
-export default {
+// Exporter l'analyseur comme objet pour faciliter les tests et les mock
+const analyzer = {
   analyzeMenu
 };
+
+export default analyzer;
