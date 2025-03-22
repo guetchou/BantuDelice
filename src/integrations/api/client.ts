@@ -1,8 +1,8 @@
 
 /**
- * API Client pour l'application
+ * API Client for the application
  * 
- * Cette implémentation fournit une API compatible avec le backend personnalisé
+ * This implementation provides an API compatible with the custom backend
  */
 
 import { mockData } from '@/utils/mockData';
@@ -78,7 +78,7 @@ export class MockApiClient {
     }
   };
 
-  // Méthode générique pour simuler une requête à la base de données
+  // Generic method to simulate a database request
   from(table: string) {
     let tableData = [] as any[];
 
@@ -108,6 +108,15 @@ export class MockApiClient {
       case 'delivery_drivers':
         tableData = mockData.delivery_drivers || [];
         break;
+      case 'favorites':
+        tableData = mockData.favorites || [];
+        break;
+      case 'users':
+        tableData = mockData.users || [];
+        break;
+      case 'notifications':
+        tableData = [];
+        break;
       default:
         tableData = [];
     }
@@ -134,7 +143,7 @@ export class MockApiClient {
           error: null
         });
       },
-      // Méthodes de filtrage de base
+      // Basic filtering methods
       eq: (field: string, value: any) => {
         const filteredData = tableData.filter(item => item[field] === value);
         return this.buildQueryObject(filteredData);
@@ -173,7 +182,7 @@ export class MockApiClient {
         );
         return this.buildQueryObject(filteredData);
       },
-      // Méthodes de récupération
+      // Retrieval methods
       single: () => {
         return Promise.resolve({
           data: tableData.length > 0 ? tableData[0] : null,
@@ -186,7 +195,7 @@ export class MockApiClient {
           error: null
         });
       },
-      // Méthodes de tri et de pagination
+      // Sorting and pagination methods
       order: (column: string, { ascending = true }) => {
         const sortedData = [...tableData].sort((a, b) => {
           if (ascending) {
@@ -336,7 +345,12 @@ export class MockApiClient {
     }
   };
 
-  // Méthodes pour realtime subscription
+  // Methods for realtime subscription
+  subscribe() {
+    console.log('Mock subscribe called');
+    return true;
+  }
+
   channel(channelName: string) {
     return {
       on: (event: string, schema: any, callback: Function) => {
@@ -368,6 +382,18 @@ export class MockApiClient {
     getMenuItems: async (restaurantId: string): Promise<ApiResponse<any>> => {
       const items = mockData.menu_items?.filter(item => item.restaurant_id === restaurantId);
       return { data: items || [], error: null };
+    },
+    getMenu: async (restaurantId: string): Promise<any[] | null> => {
+      const items = mockData.menu_items?.filter(item => item.restaurant_id === restaurantId);
+      return items || [];
+    },
+    updateMenuItemAvailability: async (itemId: string, available: boolean): Promise<void> => {
+      console.log(`Updating menu item ${itemId} availability to ${available}`);
+      return Promise.resolve();
+    },
+    updateMenuItemStock: async (itemId: string, stockLevel: number): Promise<void> => {
+      console.log(`Updating menu item ${itemId} stock level to ${stockLevel}`);
+      return Promise.resolve();
     }
   };
 
@@ -382,5 +408,8 @@ export class MockApiClient {
   }
 }
 
-// Create and export the mock API client
+// Create and export an instance of the mock API client
 export const mockApi = new MockApiClient();
+
+// Default export for components that import the client directly
+export default mockApi;

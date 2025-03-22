@@ -86,7 +86,17 @@ export const mockData = {
       current_latitude: 48.8566,
       current_longitude: 2.3522,
       max_concurrent_deliveries: 3,
-      languages: ['French', 'English']
+      languages: ['French', 'English'],
+      is_available: true,
+      status: 'available',
+      total_deliveries: 150,
+      total_earnings: 5000,
+      commission_rate: 0.15,
+      created_at: '2023-01-01T10:00:00Z',
+      updated_at: '2023-06-15T14:30:00Z',
+      last_location_update: '2023-07-15T14:30:00Z',
+      vehicle_model: 'Renault Clio',
+      current_deliveries: []
     }
   ],
   loyalty_points: [
@@ -97,5 +107,77 @@ export const mockData = {
       points_to_next_tier: 350,
       benefits: ['10% discount', 'Free delivery']
     }
-  ]
+  ],
+  favorites: [
+    {
+      id: 'fav-1',
+      user_id: 'mock-user-id',
+      restaurant_id: 'restaurant-1',
+      created_at: '2023-06-15T14:30:00Z',
+      restaurants: {
+        id: 'restaurant-1',
+        name: 'Le Gourmet'
+      }
+    }
+  ],
+  users: [
+    {
+      id: 'mock-user-id',
+      email: 'user@example.com',
+      first_name: 'John',
+      last_name: 'Doe',
+      phone: '+33123456789',
+      role: 'customer',
+      created_at: '2023-01-01T10:00:00Z'
+    }
+  ],
+  inventory_levels: [
+    {
+      id: 'inventory-1',
+      item_id: 'item-1',
+      quantity: 50,
+      restaurant_id: 'restaurant-1',
+      low_stock_threshold: 10,
+      updated_at: '2023-07-10T10:00:00Z'
+    }
+  ],
+  // Add mockApi to handle methods directly referenced in nestJsAuthAdapter
+  mockApi: {
+    auth: {
+      signInWithPassword: async (credentials) => {
+        return {
+          data: {
+            user: {
+              id: 'mock-user-id',
+              email: credentials.email,
+              user_metadata: {
+                full_name: 'John Doe'
+              }
+            },
+            session: {
+              access_token: 'mock-token',
+              expires_at: Date.now() + 3600000
+            }
+          },
+          error: null
+        };
+      },
+      signUp: async (credentials) => {
+        return {
+          data: {
+            user: {
+              id: 'mock-user-id',
+              email: credentials.email,
+              user_metadata: credentials.options?.data || { full_name: 'New User' }
+            },
+            session: {
+              access_token: 'mock-token',
+              expires_at: Date.now() + 3600000
+            }
+          },
+          error: null
+        };
+      }
+    }
+  }
 };

@@ -11,9 +11,11 @@ export const nestJsAuthAdapter = {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 800));
       
+      const result = await mockData.mockApi.auth.signInWithPassword({ email, password });
+      
       return { 
         data: {
-          user: mockData.mockApi.auth.signInWithPassword({ email, password }).then((res: any) => res.data.user),
+          user: result.data.user,
           nestToken: 'mock-backend-token-xyz'
         },
         error: null 
@@ -33,18 +35,20 @@ export const nestJsAuthAdapter = {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      const result = await mockData.mockApi.auth.signUp({
+        email, 
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName
+          }
+        }
+      });
+      
       return { 
         data: {
-          user: mockData.mockApi.auth.signUp({
-            email, 
-            password,
-            options: {
-              data: {
-                first_name: firstName,
-                last_name: lastName
-              }
-            }
-          }).then((res: any) => res.data.user),
+          user: result.data.user,
           nestToken: 'mock-backend-token-xyz'
         },
         error: null

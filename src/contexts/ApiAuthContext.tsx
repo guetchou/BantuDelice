@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '../integrations/api/client';
+import { authApi } from '../integrations/api/authApi';
 import { toast } from 'sonner';
 
 interface User {
