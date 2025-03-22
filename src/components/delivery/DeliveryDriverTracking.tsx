@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -30,6 +30,9 @@ const DeliveryDriverTracking = () => {
   const { driverId } = useParams<{ driverId: string }>();
   const [driver, setDriver] = useState<DeliveryDriver | null>(null);
   const [position, setPosition] = useState<[number, number]>([48.8566, 2.3522]); // Default to Paris coordinates
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
     const fetchDriverData = async () => {
@@ -57,6 +60,7 @@ const DeliveryDriverTracking = () => {
     
     fetchDriverData();
 
+    // Set up real-time listener
     const channel = supabase.channel('delivery_driver_location');
 
     channel
@@ -81,11 +85,52 @@ const DeliveryDriverTracking = () => {
     };
   }, [driverId]);
 
+  // Update position when driver data changes
   useEffect(() => {
     if (driver && driver.current_location) {
       setPosition([driver.current_location[0], driver.current_location[1]]);
     }
   }, [driver]);
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapRef.current) return;
+    
+    // Clean up existing map if it exists
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
+    
+    // Create new map
+    mapInstanceRef.current = L.map(mapRef.current).setView(position, 13);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(mapInstanceRef.current);
+    
+    // Add marker
+    markerRef.current = L.marker(position).addTo(mapInstanceRef.current)
+      .bindPopup(driver?.name ? `${driver.name} est ici.` : 'Position du livreur');
+    
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+  
+  // Update marker when position changes
+  useEffect(() => {
+    if (mapInstanceRef.current && markerRef.current) {
+      markerRef.current.setLatLng(position);
+      mapInstanceRef.current.setView(position, 13);
+      
+      markerRef.current.bindPopup(driver?.name ? `${driver.name} est ici.` : 'Position du livreur');
+    }
+  }, [position, driver]);
 
   if (!driver) {
     return <div>Chargement des informations du livreur...</div>;
@@ -101,17 +146,7 @@ const DeliveryDriverTracking = () => {
         <p>Dernière mise à jour: {new Date(driver.updated_at).toLocaleTimeString()}</p>
       </div>
       <div style={{ height: '500px', width: '100%' }} className="rounded-lg overflow-hidden">
-        <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          <Marker position={position}>
-            <Popup>
-              {driver.name} est ici.
-            </Popup>
-          </Marker>
-        </MapContainer>
+        <div ref={mapRef} style={{ height: '100%', width: '100%' }}></div>
       </div>
     </div>
   );

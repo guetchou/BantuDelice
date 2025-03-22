@@ -6,7 +6,7 @@ export interface DeliveryRequest {
   order_id: string;
   restaurant_id: string;
   customer_id: string;
-  status: 'pending' | 'assigned' | 'picked_up' | 'delivered' | 'failed';
+  status: DeliveryStatus;
   pickup_address: string;
   pickup_latitude: number;
   pickup_longitude: number;
@@ -32,7 +32,10 @@ export interface DeliveryRequest {
   requested_at?: string;
   delivery_fee?: number;
   pickup_time?: string;
+  delivery_type?: string;
 }
+
+export type DeliveryStatus = 'pending' | 'assigned' | 'accepted' | 'picked_up' | 'delivering' | 'delivered' | 'completed' | 'failed' | 'cancelled';
 
 export interface DeliveryDriver {
   id: string;
@@ -42,7 +45,7 @@ export interface DeliveryDriver {
   email: string;
   vehicle_type: 'bike' | 'car' | 'scooter' | 'walk';
   license_plate?: string;
-  status: 'available' | 'busy' | 'offline';
+  status: 'available' | 'busy' | 'offline' | 'on_break';
   last_location_latitude?: number;
   last_location_longitude?: number;
   last_active?: string;
@@ -121,24 +124,32 @@ export interface DeliveryMessage {
 export interface DeliveryVerification {
   id: string;
   driver_id: string;
-  document_type: 'id_card' | 'driver_license' | 'background_check';
+  document_type: 'id_card' | 'driver_license' | 'background_check' | 'passport' | 'proof_of_address';
   document_url: string;
   status: 'pending' | 'approved' | 'rejected';
   submitted_at: string;
   reviewed_at?: string;
   reviewer_id?: string;
   notes?: string;
+  verification_status?: string;
+  rejection_reason?: string;
+  document_number?: string;
+  created_at?: string;
 }
 
 export type DeliveryType = 'standard' | 'express' | 'scheduled';
-export type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'delivered' | 'failed' | 'accepted';
 
 export interface DeliveryRoute {
+  id?: string;
   driver_id: string;
   stops: DeliveryRouteStop[];
   total_distance: number;
   total_duration: number;
   created_at: string;
+  delivery_requests?: DeliveryRequest[];
+  waypoints?: any[];
+  start_time?: string;
+  estimated_end_time?: string;
 }
 
 export interface DeliveryRouteStop {
@@ -149,6 +160,8 @@ export interface DeliveryRouteStop {
   longitude: number;
   estimated_arrival: string;
   sequence: number;
+  request_id?: string;
+  is_priority?: boolean;
 }
 
 export interface ExternalDeliveryService {

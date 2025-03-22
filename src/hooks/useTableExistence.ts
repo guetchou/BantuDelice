@@ -2,63 +2,68 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface TableExistenceOptions {
-  tableName?: string | string[];
-  tables?: string[];
+interface TableExistenceOptions {
+  tableName: string;
+  schema?: string;
 }
 
-export const useTableExistence = (options: string | TableExistenceOptions) => {
+interface UseTableExistenceResult {
+  exists: boolean;
+  loading: boolean;
+  error: Error | null;
+}
+
+export const useTableExistence = (
+  options: TableExistenceOptions | string
+): UseTableExistenceResult => {
   const [exists, setExists] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   
-  // Normalize options format
-  const normalizedOptions: TableExistenceOptions = typeof options === 'string' 
-    ? { tableName: options } 
-    : options;
+  // Handle both string and options object
+  const tableName = typeof options === 'string' 
+    ? options 
+    : options.tableName;
   
-  // Support both tableName and tables for flexibility
-  const tables = normalizedOptions.tables || 
-                (Array.isArray(normalizedOptions.tableName) 
-                  ? normalizedOptions.tableName 
-                  : [normalizedOptions.tableName || '']);
+  const schema = typeof options === 'string' 
+    ? 'public' 
+    : options.schema || 'public';
 
   useEffect(() => {
     const checkTableExistence = async () => {
       try {
         setLoading(true);
         
-        // Check all specified tables
-        const results = await Promise.all(tables.map(async (tableName) => {
-          // Skip empty table names
-          if (!tableName) return false;
-          
-          try {
-            // Try to query the table with limit 0 just to check if it exists
-            const { error } = await supabase
-              .from(tableName)
-              .select('*', { count: 'exact', head: true })
-              .limit(0);
-              
-            // If no error, the table exists
-            return !error;
-          } catch (err) {
-            console.error(`Error checking table ${tableName} existence:`, err);
-            return false;
-          }
-        }));
+        // Query the information_schema.tables to check if the table exists
+        const { data, error } = await supabase
+          .from('information_schema.tables')
+          .select('table_name')
+          .eq('table_schema', schema)
+          .eq('table_name', tableName)
+          .single();
         
-        // All tables must exist for 'exists' to be true
-        setExists(results.every(Boolean) && results.length > 0);
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+        
+        // Table exists if data is not null
+        setExists(!!data);
       } catch (err) {
-        console.error(`Error checking tables existence:`, err);
-        setExists(false);
+        console.error(`Error checking if table ${tableName} exists:`, err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+        
+        // Fallback behavior: assume table exists if error occurs
+        // This is to prevent breaking existing functionality
+        setExists(true);
       } finally {
         setLoading(false);
       }
     };
     
     checkTableExistence();
-  }, [tables.join(',')]);
-
-  return { exists, loading };
+  }, [tableName, schema]);
+  
+  return { exists, loading, error };
 };
+
+export default useTableExistence;

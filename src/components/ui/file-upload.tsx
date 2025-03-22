@@ -1,192 +1,168 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, X, FileText, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Upload, X, Check, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface FileUploadProps {
-  onFileChange: (file: File | null) => void;
+  onFileSelected: (file: File) => void;
   accept?: string;
-  maxSizeMB?: number;
-  className?: string;
+  maxSize?: number; // in MB
   label?: string;
   buttonText?: string;
-  value?: File | null;
-  error?: string;
+  className?: string;
+  disabled?: boolean;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
-  onFileChange,
+  onFileSelected,
   accept = "image/*",
-  maxSizeMB = 5,
-  className,
-  label = "Télécharger un fichier",
-  buttonText = "Parcourir",
-  value,
-  error
+  maxSize = 5,
+  label = "Upload a file",
+  buttonText = "Select file",
+  className = "",
+  disabled = false
 }) => {
-  const [dragActive, setDragActive] = useState(false);
-  const [localFile, setLocalFile] = useState<File | null>(value || null);
-  const [localError, setLocalError] = useState<string | null>(error || null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const maxSizeBytes = maxSizeMB * 1024 * 1024;
-
-  const validateFile = (file: File): boolean => {
-    // Check file size
-    if (file.size > maxSizeBytes) {
-      setLocalError(`Le fichier dépasse la taille maximale de ${maxSizeMB}MB`);
-      return false;
-    }
-
-    // Check file type if accept is specified
-    if (accept !== "*") {
-      const fileType = file.type;
-      const acceptableTypes = accept.split(",").map(type => type.trim());
-      
-      // For image/* type validation
-      if (accept === "image/*" && !fileType.startsWith("image/")) {
-        setLocalError("Seules les images sont acceptées");
-        return false;
-      }
-      
-      // For specific types validation
-      if (accept !== "image/*" && !acceptableTypes.some(type => fileType === type)) {
-        setLocalError(`Les types de fichiers acceptés sont: ${accept}`);
-        return false;
-      }
-    }
-
-    setLocalError(null);
-    return true;
-  };
-
-  const handleFile = (file: File) => {
-    if (validateFile(file)) {
-      setLocalFile(file);
-      onFileChange(file);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-    }
-  };
-
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    setDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+  };
+
+  const validateFile = (file: File): boolean => {
+    setError(null);
     
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+    // Check file type
+    if (accept !== "*" && !file.type.match(accept.replace(/\*/g, '.*'))) {
+      setError(`Invalid file type. Please select a ${accept.replace('*', '')} file.`);
+      return false;
     }
+    
+    // Check file size
+    if (file.size > maxSize * 1024 * 1024) {
+      setError(`File is too large. Maximum size is ${maxSize}MB.`);
+      return false;
+    }
+    
+    return true;
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    setDragging(false);
     
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      handleFile(file);
+    }
+  };
+
+  const handleFile = (file: File) => {
+    if (validateFile(file)) {
+      setSelectedFile(file);
+      onFileSelected(file);
     }
   };
 
   const handleButtonClick = () => {
-    if (inputRef.current) {
-      inputRef.current.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
-  const removeFile = () => {
-    setLocalFile(null);
-    setLocalError(null);
-    if (inputRef.current) {
-      inputRef.current.value = '';
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
-    onFileChange(null);
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
-      {label && <label className="text-sm font-medium">{label}</label>}
+    <div className={`w-full ${className}`}>
+      {label && <p className="text-sm font-medium mb-2">{label}</p>}
       
       <div
-        className={cn(
-          "border-2 border-dashed rounded-lg p-4 transition-colors flex flex-col items-center justify-center",
-          dragActive ? "border-primary bg-primary/5" : "border-gray-300",
-          localError ? "border-red-500 bg-red-50" : "",
-          localFile ? "border-green-500 bg-green-50" : "",
-          "cursor-pointer hover:border-primary hover:bg-primary/5"
-        )}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
+        className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
+          dragging ? 'border-primary bg-primary/5' : 'border-gray-300'
+        } ${error ? 'border-red-500 bg-red-50' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={handleButtonClick}
       >
         <input
-          ref={inputRef}
           type="file"
-          className="hidden"
-          accept={accept}
+          ref={fileInputRef}
           onChange={handleChange}
+          accept={accept}
+          className="hidden"
+          disabled={disabled || uploading}
         />
         
-        {localFile ? (
-          <div className="flex flex-col items-center space-y-2 py-4">
-            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-              <Check className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="flex items-center">
-              <FileText className="mr-2 h-5 w-5 text-gray-500" />
-              <span className="text-sm font-medium text-gray-900">{localFile.name}</span>
-            </div>
-            <p className="text-xs text-gray-500">
-              {(localFile.size / 1024 / 1024).toFixed(2)} MB
+        {!selectedFile ? (
+          <div className="flex flex-col items-center justify-center py-4">
+            <Upload className="h-10 w-10 text-gray-400 mb-2" />
+            <p className="text-sm text-gray-500 text-center mb-2">
+              Drag and drop your file here, or click to select
             </p>
             <Button
+              type="button"
+              onClick={handleButtonClick}
+              disabled={disabled || uploading}
+              variant="outline"
               size="sm"
-              variant="destructive"
-              className="mt-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                removeFile();
-              }}
             >
-              <X className="mr-2 h-4 w-4" />
-              Supprimer
+              {buttonText}
             </Button>
+            {error && (
+              <div className="flex items-center text-red-500 text-sm mt-2">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                <span>{error}</span>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="flex flex-col items-center space-y-2 py-4">
-            <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-              <Upload className="h-6 w-6 text-gray-600" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Check className="h-5 w-5 text-green-500 mr-2" />
+              <span className="text-sm font-medium truncate max-w-xs">
+                {selectedFile.name}
+              </span>
+              <span className="text-xs text-gray-500 ml-2">
+                ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+              </span>
             </div>
-            <div className="flex flex-col items-center space-y-1 text-center">
-              <p className="text-sm font-medium text-gray-900">
-                Glissez-déposez ou cliquez pour télécharger
-              </p>
-              <p className="text-xs text-gray-500">
-                Taille maximale: {maxSizeMB} MB • {accept === "image/*" ? "Images" : accept}
-              </p>
-            </div>
-            <Button size="sm" className="mt-2">
-              {buttonText}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleRemoveFile}
+              disabled={disabled || uploading}
+            >
+              <X className="h-4 w-4" />
             </Button>
           </div>
         )}
       </div>
-      
-      {localError && (
-        <p className="text-sm text-red-500">{localError}</p>
-      )}
     </div>
   );
 };

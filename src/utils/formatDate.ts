@@ -1,70 +1,108 @@
-
-import { format, formatDistance, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+/**
+ * Format a date string to a readable date format
+ */
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('fr-FR', {
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric'
+  }).format(date);
+};
 
 /**
- * Format a date string into a user-friendly format
- * @param dateString ISO date string
- * @param formatString Format string (default: 'dd MMM yyyy à HH:mm')
- * @returns Formatted date string
+ * Format a date string to a readable time format
  */
-export function formatDate(
-  dateString: string, 
-  formatString: string = 'dd MMM yyyy à HH:mm'
-): string {
-  try {
-    return format(parseISO(dateString), formatString, { locale: fr });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return dateString;
-  }
-}
+export const formatTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit', 
+    minute: '2-digit'
+  }).format(date);
+};
 
 /**
- * Get relative time from a date string (e.g., "il y a 3 minutes")
- * @param dateString ISO date string
- * @param baseDate Base date to compare against (default: new Date())
- * @returns Relative time string
+ * Format a date string to a readable date and time format
  */
-export function getRelativeTime(
-  dateString: string, 
-  baseDate: Date = new Date()
-): string {
-  try {
-    return formatDistance(parseISO(dateString), baseDate, {
-      addSuffix: true,
-      locale: fr
-    });
-  } catch (error) {
-    console.error('Error getting relative time:', error);
-    return dateString;
-  }
-}
+export const formatDateTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('fr-FR', {
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit', 
+    minute: '2-digit'
+  }).format(date);
+};
 
 /**
- * Format a date for input fields
- * @param dateString ISO date string
- * @returns Date formatted as YYYY-MM-DD
+ * Format a date string to a relative time format (e.g. "2 hours ago")
  */
-export function formatDateForInput(dateString: string): string {
-  try {
-    return format(parseISO(dateString), 'yyyy-MM-dd');
-  } catch (error) {
-    console.error('Error formatting date for input:', error);
-    return '';
+export const formatRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return 'à l\'instant';
   }
-}
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
+  }
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+  }
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) {
+    return `il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
+  }
+  
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) {
+    return `il y a ${diffInMonths} mois`;
+  }
+  
+  const diffInYears = Math.floor(diffInMonths / 12);
+  return `il y a ${diffInYears} an${diffInYears > 1 ? 's' : ''}`;
+};
 
 /**
- * Format a time for input fields
- * @param dateString ISO date string
- * @returns Time formatted as HH:MM
+ * Format a message time (shows time only for today's messages, or date for older ones)
  */
-export function formatTimeForInput(dateString: string): string {
-  try {
-    return format(parseISO(dateString), 'HH:mm');
-  } catch (error) {
-    console.error('Error formatting time for input:', error);
-    return '';
+export const formatMessageTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const today = new Date();
+  
+  // If the message is from today, show only the time
+  if (date.toDateString() === today.toDateString()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
-}
+  
+  // If the message is from yesterday, show "Yesterday" + time
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return `Hier, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+  
+  // Otherwise, show the full date and time
+  return date.toLocaleDateString([], { 
+    day: 'numeric', 
+    month: 'short',
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+};
+
+export default {
+  formatDate,
+  formatTime,
+  formatDateTime,
+  formatRelativeTime,
+  formatMessageTime
+};

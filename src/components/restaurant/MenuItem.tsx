@@ -11,7 +11,7 @@ interface MenuItemComponentProps {
 }
 
 const MenuItem: React.FC<MenuItemComponentProps> = ({ item }) => {
-  const { state, addItem } = useCart();
+  const { addItem } = useCart();
 
   const handleAddToCart = () => {
     addItem({

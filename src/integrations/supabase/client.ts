@@ -125,7 +125,51 @@ supabase.from = (table) => {
     };
   }
   
-  return result;
+  // Add textSearch method if it doesn't exist
+  if (!result.textSearch) {
+    result.textSearch = function(column, query, options = {}) {
+      console.log(`Mock textSearch called with ${column} for ${query}`);
+      return this;
+    };
+  }
+  
+  // Add handling for Promise methods
+  const originalResult = { ...result };
+  
+  // Ensure select returns a proper Promise with select method
+  if (typeof originalResult.select === 'function') {
+    const originalSelect = originalResult.select;
+    originalResult.select = function(...args) {
+      const selectResult = originalSelect.apply(this, args);
+      
+      // Ensure select result has select method
+      if (selectResult && !selectResult.select) {
+        selectResult.select = function(columns) {
+          console.log(`Mock nested select called with ${columns}`);
+          return this;
+        };
+      }
+      
+      return selectResult;
+    };
+  }
+  
+  return originalResult;
 };
+
+// Add patch for single method to handle promise chain
+const originalSingle = supabase.from().single;
+if (originalSingle) {
+  supabase.from().single = function() {
+    const result = originalSingle.apply(this);
+    if (result && !result.select) {
+      result.select = function(columns) {
+        console.log(`Mock select in single called with ${columns}`);
+        return this;
+      };
+    }
+    return result;
+  };
+}
 
 export default supabase;
