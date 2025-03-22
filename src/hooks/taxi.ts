@@ -1,5 +1,5 @@
 
-// Fonctions d'utilités pour éviter les importations circulaires
+// Utility functions to avoid circular imports
 const useDriverDetails = () => ({
   isLoading: false,
   getDriverDetails: async () => null
@@ -20,7 +20,7 @@ const useRideCreation = () => ({
   createRide: async () => null
 });
 
-// Version simplifiée du hook useTaxiBooking pour éviter les dépendances circulaires
+// Simplified version of the hook to avoid circular dependencies
 const useTaxiBooking = () => ({
   drivers: {
     findDrivers: async () => [],
@@ -63,7 +63,7 @@ export {
   useTaxiBookingQuery
 };
 
-// Exporte une API combinée simplifiée
+// Export a combined simplified API
 export const useTaxiBookingSystem = () => {
   return {
     drivers: {

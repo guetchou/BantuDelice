@@ -1,5 +1,5 @@
 
-// Fonction simple pour éviter les dépendances circulaires
+// Simple function to avoid circular dependencies
 export const useTaxiBooking = () => {
   return {
     drivers: {

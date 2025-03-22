@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 
-// Type simplifié pour résoudre les erreurs de compilation
+// Type simplified to resolve compilation errors
 export interface TaxiDriver {
   id: string;
   name: string;
@@ -15,7 +15,7 @@ export interface TaxiDriver {
 }
 
 /**
- * Version simplifiée du hook pour éviter les erreurs de compilation
+ * Simplified version of the hook to avoid compilation errors
  */
 export function useTaxiDriverSelection() {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +24,7 @@ export function useTaxiDriverSelection() {
   
   const findOptimalDrivers = async () => {
     setIsLoading(true);
-    // Simulation d'un appel API
+    // Simulation of an API call
     setTimeout(() => {
       setIsLoading(false);
     }, 1000);
