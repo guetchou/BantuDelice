@@ -28,14 +28,21 @@ const MenuItem: React.FC<MenuItemComponentProps> = ({ item }) => {
   };
 
   return (
-    <div className="flex justify-between items-center p-4 border-b">
-      <div>
-        <h3 className="font-medium">{item.name}</h3>
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border-b hover:bg-gray-50 transition-colors rounded-lg">
+      <div className="flex flex-col space-y-1">
+        <h3 className="font-medium text-lg">{item.name}</h3>
         <p className="text-sm text-gray-500">{item.description}</p>
-        <p className="text-sm font-bold mt-1">{(item.price / 100).toFixed(2)} €</p>
+        <p className="text-sm font-bold mt-1 text-orange-500">{(item.price / 100).toFixed(2)} €</p>
       </div>
-      <Button variant="ghost" size="icon" onClick={handleAddToCart}>
-        <Plus className="h-5 w-5" />
+      
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleAddToCart}
+        className="mt-2 md:mt-0 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+      >
+        <Plus className="h-4 w-4 mr-1" />
+        <span>Ajouter</span>
       </Button>
     </div>
   );

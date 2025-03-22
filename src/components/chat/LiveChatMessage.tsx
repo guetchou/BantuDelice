@@ -22,7 +22,7 @@ const LiveChatMessage: React.FC<MessageProps> = ({
   user
 }) => {
   return (
-    <div className={`flex ${is_bot ? 'justify-start' : 'justify-end'}`}>
+    <div className={`flex mb-4 animate-fade-in ${is_bot ? 'justify-start' : 'justify-end'}`}>
       {is_bot && (
         <Avatar className="h-8 w-8 mr-2">
           <AvatarImage src="/images/support-avatar.png" />
@@ -33,18 +33,27 @@ const LiveChatMessage: React.FC<MessageProps> = ({
       <div
         className={`max-w-[80%] p-3 rounded-lg ${
           is_bot
-            ? 'bg-gray-100'
-            : 'bg-orange-500 text-white'
+            ? 'bg-gray-100 shadow-sm'
+            : 'bg-orange-500 text-white shadow-md'
         }`}
       >
         {is_bot && (
           <div className="text-xs font-medium mb-1">Support</div>
         )}
         <p className="text-sm">{message}</p>
-        <span className="text-xs opacity-70 block text-right">
+        <span className="text-xs opacity-70 block text-right mt-1">
           {formatMessageTime(created_at)}
         </span>
       </div>
+      
+      {!is_bot && user?.avatar_url && (
+        <Avatar className="h-8 w-8 ml-2">
+          <AvatarImage src={user.avatar_url} />
+          <AvatarFallback className="bg-blue-500 text-white">
+            {user.first_name?.charAt(0) || 'U'}
+          </AvatarFallback>
+        </Avatar>
+      )}
     </div>
   );
 };

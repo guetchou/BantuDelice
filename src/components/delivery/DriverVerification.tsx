@@ -1,628 +1,220 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { DeliveryDriver, DeliveryVerification } from '@/types/delivery';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { FileUpload } from '@/components/ui/file-upload';
-import { CheckCircle2, AlertCircle, Upload, Shield, FileCheck2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import FileUpload from '@/components/ui/file-upload';
 
-interface DriverVerificationProps {
-  driverId: string;
-  isAdmin?: boolean;
-}
+const documentTypes = [
+  { id: 'id_card', name: 'Carte d\'identité' },
+  { id: 'driver_license', name: 'Permis de conduire' },
+  { id: 'background_check', name: 'Vérification d\'antécédents' },
+  { id: 'passport', name: 'Passeport' },
+  { id: 'proof_of_address', name: 'Justificatif de domicile' },
+];
 
-export default function DriverVerification({ driverId, isAdmin = false }: DriverVerificationProps) {
-  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
-  const [documents, setDocuments] = useState<DeliveryVerification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [docNumber, setDocNumber] = useState('');
-  const [docExpiryDate, setDocExpiryDate] = useState('');
+const formSchema = z.object({
+  document_type: z.string().min(1, 'Veuillez sélectionner un type de document'),
+  document_number: z.string().min(1, 'Veuillez entrer le numéro du document'),
+  document_file: z.any().refine(file => file, 'Veuillez télécharger un fichier'),
+});
 
-  useEffect(() => {
-    fetchDriverData();
-  }, [driverId]);
+type FormData = z.infer<typeof formSchema>;
 
-  const fetchDriverData = async () => {
+const DriverVerification = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedDocuments, setSubmittedDocuments] = useState<any[]>([]);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      document_type: '',
+      document_number: '',
+      document_file: null,
+    },
+  });
+
+  const onSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    
     try {
-      setLoading(true);
+      // Mock API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Fetch driver info
-      const { data: driverData, error: driverError } = await supabase
-        .from('delivery_drivers')
-        .select('*')
-        .eq('id', driverId)
-        .single();
+      setSubmittedDocuments(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          document_type: data.document_type,
+          document_number: data.document_number,
+          status: 'pending',
+          submitted_at: new Date().toISOString(),
+        },
+      ]);
       
-      if (driverError) throw driverError;
-      setDriver(driverData as DeliveryDriver);
-      
-      // Fetch verification documents
-      const { data: docsData, error: docsError } = await supabase
-        .from('driver_verifications')
-        .select('*')
-        .eq('driver_id', driverId)
-        .order('created_at', { ascending: false });
-      
-      if (docsError) throw docsError;
-      setDocuments(docsData as DeliveryVerification[]);
-      
+      form.reset();
     } catch (error) {
-      console.error('Error fetching driver data:', error);
-      toast.error('Erreur lors du chargement des données du livreur');
+      console.error('Error submitting document:', error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
-
-  const handleFileUpload = async (docType: string, file: File) => {
-    try {
-      setUploadingDoc(docType);
-      setUploadProgress(0);
-      
-      if (!driver) return;
-      
-      // Upload file to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${driverId}_${docType}_${Date.now()}.${fileExt}`;
-      const filePath = `driver_documents/${fileName}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-      
-      if (uploadError) throw uploadError;
-      
-      // Get public URL
-      const { data: publicUrlData } = await supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-      
-      const publicUrl = publicUrlData.publicUrl;
-      
-      // Create document record
-      const { data: docData, error: docError } = await supabase
-        .from('driver_verifications')
-        .insert({
-          driver_id: driverId,
-          document_type: docType,
-          document_number: docNumber,
-          document_url: publicUrl,
-          expiry_date: docExpiryDate || null,
-          verification_status: 'pending',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-      
-      if (docError) throw docError;
-      
-      // Update driver verification status if it was 'rejected' or not set
-      if (!driver.verification_status || driver.verification_status === 'rejected') {
-        const { error: driverError } = await supabase
-          .from('delivery_drivers')
-          .update({
-            verification_status: 'pending',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', driverId);
-        
-        if (driverError) throw driverError;
-      }
-      
-      toast.success('Document téléchargé avec succès');
-      fetchDriverData();
-      
-      // Reset form
-      setDocNumber('');
-      setDocExpiryDate('');
-      
-    } catch (error) {
-      console.error('Error uploading document:', error);
-      toast.error('Erreur lors du téléchargement du document');
-    } finally {
-      setUploadingDoc(null);
-      setUploadProgress(0);
-    }
-  };
-
-  const getVerificationStatusBadge = (status: string) => {
-    switch(status) {
-      case 'verified':
-        return <Badge className="bg-green-100 text-green-800">Vérifié</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Rejeté</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getDocumentTypeName = (type: string) => {
-    switch(type) {
-      case 'id_card':
-        return 'Carte d\'identité';
-      case 'driver_license':
-        return 'Permis de conduire';
-      case 'passport':
-        return 'Passeport';
-      case 'proof_of_address':
-        return 'Justificatif de domicile';
-      default:
-        return type;
-    }
-  };
-
-  const getVerificationStatus = () => {
-    if (!driver) return 'unknown';
-    
-    if (driver.verification_status === 'verified') {
-      return 'verified';
-    }
-    
-    if (driver.verification_status === 'rejected') {
-      return 'rejected';
-    }
-    
-    const hasIdDocument = documents.some(doc => 
-      (doc.document_type === 'id_card' || doc.document_type === 'passport') && 
-      doc.verification_status !== 'rejected'
-    );
-    
-    const hasLicense = documents.some(doc => 
-      doc.document_type === 'driver_license' && 
-      doc.verification_status !== 'rejected'
-    );
-    
-    const hasAddress = documents.some(doc => 
-      doc.document_type === 'proof_of_address' && 
-      doc.verification_status !== 'rejected'
-    );
-    
-    if (hasIdDocument && hasLicense && hasAddress) {
-      return 'pending_complete';
-    }
-    
-    return 'incomplete';
-  };
-
-  if (loading) {
-    return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Vérification</CardTitle>
-          <CardDescription>Chargement...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-40 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>Vérification du livreur</span>
-          {driver && (
-            <Badge variant={driver.verification_status === 'verified' ? 'default' : 'outline'} 
-              className={
-                driver.verification_status === 'verified' ? 'bg-green-500' : 
-                driver.verification_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }
-            >
-              {driver.verification_status === 'verified' ? 'Vérifié' : 
-               driver.verification_status === 'pending' ? 'En attente' : 
-               'Non vérifié'}
-            </Badge>
-          )}
-        </CardTitle>
-        <CardDescription>
-          Téléchargez vos documents pour la vérification
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {getVerificationStatus() === 'verified' && (
-          <Alert className="bg-green-50 border-green-200">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
-            <AlertTitle>Compte vérifié</AlertTitle>
-            <AlertDescription>
-              Tous vos documents ont été vérifiés et approuvés. Vous pouvez maintenant accepter des livraisons.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {getVerificationStatus() === 'rejected' && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Vérification rejetée</AlertTitle>
-            <AlertDescription>
-              Certains de vos documents n'ont pas été approuvés. Veuillez télécharger de nouveaux documents.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {getVerificationStatus() === 'pending_complete' && (
-          <Alert className="bg-blue-50 border-blue-200">
-            <Shield className="h-4 w-4 text-blue-500" />
-            <AlertTitle>Vérification en cours</AlertTitle>
-            <AlertDescription>
-              Tous les documents nécessaires ont été téléchargés. Notre équipe est en train de les vérifier.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {getVerificationStatus() === 'incomplete' && (
-          <Alert className="bg-yellow-50 border-yellow-200">
-            <AlertCircle className="h-4 w-4 text-yellow-500" />
-            <AlertTitle>Documents manquants</AlertTitle>
-            <AlertDescription>
-              Veuillez télécharger tous les documents requis pour commencer le processus de vérification.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Documents requis</h3>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FileCheck2 className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">Carte d'identité ou Passeport</div>
-                    <div className="text-xs text-muted-foreground">Document d'identité valide</div>
-                  </div>
-                </div>
-                <div>
-                  {documents.some(doc => 
-                    (doc.document_type === 'id_card' || doc.document_type === 'passport') && 
-                    doc.verification_status !== 'rejected'
-                  ) ? (
-                    getVerificationStatusBadge(
-                      documents.find(doc => 
-                        (doc.document_type === 'id_card' || doc.document_type === 'passport') && 
-                        doc.verification_status !== 'rejected'
-                      )?.verification_status || 'pending'
-                    )
-                  ) : (
-                    <Badge variant="outline" className="bg-gray-100">Non fourni</Badge>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FileCheck2 className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">Permis de conduire</div>
-                    <div className="text-xs text-muted-foreground">Permis en cours de validité</div>
-                  </div>
-                </div>
-                <div>
-                  {documents.some(doc => 
-                    doc.document_type === 'driver_license' && 
-                    doc.verification_status !== 'rejected'
-                  ) ? (
-                    getVerificationStatusBadge(
-                      documents.find(doc => 
-                        doc.document_type === 'driver_license' && 
-                        doc.verification_status !== 'rejected'
-                      )?.verification_status || 'pending'
-                    )
-                  ) : (
-                    <Badge variant="outline" className="bg-gray-100">Non fourni</Badge>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FileCheck2 className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">Justificatif de domicile</div>
-                    <div className="text-xs text-muted-foreground">Datant de moins de 3 mois</div>
-                  </div>
-                </div>
-                <div>
-                  {documents.some(doc => 
-                    doc.document_type === 'proof_of_address' && 
-                    doc.verification_status !== 'rejected'
-                  ) ? (
-                    getVerificationStatusBadge(
-                      documents.find(doc => 
-                        doc.document_type === 'proof_of_address' && 
-                        doc.verification_status !== 'rejected'
-                      )?.verification_status || 'pending'
-                    )
-                  ) : (
-                    <Badge variant="outline" className="bg-gray-100">Non fourni</Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Télécharger un document</h3>
-            
-            <Tabs defaultValue="id_card" className="space-y-4">
-              <TabsList className="grid grid-cols-3 mb-4">
-                <TabsTrigger value="id_card">Identité</TabsTrigger>
-                <TabsTrigger value="driver_license">Permis</TabsTrigger>
-                <TabsTrigger value="proof_of_address">Domicile</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="id_card" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="id-type">Type de document</Label>
-                  <select id="id-type" className="w-full p-2 border rounded">
-                    <option value="id_card">Carte d'identité</option>
-                    <option value="passport">Passeport</option>
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="id-number">Numéro du document</Label>
-                  <Input
-                    id="id-number"
-                    value={docNumber}
-                    onChange={(e) => setDocNumber(e.target.value)}
-                    placeholder="Ex: 123456789"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="id-expiry">Date d'expiration</Label>
-                  <Input
-                    id="id-expiry"
-                    type="date"
-                    value={docExpiryDate}
-                    onChange={(e) => setDocExpiryDate(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Télécharger le document (recto-verso)</Label>
-                  <div className="border-2 border-dashed rounded-md p-4 text-center">
-                    {uploadingDoc === 'id_card' ? (
-                      <div className="space-y-2">
-                        <div className="text-sm">Téléchargement en cours...</div>
-                        <Progress value={uploadProgress} />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <div className="text-sm text-muted-foreground">
-                          Cliquez ou déposez un fichier ici
-                        </div>
-                        <Input
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          className="hidden"
-                          id="id-upload"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileUpload('id_card', file);
-                            }
-                          }}
-                        />
-                        <label htmlFor="id-upload">
-                          <Button variant="outline" className="mt-2" asChild>
-                            <span>Parcourir</span>
-                          </Button>
-                        </label>
-                      </div>
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-6">Vérification du chauffeur</h2>
+      
+      <Tabs defaultValue="submit">
+        <TabsList className="mb-6">
+          <TabsTrigger value="submit">Soumettre des documents</TabsTrigger>
+          <TabsTrigger value="status">Statut des vérifications</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="submit">
+          <Card>
+            <CardHeader>
+              <CardTitle>Soumettre un nouveau document</CardTitle>
+              <CardDescription>
+                Veuillez soumettre les documents requis pour la vérification de votre compte chauffeur.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="document_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type de document</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner un type de document" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {documentTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.id}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="driver_license" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="license-number">Numéro du permis</Label>
-                  <Input
-                    id="license-number"
-                    value={docNumber}
-                    onChange={(e) => setDocNumber(e.target.value)}
-                    placeholder="Ex: 123456789"
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="license-expiry">Date d'expiration</Label>
-                  <Input
-                    id="license-expiry"
-                    type="date"
-                    value={docExpiryDate}
-                    onChange={(e) => setDocExpiryDate(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Télécharger le permis (recto-verso)</Label>
-                  <div className="border-2 border-dashed rounded-md p-4 text-center">
-                    {uploadingDoc === 'driver_license' ? (
-                      <div className="space-y-2">
-                        <div className="text-sm">Téléchargement en cours...</div>
-                        <Progress value={uploadProgress} />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <div className="text-sm text-muted-foreground">
-                          Cliquez ou déposez un fichier ici
-                        </div>
-                        <Input
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          className="hidden"
-                          id="license-upload"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileUpload('driver_license', file);
-                            }
-                          }}
-                        />
-                        <label htmlFor="license-upload">
-                          <Button variant="outline" className="mt-2" asChild>
-                            <span>Parcourir</span>
-                          </Button>
-                        </label>
-                      </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="document_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Numéro du document</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Entrez le numéro du document" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="proof_of_address" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="address-type">Type de justificatif</Label>
-                  <select id="address-type" className="w-full p-2 border rounded">
-                    <option value="utility_bill">Facture d'électricité/eau</option>
-                    <option value="bank_statement">Relevé bancaire</option>
-                    <option value="rent_receipt">Quittance de loyer</option>
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="address-reference">Référence du document</Label>
-                  <Input
-                    id="address-reference"
-                    value={docNumber}
-                    onChange={(e) => setDocNumber(e.target.value)}
-                    placeholder="Ex: Numéro de facture"
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="address-date">Date du document</Label>
-                  <Input
-                    id="address-date"
-                    type="date"
-                    value={docExpiryDate}
-                    onChange={(e) => setDocExpiryDate(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Télécharger le justificatif</Label>
-                  <div className="border-2 border-dashed rounded-md p-4 text-center">
-                    {uploadingDoc === 'proof_of_address' ? (
-                      <div className="space-y-2">
-                        <div className="text-sm">Téléchargement en cours...</div>
-                        <Progress value={uploadProgress} />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <div className="text-sm text-muted-foreground">
-                          Cliquez ou déposez un fichier ici
-                        </div>
-                        <Input
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          className="hidden"
-                          id="address-upload"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileUpload('proof_of_address', file);
-                            }
-                          }}
-                        />
-                        <label htmlFor="address-upload">
-                          <Button variant="outline" className="mt-2" asChild>
-                            <span>Parcourir</span>
-                          </Button>
-                        </label>
-                      </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="document_file"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document</FormLabel>
+                        <FormControl>
+                          <FileUpload
+                            onChange={field.onChange}
+                            value={field.value}
+                            accept=".jpg,.jpeg,.png,.pdf"
+                            maxSize={5}
+                            placeholder="Aucun fichier sélectionné"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Soumission en cours...' : 'Soumettre le document'}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="status">
+          <Card>
+            <CardHeader>
+              <CardTitle>Statut des vérifications</CardTitle>
+              <CardDescription>
+                Consultez l'état de vos documents soumis.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {submittedDocuments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Aucun document soumis pour le moment.
                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Historique des documents</h3>
-          
-          {documents.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Aucun document téléchargé
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {documents.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                      <FileCheck2 className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <div className="space-y-4">
+                  {submittedDocuments.map((doc) => (
+                    <div key={doc.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between mb-2">
+                        <span className="font-medium">
+                          {documentTypes.find(t => t.id === doc.document_type)?.name}
+                        </span>
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          doc.status === 'approved' 
+                            ? 'bg-green-100 text-green-800' 
+                            : doc.status === 'rejected'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {doc.status === 'pending' ? 'En attente' : 
+                           doc.status === 'approved' ? 'Approuvé' : 'Rejeté'}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        N° {doc.document_number}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-2">
+                        Soumis le {new Date(doc.submitted_at).toLocaleDateString()}
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium">{getDocumentTypeName(doc.document_type)}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {format(new Date(doc.created_at), 'dd MMM yyyy, HH:mm')}
-                      </div>
-                      {doc.document_number && (
-                        <div className="text-xs">
-                          N°: {doc.document_number}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getVerificationStatusBadge(doc.verification_status)}
-                    {doc.rejection_reason && (
-                      <div className="text-xs text-red-500">
-                        {doc.rejection_reason}
-                      </div>
-                    )}
-                    <a 
-                      href={doc.document_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline ml-2"
-                    >
-                      Voir
-                    </a>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </CardContent>
-
-      <CardFooter className="border-t pt-4 flex justify-between">
-        <Button variant="outline" onClick={fetchDriverData}>
-          Actualiser
-        </Button>
-      </CardFooter>
-    </Card>
+              )}
+            </CardContent>
+            <CardFooter className="flex justify-center">
+              <Button variant="outline" className="w-full">
+                Rafraîchir le statut
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-}
+};
+
+export default DriverVerification;
