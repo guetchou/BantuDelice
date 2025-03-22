@@ -1,7 +1,6 @@
 
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, TrendingUp, Leaf, Award, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { MenuItem } from '@/types/menu';
 import RecommendedItem from './RecommendedItem';
 
@@ -14,84 +13,93 @@ interface RecommendationTabsProps {
   onAddToCart: (item: MenuItem) => void;
 }
 
-const RecommendationTabs: React.FC<RecommendationTabsProps> = ({ 
-  selectedItem, 
-  recommendedItems, 
-  popularItems, 
-  healthyItems, 
-  quickItems, 
-  onAddToCart 
+const RecommendationTabs: React.FC<RecommendationTabsProps> = ({
+  selectedItem,
+  recommendedItems,
+  popularItems,
+  healthyItems,
+  quickItems,
+  onAddToCart
 }) => {
   return (
-    <Tabs defaultValue="related" className="w-full">
-      <TabsList className="w-full mb-4">
-        <TabsTrigger value="related" className="flex-1">
-          <Award className="w-4 h-4 mr-2" />
+    <Tabs defaultValue="personal">
+      <TabsList className="w-full">
+        <TabsTrigger value="personal" className="flex-1">
           Pour vous
         </TabsTrigger>
         <TabsTrigger value="popular" className="flex-1">
-          <TrendingUp className="w-4 h-4 mr-2" />
           Populaires
         </TabsTrigger>
         <TabsTrigger value="healthy" className="flex-1">
-          <Leaf className="w-4 h-4 mr-2" />
-          Santé
-        </TabsTrigger>
-        <TabsTrigger value="quick" className="flex-1">
-          <Clock className="w-4 h-4 mr-2" />
-          Rapides
+          Healthy
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="related" className="space-y-3 pt-2">
+      <TabsContent value="personal" className="mt-4">
         {selectedItem ? (
-          recommendedItems.length > 0 ? (
-            recommendedItems.map((item, index) => (
-              <RecommendedItem key={index} item={item} onAddToCart={onAddToCart} />
-            ))
-          ) : (
-            <div className="text-center py-4 text-sm text-muted-foreground">
-              Sélectionnez un plat pour voir des recommandations associées
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Basé sur votre sélection de <span className="font-medium">{selectedItem.name}</span>
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {recommendedItems.length > 0 ? (
+                recommendedItems.map(item => (
+                  <RecommendedItem
+                    key={item.id}
+                    item={item}
+                    onAddToCart={() => onAddToCart(item)}
+                  />
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground col-span-3 text-center py-6">
+                  Aucune recommandation disponible
+                </p>
+              )}
             </div>
-          )
+          </div>
         ) : (
-          <div className="text-center py-4 text-sm text-muted-foreground">
-            Sélectionnez un plat pour voir des recommandations associées
+          <div className="text-center py-6">
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez un plat pour voir des recommandations personnalisées
+            </p>
           </div>
         )}
       </TabsContent>
       
-      <TabsContent value="popular" className="space-y-3 pt-2">
-        {popularItems.map((item, index) => (
-          <RecommendedItem 
-            key={index} 
-            item={item} 
-            badge={{ icon: <Star className="w-3 h-3" />, text: "Populaire" }}
-            onAddToCart={onAddToCart} 
-          />
-        ))}
+      <TabsContent value="popular" className="mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {popularItems.length > 0 ? (
+            popularItems.map(item => (
+              <RecommendedItem
+                key={item.id}
+                item={item}
+                onAddToCart={() => onAddToCart(item)}
+              />
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground col-span-3 text-center py-6">
+              Aucun plat populaire disponible
+            </p>
+          )}
+        </div>
       </TabsContent>
       
-      <TabsContent value="healthy" className="space-y-3 pt-2">
-        {healthyItems.map((item, index) => (
-          <RecommendedItem 
-            key={index} 
-            item={item} 
-            badge={{ icon: <Leaf className="w-3 h-3" />, text: item.is_vegan ? "Vegan" : "Végétarien" }}
-            onAddToCart={onAddToCart} 
-          />
-        ))}
-      </TabsContent>
-      
-      <TabsContent value="quick" className="space-y-3 pt-2">
-        {quickItems.map((item, index) => (
-          <RecommendedItem 
-            key={index} 
-            item={item} 
-            badge={{ icon: <Clock className="w-3 h-3" />, text: `${item.preparation_time} min` }}
-            onAddToCart={onAddToCart} 
-          />
-        ))}
+      <TabsContent value="healthy" className="mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {healthyItems.length > 0 ? (
+            healthyItems.map(item => (
+              <RecommendedItem
+                key={item.id}
+                item={item}
+                onAddToCart={() => onAddToCart(item)}
+              />
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground col-span-3 text-center py-6">
+              Aucun plat healthy disponible
+            </p>
+          )}
+        </div>
       </TabsContent>
     </Tabs>
   );

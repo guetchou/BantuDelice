@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMenuEnhanced } from '@/hooks/useMenuEnhanced';
 import { MenuItem } from '@/types/menu';
 import RecommendationTabs from './recommendation/RecommendationTabs';
+import useCart from '@/hooks/useCart';
 
 interface MenuRecommendationsProps {
   restaurantId: string;
@@ -13,17 +14,26 @@ interface MenuRecommendationsProps {
 
 const MenuRecommendations: React.FC<MenuRecommendationsProps> = ({ restaurantId, selectedItem }) => {
   const { toast } = useToast();
+  const { addToCart } = useCart();
   const { 
     allItems, 
     recommendedItems, 
     selectItem 
   } = useMenuEnhanced(restaurantId);
   
+  // Sélectionner l'item si fourni en props
+  React.useEffect(() => {
+    if (selectedItem) {
+      selectItem(selectedItem);
+    }
+  }, [selectedItem, selectItem]);
+  
   // Intelligence 1: Recommandations basées sur la popularité
   const popularItems = useMemo(() => {
     if (!allItems) return [];
     
     return [...allItems]
+      .filter(item => item.available)
       .sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0))
       .slice(0, 3);
   }, [allItems]);
@@ -33,7 +43,7 @@ const MenuRecommendations: React.FC<MenuRecommendationsProps> = ({ restaurantId,
     if (!allItems) return [];
     
     return [...allItems]
-      .filter(item => item.is_vegetarian || item.is_vegan)
+      .filter(item => item.available && (item.is_vegetarian || item.is_vegan))
       .sort((a, b) => (b.nutritional_score || 0) - (a.nutritional_score || 0))
       .slice(0, 3);
   }, [allItems]);
@@ -43,12 +53,22 @@ const MenuRecommendations: React.FC<MenuRecommendationsProps> = ({ restaurantId,
     if (!allItems) return [];
     
     return [...allItems]
-      .filter(item => item.preparation_time && item.preparation_time < 20)
+      .filter(item => item.available && item.preparation_time && item.preparation_time < 20)
       .sort((a, b) => (a.preparation_time || 0) - (b.preparation_time || 0))
       .slice(0, 3);
   }, [allItems]);
   
   const handleAddToCart = (item: MenuItem) => {
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image_url: item.image_url,
+      description: item.description || '',
+      restaurant_id: restaurantId,
+      quantity: 1
+    });
+    
     toast({
       title: "Ajouté au panier",
       description: `${item.name} a été ajouté à votre panier`

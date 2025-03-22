@@ -1,19 +1,21 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MenuItem } from '@/types/menu'; // Import from types not from component
+import { MenuItem } from '@/types/menu';
 import SmartFilters from './SmartFilters';
 import { AlertCircle } from "lucide-react";
 import CategorySection from './menu/CategorySection';
 import NoResults from './menu/NoResults';
+import { useMenuItems } from '@/hooks/useMenuItems';
+import { restaurantApi } from '@/integrations/api/restaurants';
+import { useToast } from '@/hooks/use-toast';
 
 interface RestaurantMenuProps {
   restaurantId: string;
+  onItemSelect?: (item: MenuItem) => void;
 }
 
-const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
+const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId, onItemSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -23,23 +25,15 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
     glutenFree: false
   });
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const { toast } = useToast();
   
-  const { data: menuItems, isLoading, error } = useQuery<MenuItem[]>({
-    queryKey: ['menu', restaurantId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('menu_items')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .order('category', { ascending: true });
-        
-      if (error) throw error;
-      
-      return data as MenuItem[];
-    }
-  });
+  const { 
+    items: menuItems = [], 
+    categories,
+    isLoading, 
+    error 
+  } = useMenuItems(restaurantId);
   
-  const categories = Array.from(new Set((menuItems || []).map(item => item.category)));
   const maxPrice = Math.max(...(menuItems || []).map(item => item.price), 0);
   const minPrice = Math.min(...(menuItems || []).map(item => item.price > 0 ? item.price : Infinity), 0);
   
@@ -178,7 +172,12 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId }) => {
       ) : (
         <div className="space-y-8">
           {Object.entries(groupedItems).map(([category, items]) => (
-            <CategorySection key={category} category={category} items={items} />
+            <CategorySection 
+              key={category} 
+              category={category} 
+              items={items} 
+              onItemSelect={onItemSelect}
+            />
           ))}
         </div>
       )}

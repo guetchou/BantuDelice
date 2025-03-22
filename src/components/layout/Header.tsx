@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/integrations/api/client';
 import { useUser } from '@/hooks/useUser';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,8 +19,12 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    try {
+      await apiClient.auth.signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleSearch = (e: React.FormEvent) => {

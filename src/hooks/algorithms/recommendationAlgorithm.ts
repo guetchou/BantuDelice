@@ -1,55 +1,70 @@
 
-import { MenuItem } from "@/types/menu";
+import { MenuItem } from '@/types/menu';
 
 /**
- * Recommends related menu items based on the current selected item
- * Uses category, paired items, and ingredient similarity for recommendations
+ * Recommends related menu items based on a selected item
+ * @param allItems All menu items
+ * @param selectedItem The currently selected menu item
+ * @param limit Maximum number of items to recommend
+ * @returns Array of recommended items
  */
 export const recommendRelatedItems = (
-  currentItem: MenuItem | null,
-  allItems: MenuItem[]
+  allItems: MenuItem[],
+  selectedItem: MenuItem | null,
+  limit: number = 3
 ): MenuItem[] => {
-  if (!currentItem) return [];
-  
-  // Critères de recommandation: même catégorie, ingrédients similaires, ou paires suggérées
-  return allItems
-    .filter(item => 
-      item.id !== currentItem.id && (
-        item.category === currentItem.category ||
-        (currentItem.pairs_well_with && currentItem.pairs_well_with.includes(item.id)) ||
-        (currentItem.ingredients && item.ingredients && 
-          currentItem.ingredients.some(ing => item.ingredients?.includes(ing)))
-      )
-    )
-    .sort((a, b) => {
-      // Calcul de score de pertinence
-      let scoreA = 0;
-      let scoreB = 0;
-      
-      // Bonus pour les paires suggérées
-      if (currentItem.pairs_well_with?.includes(a.id)) scoreA += 3;
-      if (currentItem.pairs_well_with?.includes(b.id)) scoreB += 3;
-      
-      // Bonus pour même catégorie
-      if (a.category === currentItem.category) scoreA += 1;
-      if (b.category === currentItem.category) scoreB += 1;
-      
-      // Bonus pour ingrédients communs
-      if (currentItem.ingredients && a.ingredients) {
-        const commonIngredientsA = currentItem.ingredients.filter(ing => 
-          a.ingredients?.includes(ing)
-        ).length;
-        scoreA += commonIngredientsA * 0.5;
+  if (!selectedItem || !allItems || allItems.length === 0) {
+    return [];
+  }
+
+  // Calculate relevance scores for each item
+  const scoredItems = allItems
+    .filter(item => item.id !== selectedItem.id) // Exclude the selected item
+    .map(item => {
+      // Initialize score
+      let score = 0;
+
+      // Same category gets a high score
+      if (item.category === selectedItem.category) {
+        score += 3;
       }
-      
-      if (currentItem.ingredients && b.ingredients) {
-        const commonIngredientsB = currentItem.ingredients.filter(ing => 
-          b.ingredients?.includes(ing)
-        ).length;
-        scoreB += commonIngredientsB * 0.5;
+
+      // Similar price range
+      const priceDiff = Math.abs(item.price - selectedItem.price);
+      const priceRatio = priceDiff / selectedItem.price;
+      if (priceRatio < 0.2) { // Within 20% of price
+        score += 2;
       }
-      
-      return scoreB - scoreA;
-    })
-    .slice(0, 3); // Limiter à 3 recommandations
+
+      // Dietary preferences match
+      if (
+        (selectedItem.is_vegetarian && item.is_vegetarian) ||
+        (selectedItem.is_vegan && item.is_vegan) ||
+        (selectedItem.is_gluten_free && item.is_gluten_free)
+      ) {
+        score += 2;
+      }
+
+      // Good for combinations (entrée + plat, plat + dessert)
+      if (
+        (selectedItem.category === 'Entrées' && item.category === 'Plats Principaux') ||
+        (selectedItem.category === 'Plats Principaux' && item.category === 'Desserts') ||
+        (selectedItem.category === 'Boissons' && (item.category !== 'Boissons'))
+      ) {
+        score += 2;
+      }
+
+      // Add popularity as a factor
+      if (item.popularity_score) {
+        score += item.popularity_score * 2;
+      }
+
+      return { item, score };
+    });
+
+  // Sort by score and return the top items
+  return scoredItems
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(scoredItem => scoredItem.item);
 };

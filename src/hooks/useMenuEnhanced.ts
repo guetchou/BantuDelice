@@ -1,120 +1,131 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { MenuItem } from '@/types/menu';
-import { toast } from 'sonner';
-import { 
-  recommendRelatedItems, 
-  applySmartFilter, 
-  analyzeMenu, 
-  generateMenuSuggestions 
+import { restaurantApi } from '@/integrations/api/restaurants';
+import { useToast } from '@/hooks/use-toast';
+import {
+  recommendRelatedItems,
+  applySmartFilter,
+  analyzeMenu,
+  generateMenuSuggestions
 } from './useMenuAlgorithms';
 
+interface FilterState {
+  keyword: string;
+  categories: string[];
+  priceRange: {
+    min?: number;
+    max?: number;
+  };
+  dietary: {
+    vegetarian: boolean;
+    vegan: boolean;
+    glutenFree: boolean;
+  };
+  includeUnavailable: boolean;
+}
+
 export const useMenuEnhanced = (restaurantId: string) => {
-  const [filters, setFilters] = useState({
+  const { toast } = useToast();
+  const [allItems, setAllItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  
+  const [filters, setFilters] = useState<FilterState>({
+    keyword: '',
     categories: [],
+    priceRange: {},
     dietary: {
       vegetarian: false,
       vegan: false,
       glutenFree: false
     },
-    priceRange: {
-      min: undefined,
-      max: undefined
-    },
-    keyword: '',
     includeUnavailable: false
   });
   
-  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  
-  // Récupération de tous les éléments du menu
-  const { data: allItems, isLoading, error } = useQuery({
-    queryKey: ['menu-items-enhanced', restaurantId],
-    queryFn: async () => {
-      if (!restaurantId) throw new Error('Restaurant ID is required');
+  // Fetch menu items
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      if (!restaurantId) return;
       
       try {
-        const { data, error } = await supabase
-          .from('menu_items')
-          .select('*')
-          .eq('restaurant_id', restaurantId);
-        
-        if (error) throw error;
-        return data as MenuItem[];
+        setLoading(true);
+        const data = await restaurantApi.getMenu(restaurantId);
+        setAllItems(data as MenuItem[]);
       } catch (err) {
-        console.error('Error fetching menu items:', err);
-        toast.error('Impossible de charger le menu');
-        return [];
+        console.error('Error fetching menu:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch menu'));
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de charger le menu',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
       }
-    },
-    enabled: !!restaurantId
-  });
+    };
+    
+    fetchMenuItems();
+  }, [restaurantId, toast]);
   
-  // Intelligence 2: Statistiques du menu et analyse
-  const menuAnalysis = useMemo(() => {
-    if (allItems && allItems.length > 0) {
-      return analyzeMenu(allItems);
-    }
-    return null;
-  }, [allItems]);
-  
-  // Filtrage intelligent des éléments
+  // Apply filters to menu items
   const filteredItems = useMemo(() => {
-    if (!allItems) return [];
     return applySmartFilter(allItems, filters);
   }, [allItems, filters]);
   
-  // Éléments recommandés basés sur l'élément sélectionné
+  // Get recommended items based on selected item
   const recommendedItems = useMemo(() => {
-    if (!allItems) return [];
-    return recommendRelatedItems(selectedItem, allItems);
-  }, [selectedItem, allItems]);
+    return recommendRelatedItems(allItems, selectedItem, 3);
+  }, [allItems, selectedItem]);
   
-  // Intelligence 3: Suggestions pour améliorer le menu
+  // Generate menu analysis
+  const menuAnalysis = useMemo(() => {
+    return analyzeMenu(allItems);
+  }, [allItems]);
+  
+  // Generate menu suggestions
   const menuSuggestions = useMemo(() => {
-    return generateMenuSuggestions(menuAnalysis, allItems);
-  }, [menuAnalysis, allItems]);
+    return generateMenuSuggestions(allItems);
+  }, [allItems]);
   
-  // Fonctions avancées
-  const updateFilters = (newFilters) => {
+  // Get all available categories
+  const getAvailableCategories = useMemo(() => {
+    return Array.from(new Set(allItems.map(item => item.category)));
+  }, [allItems]);
+  
+  // Update filters function
+  const updateFilters = (newFilters: Partial<FilterState>) => {
     setFilters(prev => ({
       ...prev,
       ...newFilters
     }));
   };
   
-  const selectItem = (item: MenuItem) => {
-    setSelectedItem(item);
-  };
-  
+  // Clear all filters
   const clearFilters = () => {
     setFilters({
+      keyword: '',
       categories: [],
+      priceRange: {},
       dietary: {
         vegetarian: false,
         vegan: false,
         glutenFree: false
       },
-      priceRange: {
-        min: undefined,
-        max: undefined
-      },
-      keyword: '',
       includeUnavailable: false
     });
   };
   
-  const getAvailableCategories = useMemo(() => {
-    if (!allItems) return [];
-    return [...new Set(allItems.map(item => item.category))];
-  }, [allItems]);
+  // Select an item for recommendations
+  const selectItem = (item: MenuItem | null) => {
+    setSelectedItem(item);
+  };
   
   return {
     allItems,
     filteredItems,
-    isLoading,
+    isLoading: loading,
     error,
     filters,
     updateFilters,
