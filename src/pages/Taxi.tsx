@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Car, Clock, CheckCircle, CreditCard, TriangleAlert, Star, User, Phone, History, MapPinned } from "lucide-react";
+import { MapPin, Calendar, Car, Clock, CheckCircle, CreditCard, TriangleAlert, Star, User, Phone, History, MapPinned, Building2 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -169,7 +169,7 @@ export default function Taxi() {
             Service de taxi rapide, fiable et sécurisé pour tous vos déplacements à Brazzaville
           </p>
           
-          <div className="flex justify-center gap-4 mt-6">
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
             <Button 
               onClick={() => navigate('/taxi/booking')} 
               className="bg-primary/90 hover:bg-primary"
@@ -192,6 +192,22 @@ export default function Taxi() {
             >
               <MapPinned className="mr-2 h-4 w-4" />
               Mes adresses
+            </Button>
+            <Button 
+              variant="outline" 
+              className="text-white border-white/20 hover:bg-white/10"
+              onClick={() => navigate('/taxi/subscription')}
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              Abonnements
+            </Button>
+            <Button 
+              variant="outline" 
+              className="text-white border-white/20 hover:bg-white/10"
+              onClick={() => navigate('/taxi/business')}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Entreprises
             </Button>
           </div>
         </motion.div>

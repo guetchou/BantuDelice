@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
@@ -19,6 +18,10 @@ import DeliveryDashboard from '@/pages/delivery/Dashboard';
 import DeliveryPage from '@/pages/delivery/index';
 import { authRoutes } from './authRoutes';
 import { errorRoutes } from './errorRoutes';
+import TaxiHistoryPage from "@/pages/taxi/History";
+import TaxiLocationsPage from "@/pages/taxi/Locations";
+import TaxiSubscriptionPage from "@/pages/taxi/Subscription";
+import TaxiBusinessPage from "@/pages/taxi/Business";
 
 const mainRoutes: RouteObject[] = [
   ...authRoutes,
@@ -53,6 +56,22 @@ const mainRoutes: RouteObject[] = [
       { path: "messages", element: <Messages /> },
       { path: "notifications", element: <Notifications /> },
     ]
+  },
+  {
+    path: "/taxi/history",
+    element: <TaxiHistoryPage />
+  },
+  {
+    path: "/taxi/locations",
+    element: <TaxiLocationsPage />
+  },
+  {
+    path: "/taxi/subscription",
+    element: <TaxiSubscriptionPage />
+  },
+  {
+    path: "/taxi/business",
+    element: <TaxiBusinessPage />
   },
   ...errorRoutes
 ];
