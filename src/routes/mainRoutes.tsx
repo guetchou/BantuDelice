@@ -16,8 +16,12 @@ import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import NotFound from '@/pages/NotFound';
 import DeliveryDashboard from '@/pages/delivery/Dashboard';
+import DeliveryPage from '@/pages/delivery/index';
+import { authRoutes } from './authRoutes';
+import { errorRoutes } from './errorRoutes';
 
 const mainRoutes: RouteObject[] = [
+  ...authRoutes,
   {
     path: "/",
     element: <MainLayout />,
@@ -30,6 +34,7 @@ const mainRoutes: RouteObject[] = [
       
       // Delivery Routes
       { path: "delivery", element: <DeliveryDashboard /> },
+      { path: "delivery/dashboard", element: <DeliveryPage /> },
       
       // Taxi Routes
       { path: "taxi/booking", element: <TaxiBooking /> },
@@ -47,11 +52,9 @@ const mainRoutes: RouteObject[] = [
       { path: "favorites", element: <Favorites /> },
       { path: "messages", element: <Messages /> },
       { path: "notifications", element: <Notifications /> },
-      
-      // 404 Route - this will handle anything that doesn't match above within the MainLayout
-      { path: "*", element: <NotFound /> }
     ]
-  }
+  },
+  ...errorRoutes
 ];
 
 export default mainRoutes;
