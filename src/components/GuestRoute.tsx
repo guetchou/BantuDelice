@@ -1,17 +1,25 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useApiAuth } from '@/contexts/ApiAuthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 interface GuestRouteProps {
   children: React.ReactNode;
 }
 
 export const GuestRoute: React.FC<GuestRouteProps> = ({ children }) => {
-  const { user, loading } = useApiAuth();
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
-    return <div>Chargement...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    );
   }
 
   if (user) {

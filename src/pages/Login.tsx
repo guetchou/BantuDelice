@@ -7,26 +7,44 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
     try {
       await signIn(email, password);
       toast.success("Connexion réussie");
       navigate('/');
-    } catch (error) {
-      console.error('Error logging in:', error);
+    } catch (err) {
+      console.error('Error logging in:', err);
+      
+      // Traitement spécifique pour les différents types d'erreurs
+      if (err instanceof Error) {
+        if (err.message.includes('Failed to execute') || err.message.includes('Unexpected end of JSON')) {
+          setError("Impossible de contacter le serveur d'authentification. Veuillez vérifier votre connexion et réessayer.");
+        } else if (err.message.includes('Invalid login credentials')) {
+          setError("Email ou mot de passe incorrect");
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError("Une erreur inattendue s'est produite");
+      }
+      
       toast.error("Échec de connexion", {
-        description: error instanceof Error ? error.message : "Une erreur s'est produite"
+        description: error || "Une erreur s'est produite"
       });
     } finally {
       setIsLoading(false);
@@ -34,13 +52,22 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
         <CardDescription>
           Saisissez vos identifiants pour accéder à votre compte
         </CardDescription>
       </CardHeader>
+      
+      {error && (
+        <div className="px-6 -mt-2 mb-2">
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -51,6 +78,7 @@ export const Login: React.FC = () => {
               placeholder="votre@email.com" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
               required
             />
           </div>
@@ -66,6 +94,7 @@ export const Login: React.FC = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
               required
             />
           </div>
@@ -76,7 +105,12 @@ export const Login: React.FC = () => {
             className="w-full" 
             disabled={isLoading}
           >
-            {isLoading ? "Connexion en cours..." : "Se connecter"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Connexion en cours...
+              </>
+            ) : "Se connecter"}
           </Button>
           <p className="mt-4 text-center text-sm">
             Vous n'avez pas de compte?{" "}
