@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Search, Car as CarIcon, Users as UsersIcon } from 'lucide-react';
+import { MapPin, Search, Car, Users } from 'lucide-react';
 
 const HomeMapSection = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -27,15 +27,10 @@ const HomeMapSection = () => {
     
     // In a real implementation, we would store and use this token
     if (mapboxToken) {
-      toast.success("Token applied. Map would load with your token in production.");
+      console.log("Token applied. Map would load with your token in production.");
     } else {
-      toast.error("Please enter a valid Mapbox token.");
+      console.error("Please enter a valid Mapbox token.");
     }
-  };
-
-  const toast = {
-    success: (message: string) => console.log(message),
-    error: (message: string) => console.error(message)
   };
 
   return (
@@ -107,7 +102,7 @@ const HomeMapSection = () => {
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                       onClick={() => navigate('/taxis')}
                     >
-                      <CarIcon className="h-4 w-4 mr-2" />
+                      <Car className="h-4 w-4 mr-2" />
                       Commander un taxi
                     </Button>
                   </div>
@@ -150,7 +145,7 @@ const HomeMapSection = () => {
             viewport={{ once: true }}
             className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6"
           >
-            <CarIcon className="h-8 w-8 text-blue-500 mb-4" />
+            <Car className="h-8 w-8 text-blue-500 mb-4" />
             <h3 className="text-white text-lg font-semibold mb-2">Taxis disponibles</h3>
             <p className="text-gray-400">Visualisez les taxis en temps réel et estimez les temps d'attente dans votre zone.</p>
           </motion.div>
@@ -162,7 +157,7 @@ const HomeMapSection = () => {
             viewport={{ once: true }}
             className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6"
           >
-            <UsersIcon className="h-8 w-8 text-green-500 mb-4" />
+            <Users className="h-8 w-8 text-green-500 mb-4" />
             <h3 className="text-white text-lg font-semibold mb-2">Trajets partagés</h3>
             <p className="text-gray-400">Trouvez des covoiturages et des trajets partagés pour économiser et voyager de manière écologique.</p>
           </motion.div>
