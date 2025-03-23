@@ -2,12 +2,18 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { CartProvider } from './contexts/CartProvider';
+import { OrderProvider } from './contexts/OrderContext';
+import { AuthProvider } from './hooks/useAuth';
 
 function App() {
   return (
-    <CartProvider>
-      <Outlet />
-    </CartProvider>
+    <AuthProvider>
+      <OrderProvider>
+        <CartProvider>
+          <Outlet />
+        </CartProvider>
+      </OrderProvider>
+    </AuthProvider>
   );
 }
 

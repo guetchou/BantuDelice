@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useOrders } from '@/contexts/OrderContext';
 import { Card } from '@/components/ui/card';
@@ -145,7 +144,6 @@ const Orders = () => {
                 {expandedOrder === order.id && (
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <h4 className="font-medium mb-2">Détails de la commande</h4>
-                    {/* Les détails seraient ici si nous avions des données d'éléments de commande */}
                     <p className="text-sm text-gray-500">
                       Informations détaillées sur la commande non disponibles.
                     </p>
@@ -213,7 +211,6 @@ const Orders = () => {
                 {expandedOrder === order.id && (
                   <div className="mt-4 pt-4 border-t border-gray-100">
                     <h4 className="font-medium mb-2">Détails de la commande</h4>
-                    {/* Les détails seraient ici si nous avions des données d'éléments de commande */}
                     <p className="text-sm text-gray-500">
                       Informations détaillées sur la commande non disponibles.
                     </p>
