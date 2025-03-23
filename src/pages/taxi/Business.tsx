@@ -1,18 +1,47 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Building2, Users, Receipt, BarChart, Clock, Shield, Phone } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Building2, Users, CreditCard, CalendarClock, BarChart } from 'lucide-react';
 import { toast } from 'sonner';
 import TaxiNavigationMenu from '@/components/taxi/TaxiNavigationMenu';
 
 const TaxiBusinessPage = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    companyName: '',
+    contactPerson: '',
+    email: '',
+    phone: '',
+    employeeCount: '',
+    message: ''
+  });
   
-  const handleRequestDemo = () => {
-    toast.success("Demande de démonstration envoyée", {
-      description: "Notre équipe commerciale vous contactera bientôt"
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success("Demande envoyée avec succès", {
+      description: "Notre équipe commerciale vous contactera dans les 24 heures"
+    });
+    
+    // Dans une vraie application, nous enverrions les données à un backend
+    console.log("Données soumises:", formData);
+    
+    // Réinitialisation du formulaire
+    setFormData({
+      companyName: '',
+      contactPerson: '',
+      email: '',
+      phone: '',
+      employeeCount: '',
+      message: ''
     });
   };
   
@@ -32,268 +61,316 @@ const TaxiBusinessPage = () => {
       
       <TaxiNavigationMenu />
       
-      <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Transport professionnel pour votre entreprise</h2>
-            <p className="text-gray-600 mb-6">
-              Optimisez les déplacements de vos employés et simplifiez votre gestion administrative avec nos solutions de transport dédiées aux entreprises congolaises.
-            </p>
-            
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
-                  <Users className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Comptes multiples</h3>
-                  <p className="text-sm text-gray-600">Gérez facilement les comptes de tous vos employés</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
-                  <Receipt className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Facturation centralisée</h3>
-                  <p className="text-sm text-gray-600">Recevez une facture unique pour tous vos déplacements</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
-                  <BarChart className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Rapports détaillés</h3>
-                  <p className="text-sm text-gray-600">Suivez et analysez les dépenses par département</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-8">
-              <Button size="lg" className="mr-4" onClick={handleRequestDemo}>
-                Demander une démo
-              </Button>
-              <Button variant="outline" size="lg" onClick={() => navigate('/contact')}>
-                Nous contacter
-              </Button>
-            </div>
-          </div>
+      <div className="max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <Users className="mr-2 h-5 w-5 text-primary" />
+                Comptes Entreprise
+              </CardTitle>
+              <CardDescription>
+                Gérez les déplacements de vos employés
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Définissez des règles et limites de dépenses</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Attribuez des budgets par département</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Console d'administration dédiée</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Assistance 24/7 prioritaire</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
           
-          <div className="rounded-lg overflow-hidden h-[400px]">
-            <img 
-              src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop" 
-              alt="Business transportation" 
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <CreditCard className="mr-2 h-5 w-5 text-primary" />
+                Paiement Centralisé
+              </CardTitle>
+              <CardDescription>
+                Simplifiez la gestion des frais de transport
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Facturation mensuelle consolidée</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Paiement différé jusqu'à 45 jours</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Intégration avec vos systèmes comptables</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Gestion des notes de frais automatisée</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <CalendarClock className="mr-2 h-5 w-5 text-primary" />
+                Réservations Récurrentes
+              </CardTitle>
+              <CardDescription>
+                Planifiez vos transports réguliers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Programmez des transports hebdomadaires</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Chauffeurs dédiés pour plus de régularité</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Modification flexible des horaires</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Tarifs préférentiels garantis</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <BarChart className="mr-2 h-5 w-5 text-primary" />
+                Rapports & Analyses
+              </CardTitle>
+              <CardDescription>
+                Suivez et optimisez vos dépenses
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Tableaux de bord personnalisables</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Rapports d'utilisation détaillés</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Analyse des tendances et optimisations</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2">•</span>
+                  <span>Export des données au format Excel/CSV</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
         </div>
         
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 text-center">Nos forfaits entreprise</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-xl">Starter</CardTitle>
-                <CardDescription>Pour les petites équipes</CardDescription>
-                <div className="mt-4">
-                  <span className="text-3xl font-bold">100,000 FCFA</span>
-                  <span className="text-gray-500 ml-1">/mois</span>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <ul className="space-y-2">
+        <Card className="mb-10">
+          <CardHeader>
+            <CardTitle>Tarification Entreprise</CardTitle>
+            <CardDescription>
+              Des solutions adaptées à la taille de votre entreprise
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-lg mb-2">PME</h3>
+                <p className="text-sm text-muted-foreground mb-2">5-50 employés</p>
+                <ul className="text-sm space-y-1 mb-4">
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Jusqu'à 10 employés</span>
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>15% de réduction sur les courses</span>
                   </li>
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>20% de réduction sur les courses</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
+                    <span className="mr-2 text-green-500">✓</span>
                     <span>Facturation mensuelle</span>
                   </li>
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Rapports basiques</span>
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>Rapports de base</span>
                   </li>
                 </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" onClick={handleRequestDemo}>Commencer</Button>
-              </CardFooter>
-            </Card>
-            
-            <Card className="flex flex-col border-primary">
-              <CardHeader>
-                <div className="py-1 px-3 bg-primary text-white text-xs font-medium rounded-full w-fit mb-2">
-                  Populaire
-                </div>
-                <CardTitle className="text-xl">Business</CardTitle>
-                <CardDescription>Pour les moyennes entreprises</CardDescription>
-                <div className="mt-4">
-                  <span className="text-3xl font-bold">250,000 FCFA</span>
-                  <span className="text-gray-500 ml-1">/mois</span>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <ul className="space-y-2">
+                <div className="text-lg font-bold">À partir de 70 000 FCFA/mois</div>
+              </div>
+              
+              <div className="border rounded-lg p-4 bg-primary/5 border-primary/20">
+                <h3 className="font-semibold text-lg mb-2">Entreprise</h3>
+                <p className="text-sm text-muted-foreground mb-2">50-200 employés</p>
+                <ul className="text-sm space-y-1 mb-4">
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Jusqu'à 50 employés</span>
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>25% de réduction sur les courses</span>
                   </li>
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>30% de réduction sur les courses</span>
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>Paiement à 30 jours</span>
                   </li>
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Facturation mensuelle détaillée</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Console d'administration</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
+                    <span className="mr-2 text-green-500">✓</span>
                     <span>Rapports avancés</span>
                   </li>
+                  <li className="flex items-center">
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>Gestionnaire de compte dédié</span>
+                  </li>
                 </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" onClick={handleRequestDemo}>Commencer</Button>
-              </CardFooter>
-            </Card>
-            
-            <Card className="flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-xl">Enterprise</CardTitle>
-                <CardDescription>Pour les grandes entreprises</CardDescription>
-                <div className="mt-4">
-                  <span className="text-3xl font-bold">Sur mesure</span>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <ul className="space-y-2">
+                <div className="text-lg font-bold">À partir de 200 000 FCFA/mois</div>
+              </div>
+              
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-lg mb-2">Corporate</h3>
+                <p className="text-sm text-muted-foreground mb-2">200+ employés</p>
+                <ul className="text-sm space-y-1 mb-4">
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Employés illimités</span>
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>35% de réduction sur les courses</span>
                   </li>
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Tarifs personnalisés</span>
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>Paiement à 45 jours</span>
                   </li>
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>Analyse prédictive</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="mr-2 text-green-500">✓</span>
                     <span>API d'intégration</span>
                   </li>
                   <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Gestionnaire de compte dédié</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center mr-2">
-                      <span className="text-white text-xs">✓</span>
-                    </div>
-                    <span>Solutions personnalisées</span>
+                    <span className="mr-2 text-green-500">✓</span>
+                    <span>Équipe de support dédiée</span>
                   </li>
                 </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" onClick={handleRequestDemo}>Nous contacter</Button>
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card>
-            <CardHeader>
-              <Clock className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Disponibilité 24/7</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Des chauffeurs disponibles à tout moment pour les déplacements urgents de vos collaborateurs.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <Shield className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Sécurité garantie</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Tous nos chauffeurs sont vérifiés et nos véhicules régulièrement inspectés pour assurer la sécurité.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <Building2 className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>Solution sur mesure</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Nous adaptons nos services aux besoins spécifiques de votre entreprise, quelle que soit sa taille.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Card className="mb-12 bg-gray-50 border-gray-200">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row items-center">
-              <div className="md:w-2/3 mb-6 md:mb-0 md:pr-6">
-                <h3 className="text-xl font-bold mb-2">Besoin d'informations supplémentaires?</h3>
-                <p className="text-gray-600 mb-4">
-                  Notre équipe commerciale est à votre disposition pour répondre à toutes vos questions et vous aider à choisir la solution adaptée à votre entreprise.
-                </p>
-                <div className="flex items-center">
-                  <Phone className="h-5 w-5 text-primary mr-2" />
-                  <span className="font-medium">+242 06 123 4567</span>
-                </div>
-              </div>
-              <div className="md:w-1/3 flex justify-center md:justify-end">
-                <Button size="lg" onClick={handleRequestDemo}>
-                  Demander une démo
-                </Button>
+                <div className="text-lg font-bold">Sur mesure</div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Demande d'information</CardTitle>
+            <CardDescription>
+              Complétez le formulaire ci-dessous pour être contacté par notre équipe commerciale
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="companyName" className="text-sm font-medium">
+                    Nom de l'entreprise <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="contactPerson" className="text-sm font-medium">
+                    Personne à contacter <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="contactPerson"
+                    name="contactPerson"
+                    value={formData.contactPerson}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium">
+                    Email professionnel <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-medium">
+                    Téléphone <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="employeeCount" className="text-sm font-medium">
+                    Nombre d'employés <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="employeeCount"
+                    name="employeeCount"
+                    value={formData.employeeCount}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="message" className="text-sm font-medium">
+                  Votre demande
+                </label>
+                <Textarea
+                  id="message"
+                  name="message"
+                  rows={4}
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Précisez vos besoins et questions spécifiques"
+                />
+              </div>
+              
+              <Button type="submit" className="w-full md:w-auto">
+                Envoyer ma demande
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
