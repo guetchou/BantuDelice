@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Search } from 'lucide-react';
+import { MapPin, Search, Car as CarIcon, Users as UsersIcon } from 'lucide-react';
 
 const HomeMapSection = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -107,7 +107,7 @@ const HomeMapSection = () => {
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                       onClick={() => navigate('/taxis')}
                     >
-                      <Car className="h-4 w-4 mr-2" />
+                      <CarIcon className="h-4 w-4 mr-2" />
                       Commander un taxi
                     </Button>
                   </div>
@@ -150,7 +150,7 @@ const HomeMapSection = () => {
             viewport={{ once: true }}
             className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6"
           >
-            <Car className="h-8 w-8 text-blue-500 mb-4" />
+            <CarIcon className="h-8 w-8 text-blue-500 mb-4" />
             <h3 className="text-white text-lg font-semibold mb-2">Taxis disponibles</h3>
             <p className="text-gray-400">Visualisez les taxis en temps réel et estimez les temps d'attente dans votre zone.</p>
           </motion.div>
@@ -162,7 +162,7 @@ const HomeMapSection = () => {
             viewport={{ once: true }}
             className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6"
           >
-            <Users className="h-8 w-8 text-green-500 mb-4" />
+            <UsersIcon className="h-8 w-8 text-green-500 mb-4" />
             <h3 className="text-white text-lg font-semibold mb-2">Trajets partagés</h3>
             <p className="text-gray-400">Trouvez des covoiturages et des trajets partagés pour économiser et voyager de manière écologique.</p>
           </motion.div>
