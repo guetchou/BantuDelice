@@ -20,19 +20,14 @@ export const Login: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await signIn(email, password);
-      
-      if (error) {
-        toast.error("Échec de connexion", {
-          description: error.message
-        });
-      } else {
-        toast.success("Connexion réussie");
-        navigate('/');
-      }
+      await signIn(email, password);
+      toast.success("Connexion réussie");
+      navigate('/');
     } catch (error) {
-      toast.error("Une erreur s'est produite");
-      console.error(error);
+      console.error('Error logging in:', error);
+      toast.error("Échec de connexion", {
+        description: error instanceof Error ? error.message : "Une erreur s'est produite"
+      });
     } finally {
       setIsLoading(false);
     }

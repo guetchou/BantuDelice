@@ -26,7 +26,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
 
-// Ajout de la fonction getErrorMessage
 const getErrorMessage = (error: AuthError): string => {
   switch (error.message) {
     case "User already registered":
@@ -40,7 +39,7 @@ const getErrorMessage = (error: AuthError): string => {
   }
 };
 
-const phoneRegex = /^(\+242|0)[1-9]\d{8}$/;
+const phoneRegex = /^(\+?242|0)[1-9]\d{7,8}$/;
 
 const registrationSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -52,7 +51,7 @@ const registrationSchema = z.object({
   confirmPassword: z.string(),
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  phone: z.string().regex(phoneRegex, "Format: +242XXXXXXXXX ou 0XXXXXXXXX"),
+  phone: z.string().regex(phoneRegex, "Format: +242XXXXXXXX ou 0XXXXXXXX"),
   address: z.string().min(10, "L'adresse doit être complète"),
   city: z.string().min(2, "La ville est requise"),
   postalCode: z.string().optional(),
@@ -76,7 +75,7 @@ type RegistrationForm = z.infer<typeof registrationSchema>;
 
 interface RegistrationFormProps {
   onCancel: () => void;
-  onSuccess?: () => void; // Make this optional since it's a new prop
+  onSuccess?: () => void;
 }
 
 export const RegistrationForm = ({ onCancel, onSuccess }: RegistrationFormProps) => {
@@ -117,7 +116,7 @@ export const RegistrationForm = ({ onCancel, onSuccess }: RegistrationFormProps)
       if (error) throw error;
 
       toast.success("Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
-      onSuccess?.(); // Call onSuccess if provided
+      onSuccess?.();
       onCancel();
     } catch (error) {
       if (error instanceof AuthError) {
@@ -230,11 +229,7 @@ export const RegistrationForm = ({ onCancel, onSuccess }: RegistrationFormProps)
                     value={value}
                     onChange={(phone) => {
                       let formattedPhone = phone;
-                      if (phone.startsWith('242')) {
-                        formattedPhone = '+' + phone;
-                      } else if (phone.startsWith('0')) {
-                        formattedPhone = phone;
-                      } else {
+                      if (!phone.startsWith('+') && !phone.startsWith('0')) {
                         formattedPhone = '+242' + phone;
                       }
                       onChange(formattedPhone);
@@ -245,7 +240,7 @@ export const RegistrationForm = ({ onCancel, onSuccess }: RegistrationFormProps)
                   />
                 </FormControl>
                 <FormDescription>
-                  Format: +242XXXXXXXXX ou 0XXXXXXXXX
+                  Format: +242XXXXXXXX ou 0XXXXXXXX
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -420,4 +415,3 @@ export const RegistrationForm = ({ onCancel, onSuccess }: RegistrationFormProps)
     </motion.div>
   );
 };
-

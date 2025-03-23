@@ -8,9 +8,9 @@ interface GuestRouteProps {
 }
 
 export const GuestRoute: React.FC<GuestRouteProps> = ({ children }) => {
-  const { user, isLoading } = useApiAuth();
+  const { user, loading } = useApiAuth();
 
-  if (isLoading) {
+  if (loading) {
     return <div>Chargement...</div>;
   }
 

@@ -12,6 +12,7 @@ export const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -27,21 +28,16 @@ export const Register: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await signUp(email, password);
-      
-      if (error) {
-        toast.error("Échec de l'inscription", {
-          description: error.message
-        });
-      } else {
-        toast.success("Inscription réussie", {
-          description: "Un email de confirmation vous a été envoyé."
-        });
-        navigate('/auth/login');
-      }
+      await signUp(email, password, name);
+      toast.success("Inscription réussie", {
+        description: "Un email de confirmation vous a été envoyé."
+      });
+      navigate('/auth/login');
     } catch (error) {
-      toast.error("Une erreur s'est produite");
-      console.error(error);
+      console.error('Error signing up:', error);
+      toast.error("Échec de l'inscription", {
+        description: error instanceof Error ? error.message : "Une erreur s'est produite"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -57,6 +53,17 @@ export const Register: React.FC = () => {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nom complet</Label>
+            <Input 
+              id="name" 
+              type="text" 
+              placeholder="Votre nom complet" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input 

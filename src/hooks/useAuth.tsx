@@ -56,20 +56,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      // Use try-catch with the native fetch API to debug network issues
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Auth failed: ${response.status} ${response.statusText}`);
+      }
+      
+      // If using the fallback approach, we can also try the regular supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        toast.error(error.message);
-      } else if (data?.user) {
-        setUser(data.user as User);
-        toast.success('Signed in successfully');
+        throw error;
       }
+      
+      if (data?.user) {
+        setUser(data.user as User);
+      }
+
     } catch (error) {
       console.error('Error signing in:', error);
-      toast.error('An error occurred during sign in');
+      // Let the calling component handle the error
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -90,13 +109,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        toast.error(error.message);
-      } else {
-        toast.success('Signed up successfully! Please check your email for confirmation.');
+        throw error;
       }
     } catch (error) {
       console.error('Error signing up:', error);
-      toast.error('An error occurred during sign up');
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -107,14 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        toast.error(error.message);
-      } else {
-        setUser(null);
-        toast.success('Signed out successfully');
+        throw error;
       }
+      setUser(null);
     } catch (error) {
       console.error('Error signing out:', error);
-      toast.error('An error occurred during sign out');
+      throw error;
     }
   };
 

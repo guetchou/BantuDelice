@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '../integrations/api/authApi';
+import { authApi } from '../integrations/api/auth';
 import { toast } from 'sonner';
 
 interface User {
@@ -13,6 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isLoading: boolean; // Added to match expected prop in GuestRoute
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
   logout: () => void;
@@ -84,6 +85,7 @@ export const ApiAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const value = {
     user,
     loading,
+    isLoading: loading, // Map loading to isLoading for consistency
     login,
     register,
     logout,
