@@ -8,10 +8,10 @@ import {
 } from '@/types/ridesharing';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useAuth } from './useAuth';
+import { useApiAuth } from '@/contexts/ApiAuthContext';
 
 export function useRidesharing() {
-  const { user } = useAuth();
+  const { user } = useApiAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [trips, setTrips] = useState<RidesharingTrip[]>([]);
   const [myTrips, setMyTrips] = useState<RidesharingTrip[]>([]);
@@ -20,13 +20,10 @@ export function useRidesharing() {
   const [recurringBookings, setRecurringBookings] = useState<RidesharingRecurringBooking[]>([]);
   const [tripMatches, setTripMatches] = useState<RecurringTripMatch[]>([]);
   
-  // Search for trips based on filters
   const searchTrips = async (filters: RidesharingSearchFilters) => {
     try {
       setIsLoading(true);
       
-      // This would be a database query in a real implementation
-      // Mock implementation for development
       const mockTrips: RidesharingTrip[] = [
         {
           id: "trip-1",
@@ -114,29 +111,23 @@ export function useRidesharing() {
         }
       ];
       
-      // Filter trips based on criteria
       const filteredTrips = mockTrips.filter(trip => {
-        // Skip recurring trips when searching for one-time rides
         if (!filters.recurringTrip && trip.is_recurring) {
           return false;
         }
         
-        // Skip one-time trips when searching for recurring rides
         if (filters.recurringTrip && !trip.is_recurring) {
           return false;
         }
         
-        // Filter by minimum seats available
         if (filters.minSeats && trip.available_seats < filters.minSeats) {
           return false;
         }
         
-        // Filter by maximum price
         if (filters.maxPrice && trip.price_per_seat > filters.maxPrice) {
           return false;
         }
         
-        // Simple search based on containing the search terms
         const originMatch = !filters.origin || 
           trip.origin_address.toLowerCase().includes(filters.origin.toLowerCase());
         
@@ -148,7 +139,6 @@ export function useRidesharing() {
       
       setTrips(filteredTrips);
       
-      // If we're searching for recurring trips, navigate to that tab instead
       if (filters.recurringTrip) {
         findRecurringTripMatches(filters);
       }
@@ -163,7 +153,6 @@ export function useRidesharing() {
     }
   };
   
-  // Fetch trips created by the current user
   const fetchMyTrips = async () => {
     try {
       setIsLoading(true);
@@ -173,7 +162,6 @@ export function useRidesharing() {
         return [];
       }
       
-      // Mock implementation for development
       const mockMyTrips: RidesharingTrip[] = [
         {
           id: "my-trip-1",
@@ -222,7 +210,6 @@ export function useRidesharing() {
     }
   };
   
-  // Fetch bookings made by the current user
   const fetchMyBookings = async () => {
     try {
       setIsLoading(true);
@@ -232,7 +219,6 @@ export function useRidesharing() {
         return [];
       }
       
-      // Mock implementation for development
       const mockMyBookings: RidesharingBooking[] = [
         {
           id: "booking-1",
@@ -265,14 +251,12 @@ export function useRidesharing() {
               pets_allowed: true,
               music_allowed: true,
               air_conditioning: true,
-              luggage_allowed: true,
-              chatty_driver: true
+              luggage_allowed: true
             }
           }
         }
       ];
       
-      // Add recurring bookings too
       const mockRecurringBookings: RidesharingRecurringBooking[] = [
         {
           id: "recurring-booking-1",
@@ -301,7 +285,6 @@ export function useRidesharing() {
     }
   };
   
-  // Book a trip
   const bookTrip = async (tripId: string, seatsCount: number, specialRequests?: string) => {
     try {
       setIsLoading(true);
@@ -311,7 +294,6 @@ export function useRidesharing() {
         return null;
       }
       
-      // Find the trip to book
       const tripToBook = trips.find(trip => trip.id === tripId);
       
       if (!tripToBook) {
@@ -324,7 +306,6 @@ export function useRidesharing() {
         return null;
       }
       
-      // Mock implementation for development
       const bookingId = `booking-${Date.now()}`;
       const newBooking: RidesharingBooking = {
         id: bookingId,
@@ -340,10 +321,8 @@ export function useRidesharing() {
         trip: tripToBook
       };
       
-      // Add to bookings
       setMyBookings(prev => [...prev, newBooking]);
       
-      // Update available seats
       setTrips(prev => prev.map(trip => {
         if (trip.id === tripId) {
           return {
@@ -368,7 +347,6 @@ export function useRidesharing() {
     }
   };
   
-  // Create a trip
   const createTrip = async (tripData: Omit<RidesharingTrip, 'id' | 'driver_id' | 'status' | 'created_at'>) => {
     try {
       setIsLoading(true);
@@ -378,7 +356,6 @@ export function useRidesharing() {
         return null;
       }
       
-      // Mock implementation for development
       const tripId = `trip-${Date.now()}`;
       const newTrip: RidesharingTrip = {
         ...tripData,
@@ -388,7 +365,6 @@ export function useRidesharing() {
         created_at: new Date().toISOString()
       };
       
-      // Add to trips
       if (newTrip.is_recurring) {
         setRecurringTrips(prev => [...prev, newTrip]);
       } else {
@@ -411,12 +387,10 @@ export function useRidesharing() {
     }
   };
   
-  // Cancel a trip
   const cancelTrip = async (tripId: string) => {
     try {
       setIsLoading(true);
       
-      // Update trip status
       setMyTrips(prev => prev.map(trip => {
         if (trip.id === tripId) {
           return {
@@ -427,7 +401,6 @@ export function useRidesharing() {
         return trip;
       }));
       
-      // Also update in recurring trips if it exists there
       setRecurringTrips(prev => prev.map(trip => {
         if (trip.id === tripId) {
           return {
@@ -449,12 +422,10 @@ export function useRidesharing() {
     }
   };
   
-  // Cancel a booking
   const cancelBooking = async (bookingId: string) => {
     try {
       setIsLoading(true);
       
-      // Update booking status
       setMyBookings(prev => prev.map(booking => {
         if (booking.id === bookingId) {
           return {
@@ -476,12 +447,10 @@ export function useRidesharing() {
     }
   };
   
-  // Find recurring trip matches based on filters
   const findRecurringTripMatches = async (filters: RidesharingSearchFilters) => {
     try {
       setIsLoading(true);
       
-      // Mock implementation for development
       const mockRecurringTrips: RidesharingTrip[] = [
         {
           id: "rec-trip-1",
@@ -590,7 +559,6 @@ export function useRidesharing() {
         }
       ];
       
-      // Mock matches with drivers
       const mockMatches: RecurringTripMatch[] = [
         {
           trip_id: "rec-trip-1",
@@ -640,7 +608,6 @@ export function useRidesharing() {
     }
   };
   
-  // Book a recurring trip
   const bookRecurringTrip = async (tripId: string, bookingData: any) => {
     try {
       setIsLoading(true);
@@ -650,7 +617,6 @@ export function useRidesharing() {
         return null;
       }
       
-      // Find the trip to book
       const tripToBook = recurringTrips.find(trip => trip.id === tripId);
       
       if (!tripToBook) {
@@ -663,7 +629,6 @@ export function useRidesharing() {
         return null;
       }
       
-      // Mock implementation for development
       const bookingId = `recurring-booking-${Date.now()}`;
       const newBooking: RidesharingRecurringBooking = {
         id: bookingId,
@@ -680,10 +645,8 @@ export function useRidesharing() {
         special_requests: bookingData.specialRequests
       };
       
-      // Add to bookings
       setRecurringBookings(prev => [...prev, newBooking]);
       
-      // Update available seats
       setRecurringTrips(prev => prev.map(trip => {
         if (trip.id === tripId) {
           return {
@@ -708,12 +671,10 @@ export function useRidesharing() {
     }
   };
   
-  // Pause a recurring trip
   const pauseRecurringTrip = async (tripId: string) => {
     try {
       setIsLoading(true);
       
-      // Update booking status
       setRecurringBookings(prev => prev.map(booking => {
         if (booking.id === tripId) {
           return {
@@ -735,12 +696,10 @@ export function useRidesharing() {
     }
   };
   
-  // Resume a recurring trip
   const resumeRecurringTrip = async (tripId: string) => {
     try {
       setIsLoading(true);
       
-      // Update booking status
       setRecurringBookings(prev => prev.map(booking => {
         if (booking.id === tripId) {
           return {

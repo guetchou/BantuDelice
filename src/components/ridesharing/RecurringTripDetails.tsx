@@ -15,6 +15,15 @@ import { RidesharingTrip } from '@/types/ridesharing';
 import { MapPin, Calendar, Clock, User, Star, Users, CreditCard, Car, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+// Define RecurrencePattern type if it's not already defined in the types
+type RecurrencePattern = {
+  frequency: 'daily' | 'weekly' | 'weekdays' | 'custom';
+  days_of_week?: Array<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'>;
+  start_date: string;
+  end_date?: string;
+  auto_accept_riders?: boolean;
+};
+
 interface RecurringTripDetailsProps {
   trip: RidesharingTrip;
   driverName: string;
