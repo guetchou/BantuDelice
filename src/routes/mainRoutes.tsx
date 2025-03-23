@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
@@ -21,6 +22,7 @@ import { errorRoutes } from './errorRoutes';
 import TaxiHistoryPage from "@/pages/taxi/History";
 import TaxiLocationsPage from "@/pages/taxi/Locations";
 import TaxiSubscriptionPage from "@/pages/taxi/Subscription";
+import TaxiSubscriptionDetails from "@/pages/taxi/SubscriptionDetails";
 import TaxiBusinessPage from "@/pages/taxi/Business";
 
 const mainRoutes: RouteObject[] = [
@@ -68,6 +70,10 @@ const mainRoutes: RouteObject[] = [
   {
     path: "/taxi/subscription",
     element: <TaxiSubscriptionPage />
+  },
+  {
+    path: "/taxi/subscription/:planId",
+    element: <TaxiSubscriptionDetails />
   },
   {
     path: "/taxi/business",

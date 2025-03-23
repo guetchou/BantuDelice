@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +71,6 @@ const SubscriptionPlans = () => {
   
   const handleSelectPlan = (planId: string) => {
     navigate(`/taxi/subscription/${planId}`);
-    // Dans un environnement de production, cela redirigerait vers une page d'abonnement
   };
   
   return (
