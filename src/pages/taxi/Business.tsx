@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Building2, Users, CreditCard, CalendarClock, BarChart } from 'lucide-react';
+import { ArrowLeft, Building2, Users, CreditCard, CalendarClock, BarChart, CheckCircle, Shield, Car, MoveRight } from 'lucide-react';
 import { toast } from 'sonner';
 import TaxiNavigationMenu from '@/components/taxi/TaxiNavigationMenu';
+import { Separator } from '@/components/ui/separator';
 
 const TaxiBusinessPage = () => {
   const navigate = useNavigate();
@@ -59,11 +60,28 @@ const TaxiBusinessPage = () => {
         <h1 className="text-3xl font-bold">Solutions Entreprises</h1>
       </div>
       
-      <TaxiNavigationMenu />
+      <TaxiNavigationMenu activeRoute="business" />
       
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto mt-6">
+        <div className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-xl p-8 mb-10">
+          <h2 className="text-2xl font-bold mb-3">Une solution de transport sur mesure pour votre entreprise</h2>
+          <p className="text-lg mb-6">
+            Simplifiez la gestion des déplacements professionnels de vos collaborateurs avec notre offre dédiée aux entreprises.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Button className="gap-2">
+              <CheckCircle className="h-4 w-4" />
+              Demander un devis
+            </Button>
+            <Button variant="outline" className="gap-2">
+              <MoveRight className="h-4 w-4" />
+              Découvrir nos offres
+            </Button>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
                 <Users className="mr-2 h-5 w-5 text-primary" />
@@ -95,7 +113,7 @@ const TaxiBusinessPage = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
                 <CreditCard className="mr-2 h-5 w-5 text-primary" />
@@ -127,7 +145,7 @@ const TaxiBusinessPage = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
                 <CalendarClock className="mr-2 h-5 w-5 text-primary" />
@@ -159,7 +177,7 @@ const TaxiBusinessPage = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
                 <BarChart className="mr-2 h-5 w-5 text-primary" />
@@ -192,6 +210,39 @@ const TaxiBusinessPage = () => {
           </Card>
         </div>
         
+        <div className="bg-muted p-6 rounded-xl mb-10">
+          <h2 className="text-xl font-bold mb-6 flex items-center">
+            <Shield className="h-5 w-5 mr-2 text-primary" />
+            Nos engagements pour les entreprises
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-card p-4 rounded-lg">
+              <Car className="h-8 w-8 text-primary mb-3" />
+              <h3 className="font-medium text-lg mb-2">Flotte premium</h3>
+              <p className="text-sm text-muted-foreground">
+                Véhicules récents et confortables avec chauffeurs professionnels pour vos collaborateurs
+              </p>
+            </div>
+            
+            <div className="bg-card p-4 rounded-lg">
+              <Clock className="h-8 w-8 text-primary mb-3" />
+              <h3 className="font-medium text-lg mb-2">Disponibilité 24/7</h3>
+              <p className="text-sm text-muted-foreground">
+                Service disponible à toute heure pour répondre aux besoins urgents de déplacement
+              </p>
+            </div>
+            
+            <div className="bg-card p-4 rounded-lg">
+              <CheckCircle className="h-8 w-8 text-primary mb-3" />
+              <h3 className="font-medium text-lg mb-2">Garantie satisfaction</h3>
+              <p className="text-sm text-muted-foreground">
+                Remboursement en cas de retard significatif ou d'insatisfaction
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <Card className="mb-10">
           <CardHeader>
             <CardTitle>Tarification Entreprise</CardTitle>
@@ -201,7 +252,7 @@ const TaxiBusinessPage = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="border rounded-lg p-4">
+              <div className="border rounded-lg p-4 transition-all hover:shadow-md">
                 <h3 className="font-semibold text-lg mb-2">PME</h3>
                 <p className="text-sm text-muted-foreground mb-2">5-50 employés</p>
                 <ul className="text-sm space-y-1 mb-4">
@@ -221,7 +272,8 @@ const TaxiBusinessPage = () => {
                 <div className="text-lg font-bold">À partir de 70 000 FCFA/mois</div>
               </div>
               
-              <div className="border rounded-lg p-4 bg-primary/5 border-primary/20">
+              <div className="border rounded-lg p-4 bg-primary/5 border-primary/20 transition-all hover:shadow-md relative">
+                <div className="absolute -top-3 right-4 bg-primary text-white text-xs px-2 py-1 rounded-full">Populaire</div>
                 <h3 className="font-semibold text-lg mb-2">Entreprise</h3>
                 <p className="text-sm text-muted-foreground mb-2">50-200 employés</p>
                 <ul className="text-sm space-y-1 mb-4">
@@ -245,7 +297,7 @@ const TaxiBusinessPage = () => {
                 <div className="text-lg font-bold">À partir de 200 000 FCFA/mois</div>
               </div>
               
-              <div className="border rounded-lg p-4">
+              <div className="border rounded-lg p-4 transition-all hover:shadow-md">
                 <h3 className="font-semibold text-lg mb-2">Corporate</h3>
                 <p className="text-sm text-muted-foreground mb-2">200+ employés</p>
                 <ul className="text-sm space-y-1 mb-4">
