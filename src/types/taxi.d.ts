@@ -82,3 +82,28 @@ export interface TaxiMessage {
   created_at: string;
   read: boolean;
 }
+
+export interface TaxiSubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number; // in days
+  features: string[];
+  discount_percentage: number;
+  max_rides: number | null;
+  type: 'individual' | 'family' | 'business';
+  popular: boolean;
+}
+
+export interface RideShareRequest {
+  id: string;
+  ride_id: string;
+  user_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  requested_at: string;
+  responded_at?: string;
+  pickup_address?: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+}
