@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { CartProvider } from './contexts/CartProvider';
+import { ApiAuthProvider } from './contexts/ApiAuthContext';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -16,10 +17,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider defaultTheme="light" storageKey="ui-theme">
       <QueryClientProvider client={queryClient}>
-        <CartProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </CartProvider>
+        <ApiAuthProvider>
+          <CartProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </CartProvider>
+        </ApiAuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   </React.StrictMode>,
