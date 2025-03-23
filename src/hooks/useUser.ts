@@ -14,6 +14,7 @@ export interface UserProfile {
   avatar_url?: string;
   status: UserStatus;
   phone?: string;
+  last_login?: string;  // Ajout de la propriété last_login optionnelle
 }
 
 export const useUser = () => {
