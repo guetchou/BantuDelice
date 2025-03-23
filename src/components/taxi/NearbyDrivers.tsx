@@ -44,54 +44,66 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         // Mock data for demo purposes
-        const mockDrivers = [
+        const mockDrivers: TaxiDriver[] = [
           {
             id: '1',
+            user_id: 'user-123',
             name: 'Jean Dupont',
             phone: '+242 06 123 4567',
-            vehicle_type: vehicleType,
+            vehicle_type: vehicleType as TaxiVehicleType,
             license_plate: 'BZV 1234',
             rating: 4.8,
-            location: [pickupLatitude + 0.01, pickupLongitude - 0.01],
-            status: 'available',
+            is_available: true,
+            current_latitude: pickupLatitude + 0.01,
+            current_longitude: pickupLongitude - 0.01,
             photo_url: 'https://randomuser.me/api/portraits/men/32.jpg',
             vehicle_model: 'Toyota Corolla', 
             languages: ['Français', 'Lingala'],
             years_experience: 5,
             total_rides: 342,
-            verified: true
+            verified: true,
+            location: [pickupLatitude + 0.01, pickupLongitude - 0.01],
+            status: 'available'
           },
           {
             id: '2',
+            user_id: 'user-456',
             name: 'Marie Okemba',
             phone: '+242 05 234 5678',
-            vehicle_type: vehicleType,
+            vehicle_type: vehicleType as TaxiVehicleType,
             license_plate: 'BZV 5678',
             rating: 4.6,
-            location: [pickupLatitude - 0.005, pickupLongitude + 0.007],
-            status: 'available',
+            is_available: true,
+            current_latitude: pickupLatitude - 0.005,
+            current_longitude: pickupLongitude + 0.007,
             photo_url: 'https://randomuser.me/api/portraits/women/44.jpg',
             vehicle_model: 'Hyundai Accent',
             languages: ['Français', 'Anglais'],
             years_experience: 3,
             total_rides: 187,
-            verified: true
+            verified: true,
+            location: [pickupLatitude - 0.005, pickupLongitude + 0.007],
+            status: 'available'
           },
           {
             id: '3',
+            user_id: 'user-789',
             name: 'Pascal Moukala',
             phone: '+242 06 345 6789',
-            vehicle_type: vehicleType,
+            vehicle_type: vehicleType as TaxiVehicleType,
             license_plate: 'BZV 9012',
             rating: 4.9,
-            location: [pickupLatitude + 0.008, pickupLongitude + 0.002],
-            status: 'available',
+            is_available: true,
+            current_latitude: pickupLatitude + 0.008,
+            current_longitude: pickupLongitude + 0.002,
             photo_url: 'https://randomuser.me/api/portraits/men/67.jpg',
             vehicle_model: 'Honda Civic',
             languages: ['Français', 'Kituba'],
             years_experience: 7,
             total_rides: 520,
-            verified: true
+            verified: true,
+            location: [pickupLatitude + 0.008, pickupLongitude + 0.002],
+            status: 'available'
           }
         ];
         

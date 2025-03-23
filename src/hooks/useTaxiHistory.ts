@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from './useAuth';
 import { TaxiRide } from '@/types/taxi';
+import { useApiAuth } from '@/contexts/ApiAuthContext';
 
 export function useTaxiHistory() {
   const [pastRides, setPastRides] = useState<TaxiRide[]>([]);
   const [upcomingRides, setUpcomingRides] = useState<TaxiRide[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user } = useApiAuth();
 
   useEffect(() => {
     if (user) {
@@ -16,8 +16,6 @@ export function useTaxiHistory() {
   }, [user]);
 
   const fetchRideHistory = async () => {
-    if (!user) return;
-    
     setIsLoading(true);
     try {
       // Dans un vrai environnement, nous interrogerions Supabase
@@ -27,7 +25,7 @@ export function useTaxiHistory() {
       const mockPastRides: TaxiRide[] = [
         {
           id: '1',
-          user_id: user.id,
+          user_id: user?.id || 'user-123',
           driver_id: 'driver-123',
           pickup_address: 'Centre ville, Brazzaville',
           pickup_latitude: -4.2634,
@@ -50,7 +48,7 @@ export function useTaxiHistory() {
         },
         {
           id: '2',
-          user_id: user.id,
+          user_id: user?.id || 'user-123',
           driver_id: 'driver-456',
           pickup_address: 'Marché Bacongo, Brazzaville',
           pickup_latitude: -4.2867,
@@ -77,7 +75,7 @@ export function useTaxiHistory() {
       const mockUpcomingRides: TaxiRide[] = [
         {
           id: '3',
-          user_id: user.id,
+          user_id: user?.id || 'user-123',
           driver_id: null,
           pickup_address: '123 Boulevard de la Liberté, Brazzaville',
           pickup_latitude: -4.2634,
@@ -109,8 +107,6 @@ export function useTaxiHistory() {
   };
 
   const cancelUpcomingRide = async (rideId: string) => {
-    if (!user) return false;
-    
     try {
       // Dans un vrai environnement, nous mettrions à jour Supabase
       setUpcomingRides(prev => prev.filter(ride => ride.id !== rideId));

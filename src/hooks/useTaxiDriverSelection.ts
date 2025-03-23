@@ -1,23 +1,6 @@
 
 import { useState } from 'react';
-
-// Type simplified to resolve compilation errors
-export interface TaxiDriver {
-  id: string;
-  name: string;
-  phone: string;
-  vehicle_type: string;
-  license_plate: string;
-  rating: number;
-  location: [number, number];
-  status: string;
-  photo_url?: string;
-  vehicle_model: string;
-  languages: string[];
-  years_experience: number;
-  total_rides: number;
-  verified: boolean;
-}
+import { TaxiDriver } from '@/types/taxi';
 
 /**
  * Hook to manage taxi driver selection
@@ -43,35 +26,43 @@ export function useTaxiDriverSelection() {
       const mockDrivers: TaxiDriver[] = [
         {
           id: '1',
+          user_id: 'user-123',
           name: 'Jean Dupont',
           phone: '+242 06 123 4567',
-          vehicle_type: vehicleType || 'standard',
+          vehicle_type: 'standard',
           license_plate: 'BZV 1234',
           rating: 4.8,
-          location: [pickupLatitude || 0 + 0.01, pickupLongitude || 0 - 0.01],
-          status: 'available',
+          is_available: true,
+          current_latitude: pickupLatitude ? pickupLatitude + 0.01 : -4.2634 + 0.01,
+          current_longitude: pickupLongitude ? pickupLongitude - 0.01 : 15.2429 - 0.01,
           photo_url: 'https://randomuser.me/api/portraits/men/32.jpg',
           vehicle_model: 'Toyota Corolla',
           languages: ['Français', 'Lingala'],
           years_experience: 5,
           total_rides: 342,
-          verified: true
+          verified: true,
+          location: [pickupLatitude ? pickupLatitude + 0.01 : -4.2634 + 0.01, pickupLongitude ? pickupLongitude - 0.01 : 15.2429 - 0.01],
+          status: 'available'
         },
         {
           id: '2',
+          user_id: 'user-456',
           name: 'Marie Okemba',
           phone: '+242 05 234 5678',
-          vehicle_type: vehicleType || 'standard',
+          vehicle_type: 'standard',
           license_plate: 'BZV 5678',
           rating: 4.6,
-          location: [pickupLatitude || 0 - 0.005, pickupLongitude || 0 + 0.007],
-          status: 'available',
+          is_available: true,
+          current_latitude: pickupLatitude ? pickupLatitude - 0.005 : -4.2634 - 0.005,
+          current_longitude: pickupLongitude ? pickupLongitude + 0.007 : 15.2429 + 0.007,
           photo_url: 'https://randomuser.me/api/portraits/women/44.jpg',
           vehicle_model: 'Hyundai Accent',
           languages: ['Français', 'Anglais'],
           years_experience: 3,
           total_rides: 187,
-          verified: true
+          verified: true,
+          location: [pickupLatitude ? pickupLatitude - 0.005 : -4.2634 - 0.005, pickupLongitude ? pickupLongitude + 0.007 : 15.2429 + 0.007],
+          status: 'available'
         }
       ];
       

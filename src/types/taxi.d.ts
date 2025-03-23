@@ -27,6 +27,7 @@ export interface TaxiRide {
   route_polyline?: string;
   promo_code_applied?: string;
   promo_discount?: number;
+  payment_status?: 'pending' | 'paid' | 'failed';
 }
 
 export type TaxiRideStatus = 'pending' | 'accepted' | 'en_route' | 'arrived' | 'in_progress' | 'completed' | 'cancelled';
@@ -50,6 +51,10 @@ export interface TaxiDriver {
   years_experience: number;
   languages: string[];
   verified: boolean;
+  location?: [number, number];
+  status?: string;
+  profile_picture?: string;
+  average_rating?: number;
 }
 
 export interface TaxiRideRequest {

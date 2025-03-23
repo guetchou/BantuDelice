@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,16 @@ export default function TaxiHistoryView() {
   const viewRideDetails = (rideId: string) => {
     navigate(`/taxi/ride/${rideId}`);
   };
+
+  // Prevent date format issues
+  const safeFormat = (date: string | Date, formatStr: string) => {
+    try {
+      return format(new Date(date), formatStr, { locale: fr });
+    } catch (error) {
+      console.error('Date format error:', error);
+      return 'Date non disponible';
+    }
+  };
   
   return (
     <div className="space-y-6">
@@ -104,8 +114,8 @@ export default function TaxiHistoryView() {
                     <div className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-medium">{format(new Date(ride.pickup_time), 'EEEE d MMMM', { locale: fr })}</h3>
-                          <p className="text-sm text-gray-500">{format(new Date(ride.pickup_time), 'HH:mm', { locale: fr })}</p>
+                          <h3 className="font-medium">{safeFormat(ride.pickup_time, 'EEEE d MMMM')}</h3>
+                          <p className="text-sm text-gray-500">{safeFormat(ride.pickup_time, 'HH:mm')}</p>
                         </div>
                         <Badge className={`${getStatusColor(ride.status)}`}>
                           {formatStatus(ride.status)}
@@ -191,7 +201,7 @@ export default function TaxiHistoryView() {
                     <div className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-medium">{formatDate(ride.pickup_time)}</h3>
+                          <h3 className="font-medium">{formatDate(String(ride.pickup_time))}</h3>
                         </div>
                         <Badge className={`${getStatusColor(ride.status)}`}>
                           {formatStatus(ride.status)}
@@ -248,7 +258,7 @@ export default function TaxiHistoryView() {
             <DialogHeader>
               <DialogTitle>Détails de la course</DialogTitle>
               <DialogDescription>
-                {formatDate(selectedRide.pickup_time)}
+                {formatDate(String(selectedRide.pickup_time))}
               </DialogDescription>
             </DialogHeader>
             
