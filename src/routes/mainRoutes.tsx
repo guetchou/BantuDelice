@@ -24,6 +24,8 @@ import TaxiLocationsPage from "@/pages/taxi/Locations";
 import TaxiSubscriptionPage from "@/pages/taxi/Subscription";
 import TaxiSubscriptionDetails from "@/pages/taxi/SubscriptionDetails";
 import TaxiBusinessPage from "@/pages/taxi/Business";
+import TaxiVehicleComparison from "@/pages/taxi/VehicleComparison";
+import Taxi from "@/pages/Taxi";
 
 const mainRoutes: RouteObject[] = [
   ...authRoutes,
@@ -42,8 +44,15 @@ const mainRoutes: RouteObject[] = [
       { path: "delivery/dashboard", element: <DeliveryPage /> },
       
       // Taxi Routes
+      { path: "taxi", element: <Taxi /> },
       { path: "taxi/booking", element: <TaxiBooking /> },
       { path: "taxi/ride/:id", element: <TaxiRideStatus /> },
+      { path: "taxi/history", element: <TaxiHistoryPage /> },
+      { path: "taxi/locations", element: <TaxiLocationsPage /> },
+      { path: "taxi/subscription", element: <TaxiSubscriptionPage /> },
+      { path: "taxi/subscription/:planId", element: <TaxiSubscriptionDetails /> },
+      { path: "taxi/business", element: <TaxiBusinessPage /> },
+      { path: "taxi/compare-vehicles", element: <TaxiVehicleComparison /> },
       
       // Covoiturage Routes
       { path: "covoiturage", element: <Covoiturage /> },
@@ -58,26 +67,6 @@ const mainRoutes: RouteObject[] = [
       { path: "messages", element: <Messages /> },
       { path: "notifications", element: <Notifications /> },
     ]
-  },
-  {
-    path: "/taxi/history",
-    element: <TaxiHistoryPage />
-  },
-  {
-    path: "/taxi/locations",
-    element: <TaxiLocationsPage />
-  },
-  {
-    path: "/taxi/subscription",
-    element: <TaxiSubscriptionPage />
-  },
-  {
-    path: "/taxi/subscription/:planId",
-    element: <TaxiSubscriptionDetails />
-  },
-  {
-    path: "/taxi/business",
-    element: <TaxiBusinessPage />
   },
   ...errorRoutes
 ];
