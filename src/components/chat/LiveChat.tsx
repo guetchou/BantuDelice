@@ -43,7 +43,7 @@ const LiveChat = () => {
             message,
             created_at,
             is_bot,
-            profiles:profiles(first_name, last_name, avatar_url)
+            profiles(first_name, last_name, avatar_url)
           `)
           .or(`user_id.eq.${user.id},is_bot.eq.true`)
           .order('created_at', { ascending: true })
@@ -58,7 +58,11 @@ const LiveChat = () => {
             message: msg.message,
             created_at: msg.created_at,
             is_bot: msg.is_bot,
-            user: msg.profiles
+            user: msg.profiles ? {
+              first_name: msg.profiles.first_name,
+              last_name: msg.profiles.last_name,
+              avatar_url: msg.profiles.avatar_url
+            } : undefined
           }));
           setMessages(formattedMessages);
         }

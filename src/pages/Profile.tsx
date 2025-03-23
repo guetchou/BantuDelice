@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
 import ProfilePhotoUpload from "@/components/profile/ProfilePhotoUpload";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Phone, MapPin, Shield } from "lucide-react";
+import { User, Mail, Phone, Shield } from "lucide-react";
 
 const Profile = () => {
   usePageTitle({ title: "Profil" });
@@ -232,7 +232,7 @@ const Profile = () => {
                     <div className="space-y-2">
                       <h3 className="text-lg font-medium">Connexions récentes</h3>
                       <p className="text-sm text-gray-500">
-                        Dernière connexion: {user?.last_login ? new Date(user.last_login).toLocaleDateString() + ' à ' + new Date(user.last_login).toLocaleTimeString() : 'Inconnue'}
+                        Dernière connexion: {user && user?.last_login ? new Date(user.last_login).toLocaleDateString() + ' à ' + new Date(user.last_login).toLocaleTimeString() : 'Inconnue'}
                       </p>
                     </div>
                     
