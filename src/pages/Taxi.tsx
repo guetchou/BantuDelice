@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Car, Clock, CheckCircle, CreditCard, TriangleAlert, Star, User, Phone } from "lucide-react";
+import { MapPin, Calendar, Car, Clock, CheckCircle, CreditCard, TriangleAlert, Star, User, Phone, History, MapPinned } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useTaxiBooking } from '@/hooks/useTaxiBooking';
+import { useTaxiPricing } from '@/hooks/useTaxiPricing';
 import { useUser } from '@/hooks/useUser';
 
 const vehicleTypes = [
@@ -22,7 +22,8 @@ const vehicleTypes = [
 export default function Taxi() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { createBooking, isLoading } = useTaxiBooking();
+  const { rides } = useTaxiBooking();
+  const { getQuickEstimate } = useTaxiPricing();
   const [activeStep, setActiveStep] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
   
@@ -135,6 +136,11 @@ export default function Taxi() {
     img.src = "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?q=80&w=2071&auto=format&fit=crop";
     img.onload = () => setBgLoaded(true);
   }, []);
+
+  // Fonction pour obtenir une estimation rapide du prix
+  const getEstimateForDisplay = (distance: number, vehicleType: string) => {
+    return getQuickEstimate(distance, vehicleType as 'standard' | 'comfort' | 'premium' | 'van');
+  };
   
   return (
     <div className="min-h-screen relative py-12">
@@ -162,6 +168,32 @@ export default function Taxi() {
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Service de taxi rapide, fiable et sécurisé pour tous vos déplacements à Brazzaville
           </p>
+          
+          <div className="flex justify-center gap-4 mt-6">
+            <Button 
+              onClick={() => navigate('/taxi/booking')} 
+              className="bg-primary/90 hover:bg-primary"
+            >
+              <Car className="mr-2 h-4 w-4" />
+              Réserver maintenant
+            </Button>
+            <Button 
+              variant="outline" 
+              className="text-white border-white/20 hover:bg-white/10"
+              onClick={() => navigate('/taxi/history')}
+            >
+              <History className="mr-2 h-4 w-4" />
+              Mes courses
+            </Button>
+            <Button 
+              variant="outline" 
+              className="text-white border-white/20 hover:bg-white/10"
+              onClick={() => navigate('/taxi/locations')}
+            >
+              <MapPinned className="mr-2 h-4 w-4" />
+              Mes adresses
+            </Button>
+          </div>
         </motion.div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
@@ -224,341 +256,105 @@ export default function Taxi() {
             <CardHeader className="border-b border-white/10">
               <CardTitle className="flex items-center gap-2 text-white">
                 <Car className="h-6 w-6 text-primary" />
-                <span>Réservez votre taxi</span>
+                <span>Estimation rapide</span>
               </CardTitle>
               <CardDescription className="text-gray-300">
-                Complétez les informations ci-dessous pour réserver votre course
+                Obtenez une estimation du prix de votre course
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              {/* Steps indicator */}
-              <div className="relative mb-8">
-                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-white/10">
-                  <div 
-                    style={{ width: `${(activeStep + 1) * 20}%` }} 
-                    className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary transition-all duration-500"
-                  ></div>
-                </div>
-                <div className="flex justify-between">
-                  <div className={`text-xs ${activeStep >= 0 ? 'text-primary' : 'text-gray-400'}`}>Adresse</div>
-                  <div className={`text-xs ${activeStep >= 1 ? 'text-primary' : 'text-gray-400'}`}>Horaire</div>
-                  <div className={`text-xs ${activeStep >= 2 ? 'text-primary' : 'text-gray-400'}`}>Véhicule</div>
-                  <div className={`text-xs ${activeStep >= 3 ? 'text-primary' : 'text-gray-400'}`}>Contact</div>
-                  <div className={`text-xs ${activeStep >= 4 ? 'text-primary' : 'text-gray-400'}`}>Confirmation</div>
-                </div>
-              </div>
-              
-              <div className="space-y-6">
-                {/* Step 1: Addresses */}
-                {activeStep === 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
-                  >
-                    <div className="space-y-2">
-                      <Label className="text-gray-200">Adresse de prise en charge</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                        <Input 
-                          name="pickup_address"
-                          value={formData.pickup_address}
-                          onChange={handleInputChange}
-                          placeholder="Votre localisation" 
-                          className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-gray-200">Destination</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                        <Input 
-                          name="destination_address"
-                          value={formData.destination_address}
-                          onChange={handleInputChange}
-                          placeholder="Votre destination" 
-                          className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                
-                {/* Step 2: Time */}
-                {activeStep === 1 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
-                  >
-                    <div className="space-y-2">
-                      <Label className="text-gray-200">Quand souhaitez-vous partir?</Label>
-                      <Select
-                        value={formData.pickup_time}
-                        onValueChange={(value) => handleSelectChange('pickup_time', value)}
-                      >
-                        <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                          <SelectValue placeholder="Sélectionnez une option" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="immediate">Départ immédiat</SelectItem>
-                          <SelectItem value="scheduled">Départ programmé</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {formData.pickup_time === 'scheduled' && (
-                      <div className="space-y-2">
-                        <Label className="text-gray-200">Date et heure de départ</Label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                          <Input 
-                            type="datetime-local"
-                            name="scheduled_time"
-                            value={formData.scheduled_time}
-                            onChange={handleInputChange}
-                            className="pl-10 bg-white/5 border-white/20 text-white"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-                
-                {/* Step 3: Vehicle */}
-                {activeStep === 2 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    <div className="space-y-4">
-                      <Label className="text-gray-200">Choisissez votre véhicule</Label>
-                      
-                      <div className="grid gap-4">
-                        {vehicleTypes.map((vehicle) => (
-                          <div 
-                            key={vehicle.id}
-                            onClick={() => handleSelectChange('vehicle_type', vehicle.id)}
-                            className={`flex items-start rounded-lg p-3 cursor-pointer transition-all ${
-                              formData.vehicle_type === vehicle.id 
-                                ? 'bg-white/20 border border-primary/50' 
-                                : 'bg-white/5 border border-white/10 hover:bg-white/10'
-                            }`}
-                          >
-                            <div className="flex-shrink-0 mr-4 rounded-md overflow-hidden" style={{width: '80px', height: '60px'}}>
-                              <img src={vehicle.image} alt={vehicle.name} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex justify-between">
-                                <h3 className="font-medium text-white">{vehicle.name}</h3>
-                                <span className="font-bold text-primary">{vehicle.price} FCFA</span>
-                              </div>
-                              <p className="text-sm text-gray-300">{vehicle.description}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-gray-200">Nombre de passagers</Label>
-                      <Select
-                        value={formData.passengers}
-                        onValueChange={(value) => handleSelectChange('passengers', value)}
-                      >
-                        <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                          <SelectValue placeholder="Nombre de passagers" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 personne</SelectItem>
-                          <SelectItem value="2">2 personnes</SelectItem>
-                          <SelectItem value="3">3 personnes</SelectItem>
-                          <SelectItem value="4">4 personnes</SelectItem>
-                          <SelectItem value="5+">5+ personnes</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </motion.div>
-                )}
-                
-                {/* Step 4: Contact Info */}
-                {activeStep === 3 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
-                  >
-                    <div className="space-y-2">
-                      <Label className="text-gray-200">Nom du contact</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                        <Input 
-                          name="contact_name"
-                          value={formData.contact_name}
-                          onChange={handleInputChange}
-                          placeholder="Votre nom" 
-                          className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-gray-200">Numéro de téléphone</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                        <Input 
-                          name="contact_phone"
-                          value={formData.contact_phone}
-                          onChange={handleInputChange}
-                          placeholder="Votre numéro" 
-                          className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-gray-200">Mode de paiement</Label>
-                      <Select
-                        value={formData.payment_method}
-                        onValueChange={(value) => handleSelectChange('payment_method', value)}
-                      >
-                        <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                          <SelectValue placeholder="Choisir un mode de paiement" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="cash">Espèces</SelectItem>
-                          <SelectItem value="card">Carte bancaire</SelectItem>
-                          <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-gray-200">Instructions spéciales (facultatif)</Label>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-gray-200">Départ</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                       <Input 
-                        name="special_instructions"
-                        value={formData.special_instructions}
+                        name="pickup_address"
+                        value={formData.pickup_address}
                         onChange={handleInputChange}
-                        placeholder="Instructions pour le chauffeur" 
-                        className="bg-white/5 border-white/20 text-white placeholder:text-gray-500"
+                        placeholder="Votre localisation" 
+                        className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500"
                       />
                     </div>
-                  </motion.div>
-                )}
-                
-                {/* Step 5: Confirmation */}
-                {activeStep === 4 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
-                  >
-                    <div className="border border-white/20 rounded-lg p-4 bg-white/5">
-                      <h3 className="font-medium text-white mb-3">Résumé de votre réservation</h3>
-                      
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between border-b border-white/10 pb-2">
-                          <span className="text-gray-400">Prise en charge:</span>
-                          <span className="text-white">{formData.pickup_address}</span>
-                        </div>
-                        
-                        <div className="flex justify-between border-b border-white/10 pb-2">
-                          <span className="text-gray-400">Destination:</span>
-                          <span className="text-white">{formData.destination_address}</span>
-                        </div>
-                        
-                        <div className="flex justify-between border-b border-white/10 pb-2">
-                          <span className="text-gray-400">Date et heure:</span>
-                          <span className="text-white">
-                            {formData.pickup_time === 'immediate' 
-                              ? 'Immédiat' 
-                              : new Date(formData.scheduled_time).toLocaleString('fr-FR')}
-                          </span>
-                        </div>
-                        
-                        <div className="flex justify-between border-b border-white/10 pb-2">
-                          <span className="text-gray-400">Véhicule:</span>
-                          <span className="text-white">{selectedVehicle.name}</span>
-                        </div>
-                        
-                        <div className="flex justify-between border-b border-white/10 pb-2">
-                          <span className="text-gray-400">Passagers:</span>
-                          <span className="text-white">{formData.passengers}</span>
-                        </div>
-                        
-                        <div className="flex justify-between border-b border-white/10 pb-2">
-                          <span className="text-gray-400">Contact:</span>
-                          <span className="text-white">{formData.contact_name} ({formData.contact_phone})</span>
-                        </div>
-                        
-                        <div className="flex justify-between border-b border-white/10 pb-2">
-                          <span className="text-gray-400">Paiement:</span>
-                          <span className="text-white">
-                            {formData.payment_method === 'cash' && 'Espèces'}
-                            {formData.payment_method === 'card' && 'Carte bancaire'}
-                            {formData.payment_method === 'mobile_money' && 'Mobile Money'}
-                          </span>
-                        </div>
-                        
-                        <div className="flex justify-between pt-2">
-                          <span className="text-gray-400">Estimation du prix:</span>
-                          <span className="font-bold text-primary text-lg">{selectedVehicle.price} FCFA</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
-                      <TriangleAlert className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-gray-300">
-                        Le prix final peut varier en fonction du trajet réel et des conditions de circulation.
-                        En confirmant, vous acceptez nos conditions d'utilisation.
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                
-                <div className="flex justify-between pt-4">
-                  {activeStep > 0 && (
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setActiveStep(prev => Math.max(0, prev - 1))}
-                      className="border-white/20 text-white hover:bg-white/10"
-                    >
-                      Retour
-                    </Button>
-                  )}
+                  </div>
                   
-                  {activeStep < 4 ? (
-                    <Button 
-                      className="ml-auto"
-                      onClick={handleNextStep}
+                  <div className="space-y-2">
+                    <Label className="text-gray-200">Destination</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                      <Input 
+                        name="destination_address"
+                        value={formData.destination_address}
+                        onChange={handleInputChange}
+                        placeholder="Votre destination" 
+                        className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-gray-200">Type de véhicule</Label>
+                    <Select
+                      value={formData.vehicle_type}
+                      onValueChange={(value) => handleSelectChange('vehicle_type', value)}
                     >
-                      Continuer
-                    </Button>
-                  ) : (
-                    <Button 
-                      className="ml-auto"
-                      onClick={handleReservation}
-                      disabled={isLoading}
+                      <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                        <SelectValue placeholder="Sélectionnez une option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicleTypes.map(vehicle => (
+                          <SelectItem key={vehicle.id} value={vehicle.id}>
+                            {vehicle.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-gray-200">Passagers</Label>
+                    <Select
+                      value={formData.passengers}
+                      onValueChange={(value) => handleSelectChange('passengers', value)}
                     >
-                      {isLoading ? (
-                        <span className="flex items-center">
-                          <span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
-                          Réservation...
-                        </span>
-                      ) : (
-                        "Réserver maintenant"
-                      )}
-                    </Button>
-                  )}
+                      <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                        <SelectValue placeholder="Nombre de passagers" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 personne</SelectItem>
+                        <SelectItem value="2">2 personnes</SelectItem>
+                        <SelectItem value="3">3 personnes</SelectItem>
+                        <SelectItem value="4">4 personnes</SelectItem>
+                        <SelectItem value="5+">5+ personnes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-white font-medium">Prix estimé</h3>
+                      <p className="text-sm text-gray-300">
+                        Basé sur une distance approximative de 12 km
+                      </p>
+                    </div>
+                    <div className="text-2xl font-bold text-primary">
+                      {getEstimateForDisplay(12, formData.vehicle_type)}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <Button 
+                    onClick={() => navigate('/taxi/booking')} 
+                    className="w-full bg-primary/90 hover:bg-primary"
+                  >
+                    Réserver maintenant
+                  </Button>
                 </div>
               </div>
             </CardContent>
