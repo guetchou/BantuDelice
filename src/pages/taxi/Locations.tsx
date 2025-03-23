@@ -5,6 +5,7 @@ import SavedLocations from '@/components/taxi/SavedLocations';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import TaxiNavigationMenu from '@/components/taxi/TaxiNavigationMenu';
 
 const TaxiLocationsPage = () => {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ const TaxiLocationsPage = () => {
         </Button>
         <h1 className="text-3xl font-bold">Mes emplacements</h1>
       </div>
+      
+      <TaxiNavigationMenu />
       
       <div className="max-w-3xl mx-auto">
         <SavedLocations onSelectLocation={handleSelectLocation} />

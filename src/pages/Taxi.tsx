@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, Car, Clock, CheckCircle, CreditCard, TriangleAlert, Star, User, Phone, History, MapPinned, Building2 } from "lucide-react";
+import { MapPin, Calendar, Car, Clock, CheckCircle, CreditCard, TriangleAlert, Star, User, Phone, History, MapPinned, Building2, ChevronRight } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -169,45 +170,50 @@ export default function Taxi() {
             Service de taxi rapide, fiable et sécurisé pour tous vos déplacements à Brazzaville
           </p>
           
+          {/* Navigation Pills - Improved visibility and interactive design */}
           <div className="flex flex-wrap justify-center gap-4 mt-6">
             <Button 
               onClick={() => navigate('/taxi/booking')} 
-              className="bg-primary/90 hover:bg-primary"
+              className="bg-primary/90 hover:bg-primary flex items-center gap-2 px-5 py-2.5 shadow-lg transition-all duration-300 hover:translate-y-[-2px]"
             >
-              <Car className="mr-2 h-4 w-4" />
+              <Car className="h-4 w-4" />
               Réserver maintenant
             </Button>
+            
             <Button 
               variant="outline" 
-              className="text-white border-white/20 hover:bg-white/10"
+              className="text-white border-white/20 hover:bg-white/10 flex items-center gap-2 px-5 py-2.5 shadow-lg transition-all duration-300 hover:translate-y-[-2px]"
               onClick={() => navigate('/taxi/history')}
             >
-              <History className="mr-2 h-4 w-4" />
-              Mes courses
+              <History className="h-4 w-4" />
+              <span className="whitespace-nowrap">Mes courses</span>
             </Button>
+            
             <Button 
               variant="outline" 
-              className="text-white border-white/20 hover:bg-white/10"
+              className="text-white border-white/20 hover:bg-white/10 flex items-center gap-2 px-5 py-2.5 shadow-lg transition-all duration-300 hover:translate-y-[-2px]"
               onClick={() => navigate('/taxi/locations')}
             >
-              <MapPinned className="mr-2 h-4 w-4" />
-              Mes adresses
+              <MapPinned className="h-4 w-4" />
+              <span className="whitespace-nowrap">Mes adresses</span>
             </Button>
+            
             <Button 
               variant="outline" 
-              className="text-white border-white/20 hover:bg-white/10"
+              className="text-white border-white/20 hover:bg-white/10 flex items-center gap-2 px-5 py-2.5 shadow-lg transition-all duration-300 hover:translate-y-[-2px]"
               onClick={() => navigate('/taxi/subscription')}
             >
-              <Calendar className="mr-2 h-4 w-4" />
-              Abonnements
+              <Calendar className="h-4 w-4" />
+              <span className="whitespace-nowrap">Abonnements</span>
             </Button>
+            
             <Button 
               variant="outline" 
-              className="text-white border-white/20 hover:bg-white/10"
+              className="text-white border-white/20 hover:bg-white/10 flex items-center gap-2 px-5 py-2.5 shadow-lg transition-all duration-300 hover:translate-y-[-2px]"
               onClick={() => navigate('/taxi/business')}
             >
-              <Building2 className="mr-2 h-4 w-4" />
-              Entreprises
+              <Building2 className="h-4 w-4" />
+              <span className="whitespace-nowrap">Entreprises</span>
             </Button>
           </div>
         </motion.div>
@@ -218,7 +224,7 @@ export default function Taxi() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Card className="bg-white/10 backdrop-blur border-white/10 text-white h-full">
+            <Card className="bg-white/10 backdrop-blur border-white/10 text-white h-full hover:bg-white/15 transition-colors">
               <CardHeader className="pb-3">
                 <CheckCircle className="h-12 w-12 text-green-400 mb-2" />
                 <CardTitle>Rapide et Efficace</CardTitle>
@@ -234,7 +240,7 @@ export default function Taxi() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Card className="bg-white/10 backdrop-blur border-white/10 text-white h-full">
+            <Card className="bg-white/10 backdrop-blur border-white/10 text-white h-full hover:bg-white/15 transition-colors">
               <CardHeader className="pb-3">
                 <Star className="h-12 w-12 text-yellow-400 mb-2" />
                 <CardTitle>Chauffeurs Professionnels</CardTitle>
@@ -250,7 +256,7 @@ export default function Taxi() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Card className="bg-white/10 backdrop-blur border-white/10 text-white h-full">
+            <Card className="bg-white/10 backdrop-blur border-white/10 text-white h-full hover:bg-white/15 transition-colors">
               <CardHeader className="pb-3">
                 <CreditCard className="h-12 w-12 text-blue-400 mb-2" />
                 <CardTitle>Paiement Facile</CardTitle>
@@ -268,7 +274,7 @@ export default function Taxi() {
           transition={{ duration: 0.7 }}
           className="max-w-3xl mx-auto"
         >
-          <Card className="bg-white/10 backdrop-blur-lg border-white/10">
+          <Card className="bg-white/10 backdrop-blur-lg border-white/10 hover:bg-white/15 transition-colors">
             <CardHeader className="border-b border-white/10">
               <CardTitle className="flex items-center gap-2 text-white">
                 <Car className="h-6 w-6 text-primary" />
@@ -290,7 +296,7 @@ export default function Taxi() {
                         value={formData.pickup_address}
                         onChange={handleInputChange}
                         placeholder="Votre localisation" 
-                        className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500"
+                        className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500 focus:bg-white/10"
                       />
                     </div>
                   </div>
@@ -304,7 +310,7 @@ export default function Taxi() {
                         value={formData.destination_address}
                         onChange={handleInputChange}
                         placeholder="Votre destination" 
-                        className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500"
+                        className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-gray-500 focus:bg-white/10"
                       />
                     </div>
                   </div>
@@ -317,12 +323,12 @@ export default function Taxi() {
                       value={formData.vehicle_type}
                       onValueChange={(value) => handleSelectChange('vehicle_type', value)}
                     >
-                      <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                      <SelectTrigger className="bg-white/5 border-white/20 text-white focus:bg-white/10">
                         <SelectValue placeholder="Sélectionnez une option" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-gray-800 border-white/10 text-white">
                         {vehicleTypes.map(vehicle => (
-                          <SelectItem key={vehicle.id} value={vehicle.id}>
+                          <SelectItem key={vehicle.id} value={vehicle.id} className="focus:bg-white/10 focus:text-white">
                             {vehicle.name}
                           </SelectItem>
                         ))}
@@ -336,15 +342,15 @@ export default function Taxi() {
                       value={formData.passengers}
                       onValueChange={(value) => handleSelectChange('passengers', value)}
                     >
-                      <SelectTrigger className="bg-white/5 border-white/20 text-white">
+                      <SelectTrigger className="bg-white/5 border-white/20 text-white focus:bg-white/10">
                         <SelectValue placeholder="Nombre de passagers" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 personne</SelectItem>
-                        <SelectItem value="2">2 personnes</SelectItem>
-                        <SelectItem value="3">3 personnes</SelectItem>
-                        <SelectItem value="4">4 personnes</SelectItem>
-                        <SelectItem value="5+">5+ personnes</SelectItem>
+                      <SelectContent className="bg-gray-800 border-white/10 text-white">
+                        <SelectItem value="1" className="focus:bg-white/10 focus:text-white">1 personne</SelectItem>
+                        <SelectItem value="2" className="focus:bg-white/10 focus:text-white">2 personnes</SelectItem>
+                        <SelectItem value="3" className="focus:bg-white/10 focus:text-white">3 personnes</SelectItem>
+                        <SelectItem value="4" className="focus:bg-white/10 focus:text-white">4 personnes</SelectItem>
+                        <SelectItem value="5+" className="focus:bg-white/10 focus:text-white">5+ personnes</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -367,9 +373,10 @@ export default function Taxi() {
                 <div className="pt-4">
                   <Button 
                     onClick={() => navigate('/taxi/booking')} 
-                    className="w-full bg-primary/90 hover:bg-primary"
+                    className="w-full bg-primary/90 hover:bg-primary font-medium shadow-lg transition-all duration-300 hover:translate-y-[-2px] flex items-center justify-center"
                   >
                     Réserver maintenant
+                    <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </div>
