@@ -1,11 +1,13 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import pb from '../lib/pocketbase';
 
 interface AuthContextType {
   user: any;
+  logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null });
+const AuthContext = createContext<AuthContextType>({ user: null, logout: () => {} });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState(pb.authStore.model);
@@ -19,8 +21,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return unsubscribe;
   }, []);
 
+  const logout = () => {
+    pb.authStore.clear();
+  };
+
   return (
-    <AuthContext.Provider value={{ user }}>
+    <AuthContext.Provider value={{ user, logout }}>
       {children}
     </AuthContext.Provider>
   );

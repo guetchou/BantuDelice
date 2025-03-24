@@ -23,19 +23,21 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import ProfilePhotoUpload from "@/components/profile/ProfilePhotoUpload";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import pb from '@/lib/pocketbase';
 
-const getErrorMessage = (error: AuthError): string => {
-  switch (error.message) {
-    case "User already registered":
-      return "Cet email est déjà utilisé";
-    case "Invalid email":
-      return "Email invalide";
-    case "Weak password":
-      return "Le mot de passe est trop faible";
-    default:
-      return error.message;
+const getErrorMessage = (error: Error): string => {
+  const message = error.message.toLowerCase();
+  
+  if (message.includes('email already exists')) {
+    return "Cet email est déjà utilisé";
   }
+  if (message.includes('invalid email')) {
+    return "Email invalide";
+  }
+  if (message.includes('password')) {
+    return "Le mot de passe est trop faible";
+  }
+  return error.message;
 };
 
 const phoneRegex = /^(\+?242|0)[1-9]\d{7,8}$/;
@@ -91,34 +93,30 @@ export const RegistrationForm = ({ onCancel, onSuccess }: RegistrationFormProps)
 
   const onSubmit = async (data: RegistrationForm) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const userData = {
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            first_name: data.firstName,
-            last_name: data.lastName,
-            phone: data.phone,
-            address: data.address,
-            city: data.city,
-            postal_code: data.postalCode,
-            birth_date: data.birthDate,
-            gender: data.gender,
-            preferred_language: data.preferredLanguage,
-            newsletter: data.newsletter,
-            bio: data.bio,
-            avatar_url: avatarUrl
-          }
-        }
-      });
+        passwordConfirm: data.password,
+        name: `${data.firstName} ${data.lastName}`,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        postal_code: data.postalCode,
+        birth_date: data.birthDate,
+        gender: data.gender,
+        preferred_language: data.preferredLanguage,
+        newsletter: data.newsletter,
+        bio: data.bio,
+        avatar: avatarUrl
+      };
 
-      if (error) throw error;
+      await pb.collection('users').create(userData);
 
       toast.success("Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
       onSuccess?.();
       onCancel();
     } catch (error) {
-      if (error instanceof AuthError) {
+      if (error instanceof Error) {
         toast.error(getErrorMessage(error));
       } else {
         toast.error("Une erreur inattendue s'est produite. Veuillez réessayer.");

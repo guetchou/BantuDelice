@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import pb from '../lib/pocketbase';
 
 /**
  * Check if a user is authenticated
@@ -7,14 +7,11 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const checkAuth = async () => {
   try {
-    const { data, error } = await supabase.auth.getUser();
-    
-    if (error) {
-      console.error('Auth error:', error);
+    if (!pb.authStore.isValid) {
       return null;
     }
     
-    return data.user;
+    return pb.authStore.model;
   } catch (error) {
     console.error('Error checking auth:', error);
     return null;
@@ -40,19 +37,20 @@ export const hasRole = async (role: string): Promise<boolean> => {
     const user = await checkAuth();
     if (!user) return false;
     
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('role', role)
-      .maybeSingle();
+    // Récupérer les rôles de l'utilisateur depuis PocketBase
+    // Note: Vous devez adapter ceci selon la structure de vos données dans PocketBase
+    const { data, error } = await pb
+      .collection('user_roles')
+      .getList(1, 50, {
+        filter: `user_id="${user.id}" && role="${role}"`
+      });
       
     if (error) {
       console.error('Error checking role:', error);
       return false;
     }
     
-    return !!data;
+    return data.length > 0;
   } catch (error) {
     console.error('Error checking role:', error);
     return false;

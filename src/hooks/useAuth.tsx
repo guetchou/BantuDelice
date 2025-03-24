@@ -1,15 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getSupabaseClient } from '@/integrations/supabase/client';
+import pb from '../lib/pocketbase';
 import { toast } from 'sonner';
 
 // Define user type
 interface User {
   id: string;
   email: string;
-  user_metadata?: {
-    full_name?: string;
-  };
+  name?: string;
+  avatar?: string;
 }
 
 // Define auth context type
@@ -17,7 +16,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -26,50 +25,37 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Auth provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(pb.authStore.model);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = getSupabaseClient();
 
   // Check for user session on component mount
   useEffect(() => {
-    async function getInitialSession() {
-      setIsLoading(true);
-      try {
-        // Get session from Supabase/mock
-        const { data, error } = await supabase.auth.getUser();
-        
-        if (error) {
-          console.error('Error getting user:', error);
-        } else if (data?.user) {
-          setUser(data.user as User);
-        }
-      } catch (error) {
-        console.error('Error getting session:', error);
-      } finally {
-        setIsLoading(false);
-      }
+    setIsLoading(true);
+    try {
+      // Get session from PocketBase
+      setUser(pb.authStore.model);
+    } catch (error) {
+      console.error('Error getting session:', error);
+    } finally {
+      setIsLoading(false);
     }
 
-    getInitialSession();
+    // Subscribe to auth state changes
+    const unsubscribe = pb.authStore.onChange(() => {
+      setUser(pb.authStore.model);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // Sign in function
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw error;
-      }
-      
-      if (data?.user) {
-        setUser(data.user as User);
-      }
-
+      await pb.collection('users').authWithPassword(email, password);
+      toast.success("Connexion réussie !");
     } catch (error) {
       console.error('Error signing in:', error);
       // Let the calling component handle the error
@@ -80,22 +66,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Sign up function
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name?: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const data = {
         email,
         password,
-        options: {
-          data: {
-            full_name: name,
-          },
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
+        passwordConfirm: password,
+        name
+      };
+      await pb.collection('users').create(data);
+      // Automatically sign in after registration
+      await pb.collection('users').authWithPassword(email, password);
+      toast.success("Inscription réussie !");
     } catch (error) {
       console.error('Error signing up:', error);
       throw error;
@@ -107,11 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign out function
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
-      setUser(null);
+      pb.authStore.clear();
+      toast.success("Déconnexion réussie !");
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;

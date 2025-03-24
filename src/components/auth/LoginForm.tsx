@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import pb from '@/lib/pocketbase';
 
 interface LoginFormProps {
   onRegister: () => void;
@@ -23,13 +23,8 @@ export const LoginForm = ({ onRegister, onForgotPassword }: LoginFormProps) => {
     
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
+      await pb.collection('users').authWithPassword(email, password);
+      
       window.location.href = '/dashboard';
     } catch (error) {
       console.error('Error logging in:', error);

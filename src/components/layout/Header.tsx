@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import pb from '@/lib/pocketbase';
 import { useAuth } from '@/hooks/useAuth';
 import SearchBar from './SearchBar';
 import UserProfileMenu from './UserProfileMenu';
@@ -13,7 +13,7 @@ const Header: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    pb.authStore.clear();
     // Redirect to home page or login page
     window.location.href = '/';
   };

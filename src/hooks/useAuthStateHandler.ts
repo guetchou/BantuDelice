@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import pb from '@/lib/pocketbase';
 import { logger } from "@/services/logger";
 import { toast } from "sonner";
 
@@ -17,52 +17,33 @@ export const useAuthStateHandler = () => {
     logger.info("Page d'authentification chargée");
     checkSession();
 
-    // We can't directly use supabase.auth.onAuthStateChange due to TypeScript errors,
-    // so we'll access it through any type to bypass the error for now
-    const authClient = supabase.auth as any;
-    const { data: { subscription } } = authClient.onAuthStateChange(async (event: string, session: any) => {
-      logger.info("État d'authentification changé:", { event, sessionExists: !!session });
+    // Subscribe to auth state changes
+    const unsubscribe = pb.authStore.onChange((token, model) => {
+      logger.info("État d'authentification changé:", { sessionExists: !!model });
       
-      if (event === "SIGNED_IN" && session) {
+      if (token && model) {
         logger.info("Utilisateur connecté, redirection vers l'accueil");
         toast.success("Connexion réussie !");
         const from = (location.state as any)?.from?.pathname || "/";
         navigate(from);
       }
-      if (event === "SIGNED_OUT") {
+      
+      if (!token && !model) {
         logger.info("Utilisateur déconnecté");
         setError(null);
-      }
-      if (event === "PASSWORD_RECOVERY") {
-        setError("Un email de récupération a été envoyé.");
-      }
-      if (event === "USER_UPDATED") {
-        logger.info("Profil utilisateur mis à jour");
-        toast.success("Profil mis à jour avec succès !");
-      }
-
-      const authError = (session as any)?.error;
-      if (authError) {
-        logger.error("Erreur d'authentification:", { error: authError });
-        handleError(authError as AuthError);
       }
     });
 
     return () => {
       logger.info("Nettoyage des écouteurs d'authentification");
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [navigate, location]);
 
   const checkSession = async () => {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        logger.error("Erreur lors de la vérification de la session:", { error });
-        handleError(error);
-        return;
-      }
-      if (session) {
+      // Check if there's an active session
+      if (pb.authStore.isValid) {
         logger.info("Session existante trouvée, redirection vers l'accueil");
         const from = (location.state as any)?.from?.pathname || "/";
         navigate(from);
@@ -75,45 +56,34 @@ export const useAuthStateHandler = () => {
     }
   };
 
-  const handleError = (error: AuthError) => {
+  const handleError = (error: Error) => {
     logger.error("Erreur d'authentification détaillée:", { 
-      code: error.code,
-      message: error.message,
-      status: error.status
+      message: error.message
     });
 
-    switch (error.message) {
-      case "Invalid login credentials":
-        setError("Identifiants invalides. Veuillez vérifier votre email et mot de passe.");
-        break;
-      case "Email not confirmed":
-        setError("Veuillez confirmer votre email avant de vous connecter.");
-        break;
-      case "User not found":
-        setError("Aucun utilisateur trouvé avec ces identifiants.");
-        break;
-      case "Invalid email":
-        setError("L'adresse email n'est pas valide.");
-        break;
-      default:
-        setError(error.message || "Une erreur s'est produite. Veuillez réessayer.");
+    const errorMsg = error.message.toLowerCase();
+    
+    if (errorMsg.includes('invalid email or password')) {
+      setError("Identifiants invalides. Veuillez vérifier votre email et mot de passe.");
+    } else if (errorMsg.includes('email not confirmed')) {
+      setError("Veuillez confirmer votre email avant de vous connecter.");
+    } else if (errorMsg.includes('user not found')) {
+      setError("Aucun utilisateur trouvé avec ces identifiants.");
+    } else if (errorMsg.includes('invalid email')) {
+      setError("L'adresse email n'est pas valide.");
+    } else {
+      setError(error.message || "Une erreur s'est produite. Veuillez réessayer.");
     }
   };
 
   const handleForgotPassword = async (email: string) => {
     try {
-      // Use any type to bypass TypeScript error for now
-      const authClient = supabase.auth as any;
-      const { error } = await authClient.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      });
-      
-      if (error) throw error;
+      await pb.collection('users').requestPasswordReset(email);
       
       toast.success("Instructions de réinitialisation envoyées par email");
       setIsForgotPassword(false);
     } catch (error) {
-      if (error instanceof AuthError) {
+      if (error instanceof Error) {
         handleError(error);
       }
     }

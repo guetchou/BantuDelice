@@ -18,15 +18,15 @@ interface UserProfileMenuProps {
 }
 
 const UserProfileMenu: React.FC<UserProfileMenuProps> = ({ user, onLogout }) => {
-  const userInitials = user.user_metadata?.full_name 
-    ? user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+  const userInitials = user.name 
+    ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
     : user.email.substring(0, 2).toUpperCase();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none">
         <Avatar>
-          <AvatarImage src={user.avatar_url} />
+          <AvatarImage src={user.avatar} />
           <AvatarFallback>{userInitials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
