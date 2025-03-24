@@ -1,7 +1,7 @@
 
-import { LoginForm } from "@/components/clients/LoginForm";
-import { AddClientForm } from "@/components/clients/AddClientForm";
-import { ClientsList } from "@/components/clients/ClientsList";
+import LoginForm from "@/components/clients/LoginForm";
+import AddClientForm from "@/components/clients/AddClientForm";
+import ClientsList from "@/components/clients/ClientsList";
 
 export default function ClientsPage() {
   return (

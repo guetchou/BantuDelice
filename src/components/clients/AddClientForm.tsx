@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { addClient } from "@/services/pocketbaseService";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export default function AddClientForm() {
   const { toast } = useToast();
@@ -15,15 +17,26 @@ export default function AddClientForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!nom || !email || !telephone) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setLoading(true);
-
+    
     try {
       const client = await addClient(nom, email, telephone);
       toast({
         title: "Client ajouté",
-        description: `${client.record.nom} a été ajouté avec succès`,
+        description: `${client.nom} a été ajouté avec succès`,
       });
-      // Reset form
+      
+      // Réinitialiser le formulaire
       setNom("");
       setEmail("");
       setTelephone("");
@@ -39,41 +52,58 @@ export default function AddClientForm() {
   };
 
   return (
-    <Card className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Ajouter un client</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Input
-            placeholder="Nom"
-            value={nom}
-            onChange={(e) => setNom(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
-        <div>
-          <Input
-            placeholder="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
-        <div>
-          <Input
-            placeholder="Téléphone"
-            value={telephone}
-            onChange={(e) => setTelephone(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Enregistrement..." : "Enregistrer"}
-        </Button>
-      </form>
+    <Card>
+      <CardHeader>
+        <CardTitle>Ajouter un client</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="nom">Nom</Label>
+            <Input 
+              id="nom"
+              placeholder="Nom" 
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input 
+              id="email"
+              type="email"
+              placeholder="Email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="telephone">Téléphone</Label>
+            <Input 
+              id="telephone"
+              placeholder="Téléphone" 
+              value={telephone}
+              onChange={(e) => setTelephone(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enregistrement...
+              </>
+            ) : (
+              "Enregistrer"
+            )}
+          </Button>
+        </form>
+      </CardContent>
     </Card>
   );
 }
