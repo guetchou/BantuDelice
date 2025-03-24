@@ -1,3 +1,4 @@
+
 import { RouteObject } from "react-router-dom";
 import Home from "@/pages/Home";
 import Restaurants from "@/pages/Restaurants";
@@ -7,7 +8,6 @@ import Checkout from "@/pages/Checkout";
 import About from "@/pages/About";
 import SearchResults from "@/pages/SearchResults";
 import BookingPage from "@/pages/BookingPage";
-
 import ClientsPage from "@/pages/ClientsPage";
 
 export const mainRoutes: RouteObject[] = [
