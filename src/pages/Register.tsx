@@ -1,60 +1,53 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
+import pb from '@/lib/pocketbase';
+import { useToast } from '@/hooks/use-toast';
 
-export const Register: React.FC = () => {
+export const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { signUp } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     
-    if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+    if (password !== passwordConfirm) {
+      toast({
+        title: "Erreur",
+        description: "Les mots de passe ne correspondent pas",
+        variant: "destructive",
+      });
       return;
     }
     
     setIsLoading(true);
-    
+
     try {
-      await signUp(email, password, name);
-      toast.success("Inscription réussie", {
-        description: "Un email de confirmation vous a été envoyé."
+      await pb.collection('users').create({
+        email,
+        password,
+        passwordConfirm,
+        name,
       });
-      navigate('/auth/login');
-    } catch (err) {
-      console.error('Error signing up:', err);
       
-      // Traitement spécifique pour les différents types d'erreurs
-      if (err instanceof Error) {
-        if (err.message.includes('Failed to execute') || err.message.includes('Unexpected end of JSON')) {
-          setError("Impossible de contacter le serveur d'authentification. Veuillez vérifier votre connexion et réessayer.");
-        } else if (err.message.includes('already')) {
-          setError("Cet email est déjà utilisé");
-        } else {
-          setError(err.message);
-        }
-      } else {
-        setError("Une erreur inattendue s'est produite");
-      }
+      toast({
+        title: "Inscription réussie",
+        description: "Votre compte a été créé avec succès",
+      });
       
-      toast.error("Échec de l'inscription", {
-        description: error || "Une erreur s'est produite"
+      // Connexion automatique après inscription
+      await pb.collection('users').authWithPassword(email, password);
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Erreur d'inscription",
+        description: error.message || "Une erreur est survenue lors de l'inscription",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -62,92 +55,61 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Créer un compte</CardTitle>
-        <CardDescription>
-          Saisissez vos informations pour créer un compte
-        </CardDescription>
-      </CardHeader>
-      
-      {error && (
-        <div className="px-6 -mt-2 mb-2">
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">Inscription</h1>
+      <form onSubmit={handleRegister} className="space-y-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium">Nom</label>
+          <input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="mt-1 block w-full p-2 border rounded-md"
+            required
+          />
         </div>
-      )}
-      
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nom complet</Label>
-            <Input 
-              id="name" 
-              type="text" 
-              placeholder="Votre nom complet" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="votre@email.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe</Label>
-            <Input 
-              id="password" 
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-            <Input 
-              id="confirmPassword" 
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col">
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Inscription en cours...
-              </>
-            ) : "S'inscrire"}
-          </Button>
-          <p className="mt-4 text-center text-sm">
-            Vous avez déjà un compte?{" "}
-            <Link to="/auth/login" className="text-primary hover:underline">
-              Se connecter
-            </Link>
-          </p>
-        </CardFooter>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1 block w-full p-2 border rounded-md"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium">Mot de passe</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1 block w-full p-2 border rounded-md"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="passwordConfirm" className="block text-sm font-medium">Confirmer le mot de passe</label>
+          <input
+            id="passwordConfirm"
+            type="password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            className="mt-1 block w-full p-2 border rounded-md"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
+        >
+          {isLoading ? "Inscription en cours..." : "S'inscrire"}
+        </button>
       </form>
-    </Card>
+    </div>
   );
 };

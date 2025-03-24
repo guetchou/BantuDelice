@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import pb from '@/lib/pocketbase';
 import { Loader2 } from 'lucide-react';
 
 interface GuestRouteProps {
@@ -9,20 +9,13 @@ interface GuestRouteProps {
 }
 
 export const GuestRoute: React.FC<GuestRouteProps> = ({ children }) => {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Chargement...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (user) {
+  // Vérifier si l'utilisateur est connecté à partir de PocketBase
+  const isAuthenticated = pb.authStore.isValid;
+  
+  // Nous n'avons pas besoin de gérer un état de chargement ici puisque
+  // PocketBase vérifie immédiatement si l'utilisateur est connecté
+  
+  if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 

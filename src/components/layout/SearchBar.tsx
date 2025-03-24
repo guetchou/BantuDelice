@@ -5,7 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 
-const SearchBar: React.FC = () => {
+interface SearchBarProps {
+  className?: string;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
@@ -17,19 +21,20 @@ const SearchBar: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSearch} className="w-full flex items-center">
-      <div className="relative w-full">
-        <Input
-          type="text"
-          placeholder="Rechercher un restaurant ou un plat..."
-          className="w-full pl-10"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-      </div>
-      <Button type="submit" className="ml-2">
-        Rechercher
+    <form onSubmit={handleSearch} className={`relative ${className}`}>
+      <Input
+        placeholder="Rechercher un restaurant..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="pr-10"
+      />
+      <Button 
+        type="submit" 
+        variant="ghost" 
+        size="icon" 
+        className="absolute right-0 top-0 h-full"
+      >
+        <Search className="h-4 w-4 text-muted-foreground" />
       </Button>
     </form>
   );

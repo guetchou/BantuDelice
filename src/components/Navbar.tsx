@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/hooks/useUser';
+import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, Moon, Sun } from "lucide-react";
@@ -18,27 +17,13 @@ import LoyaltyStatus from "@/components/loyalty/LoyaltyStatus";
 import { useTheme } from '@/components/ui/ThemeProvider';
 
 const Navbar = () => {
-  const { user, loading } = useUser();
+  const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
 
-  useEffect(() => {
-    if (user && user.avatar_url) {
-      setAvatarUrl(user.avatar_url);
-    } else if (user) {
-      const fetchAvatar = async () => {
-        const { data } = await supabase.storage
-          .from('avatars')
-          .getPublicUrl(`avatars/${user.id}`);
-        setAvatarUrl(data.publicUrl);
-      };
-      fetchAvatar();
-    }
-  }, [user]);
-
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    logout();
     navigate('/auth');
   };
 
@@ -63,7 +48,7 @@ const Navbar = () => {
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
           
-          {loading ? (
+          {isLoading ? (
             <div>Chargement...</div>
           ) : user ? (
             <DropdownMenu>

@@ -1,50 +1,32 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
+import pb from '@/lib/pocketbase';
+import { useToast } from '@/hooks/use-toast';
 
-export const Login: React.FC = () => {
+export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { signIn } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
-    
+
     try {
-      await signIn(email, password);
-      toast.success("Connexion réussie");
+      await pb.collection('users').authWithPassword(email, password);
+      toast({
+        title: "Connexion réussie",
+        description: "Vous êtes maintenant connecté",
+      });
       navigate('/');
-    } catch (err) {
-      console.error('Error logging in:', err);
-      
-      // Traitement spécifique pour les différents types d'erreurs
-      if (err instanceof Error) {
-        if (err.message.includes('Failed to execute') || err.message.includes('Unexpected end of JSON')) {
-          setError("Impossible de contacter le serveur d'authentification. Veuillez vérifier votre connexion et réessayer.");
-        } else if (err.message.includes('Invalid login credentials')) {
-          setError("Email ou mot de passe incorrect");
-        } else {
-          setError(err.message);
-        }
-      } else {
-        setError("Une erreur inattendue s'est produite");
-      }
-      
-      toast.error("Échec de connexion", {
-        description: error || "Une erreur s'est produite"
+    } catch (error: any) {
+      toast({
+        title: "Erreur de connexion",
+        description: error.message || "Identifiants invalides",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -52,74 +34,39 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
-        <CardDescription>
-          Saisissez vos identifiants pour accéder à votre compte
-        </CardDescription>
-      </CardHeader>
-      
-      {error && (
-        <div className="px-6 -mt-2 mb-2">
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">Connexion</h1>
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1 block w-full p-2 border rounded-md"
+            required
+          />
         </div>
-      )}
-      
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="votre@email.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Mot de passe</Label>
-              <Link to="/auth/forgot-password" className="text-sm text-primary hover:underline">
-                Mot de passe oublié?
-              </Link>
-            </div>
-            <Input 
-              id="password" 
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              required
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col">
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Connexion en cours...
-              </>
-            ) : "Se connecter"}
-          </Button>
-          <p className="mt-4 text-center text-sm">
-            Vous n'avez pas de compte?{" "}
-            <Link to="/auth/register" className="text-primary hover:underline">
-              Créer un compte
-            </Link>
-          </p>
-        </CardFooter>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium">Mot de passe</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-1 block w-full p-2 border rounded-md"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
+        >
+          {isLoading ? "Connexion en cours..." : "Se connecter"}
+        </button>
       </form>
-    </Card>
+    </div>
   );
 };
