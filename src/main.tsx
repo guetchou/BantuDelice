@@ -17,10 +17,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider defaultTheme="light" storageKey="ui-theme">
       <QueryClientProvider client={queryClient}>
-        <ApiAuthProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </ApiAuthProvider>
+        <AuthProvider>
+          <ApiAuthProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </ApiAuthProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   </React.StrictMode>,

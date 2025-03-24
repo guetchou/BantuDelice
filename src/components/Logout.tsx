@@ -1,17 +1,20 @@
 
 import React from 'react';
-import pb from '../lib/pocketbase';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 export default function Logout() {
+  const { logout } = useAuth();
+
   const handleLogout = () => {
-    pb.authStore.clear(); // Efface la session
+    logout();
     alert("Déconnexion réussie !");
-    window.location.reload(); // ou rediriger avec useNavigate()
+    window.location.reload(); // or use useNavigate()
   };
 
   return (
-    <button onClick={handleLogout}>
+    <Button variant="outline" onClick={handleLogout}>
       Se déconnecter
-    </button>
+    </Button>
   );
 }

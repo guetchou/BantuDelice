@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { RouteObject } from 'react-router-dom';
+import App from '@/App';
 import MainLayout from '@/layouts/MainLayout';
 import Home from '@/pages/Home';
 import Restaurants from '@/pages/Restaurants';
@@ -28,46 +29,52 @@ import TaxiVehicleComparison from "@/pages/taxi/VehicleComparison";
 import Taxi from "@/pages/Taxi";
 
 const mainRoutes: RouteObject[] = [
-  ...authRoutes,
   {
     path: "/",
-    element: <MainLayout />,
+    element: <App />,
     children: [
-      { index: true, element: <Home /> },
-      
-      // Restaurant Routes
-      { path: "restaurants", element: <Restaurants /> },
-      { path: "restaurants/:id", element: <RestaurantDetails /> },
-      
-      // Delivery Routes
-      { path: "delivery", element: <DeliveryDashboard /> },
-      { path: "delivery/dashboard", element: <DeliveryPage /> },
-      
-      // Taxi Routes
-      { path: "taxi", element: <Taxi /> },
-      { path: "taxi/booking", element: <TaxiBooking /> },
-      { path: "taxi/ride/:id", element: <TaxiRideStatus /> },
-      { path: "taxi/history", element: <TaxiHistoryPage /> },
-      { path: "taxi/locations", element: <TaxiLocationsPage /> },
-      { path: "taxi/subscription", element: <TaxiSubscriptionPage /> },
-      { path: "taxi/subscription/:planId", element: <TaxiSubscriptionDetails /> },
-      { path: "taxi/business", element: <TaxiBusinessPage /> },
-      { path: "taxi/compare-vehicles", element: <TaxiVehicleComparison /> },
-      
-      // Covoiturage Routes
-      { path: "covoiturage", element: <Covoiturage /> },
-      
-      // Order Routes
-      { path: "orders", element: <Orders /> },
-      { path: "orders/:id", element: <OrderDetails /> },
-      
-      // User Routes
-      { path: "profile", element: <Profile /> },
-      { path: "favorites", element: <Favorites /> },
-      { path: "messages", element: <Messages /> },
-      { path: "notifications", element: <Notifications /> },
+      {
+        path: "/",
+        element: <MainLayout />,
+        children: [
+          { index: true, element: <Home /> },
+          
+          // Restaurant Routes
+          { path: "restaurants", element: <Restaurants /> },
+          { path: "restaurants/:id", element: <RestaurantDetails /> },
+          
+          // Delivery Routes
+          { path: "delivery", element: <DeliveryDashboard /> },
+          { path: "delivery/dashboard", element: <DeliveryPage /> },
+          
+          // Taxi Routes
+          { path: "taxi", element: <Taxi /> },
+          { path: "taxi/booking", element: <TaxiBooking /> },
+          { path: "taxi/ride/:id", element: <TaxiRideStatus /> },
+          { path: "taxi/history", element: <TaxiHistoryPage /> },
+          { path: "taxi/locations", element: <TaxiLocationsPage /> },
+          { path: "taxi/subscription", element: <TaxiSubscriptionPage /> },
+          { path: "taxi/subscription/:planId", element: <TaxiSubscriptionDetails /> },
+          { path: "taxi/business", element: <TaxiBusinessPage /> },
+          { path: "taxi/compare-vehicles", element: <TaxiVehicleComparison /> },
+          
+          // Covoiturage Routes
+          { path: "covoiturage", element: <Covoiturage /> },
+          
+          // Order Routes
+          { path: "orders", element: <Orders /> },
+          { path: "orders/:id", element: <OrderDetails /> },
+          
+          // User Routes
+          { path: "profile", element: <Profile /> },
+          { path: "favorites", element: <Favorites /> },
+          { path: "messages", element: <Messages /> },
+          { path: "notifications", element: <Notifications /> },
+        ]
+      }
     ]
   },
+  ...authRoutes,
   ...errorRoutes
 ];
 

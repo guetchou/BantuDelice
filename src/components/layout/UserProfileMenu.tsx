@@ -18,15 +18,20 @@ interface UserProfileMenuProps {
 }
 
 const UserProfileMenu: React.FC<UserProfileMenuProps> = ({ user, onLogout }) => {
-  const userInitials = user.name 
-    ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
-    : user.email.substring(0, 2).toUpperCase();
+  // Extract user data safely from PocketBase user model
+  const userName = user.name || user.username || '';
+  const userEmail = user.email || '';
+  const userAvatar = user.avatar || '';
+  
+  const userInitials = userName 
+    ? userName.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+    : userEmail.substring(0, 2).toUpperCase();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none">
         <Avatar>
-          <AvatarImage src={user.avatar} />
+          <AvatarImage src={userAvatar} />
           <AvatarFallback>{userInitials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
