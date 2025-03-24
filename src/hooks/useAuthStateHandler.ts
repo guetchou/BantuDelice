@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthError } from "@supabase/supabase-js";
 import { logger } from "@/services/logger";
 import { toast } from "sonner";
 

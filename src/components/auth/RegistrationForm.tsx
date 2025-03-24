@@ -24,7 +24,6 @@ import { Label } from "@/components/ui/label";
 import ProfilePhotoUpload from "@/components/profile/ProfilePhotoUpload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthError } from "@supabase/supabase-js";
 
 const getErrorMessage = (error: AuthError): string => {
   switch (error.message) {

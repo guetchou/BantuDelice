@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { ApiAuthProvider } from './contexts/ApiAuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Create a client
 const queryClient = new QueryClient();
