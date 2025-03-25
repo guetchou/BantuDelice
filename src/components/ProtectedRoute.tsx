@@ -2,7 +2,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useUser } from '@/hooks/useUser';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,11 +18,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   restaurantOwnerOnly = false,
   driverOnly = false
 }) => {
-  const { user, isLoading } = useAuth();
-  const { isAdmin, isSuperAdmin, isRestaurantOwner, isDriver } = useUser();
+  const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -31,25 +29,25 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  if (!user) {
-    // Rediriger vers la page de connexion avec l'URL de retour
+  if (!isAuthenticated) {
+    // Redirect to login page with return URL
     return <Navigate to={`/auth/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
-  // Vérifier les autorisations spécifiques
-  if (superAdminOnly && !isSuperAdmin()) {
+  // Check for specific permissions
+  if (superAdminOnly && user?.role !== 'super_admin') {
     return <Navigate to="/" replace />;
   }
 
-  if (adminOnly && !isAdmin()) {
+  if (adminOnly && !['admin', 'super_admin'].includes(user?.role || '')) {
     return <Navigate to="/" replace />;
   }
 
-  if (restaurantOwnerOnly && !isRestaurantOwner()) {
+  if (restaurantOwnerOnly && user?.role !== 'restaurant_owner') {
     return <Navigate to="/" replace />;
   }
 
-  if (driverOnly && !isDriver()) {
+  if (driverOnly && user?.role !== 'driver') {
     return <Navigate to="/" replace />;
   }
 

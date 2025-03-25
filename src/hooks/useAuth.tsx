@@ -1,57 +1,112 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import pb from '@/lib/pocketbase';
+import { authService } from '@/services/pocketbaseService';
+import { toast } from 'sonner';
 
-export interface User {
+type User = {
   id: string;
   email: string;
   name?: string;
-  avatar?: string;
-  created?: string;
   role?: string;
+  [key: string]: any;
+};
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
+  logout: () => void;
+  register: (email: string, password: string, userData: Record<string, any>) => Promise<{ success: boolean; error?: any }>;
 }
 
-export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(pb.authStore.model);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Convert PocketBase user model to our User type
-    const convertPbUser = (pbUser: any): User | null => {
-      if (!pbUser) return null;
-      
-      return {
-        id: pbUser.id,
-        email: pbUser.email || '',
-        name: pbUser.name || pbUser.username || '',
-        avatar: pbUser.avatar,
-        created: pbUser.created,
-        role: pbUser.role
-      };
-    };
-
-    // Check initial auth state
-    setUser(convertPbUser(pb.authStore.model));
-    setIsLoading(false);
+    // Check initial authentication state
+    setUser(pb.authStore.model);
+    setLoading(false);
 
     // Subscribe to auth state changes
     const unsubscribe = pb.authStore.onChange((token, model) => {
-      setUser(convertPbUser(model));
+      setUser(model);
     });
 
     return unsubscribe;
   }, []);
 
-  const logout = () => {
-    pb.authStore.clear();
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await authService.login(email, password);
+      if (error) {
+        toast("Échec de connexion", {
+          description: "Vérifiez vos identifiants et réessayez.",
+        });
+        return { success: false, error };
+      }
+      
+      setUser(data.record);
+      toast("Connexion réussie", {
+        description: "Bienvenue dans votre espace."
+      });
+      return { success: true };
+    } catch (error) {
+      toast("Erreur de connexion", {
+        description: "Une erreur inattendue s'est produite.",
+      });
+      return { success: false, error };
+    }
   };
 
-  return {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    logout
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+    toast("Déconnexion réussie");
   };
+
+  const register = async (email: string, password: string, userData: Record<string, any>) => {
+    try {
+      const { data, error } = await authService.register(email, password, userData);
+      if (error) {
+        toast("Échec d'inscription", {
+          description: "Vérifiez vos données et réessayez.",
+        });
+        return { success: false, error };
+      }
+      
+      toast("Inscription réussie", {
+        description: "Vous pouvez maintenant vous connecter.",
+      });
+      return { success: true };
+    } catch (error) {
+      toast("Erreur d'inscription", {
+        description: "Une erreur inattendue s'est produite.",
+      });
+      return { success: false, error };
+    }
+  };
+
+  const value = {
+    user,
+    loading,
+    isAuthenticated: !!user,
+    login,
+    logout,
+    register
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export default useAuth;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

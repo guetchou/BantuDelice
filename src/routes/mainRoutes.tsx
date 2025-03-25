@@ -12,12 +12,14 @@ import Orders from '@/pages/Orders';
 import OrderDetails from '@/pages/OrderDetails';
 import Covoiturage from '@/pages/Covoiturage';
 import Profile from '@/pages/Profile';
+import ProfilePage from '@/pages/auth/ProfilePage';
 import Favorites from '@/pages/Favorites';
 import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import NotFound from '@/pages/NotFound';
 import DeliveryDashboard from '@/pages/delivery/Dashboard';
 import DeliveryPage from '@/pages/delivery/index';
+import ClientsPage from '@/pages/ClientsPage';
 import { authRoutes } from './authRoutes';
 import { errorRoutes } from './errorRoutes';
 import TaxiHistoryPage from "@/pages/taxi/History";
@@ -27,6 +29,7 @@ import TaxiSubscriptionDetails from "@/pages/taxi/SubscriptionDetails";
 import TaxiBusinessPage from "@/pages/taxi/Business";
 import TaxiVehicleComparison from "@/pages/taxi/VehicleComparison";
 import Taxi from "@/pages/Taxi";
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 const mainRoutes: RouteObject[] = [
   {
@@ -66,10 +69,19 @@ const mainRoutes: RouteObject[] = [
           { path: "orders/:id", element: <OrderDetails /> },
           
           // User Routes
-          { path: "profile", element: <Profile /> },
+          { 
+            path: "profile", 
+            element: <ProtectedRoute><ProfilePage /></ProtectedRoute>
+          },
           { path: "favorites", element: <Favorites /> },
           { path: "messages", element: <Messages /> },
           { path: "notifications", element: <Notifications /> },
+          
+          // Client Management Route
+          { 
+            path: "clients", 
+            element: <ProtectedRoute><ClientsPage /></ProtectedRoute>
+          },
         ]
       }
     ]
