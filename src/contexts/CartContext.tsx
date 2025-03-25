@@ -1,53 +1,40 @@
 
 import React, { createContext, useReducer, useEffect, useState } from 'react';
+import { CartItem, CartItemOption } from '@/types/cart';
 
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image_url?: string;
-  description?: string;
-  restaurant_id: string;
-  options?: CartItemOption[];
-}
-
-export interface CartItemOption {
-  id: string;
-  name: string;
-  value: string;
-  price: number;
-  quantity: number;
-}
-
-type CartState = {
+// Types
+export interface CartState {
   items: CartItem[];
   total: number;
+  count: number;
   totalItems: number;
-};
+}
 
-interface CartContextType {
+export interface CartContextType {
   state: CartState;
   addItem: (item: CartItem) => void;
   removeItem: (itemId: string) => void;
+  updateItemQuantity: (itemId: string, quantity: number) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
 }
 
-export { type CartContextType };
-
+// Initial state
 const initialState: CartState = {
   items: [],
   total: 0,
+  count: 0,
   totalItems: 0,
 };
 
+// Actions
 type CartAction =
   | { type: 'ADD_ITEM'; payload: CartItem }
   | { type: 'REMOVE_ITEM'; payload: { id: string } }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'CLEAR_CART' };
 
+// Reducer
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_ITEM': {
@@ -80,6 +67,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         ...state,
         items: newItems,
         total,
+        count: newItems.length,
         totalItems,
       };
     }
@@ -103,15 +91,20 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         ...state,
         items: newItems,
         total,
+        count: newItems.length,
         totalItems,
       };
     }
 
     case 'UPDATE_QUANTITY': {
+      const { id, quantity } = action.payload;
+      
+      if (quantity <= 0) {
+        return cartReducer(state, { type: 'REMOVE_ITEM', payload: { id } });
+      }
+      
       const newItems = state.items.map((item) =>
-        item.id === action.payload.id
-          ? { ...item, quantity: action.payload.quantity }
-          : item
+        item.id === id ? { ...item, quantity } : item
       );
 
       const total = newItems.reduce(
@@ -128,17 +121,13 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         ...state,
         items: newItems,
         total,
+        count: newItems.length,
         totalItems,
       };
     }
 
     case 'CLEAR_CART': {
-      return {
-        ...state,
-        items: [],
-        total: 0,
-        totalItems: 0,
-      };
+      return initialState;
     }
 
     default:
@@ -146,8 +135,10 @@ function cartReducer(state: CartState, action: CartAction): CartState {
   }
 }
 
+// Context
 export const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Provider Component
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const [initialized, setInitialized] = useState(false);
@@ -178,6 +169,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [state, initialized]);
 
+  // Actions
   const addItem = (item: CartItem) => {
     if (!item.quantity) {
       item.quantity = 1;
@@ -187,6 +179,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const removeItem = (itemId: string) => {
     dispatch({ type: 'REMOVE_ITEM', payload: { id: itemId } });
+  };
+
+  const updateItemQuantity = (itemId: string, quantity: number) => {
+    dispatch({
+      type: 'UPDATE_QUANTITY',
+      payload: { id: itemId, quantity },
+    });
   };
 
   const updateQuantity = (itemId: string, quantity: number) => {
@@ -206,6 +205,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         state,
         addItem,
         removeItem,
+        updateItemQuantity,
         updateQuantity,
         clearCart,
       }}

@@ -1,193 +1,194 @@
 
 import React, { useState } from 'react';
-import { Bell, BellOff, Check, Trash2, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
 } from '@/components/ui/popover';
-import { useRealTimeNotifications, Notification } from '@/hooks/useRealTimeNotifications';
-import { useUser } from '@/hooks/useUser';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Notification } from '@/hooks/useRealTimeNotifications';
+import { Bell, Check, Info, AlertTriangle, AlertCircle, Link } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-const NotificationItem = ({ 
-  notification, 
-  onRead, 
-  onDelete 
-}: { 
-  notification: Notification, 
-  onRead: () => void, 
-  onDelete: () => void 
+interface NotificationCenterProps {
+  notifications: Notification[];
+  unreadCount: number;
+  onMarkAsRead: (id: string) => Promise<{ success: boolean }>;
+  onMarkAllAsRead: () => Promise<{ success: boolean }>;
+  onDeleteNotification: (id: string) => Promise<{ success: boolean }>;
+}
+
+const NotificationCenter: React.FC<NotificationCenterProps> = ({
+  notifications,
+  unreadCount,
+  onMarkAsRead,
+  onMarkAllAsRead,
+  onDeleteNotification
 }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Card className={cn(
-        "mb-2 border transition-colors",
-        notification.read ? "bg-muted/30" : "bg-card shadow-sm",
-        notification.type === 'success' && !notification.read && "border-l-4 border-l-green-500",
-        notification.type === 'warning' && !notification.read && "border-l-4 border-l-yellow-500",
-        notification.type === 'error' && !notification.read && "border-l-4 border-l-red-500",
-        notification.type === 'info' && !notification.read && "border-l-4 border-l-blue-500"
-      )}>
-        <CardHeader className="p-3 pb-1">
-          <div className="flex justify-between items-start">
-            <CardTitle className={cn(
-              "text-sm font-medium",
-              notification.read && "text-muted-foreground"
-            )}>
-              {notification.type === 'success' && '✓ '}
-              {notification.type === 'warning' && '⚠️ '}
-              {notification.type === 'error' && '✗ '}
-              {notification.type === 'info' && 'ℹ '}
-              {notification.message.split(' ').slice(0, 4).join(' ')}
-              {notification.message.split(' ').length > 4 ? '...' : ''}
-            </CardTitle>
-            <div className="flex gap-1">
-              {!notification.read && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6" 
-                  onClick={onRead}
-                  title="Marquer comme lu"
-                >
-                  <Check className="h-3 w-3" />
-                </Button>
-              )}
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 text-muted-foreground hover:text-destructive" 
-                onClick={onDelete}
-                title="Supprimer"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-          <CardDescription className="text-xs">
-            {new Date(notification.created_at).toLocaleString()}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-3 pt-1">
-          <p className={cn(
-            "text-sm",
-            notification.read && "text-muted-foreground"
-          )}>
-            {notification.message}
-          </p>
-        </CardContent>
-        {notification.action_link && (
-          <CardFooter className="p-2 pt-0">
-            <Button 
-              variant="link" 
-              size="sm" 
-              className="px-0 h-auto" 
-              asChild
-            >
-              <a href={notification.action_link}>Voir plus</a>
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
-    </motion.div>
-  );
-};
-
-export const NotificationCenter = () => {
-  const { user } = useUser();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   
-  const { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    markAllAsRead, 
-    deleteNotification 
-  } = useRealTimeNotifications(user?.id);
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'info':
+        return <Info className="h-4 w-4 text-blue-500" />;
+      case 'success':
+        return <Check className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+      case 'error':
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Info className="h-4 w-4 text-blue-500" />;
+    }
+  };
 
-  if (!user) {
-    return null;
-  }
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+      await onMarkAsRead(notification.id);
+    }
+    
+    if (notification.action_link) {
+      navigate(notification.action_link);
+      setOpen(false);
+    }
+  };
+
+  const unreadNotifications = notifications.filter(n => !n.read);
+  const readNotifications = notifications.filter(n => n.read);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          {unreadCount > 0 ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+        <Button variant="outline" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge 
-              className="absolute -top-1 -right-1 px-1.5 h-5 min-w-5 flex items-center justify-center" 
-              variant="destructive"
+              variant="destructive" 
+              className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="end">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="font-semibold">Notifications</h2>
-          <div className="flex gap-2">
-            {unreadCount > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 text-xs"
-                onClick={() => markAllAsRead()}
-              >
-                <Check className="h-3.5 w-3.5 mr-1" />
-                Tout marquer comme lu
-              </Button>
-            )}
+      <PopoverContent className="w-80 p-0" align="end">
+        <div className="p-4 border-b flex items-center justify-between">
+          <h3 className="font-medium text-sm">Notifications</h3>
+          {unreadCount > 0 && (
             <Button 
               variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={() => setOpen(false)}
+              size="sm" 
+              className="h-8 text-xs"
+              onClick={onMarkAllAsRead}
             >
-              <X className="h-4 w-4" />
+              Tout marquer comme lu
             </Button>
-          </div>
+          )}
         </div>
         
-        <ScrollArea className="h-[400px] p-4">
-          {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
-              <BellOff className="h-12 w-12 mb-2 opacity-20" />
-              <p>Aucune notification pour le moment</p>
-            </div>
-          ) : (
-            <AnimatePresence>
-              {notifications.map(notification => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                  onRead={() => markAsRead(notification.id)}
-                  onDelete={() => deleteNotification(notification.id)}
-                />
-              ))}
-            </AnimatePresence>
-          )}
-        </ScrollArea>
+        <Tabs defaultValue="unread">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="unread" className="relative">
+              Non lues
+              {unreadCount > 0 && (
+                <Badge 
+                  variant="secondary" 
+                  className="ml-1 h-5 flex items-center justify-center"
+                >
+                  {unreadCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="all">Toutes</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="unread">
+            <ScrollArea className="h-[300px]">
+              {unreadNotifications.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <p>Pas de notifications non lues</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {unreadNotifications.map((notification) => (
+                    <div 
+                      key={notification.id} 
+                      className="p-3 hover:bg-muted cursor-pointer flex gap-3"
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <div className="mt-0.5">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm">{notification.message}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(notification.created_at), { 
+                              addSuffix: true,
+                              locale: fr
+                            })}
+                          </p>
+                          
+                          {notification.action_link && (
+                            <Link className="h-3 w-3 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="all">
+            <ScrollArea className="h-[300px]">
+              {notifications.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <p>Pas de notifications</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {notifications.map((notification) => (
+                    <div 
+                      key={notification.id} 
+                      className={`p-3 hover:bg-muted cursor-pointer flex gap-3 ${notification.read ? 'opacity-70' : ''}`}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <div className="mt-0.5">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm">{notification.message}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(notification.created_at), { 
+                              addSuffix: true,
+                              locale: fr
+                            })}
+                          </p>
+                          
+                          {notification.action_link && (
+                            <Link className="h-3 w-3 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </PopoverContent>
     </Popover>
   );
 };
+
+export default NotificationCenter;

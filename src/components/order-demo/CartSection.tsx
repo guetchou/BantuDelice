@@ -4,30 +4,59 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, Trash2, CreditCard } from 'lucide-react';
 import { CartItem } from '@/types/cart';
+import { useCart } from '@/hooks/useCart';
+import { Badge } from '@/components/ui/badge';
 
-export interface CartSectionProps {
-  items: CartItem[];
-  onOrder: () => void;
-  onPaymentComplete: () => Promise<void>;
+interface CartSectionProps {
+  onOrder?: () => void;
+  onPaymentComplete?: () => Promise<void>;
+  loading?: boolean;
+  error?: string | null;
+  currentStep?: number;
 }
 
 const CartSection: React.FC<CartSectionProps> = ({ 
-  items, 
   onOrder,
-  onPaymentComplete
+  onPaymentComplete,
+  loading = false,
+  error = null,
+  currentStep = 0
 }) => {
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const { items, total, totalItems, removeItem, updateQuantity } = useCart();
+  
   const deliveryFee = 299; // €2.99
-  const total = subtotal + deliveryFee;
+  const totalWithDelivery = total + deliveryFee;
   
   const formatPrice = (price: number) => {
     return (price / 100).toFixed(2) + ' €';
   };
 
+  const handleRemoveItem = (id: string) => {
+    removeItem(id);
+  };
+
+  const handleUpdateQuantity = (id: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeItem(id);
+      return;
+    }
+    updateQuantity(id, newQuantity);
+  };
+
+  // Si la commande est en cours, on n'affiche pas le panier
+  if (currentStep > 0) {
+    return null;
+  }
+
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Votre panier</CardTitle>
+        {totalItems > 0 && (
+          <Badge variant="outline" className="ml-2">
+            {totalItems} article{totalItems > 1 ? 's' : ''}
+          </Badge>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {items.length === 0 ? (
@@ -45,14 +74,29 @@ const CartSection: React.FC<CartSectionProps> = ({
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="icon" className="h-8 w-8">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8"
+                    onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                  >
                     <Minus className="h-4 w-4" />
                   </Button>
                   <span className="w-4 text-center">{item.quantity}</span>
-                  <Button variant="outline" size="icon" className="h-8 w-8">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8"
+                    onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-destructive"
+                    onClick={() => handleRemoveItem(item.id)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -62,7 +106,7 @@ const CartSection: React.FC<CartSectionProps> = ({
             <div className="pt-4 space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Sous-total</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span>{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Frais de livraison</span>
@@ -70,16 +114,22 @@ const CartSection: React.FC<CartSectionProps> = ({
               </div>
               <div className="flex justify-between font-bold pt-2 border-t">
                 <span>Total</span>
-                <span>{formatPrice(total)}</span>
+                <span>{formatPrice(totalWithDelivery)}</span>
               </div>
             </div>
           </>
+        )}
+        
+        {error && (
+          <div className="text-destructive text-sm mt-2 p-2 bg-destructive/10 rounded-md">
+            {error}
+          </div>
         )}
       </CardContent>
       <CardFooter className="flex-col space-y-2">
         <Button 
           onClick={onOrder}
-          disabled={items.length === 0}
+          disabled={items.length === 0 || loading}
           className="w-full"
         >
           Commander maintenant
@@ -88,11 +138,20 @@ const CartSection: React.FC<CartSectionProps> = ({
         <Button 
           variant="outline" 
           className="w-full mt-2"
-          onClick={async () => await onPaymentComplete()}
-          disabled={items.length === 0}
+          onClick={async () => onPaymentComplete && await onPaymentComplete()}
+          disabled={items.length === 0 || loading}
         >
-          <CreditCard className="mr-2 h-4 w-4" />
-          Paiement rapide
+          {loading ? (
+            <span className="flex items-center">
+              <span className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
+              Traitement...
+            </span>
+          ) : (
+            <>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Paiement rapide
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>

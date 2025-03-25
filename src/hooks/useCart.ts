@@ -1,6 +1,7 @@
 
 import { useContext } from 'react';
-import { CartContext } from '@/contexts/CartContext';
+import { CartContext, CartContextType } from '@/contexts/CartContext';
+import { CartItem } from '@/types/cart';
 
 export const useCart = () => {
   const context = useContext(CartContext);
@@ -10,16 +11,20 @@ export const useCart = () => {
   }
   
   return {
-    ...context,
-    state: context.state,
+    // État du panier
+    items: context.state.items,
+    total: context.state.total,
+    count: context.state.count,
+    totalItems: context.state.totalItems,
+    
+    // Actions du panier
     addItem: context.addItem,
     removeItem: context.removeItem,
     updateItemQuantity: context.updateItemQuantity,
     updateQuantity: context.updateQuantity,
     clearCart: context.clearCart,
-    items: context.state.items,
-    total: context.state.total,
-    count: context.state.count,
-    totalItems: context.state.totalItems
+    
+    // Pour le passage au composant CartSection
+    state: context.state
   };
 };
