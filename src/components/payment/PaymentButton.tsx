@@ -1,14 +1,17 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Loader2 } from 'lucide-react';
+import { LockClosedIcon } from "lucide-react";
 
 interface PaymentButtonProps {
   isProcessing: boolean;
-  handlePayment: () => Promise<void>;
+  handlePayment: () => void;
 }
 
-const PaymentButton = ({ isProcessing, handlePayment }: PaymentButtonProps) => {
+const PaymentButton: React.FC<PaymentButtonProps> = ({
+  isProcessing,
+  handlePayment
+}) => {
   return (
     <Button
       className="w-full"
@@ -16,12 +19,15 @@ const PaymentButton = ({ isProcessing, handlePayment }: PaymentButtonProps) => {
       disabled={isProcessing}
     >
       {isProcessing ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <span className="flex items-center">
+          <span className="animate-spin h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full"></span>
           Traitement en cours...
-        </>
+        </span>
       ) : (
-        'Payer maintenant'
+        <span className="flex items-center">
+          <LockClosedIcon className="h-4 w-4 mr-2" />
+          Payer maintenant
+        </span>
       )}
     </Button>
   );

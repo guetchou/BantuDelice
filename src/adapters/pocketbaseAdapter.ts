@@ -61,8 +61,9 @@ export const createCollection = <T extends Record<string, any>>(collectionName: 
     ): Promise<ApiResponse<T[]>> => {
       return pbWrapper(async () => {
         const result = await pb.collection(collectionName).getList(page, perPage, options);
+        const items = result.items as unknown as T[];
         return {
-          data: result.items as T[],
+          data: items,
           totalItems: result.totalItems,
           count: result.items.length
         };
@@ -71,21 +72,30 @@ export const createCollection = <T extends Record<string, any>>(collectionName: 
     
     getOne: async (id: string): Promise<ApiResponse<T>> => {
       return pbWrapper(
-        () => pb.collection(collectionName).getOne(id) as Promise<T>,
+        async () => {
+          const record = await pb.collection(collectionName).getOne(id);
+          return record as unknown as T;
+        },
         `Impossible de récupérer l'élément de ${collectionName}`
       );
     },
     
     create: async (data: Record<string, any>): Promise<ApiResponse<T>> => {
       return pbWrapper(
-        () => pb.collection(collectionName).create(data) as Promise<T>,
+        async () => {
+          const record = await pb.collection(collectionName).create(data);
+          return record as unknown as T;
+        },
         `Impossible de créer l'élément dans ${collectionName}`
       );
     },
     
     update: async (id: string, data: Record<string, any>): Promise<ApiResponse<T>> => {
       return pbWrapper(
-        () => pb.collection(collectionName).update(id, data) as Promise<T>,
+        async () => {
+          const record = await pb.collection(collectionName).update(id, data);
+          return record as unknown as T;
+        },
         `Impossible de mettre à jour l'élément dans ${collectionName}`
       );
     },
@@ -101,7 +111,7 @@ export const createCollection = <T extends Record<string, any>>(collectionName: 
     getByField: async (field: string, value: any): Promise<ApiResponse<T>> => {
       return pbWrapper(async () => {
         const result = await pb.collection(collectionName).getFirstListItem(`${field}="${value}"`);
-        return result as T;
+        return result as unknown as T;
       }, `Impossible de trouver l'élément dans ${collectionName}`);
     },
     
@@ -111,8 +121,9 @@ export const createCollection = <T extends Record<string, any>>(collectionName: 
           filter,
           ...options
         });
+        const items = result.items as unknown as T[];
         return {
-          data: result.items as T[],
+          data: items,
           totalItems: result.totalItems,
           count: result.items.length
         };

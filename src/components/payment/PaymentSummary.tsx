@@ -1,35 +1,65 @@
 
 import React from 'react';
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 interface PaymentSummaryProps {
   amount: number;
   saveMethod: boolean;
-  setSaveMethod: (checked: boolean) => void;
+  setSaveMethod: (value: boolean) => void;
 }
 
-const PaymentSummary = ({ amount, saveMethod, setSaveMethod }: PaymentSummaryProps) => {
+const PaymentSummary: React.FC<PaymentSummaryProps> = ({
+  amount,
+  saveMethod,
+  setSaveMethod
+}) => {
+  // Formatter pour afficher les montants en FCFA
+  const formatAmount = (value: number): string => {
+    return new Intl.NumberFormat('fr-CD', {
+      style: 'decimal',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
   return (
-    <>
+    <div className="space-y-4">
+      <div className="border rounded-md p-4 bg-muted/30">
+        <h3 className="font-medium mb-3">Récapitulatif</h3>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Montant</span>
+            <span>{formatAmount(amount)} FCFA</span>
+          </div>
+          
+          <div className="flex justify-between text-sm">
+            <span>Frais de service</span>
+            <span>0 FCFA</span>
+          </div>
+          
+          <Separator className="my-2" />
+          
+          <div className="flex justify-between font-medium">
+            <span>Total à payer</span>
+            <span>{formatAmount(amount)} FCFA</span>
+          </div>
+        </div>
+      </div>
+      
       <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="saveMethod" 
-          checked={saveMethod} 
-          onCheckedChange={(checked) => setSaveMethod(!!checked)} 
+        <Switch
+          id="save-payment-method"
+          checked={saveMethod}
+          onCheckedChange={setSaveMethod}
         />
-        <Label htmlFor="saveMethod" className="text-sm">
+        <Label htmlFor="save-payment-method">
           Enregistrer ce mode de paiement
         </Label>
       </div>
-
-      <div className="bg-muted/50 p-4 rounded-lg">
-        <div className="flex justify-between text-sm">
-          <span>Montant à payer:</span>
-          <span className="font-semibold">{amount.toLocaleString()} FCFA</span>
-        </div>
-      </div>
-    </>
+    </div>
   );
 };
 

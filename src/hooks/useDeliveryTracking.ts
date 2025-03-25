@@ -1,141 +1,208 @@
 
 import { useState, useEffect } from 'react';
-import pb from '@/lib/pocketbase';
 import { toast } from 'sonner';
+import { pbService } from '@/services/pocketbaseService';
 
 interface DeliveryLocation {
   latitude: number;
   longitude: number;
-  updatedAt: string;
 }
 
 interface DeliveryDriver {
   id: string;
   name: string;
-  phone?: string;
-  photo?: string;
+  phone: string;
+  avatar?: string;
+  vehicle_type: 'motorcycle' | 'car' | 'bicycle';
+  rating: number;
 }
 
-export const useDeliveryTracking = (orderId: string) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deliveryId, setDeliveryId] = useState<string | null>(null);
-  const [driverLocation, setDriverLocation] = useState<DeliveryLocation | null>(null);
-  const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null);
-  const [estimatedTime, setEstimatedTime] = useState<string | null>(null);
-  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
-  
-  // Charge les données initiales de la livraison
-  useEffect(() => {
-    const loadDeliveryData = async () => {
-      if (!orderId) return;
+interface DeliveryStatus {
+  status: 'pending' | 'preparing' | 'picking_up' | 'in_transit' | 'delivered' | 'cancelled';
+  timestamp: string;
+  location?: DeliveryLocation;
+  note?: string;
+}
+
+interface DeliveryTrackingState {
+  orderId: string | null;
+  driver: DeliveryDriver | null;
+  status: DeliveryStatus | null;
+  estimatedDeliveryTime: string | null;
+  route: DeliveryLocation[];
+  currentLocation: DeliveryLocation | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export const useDeliveryTracking = (orderId: string | null) => {
+  const [state, setState] = useState<DeliveryTrackingState>({
+    orderId,
+    driver: null,
+    status: null,
+    estimatedDeliveryTime: null,
+    route: [],
+    currentLocation: null,
+    loading: false,
+    error: null
+  });
+
+  // Fonction pour charger les données de suivi
+  const loadTrackingData = async () => {
+    if (!orderId) return;
+    
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      // Récupérer les informations de suivi
+      const trackingResult = await pbService.delivery.getOrderDeliveryStatus(orderId);
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Trouver les données de livraison associées à cette commande
-        const deliveryData = await pb.collection('delivery_requests').getFirstListItem(`order_id="${orderId}"`);
-        
-        if (deliveryData) {
-          setDeliveryId(deliveryData.id);
-          setDeliveryStatus(deliveryData.status);
-          setEstimatedTime(deliveryData.estimated_delivery_time);
-          
-          // Si un conducteur est assigné, charger ses informations
-          if (deliveryData.driver_id) {
-            const driverData = await pb.collection('drivers').getOne(deliveryData.driver_id);
-            
-            if (driverData) {
-              setDriver({
-                id: driverData.id,
-                name: driverData.name,
-                phone: driverData.phone,
-                photo: driverData.photo ? pb.files.getUrl(driverData, driverData.photo) : undefined
-              });
-              
-              // Obtenir la dernière position du conducteur
-              const locationData = await pb.collection('driver_locations').getFirstListItem(`driver_id="${driverData.id}"`, {
-                sort: '-created'
-              });
-              
-              if (locationData) {
-                setDriverLocation({
-                  latitude: locationData.latitude,
-                  longitude: locationData.longitude,
-                  updatedAt: locationData.created
-                });
-              }
-            }
-          }
-        } else {
-          setError("Aucune information de livraison trouvée pour cette commande");
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des données de livraison:', error);
-        setError("Impossible de charger les informations de livraison");
-      } finally {
-        setLoading(false);
+      if (trackingResult.error) {
+        throw new Error("Impossible de récupérer les données de suivi");
       }
-    };
-    
-    loadDeliveryData();
-  }, [orderId]);
-  
-  // S'abonner aux mises à jour en temps réel
-  useEffect(() => {
-    if (!deliveryId) return;
-    
-    // Abonnement aux changements de statut de livraison
-    const statusSubscription = pb.collection('delivery_requests').subscribe(deliveryId, (data) => {
-      if (data.record) {
-        setDeliveryStatus(data.record.status);
-        setEstimatedTime(data.record.estimated_delivery_time);
-        
-        // Notification de mise à jour du statut
-        const statusMessages: Record<string, string> = {
-          'accepted': 'Votre commande a été acceptée pour livraison',
-          'picked_up': 'Votre commande a été récupérée par le livreur',
-          'delivering': 'Votre commande est en route !',
-          'delivered': 'Votre commande a été livrée avec succès',
-          'completed': 'Livraison terminée - Bon appétit !'
-        };
-        
-        if (statusMessages[data.record.status]) {
-          toast(statusMessages[data.record.status]);
-        }
-      }
-    });
-    
-    // Si un conducteur est assigné, s'abonner aux mises à jour de sa position
-    let locationSubscription: any = null;
-    if (driver) {
-      locationSubscription = pb.collection('driver_locations').subscribe(`driver_id="${driver.id}"`, (data) => {
-        if (data.record) {
-          setDriverLocation({
-            latitude: data.record.latitude,
-            longitude: data.record.longitude,
-            updatedAt: data.record.created
-          });
-        }
+      
+      // Données simulées pour la démo
+      const mockDriver: DeliveryDriver = {
+        id: "driver_123",
+        name: "Mamadou Diop",
+        phone: "+243 123 456 789",
+        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+        vehicle_type: "motorcycle",
+        rating: 4.8
+      };
+      
+      const mockStatus: DeliveryStatus = {
+        status: "in_transit",
+        timestamp: new Date().toISOString(),
+        location: { latitude: -4.325, longitude: 15.322 }
+      };
+      
+      // Mise à jour de l'état avec les données
+      setState(prev => ({
+        ...prev,
+        driver: mockDriver,
+        status: mockStatus,
+        estimatedDeliveryTime: "10-15 min",
+        currentLocation: mockStatus.location,
+        loading: false
+      }));
+      
+      // Simuler la mise à jour de la position en temps réel
+      startLocationSimulation();
+      
+    } catch (error) {
+      console.error("Erreur de suivi de livraison:", error);
+      setState(prev => ({ 
+        ...prev, 
+        loading: false, 
+        error: error instanceof Error ? error.message : "Une erreur s'est produite" 
+      }));
+      
+      toast.error("Erreur de suivi", {
+        description: "Impossible de charger les données de suivi"
       });
+    }
+  };
+  
+  // Fonction pour simuler les mises à jour de position en temps réel
+  const startLocationSimulation = () => {
+    // Point de départ
+    const startLat = -4.325;
+    const startLng = 15.322;
+    
+    // Point d'arrivée (destination)
+    const endLat = -4.338;
+    const endLng = 15.349;
+    
+    // Calculer la distance totale
+    const totalSteps = 20;
+    const latStep = (endLat - startLat) / totalSteps;
+    const lngStep = (endLng - startLng) / totalSteps;
+    
+    let currentStep = 0;
+    
+    const interval = setInterval(() => {
+      if (currentStep >= totalSteps) {
+        clearInterval(interval);
+        
+        // Arrivée à destination
+        setState(prev => ({
+          ...prev,
+          status: {
+            status: "delivered",
+            timestamp: new Date().toISOString(),
+            location: { latitude: endLat, longitude: endLng }
+          }
+        }));
+        
+        toast.success("Livraison effectuée", {
+          description: "Votre commande a été livrée avec succès"
+        });
+        
+        return;
+      }
+      
+      // Calculer la nouvelle position
+      const newLat = startLat + latStep * currentStep;
+      const newLng = startLng + lngStep * currentStep;
+      
+      // Mettre à jour l'état
+      setState(prev => {
+        const newRoute = [...prev.route, { latitude: newLat, longitude: newLng }];
+        
+        return {
+          ...prev,
+          route: newRoute,
+          currentLocation: { latitude: newLat, longitude: newLng },
+          status: {
+            status: "in_transit",
+            timestamp: new Date().toISOString(),
+            location: { latitude: newLat, longitude: newLng }
+          }
+        };
+      });
+      
+      currentStep++;
+    }, 3000);
+    
+    // Nettoyer l'intervalle lors du démontage du hook
+    return () => clearInterval(interval);
+  };
+  
+  // Charger les données initiales
+  useEffect(() => {
+    if (orderId) {
+      loadTrackingData();
     }
     
     return () => {
-      pb.collection('delivery_requests').unsubscribe(deliveryId);
-      if (locationSubscription && driver) {
-        pb.collection('driver_locations').unsubscribe();
-      }
+      // Nettoyage lors du démontage
     };
-  }, [deliveryId, driver]);
+  }, [orderId]);
+  
+  // Rafraîchir manuellement les données
+  const refreshTracking = () => {
+    loadTrackingData();
+  };
+  
+  // Contacter le livreur
+  const contactDriver = () => {
+    if (!state.driver) {
+      toast.error("Impossible de contacter le livreur", {
+        description: "Aucun livreur n'est actuellement assigné à votre commande"
+      });
+      return;
+    }
+    
+    // Simuler l'action d'appeler le livreur
+    toast.info("Appel au livreur", {
+      description: `Vous allez être mis en relation avec ${state.driver.name}`
+    });
+  };
   
   return {
-    loading,
-    error,
-    deliveryId,
-    deliveryStatus,
-    estimatedTime,
-    driver,
-    driverLocation
+    ...state,
+    refreshTracking,
+    contactDriver
   };
 };

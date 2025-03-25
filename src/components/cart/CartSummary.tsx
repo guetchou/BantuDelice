@@ -1,89 +1,128 @@
 
-import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import { useCart } from '@/hooks/useCart';
-import { Separator } from '@/components/ui/separator';
-import { Check, ShoppingBag } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ShoppingCart, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 interface CartSummaryProps {
-  showCheckoutButton?: boolean;
   title?: string;
-  description?: string;
+  showCheckoutButton?: boolean;
+  onCheckout?: () => void;
 }
 
-const CartSummary = ({ 
-  showCheckoutButton = true, 
-  title = "Récapitulatif du panier",
-  description
+const CartSummary = ({
+  title = "Votre commande",
+  showCheckoutButton = true,
+  onCheckout
 }: CartSummaryProps) => {
-  const { items, total } = useCart();
+  const { items, total, isEmpty, calculateTotalWithDelivery } = useCart();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const deliveryFee = 299; // €2.99
-  const totalWithDelivery = total + deliveryFee;
+  
+  const deliveryFee = 299; // 2.99€ en centimes
+  const totalWithDelivery = calculateTotalWithDelivery(deliveryFee);
+  
+  const handleCheckout = () => {
+    setLoading(true);
+    
+    if (onCheckout) {
+      onCheckout();
+    } else {
+      navigate('/checkout');
+    }
+    
+    setTimeout(() => setLoading(false), 500);
+  };
+  
+  // Formatter pour afficher les montants en euros
+  const formatPrice = (price: number): string => {
+    return (price / 100).toFixed(2) + ' €';
+  };
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ShoppingBag className="h-5 w-5" />
-          {title}
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center">
+            <ShoppingCart className="h-5 w-5 mr-2" />
+            <span>{title}</span>
+          </div>
+          {items.length > 0 && (
+            <Badge variant="secondary">
+              {items.length} {items.length > 1 ? 'articles' : 'article'}
+            </Badge>
+          )}
         </CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
+      
       <CardContent>
-        {items.length === 0 ? (
+        {isEmpty() ? (
           <div className="text-center py-6">
             <p className="text-muted-foreground">Votre panier est vide</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {items.map((item) => (
-              <div key={item.id} className="flex justify-between items-center">
-                <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground">{item.quantity}×</span>
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    {item.options && item.options.length > 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        {item.options.map(opt => `${opt.name}`).join(', ')}
-                      </p>
-                    )}
-                  </div>
+            {items.map(item => (
+              <div key={item.id} className="flex justify-between text-sm">
+                <div className="flex-1">
+                  <span className="font-medium">
+                    {item.quantity}x {item.name}
+                  </span>
+                  {item.options && item.options.length > 0 && (
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {item.options.map(opt => opt.name).join(', ')}
+                    </div>
+                  )}
                 </div>
-                <p className="font-medium">{((item.price * item.quantity) / 100).toFixed(2)} €</p>
+                <span>{formatPrice(item.price * item.quantity)}</span>
               </div>
             ))}
             
-            <Separator className="my-4" />
+            <Separator className="my-2" />
             
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Sous-total</span>
-                <span>{(total / 100).toFixed(2)} €</span>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-sm">
+                <span>Sous-total</span>
+                <span>{formatPrice(total)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Frais de livraison</span>
-                <span>{(deliveryFee / 100).toFixed(2)} €</span>
+              <div className="flex justify-between text-sm">
+                <span>Frais de livraison</span>
+                <span>{formatPrice(deliveryFee)}</span>
               </div>
+              
               <Separator className="my-2" />
-              <div className="flex justify-between font-bold">
+              
+              <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span>{(totalWithDelivery / 100).toFixed(2)} €</span>
+                <span>{formatPrice(totalWithDelivery)}</span>
               </div>
             </div>
           </div>
         )}
       </CardContent>
-      {showCheckoutButton && items.length > 0 && (
+      
+      {!isEmpty() && showCheckoutButton && (
         <CardFooter>
           <Button 
-            className="w-full" 
-            onClick={() => navigate('/checkout')}
+            onClick={handleCheckout}
+            disabled={loading || isEmpty()}
+            className="w-full"
           >
-            <Check className="mr-2 h-4 w-4" />
-            Passer la commande
+            {loading ? (
+              <span className="flex items-center">
+                <span className="animate-spin h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full"></span>
+                Traitement...
+              </span>
+            ) : (
+              <span className="flex items-center">
+                Commander
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </span>
+            )}
           </Button>
         </CardFooter>
       )}

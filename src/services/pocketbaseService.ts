@@ -1,161 +1,174 @@
 
 import pb from '@/lib/pocketbase';
+import { pbWrapper, createCollection, authAdapter } from '@/adapters/pocketbaseAdapter';
 
-// Authentication functions
-export const authService = {
-  login: async (email: string, password: string) => {
-    try {
-      const authData = await pb.collection('users').authWithPassword(email, password);
-      return { data: authData, error: null };
-    } catch (error) {
-      console.error('Login error:', error);
-      return { data: null, error };
-    }
-  },
-  
-  logout: () => {
-    pb.authStore.clear();
-    return { error: null };
-  },
-  
-  register: async (email: string, password: string, userData: Record<string, any>) => {
-    try {
-      const data = {
-        email,
-        password,
-        passwordConfirm: password,
-        ...userData
-      };
-      const record = await pb.collection('users').create(data);
-      return { data: record, error: null };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { data: null, error };
-    }
-  },
-  
-  getUser: () => {
-    const user = pb.authStore.model;
-    return { data: { user }, error: null };
-  },
-  
-  resetPassword: async (email: string) => {
-    try {
-      await pb.collection('users').requestPasswordReset(email);
-      return { data: true, error: null };
-    } catch (error) {
-      console.error('Password reset error:', error);
-      return { data: null, error };
-    }
-  }
+// Service d'authentification
+export const authService = authAdapter;
+
+// Services des restaurants
+export const restaurantService = {
+  getAll: (filters?: any) => createCollection('restaurants').getList(1, 50, filters),
+  getById: (id: string) => createCollection('restaurants').getOne(id),
+  getMenuItems: (restaurantId: string) => createCollection('menu_items').getByFilter(`restaurant_id="${restaurantId}"`),
+  getMenu: (restaurantId: string) => createCollection('menus').getByFilter(`restaurant_id="${restaurantId}"`)
 };
 
-// Client data functions
-export const clientService = {
-  getClients: async () => {
-    try {
-      const records = await pb.collection('clients').getList(1, 50, {
-        sort: 'created',
+// Services des commandes
+export const orderService = {
+  getAll: (userId?: string, status?: string) => {
+    const filter = [];
+    if (userId) filter.push(`user_id="${userId}"`);
+    if (status) filter.push(`status="${status}"`);
+    
+    return createCollection('orders').getByFilter(filter.join(' && '));
+  },
+  
+  getById: (id: string) => createCollection('orders').getOne(id),
+  
+  createOrder: async (data: {
+    user_id: string,
+    restaurant_id: string,
+    items: any[],
+    delivery_address: string,
+    payment_method: string,
+    special_instructions?: string
+  }) => {
+    // Créer la commande
+    const orderResult = await createCollection('orders').create({
+      user_id: data.user_id,
+      restaurant_id: data.restaurant_id,
+      status: 'pending',
+      total_amount: data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+      delivery_address: data.delivery_address,
+      payment_method: data.payment_method,
+      special_instructions: data.special_instructions || '',
+      created_at: new Date().toISOString()
+    });
+    
+    if (orderResult.error || !orderResult.data) {
+      return orderResult;
+    }
+    
+    // Ajouter les articles de la commande
+    for (const item of data.items) {
+      await createCollection('order_items').create({
+        order_id: orderResult.data.id,
+        menu_item_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        options: JSON.stringify(item.options || [])
       });
-      return { data: records.items, error: null };
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-      return { data: null, error };
     }
+    
+    return orderResult;
   },
   
-  getClient: async (id: string) => {
-    try {
-      const record = await pb.collection('clients').getOne(id);
-      return { data: record, error: null };
-    } catch (error) {
-      console.error('Error fetching client:', error);
-      return { data: null, error };
-    }
-  },
+  updateOrderStatus: (orderId: string, status: string) => 
+    createCollection('orders').update(orderId, { status })
+};
+
+// Services de paiement
+export const paymentService = {
+  createPayment: (data: {
+    order_id: string,
+    amount: number,
+    payment_method: string,
+    user_id: string
+  }) => createCollection('payments').create({
+    ...data,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  }),
   
-  createClient: async (data: Record<string, any>) => {
-    try {
-      const record = await pb.collection('clients').create(data);
-      return { data: record, error: null };
-    } catch (error) {
-      console.error('Error creating client:', error);
-      return { data: null, error };
-    }
-  },
+  updatePaymentStatus: (paymentId: string, status: string) => 
+    createCollection('payments').update(paymentId, { status }),
   
-  updateClient: async (id: string, data: Record<string, any>) => {
-    try {
-      const record = await pb.collection('clients').update(id, data);
-      return { data: record, error: null };
-    } catch (error) {
-      console.error('Error updating client:', error);
-      return { data: null, error };
+  getWalletBalance: async (userId: string) => {
+    const walletResult = await createCollection('wallets').getByField('user_id', userId);
+    
+    if (walletResult.error || !walletResult.data) {
+      // Créer un nouveau wallet si nécessaire
+      if (walletResult.error) {
+        return createCollection('wallets').create({
+          user_id: userId,
+          balance: 0,
+          created_at: new Date().toISOString()
+        });
+      }
+      
+      return walletResult;
     }
-  },
-  
-  deleteClient: async (id: string) => {
-    try {
-      await pb.collection('clients').delete(id);
-      return { data: true, error: null };
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      return { data: null, error };
-    }
+    
+    return walletResult;
   }
 };
 
-// General data access function
-export const getCollection = (collection: string) => {
-  return {
-    getList: async (page = 1, perPage = 20, options = {}) => {
-      try {
-        const records = await pb.collection(collection).getList(page, perPage, options);
-        return { data: records.items, error: null, totalItems: records.totalItems };
-      } catch (error) {
-        console.error(`Error fetching ${collection}:`, error);
-        return { data: null, error, totalItems: 0 };
-      }
-    },
+// Service de livraison
+export const deliveryService = {
+  getOrderDeliveryStatus: (orderId: string) => createCollection('delivery_tracking').getByField('order_id', orderId),
+  
+  updateDeliveryStatus: (deliveryId: string, status: string, location?: { latitude: number, longitude: number }) => {
+    const updateData: Record<string, any> = { status };
     
-    getOne: async (id: string) => {
-      try {
-        const record = await pb.collection(collection).getOne(id);
-        return { data: record, error: null };
-      } catch (error) {
-        console.error(`Error fetching ${collection} item:`, error);
-        return { data: null, error };
-      }
-    },
-    
-    create: async (data: Record<string, any>) => {
-      try {
-        const record = await pb.collection(collection).create(data);
-        return { data: record, error: null };
-      } catch (error) {
-        console.error(`Error creating ${collection} item:`, error);
-        return { data: null, error };
-      }
-    },
-    
-    update: async (id: string, data: Record<string, any>) => {
-      try {
-        const record = await pb.collection(collection).update(id, data);
-        return { data: record, error: null };
-      } catch (error) {
-        console.error(`Error updating ${collection} item:`, error);
-        return { data: null, error };
-      }
-    },
-    
-    delete: async (id: string) => {
-      try {
-        await pb.collection(collection).delete(id);
-        return { data: true, error: null };
-      } catch (error) {
-        console.error(`Error deleting ${collection} item:`, error);
-        return { data: null, error };
-      }
+    if (location) {
+      updateData.current_latitude = location.latitude;
+      updateData.current_longitude = location.longitude;
     }
-  };
+    
+    return createCollection('delivery_tracking').update(deliveryId, updateData);
+  },
+  
+  createDeliveryRequest: (data: {
+    order_id: string,
+    pickup_address: string,
+    delivery_address: string,
+    estimated_delivery_time?: string
+  }) => createCollection('delivery_requests').create({
+    ...data,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  })
 };
+
+// Service de notifications
+export const notificationService = {
+  getAll: (userId: string) => createCollection('notifications').getByFilter(`user_id="${userId}"`),
+  
+  create: (data: {
+    user_id: string,
+    title: string,
+    message: string,
+    type: string,
+    related_id?: string
+  }) => createCollection('notifications').create({
+    ...data,
+    is_read: false,
+    created_at: new Date().toISOString()
+  }),
+  
+  markAsRead: (notificationId: string) => createCollection('notifications').update(notificationId, { is_read: true })
+};
+
+// Service en temps réel
+export const realTimeService = {
+  subscribeToCollection: (collectionName: string, recordId: string, callback: (data: any) => void) => {
+    return pb.collection(collectionName).subscribe(recordId, callback);
+  },
+  
+  unsubscribeFromCollection: (collectionName: string, recordId: string) => {
+    pb.collection(collectionName).unsubscribe(recordId);
+  }
+};
+
+// Export unifié de tous les services
+export const pbService = {
+  auth: authService,
+  restaurants: restaurantService,
+  orders: orderService,
+  payments: paymentService,
+  delivery: deliveryService,
+  notifications: notificationService,
+  realTime: realTimeService
+};
+
+export default pbService;
