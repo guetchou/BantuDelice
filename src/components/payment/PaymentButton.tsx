@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { LockClosedIcon } from "lucide-react";
+import { Lock } from "lucide-react";
 
 interface PaymentButtonProps {
   isProcessing: boolean;
@@ -25,7 +25,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         </span>
       ) : (
         <span className="flex items-center">
-          <LockClosedIcon className="h-4 w-4 mr-2" />
+          <Lock className="h-4 w-4 mr-2" />
           Payer maintenant
         </span>
       )}

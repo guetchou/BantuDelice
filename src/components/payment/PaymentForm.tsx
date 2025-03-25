@@ -1,136 +1,163 @@
-import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { motion } from "framer-motion";
-import { CreditCard, Smartphone } from 'lucide-react';
 
-interface PaymentFormProps {
+import React, { useState } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import { PaymentMethodSelector } from './PaymentMethodSelector';
+import { PhoneNumberInput } from './PhoneNumberInput'; 
+import { CardPaymentForm } from './CardPaymentForm';
+import { CashDeliveryInfo } from './CashDeliveryInfo';
+import { PaymentSummary } from './PaymentSummary';
+import { PaymentButton } from './PaymentButton';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from 'lucide-react';
+import { paymentService } from '@/services/apiService';
+
+export interface PaymentFormProps {
   amount: number;
+  orderId?: string;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  onPaymentComplete?: () => void;
+  description?: string;
 }
 
-export default function PaymentForm({ amount, onSuccess, onError }: PaymentFormProps) {
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'mobile'>('mobile');
+const operators = [
+  { value: "mtn", label: "MTN Mobile Money", icon: "🟡" },
+  { value: "airtel", label: "Airtel Money", icon: "🔴" },
+  { value: "orange", label: "Orange Money", icon: "🟠" },
+];
+
+export const PaymentForm: React.FC<PaymentFormProps> = ({ 
+  amount, 
+  orderId,
+  onSuccess, 
+  onError,
+  onPaymentComplete,
+  description = "Paiement"
+}) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [operator, setOperator] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [saveMethod, setSaveMethod] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'mobile' | 'card' | 'cashdelivery'>('mobile');
+  const [openOperatorSelect, setOpenOperatorSelect] = useState(false);
   const { toast } = useToast();
+
+  const validatePhoneNumber = (number: string) => {
+    const regex = /^[0-9]{9}$/;
+    return regex.test(number);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (rawValue.length <= 9) {
+      setPhoneNumber(rawValue);
+    }
+  };
 
   const handlePayment = async () => {
     try {
+      setError(null);
       setIsProcessing(true);
-      // Simuler un paiement
+
+      if (paymentMethod === 'mobile') {
+        if (!phoneNumber || !operator) {
+          throw new Error('Veuillez remplir tous les champs');
+        }
+
+        if (!/^[0-9]{9}$/.test(phoneNumber.replace(/\s/g, ''))) {
+          throw new Error('Numéro de téléphone invalide (9 chiffres requis)');
+        }
+      }
+
+      // Simuler un traitement
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Créer un enregistrement de paiement
+      if (orderId) {
+        const { data, error } = await paymentService.create({
+          order_id: orderId,
+          amount,
+          payment_method: paymentMethod,
+          payment_provider: paymentMethod === 'mobile' ? operator : 
+                           paymentMethod === 'card' ? 'card' : 'cash',
+          status: paymentMethod === 'cashdelivery' ? 'pending' : 'completed',
+          metadata: paymentMethod === 'mobile' ? { phone_number: phoneNumber } : {}
+        });
+        
+        if (error) throw error;
+      }
+      
+      // Sauvegarder la méthode de paiement si demandé
+      if (saveMethod && paymentMethod !== 'cashdelivery') {
+        // Logique pour sauvegarder la méthode de paiement
+        console.log('Méthode de paiement sauvegardée');
+      }
+
       toast({
         title: "Paiement réussi",
-        description: "Votre paiement a été traité avec succès",
+        description: `${description} a été traité avec succès`,
       });
-      
-      onSuccess?.();
+
+      if (onSuccess) onSuccess();
+      if (onPaymentComplete) onPaymentComplete();
+
     } catch (error) {
+      console.error('Erreur de paiement:', error);
+      setError(error instanceof Error ? error.message : "Une erreur est survenue");
       toast({
         title: "Erreur de paiement",
-        description: "Une erreur est survenue lors du paiement",
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive",
       });
-      onError?.(error as Error);
+      if (onError) onError(error instanceof Error ? error : new Error('Unknown error'));
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <Card className="p-6 max-w-md mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-6"
-      >
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold">Paiement Sécurisé</h2>
-          <p className="text-gray-500">Montant à payer: {amount.toLocaleString()} FCFA</p>
-        </div>
+    <div className="space-y-6">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-        <div className="space-y-4">
-          <div className="flex space-x-4">
-            <Button
-              type="button"
-              variant={paymentMethod === 'mobile' ? 'default' : 'outline'}
-              className="flex-1"
-              onClick={() => setPaymentMethod('mobile')}
-            >
-              <Smartphone className="w-4 h-4 mr-2" />
-              Mobile Money
-            </Button>
-            <Button
-              type="button"
-              variant={paymentMethod === 'card' ? 'default' : 'outline'}
-              className="flex-1"
-              onClick={() => setPaymentMethod('card')}
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Carte Bancaire
-            </Button>
-          </div>
+      <div className="space-y-4">
+        <PaymentMethodSelector 
+          paymentMethod={paymentMethod} 
+          setPaymentMethod={setPaymentMethod} 
+        />
 
-          {paymentMethod === 'mobile' ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Opérateur</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir un opérateur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mtn">MTN Mobile Money</SelectItem>
-                    <SelectItem value="orange">Orange Money</SelectItem>
-                    <SelectItem value="moov">Moov Money</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Numéro de téléphone</Label>
-                <Input type="tel" placeholder="+243..." />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Numéro de carte</Label>
-                <Input type="text" placeholder="4242 4242 4242 4242" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Date d'expiration</Label>
-                  <Input type="text" placeholder="MM/YY" />
-                </div>
-                <div className="space-y-2">
-                  <Label>CVC</Label>
-                  <Input type="text" placeholder="123" />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        {paymentMethod === 'mobile' && (
+          <PhoneNumberInput
+            phoneNumber={phoneNumber}
+            operator={operator}
+            handleInputChange={handleInputChange}
+            openOperatorSelect={openOperatorSelect}
+            setOpenOperatorSelect={setOpenOperatorSelect}
+            setOperator={setOperator}
+            operators={operators}
+          />
+        )}
 
-        <Button
-          className="w-full"
-          onClick={handlePayment}
-          disabled={isProcessing}
-        >
-          {isProcessing ? "Traitement en cours..." : "Payer maintenant"}
-        </Button>
-      </motion.div>
-    </Card>
+        {paymentMethod === 'card' && <CardPaymentForm />}
+
+        {paymentMethod === 'cashdelivery' && <CashDeliveryInfo />}
+
+        <PaymentSummary 
+          amount={amount} 
+          saveMethod={saveMethod} 
+          setSaveMethod={setSaveMethod} 
+        />
+
+        <PaymentButton 
+          isProcessing={isProcessing} 
+          handlePayment={handlePayment} 
+        />
+      </div>
+    </div>
   );
-}
+};

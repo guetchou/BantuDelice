@@ -1,22 +1,22 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
+import { useEffect } from 'react';
+import { useLoyalty } from '@/hooks/useLoyalty';
 import { Award, Crown, Gift } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface LoyaltyStatus {
-  points: number;
-  lifetime_points: number;
-  tier_name: string;
-  points_to_next_tier: number | null;
-  benefits: string[];
+interface LoyaltyStatusProps {
+  userId?: string;
+  showDetailedInfo?: boolean;
 }
 
-export default function LoyaltyStatus() {
-  const [status, setStatus] = useState<LoyaltyStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+export default function LoyaltyStatus({ userId, showDetailedInfo = true }: LoyaltyStatusProps) {
+  const { status, isLoading, error, fetchLoyaltyStatus } = useLoyalty({ userId });
+
+  useEffect(() => {
+    fetchLoyaltyStatus();
+  }, [fetchLoyaltyStatus, userId]);
 
   const parseBenefits = (benefits: any): string[] => {
     if (Array.isArray(benefits)) return benefits;
@@ -31,63 +31,50 @@ export default function LoyaltyStatus() {
     return [];
   };
 
-  useEffect(() => {
-    const fetchLoyaltyStatus = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          setIsLoading(false);
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from('loyalty_points')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setStatus({
-            points: data.points,
-            lifetime_points: data.lifetime_points,
-            tier_name: data.tier_name,
-            points_to_next_tier: data.points_to_next_tier,
-            benefits: parseBenefits(data.benefits)
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching loyalty status:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger votre statut de fidélité",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchLoyaltyStatus();
-  }, []);
-
   if (isLoading) {
-    return <div>Chargement...</div>;
+    return (
+      <Card className="p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div>
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-2 w-full" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        </div>
+      </Card>
+    );
   }
 
-  if (!status) {
-    return <div>Connectez-vous pour voir votre statut de fidélité</div>;
+  if (error || !status) {
+    return (
+      <Card className="p-6">
+        <div className="text-center text-muted-foreground">
+          {error ? 
+            "Impossible de charger votre statut de fidélité" : 
+            "Connectez-vous pour voir votre statut de fidélité"}
+        </div>
+      </Card>
+    );
   }
 
   const getTierIcon = () => {
     switch (status.tier_name) {
-      case 'Diamond':
+      case 'diamond':
         return <Crown className="h-8 w-8 text-purple-500" />;
-      case 'Gold':
+      case 'gold':
         return <Award className="h-8 w-8 text-yellow-500" />;
-      case 'Silver':
+      case 'silver':
         return <Award className="h-8 w-8 text-gray-400" />;
       default:
         return <Award className="h-8 w-8 text-orange-500" />;
@@ -96,11 +83,11 @@ export default function LoyaltyStatus() {
 
   const getTierColor = () => {
     switch (status.tier_name) {
-      case 'Diamond':
+      case 'diamond':
         return 'bg-purple-500';
-      case 'Gold':
+      case 'gold':
         return 'bg-yellow-500';
-      case 'Silver':
+      case 'silver':
         return 'bg-gray-400';
       default:
         return 'bg-orange-500';
@@ -112,6 +99,8 @@ export default function LoyaltyStatus() {
     const totalPointsNeeded = status.points + status.points_to_next_tier;
     return (status.points / totalPointsNeeded) * 100;
   };
+
+  const benefits = parseBenefits(status.benefits);
 
   return (
     <Card className="p-6">
@@ -135,20 +124,22 @@ export default function LoyaltyStatus() {
         </div>
       )}
 
-      <div className="space-y-4">
-        <h3 className="font-semibold flex items-center gap-2">
-          <Gift className="h-5 w-5" />
-          Vos avantages
-        </h3>
-        <ul className="space-y-2">
-          {status.benefits.map((benefit, index) => (
-            <li key={index} className="flex items-center gap-2 text-sm">
-              <span className={`h-2 w-2 rounded-full ${getTierColor()}`} />
-              {benefit}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {showDetailedInfo && (
+        <div className="space-y-4">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Gift className="h-5 w-5" />
+            Vos avantages
+          </h3>
+          <ul className="space-y-2">
+            {benefits.map((benefit, index) => (
+              <li key={index} className="flex items-center gap-2 text-sm">
+                <span className={`h-2 w-2 rounded-full ${getTierColor()}`} />
+                {benefit}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-6 pt-6 border-t">
         <p className="text-sm text-gray-500">

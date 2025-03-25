@@ -61,12 +61,7 @@ export const createCollection = <T extends Record<string, any>>(collectionName: 
     ): Promise<ApiResponse<T[]>> => {
       return pbWrapper(async () => {
         const result = await pb.collection(collectionName).getList(page, perPage, options);
-        const items = result.items as unknown as T[];
-        return {
-          data: items,
-          totalItems: result.totalItems,
-          count: result.items.length
-        };
+        return result.items as unknown as T[];
       }, `Impossible de récupérer les données de ${collectionName}`);
     },
     
@@ -121,12 +116,7 @@ export const createCollection = <T extends Record<string, any>>(collectionName: 
           filter,
           ...options
         });
-        const items = result.items as unknown as T[];
-        return {
-          data: items,
-          totalItems: result.totalItems,
-          count: result.items.length
-        };
+        return result.items as unknown as T[];
       }, `Impossible de filtrer les données de ${collectionName}`);
     }
   };
