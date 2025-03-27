@@ -1,12 +1,11 @@
-
 /**
- * Estime le temps nécessaire pour un trajet en taxi
- * @param distance Distance en kilomètres
- * @param trafficLevel Niveau de trafic ('light', 'moderate', 'heavy', 'severe')
- * @param vehicleType Type de véhicule ('standard', 'comfort', 'premium', 'van')
- * @param timeOfDay Heure de la journée (optionnel)
- * @param weatherCondition Conditions météorologiques (optionnel)
- * @returns Temps estimé en minutes
+ * Estimates the time required for a taxi journey
+ * @param distance Distance in kilometers
+ * @param trafficLevel Traffic level ('light', 'moderate', 'heavy', 'severe')
+ * @param vehicleType Vehicle type ('standard', 'comfort', 'premium', 'van')
+ * @param timeOfDay Time of day (optional)
+ * @param weatherCondition Weather conditions (optional)
+ * @returns Estimated time in minutes
  */
 export function estimateTime(
   distance: number, 
@@ -15,7 +14,7 @@ export function estimateTime(
   timeOfDay?: Date,
   weatherCondition?: 'clear' | 'rain' | 'snow' | 'fog'
 ): number {
-  // Vitesse moyenne en km/h selon le niveau de trafic
+  // Average speed in km/h based on traffic level
   const avgSpeedByTraffic = {
     light: 45,
     moderate: 30,
@@ -23,7 +22,7 @@ export function estimateTime(
     severe: 12
   };
   
-  // Ajustement de la vitesse selon le type de véhicule
+  // Speed adjustment based on vehicle type
   const vehicleSpeedFactor = {
     standard: 1,
     comfort: 1.05,
@@ -31,25 +30,25 @@ export function estimateTime(
     van: 0.95
   };
   
-  // Calcul de la vitesse ajustée
+  // Calculate adjusted speed
   let adjustedSpeed = avgSpeedByTraffic[trafficLevel] * vehicleSpeedFactor[vehicleType];
   
-  // Ajustement selon l'heure de la journée
+  // Adjust based on time of day
   if (timeOfDay) {
     const hour = timeOfDay.getHours();
     
-    // Heures de pointe: 7h-9h et 17h-19h
+    // Rush hours: 7-9 AM and 5-7 PM
     if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
-      adjustedSpeed *= 0.85; // Réduction de 15% pendant les heures de pointe
+      adjustedSpeed *= 0.85; // 15% reduction during rush hours
     }
     
-    // Nuit: 22h-6h
+    // Night: 10 PM - 6 AM
     if (hour >= 22 || hour <= 6) {
-      adjustedSpeed *= 1.15; // Augmentation de 15% pendant la nuit (moins de trafic)
+      adjustedSpeed *= 1.15; // 15% increase during night (less traffic)
     }
   }
   
-  // Ajustement selon les conditions météorologiques
+  // Adjust based on weather conditions
   if (weatherCondition) {
     const weatherSpeedFactor = {
       clear: 1,
@@ -61,18 +60,18 @@ export function estimateTime(
     adjustedSpeed *= weatherSpeedFactor[weatherCondition];
   }
   
-  // Conversion en minutes (vitesse en km/h -> minutes)
+  // Convert to minutes (speed in km/h -> minutes)
   const timeInMinutes = (distance / adjustedSpeed) * 60;
   
-  // Arrondi à la minute supérieure avec un minimum de 5 minutes
+  // Round up to the nearest minute with a minimum of 5 minutes
   return Math.max(5, Math.ceil(timeInMinutes));
 }
 
 /**
- * Calcule l'heure d'arrivée estimée basée sur l'heure actuelle et le temps estimé
- * @param estimatedTimeMinutes Temps estimé en minutes
- * @param departureTime Heure de départ (par défaut: maintenant)
- * @returns Objet contenant l'heure d'arrivée et la représentation formatée
+ * Calculates the estimated arrival time based on current time and estimated time
+ * @param estimatedTimeMinutes Estimated time in minutes
+ * @param departureTime Departure time (default: now)
+ * @returns Object containing arrival time and formatted representation
  */
 export function calculateETA(
   estimatedTimeMinutes: number,
@@ -80,7 +79,7 @@ export function calculateETA(
 ): { arrivalTime: Date; formattedETA: string } {
   const arrivalTime = new Date(departureTime.getTime() + estimatedTimeMinutes * 60 * 1000);
   
-  // Format pour l'affichage
+  // Formatting options
   const options: Intl.DateTimeFormatOptions = {
     hour: '2-digit',
     minute: '2-digit'
@@ -93,4 +92,75 @@ export function calculateETA(
     arrivalTime,
     formattedETA
   };
+}
+
+/**
+ * Estimates traffic conditions based on time of day, day of week, and historical data
+ * @param location Current location coordinates
+ * @param timeOfDay Time of day (default: current time)
+ * @returns Estimated traffic level
+ */
+export function estimateTrafficLevel(
+  location: { latitude: number; longitude: number },
+  timeOfDay: Date = new Date()
+): 'light' | 'moderate' | 'heavy' | 'severe' {
+  const hour = timeOfDay.getHours();
+  const dayOfWeek = timeOfDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  
+  // Rush hours - heavy traffic
+  if (!isWeekend && ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19))) {
+    return 'heavy';
+  }
+  
+  // Mid-day - moderate traffic
+  if (hour >= 10 && hour <= 16) {
+    return isWeekend ? 'moderate' : 'moderate';
+  }
+  
+  // Evening - varies
+  if (hour >= 20 && hour <= 22) {
+    return isWeekend ? 'moderate' : 'light';
+  }
+  
+  // Late night - light traffic
+  if (hour >= 23 || hour <= 5) {
+    return 'light';
+  }
+  
+  // Default
+  return 'moderate';
+}
+
+/**
+ * Dynamic ETA update based on real-time conditions
+ * @param initialETA Initial ETA calculation
+ * @param distanceRemaining Remaining distance in kilometers
+ * @param currentTrafficLevel Current traffic level
+ * @param weatherUpdate Updated weather conditions
+ * @returns Updated ETA in minutes
+ */
+export function updateETADynamically(
+  initialETA: number,
+  distanceRemaining: number,
+  currentTrafficLevel: 'light' | 'moderate' | 'heavy' | 'severe',
+  weatherUpdate?: 'clear' | 'rain' | 'snow' | 'fog'
+): number {
+  // Calculate new ETA based on remaining distance and current conditions
+  const updatedEstimate = estimateTime(
+    distanceRemaining,
+    currentTrafficLevel,
+    'standard', // Assuming standard vehicle for recalculation
+    new Date(),
+    weatherUpdate
+  );
+  
+  // If significant change (more than 15% difference), update the ETA
+  const etaDifference = Math.abs(updatedEstimate - initialETA);
+  if (etaDifference / initialETA > 0.15) {
+    return updatedEstimate;
+  }
+  
+  // Otherwise keep the initial estimate for consistency
+  return initialETA;
 }

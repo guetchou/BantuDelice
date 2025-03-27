@@ -1,20 +1,29 @@
 
-import { PromoCodeValidation } from './types';
-import { VALID_PROMO_CODES } from './constants';
+import { PaymentMethod, TaxiVehicleType } from '@/types/taxi';
+import { paymentApi } from '@/integrations/api/payments';
 
-interface PromoCode {
-  code: string;
+export interface PromoCodeValidation {
+  valid: boolean;
   discount: number;
-  type: 'percentage' | 'fixed_amount' | 'free_delivery';
+  discount_type?: 'percentage' | 'fixed_amount' | 'free_ride';
+  message: string;
+  expiresAt?: string;
+  final_amount?: number;
+}
+
+export interface PromoCode {
+  code: string;
+  description: string;
+  discount: number;
+  type: 'percentage' | 'fixed_amount' | 'free_ride';
   minOrderValue?: number;
   maxUses?: number;
   expiresAt?: string;
   restrictedToUsers?: string[];
-  restrictedToVehicleTypes?: string[];
-  description?: string;
+  restrictedToVehicleTypes?: TaxiVehicleType[];
 }
 
-// Base de données simulée des codes promo
+// Local database of promo codes for offline validation
 const PROMO_CODES: Record<string, PromoCode> = {
   'BIENVENUE': { 
     code: 'BIENVENUE', 
@@ -47,11 +56,11 @@ const PROMO_CODES: Record<string, PromoCode> = {
   'FREESHIP': {
     code: 'FREESHIP',
     discount: 1.0,
-    type: 'free_delivery',
-    description: 'Frais de service offerts'
+    type: 'free_ride',
+    description: 'Course offerte'
   },
-  '10FCFA': {
-    code: '10FCFA',
+  '1000FCFA': {
+    code: '1000FCFA',
     discount: 1000,
     type: 'fixed_amount',
     description: '1000 FCFA de réduction sur votre course',
@@ -60,23 +69,39 @@ const PROMO_CODES: Record<string, PromoCode> = {
 };
 
 /**
- * Vérifie si un code promo est valide
- * @param code Code promo à vérifier
- * @param orderValue Valeur de la commande (optionnel)
- * @param userId ID de l'utilisateur (optionnel)
- * @param vehicleType Type de véhicule (optionnel)
- * @returns Résultat de la validation
+ * Validates a promo code and returns discount information
+ * @param code Promo code to validate
+ * @param amount Order amount (optional)
+ * @param userId User ID (optional)
+ * @param vehicleType Vehicle type (optional)
+ * @returns Validation result
  */
 export async function validatePromoCode(
   code: string,
-  orderValue?: number,
+  amount?: number,
   userId?: string,
-  vehicleType?: string
+  vehicleType?: TaxiVehicleType
 ): Promise<PromoCodeValidation> {
-  // Simuler un appel API pour vérifier le code promo
+  // If connectivity available, use the API
+  try {
+    if (navigator.onLine && amount) {
+      const response = await paymentApi.validatePromoCode(code, amount, vehicleType);
+      return {
+        valid: response.valid,
+        discount: response.discount,
+        discount_type: response.discount_type,
+        message: response.message,
+        final_amount: response.final_amount
+      };
+    }
+  } catch (error) {
+    console.warn('API promo code validation failed, using offline validation', error);
+  }
+  
+  // Fallback to local validation
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Vérifier si le code existe
+      // Check if code exists
       const promoCode = PROMO_CODES[code];
       
       if (!promoCode) {
@@ -88,7 +113,7 @@ export async function validatePromoCode(
         return;
       }
       
-      // Vérifier si le code a expiré
+      // Check if code has expired
       if (promoCode.expiresAt && new Date(promoCode.expiresAt) < new Date()) {
         resolve({
           valid: false,
@@ -99,8 +124,8 @@ export async function validatePromoCode(
         return;
       }
       
-      // Vérifier le montant minimum de commande
-      if (promoCode.minOrderValue && orderValue && orderValue < promoCode.minOrderValue) {
+      // Check minimum order amount
+      if (promoCode.minOrderValue && amount && amount < promoCode.minOrderValue) {
         resolve({
           valid: false,
           discount: 0,
@@ -109,7 +134,7 @@ export async function validatePromoCode(
         return;
       }
       
-      // Vérifier les restrictions d'utilisateurs
+      // Check user restrictions
       if (promoCode.restrictedToUsers && 
           userId && 
           !promoCode.restrictedToUsers.includes(userId)) {
@@ -121,7 +146,7 @@ export async function validatePromoCode(
         return;
       }
       
-      // Vérifier les restrictions de type de véhicule
+      // Check vehicle type restrictions
       if (promoCode.restrictedToVehicleTypes && 
           vehicleType && 
           !promoCode.restrictedToVehicleTypes.includes(vehicleType)) {
@@ -133,22 +158,30 @@ export async function validatePromoCode(
         return;
       }
       
-      // Le code est valide
+      // Calculate final amount if possible
+      let finalAmount: number | undefined = undefined;
+      if (amount) {
+        finalAmount = applyPromoCode(amount, promoCode);
+      }
+      
+      // The code is valid
       resolve({
         valid: true,
         discount: promoCode.discount,
+        discount_type: promoCode.type,
         message: `Code '${code}' appliqué avec succès: ${promoCode.description}`,
-        expiresAt: promoCode.expiresAt
+        expiresAt: promoCode.expiresAt,
+        final_amount: finalAmount
       });
-    }, 500);
+    }, 500); // Simulate API delay
   });
 }
 
 /**
- * Applique un code promo à un montant
- * @param amount Montant initial
- * @param promoCode Code promo validé
- * @returns Montant après application du code promo
+ * Applies a promo code to an amount
+ * @param amount Initial amount
+ * @param promoCode Promo code object
+ * @returns Amount after applying the promo code
  */
 export function applyPromoCode(amount: number, promoCode: PromoCode): number {
   if (!promoCode) return amount;
@@ -160,10 +193,9 @@ export function applyPromoCode(amount: number, promoCode: PromoCode): number {
     case 'fixed_amount':
       return Math.max(0, amount - promoCode.discount);
     
-    case 'free_delivery':
-      // Ici, on pourrait avoir une logique pour retirer les frais de service
-      // Pour simplifier, on considère que les frais de service sont de 500 FCFA
-      return Math.max(0, amount - 500);
+    case 'free_ride':
+      // Completely free, return 0
+      return 0;
     
     default:
       return amount;
@@ -171,10 +203,31 @@ export function applyPromoCode(amount: number, promoCode: PromoCode): number {
 }
 
 /**
- * Récupère les détails d'un code promo
- * @param code Code promo
- * @returns Détails du code promo ou null si inexistant
+ * Retrieves promo code details
+ * @param code Promo code
+ * @returns Promo code details or null if not found
  */
 export function getPromoCodeDetails(code: string): PromoCode | null {
   return PROMO_CODES[code] || null;
+}
+
+/**
+ * Formats a promo code discount for display
+ * @param promoCode Validated promo code
+ * @returns Formatted discount string
+ */
+export function formatPromoDiscount(
+  discountType: 'percentage' | 'fixed_amount' | 'free_ride',
+  discountValue: number
+): string {
+  switch (discountType) {
+    case 'percentage':
+      return `${Math.round(discountValue * 100)}%`;
+    case 'fixed_amount':
+      return `${discountValue} FCFA`;
+    case 'free_ride':
+      return `Course gratuite`;
+    default:
+      return '';
+  }
 }

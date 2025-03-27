@@ -1,243 +1,146 @@
 
 import { useState } from 'react';
-import { TaxiRide, TaxiDriver } from '@/types/taxi';
+import { TaxiInvoice } from '@/types/taxi';
+import { paymentApi } from '@/integrations/api/payments';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/utils/formatters';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-interface InvoiceData {
-  invoiceId: string;
-  rideId: string;
-  date: string;
-  customer: {
-    name: string;
-    email?: string;
-    phone?: string;
-  };
-  driver: {
-    name: string;
-    vehicleType: string;
-    licensePlate: string;
-  };
-  ride: {
-    pickup: string;
-    destination: string;
-    startTime: string;
-    endTime: string;
-    distance: number;
-    duration: number;
-  };
-  payment: {
-    subtotal: number;
-    tax: number;
-    discount: number;
-    total: number;
-    method: string;
-    currency: string;
-  };
-  company: {
-    name: string;
-    address: string;
-    phone: string;
-    logo?: string;
-    website?: string;
-  };
+interface UseInvoiceGenerationOptions {
+  onSuccess?: (invoiceData: { id: string; url: string }) => void;
+  onError?: (error: Error) => void;
 }
 
-/**
- * Hook pour la génération et l'envoi de factures
- */
-export function useInvoiceGeneration() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentInvoice, setCurrentInvoice] = useState<InvoiceData | null>(null);
-
+export function useInvoiceGeneration(options?: UseInvoiceGenerationOptions) {
+  const [loading, setLoading] = useState(false);
+  const [invoiceData, setInvoiceData] = useState<TaxiInvoice | null>(null);
+  
   /**
-   * Génère les données de la facture
-   */
-  const generateInvoiceData = (
-    ride: TaxiRide,
-    driver: TaxiDriver,
-    userName: string,
-    userEmail?: string,
-    userPhone?: string
-  ): InvoiceData => {
-    // Générer un ID unique pour la facture
-    const invoiceId = `INV-${Date.now().toString().slice(-8)}-${ride.id.slice(-4)}`;
-    
-    // Calculer la TVA (simplifié)
-    const subtotal = ride.actual_price || ride.estimated_price;
-    const taxRate = 0.18; // 18% TVA
-    const taxAmount = Math.round(subtotal * taxRate);
-    
-    // Calculer la réduction (si applicable)
-    const discount = ride.promo_discount || 0;
-    
-    // Calculer le total
-    const total = subtotal + taxAmount - discount;
-    
-    // Créer l'objet facture
-    const invoiceData: InvoiceData = {
-      invoiceId,
-      rideId: ride.id,
-      date: new Date().toISOString(),
-      customer: {
-        name: userName,
-        email: userEmail,
-        phone: userPhone
-      },
-      driver: {
-        name: driver.name,
-        vehicleType: driver.vehicle_type,
-        licensePlate: driver.license_plate
-      },
-      ride: {
-        pickup: ride.pickup_address,
-        destination: ride.destination_address,
-        startTime: ride.pickup_time,
-        endTime: ride.actual_arrival_time || new Date().toISOString(),
-        distance: ride.distance_km || 0,
-        duration: calculateDuration(ride.pickup_time, ride.actual_arrival_time)
-      },
-      payment: {
-        subtotal,
-        tax: taxAmount,
-        discount,
-        total,
-        method: ride.payment_method,
-        currency: 'FCFA'
-      },
-      company: {
-        name: 'Taxi Express',
-        address: 'Avenue du Port, Brazzaville, Congo',
-        phone: '+242 06 123 4567',
-        logo: '/logo.png',
-        website: 'www.taxiexpress.cg'
-      }
-    };
-    
-    return invoiceData;
-  };
-
-  /**
-   * Calcule la durée d'un trajet en minutes
-   */
-  const calculateDuration = (startTime?: string, endTime?: string): number => {
-    if (!startTime || !endTime) return 0;
-    
-    const start = new Date(startTime).getTime();
-    const end = new Date(endTime).getTime();
-    
-    // Convertir en minutes
-    return Math.round((end - start) / (1000 * 60));
-  };
-
-  /**
-   * Génère une facture PDF pour une course
+   * Generate an invoice for a completed ride
    */
   const generateInvoice = async (
-    ride: TaxiRide,
-    driver: TaxiDriver,
-    userName: string,
-    userEmail?: string,
-    userPhone?: string
-  ): Promise<Blob | null> => {
-    setIsLoading(true);
+    rideId: string,
+    options?: {
+      includeTip?: boolean;
+      customAmount?: number;
+      additionalItems?: Array<{name: string; amount: number}>;
+      customerEmail?: string;
+      sendEmail?: boolean;
+    }
+  ) => {
+    setLoading(true);
     
     try {
-      // Générer les données de la facture
-      const invoiceData = generateInvoiceData(ride, driver, userName, userEmail, userPhone);
-      setCurrentInvoice(invoiceData);
+      const response = await paymentApi.createInvoice(rideId, {
+        include_tip: options?.includeTip,
+        custom_amount: options?.customAmount,
+        additional_items: options?.additionalItems,
+        customer_email: options?.customerEmail,
+        send_email: options?.sendEmail
+      });
       
-      // Dans une implémentation réelle, ici on appellerait une API ou une bibliothèque
-      // pour générer un PDF. On simule le processus pour la démo.
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Fetch the full invoice details
+      const invoiceDetails = await paymentApi.getInvoice(response.invoice_id);
       
-      // Simuler un blob PDF
-      const mockPdfBlob = new Blob(['PDF content'], { type: 'application/pdf' });
+      setInvoiceData({
+        id: invoiceDetails.id,
+        ride_id: invoiceDetails.ride_id,
+        user_id: invoiceDetails.user_id,
+        driver_id: invoiceDetails.driver_id,
+        subtotal: invoiceDetails.subtotal,
+        tax: invoiceDetails.tax,
+        discount: invoiceDetails.discount,
+        total: invoiceDetails.total,
+        payment_method: invoiceDetails.payment_method,
+        currency: invoiceDetails.currency,
+        issued_at: invoiceDetails.issued_at,
+        due_at: invoiceDetails.due_at,
+        paid_at: invoiceDetails.paid_at,
+        status: invoiceDetails.status,
+        invoice_url: invoiceDetails.invoice_url,
+        pdf_url: invoiceDetails.pdf_url,
+        reference_number: invoiceDetails.reference_number
+      });
       
       toast.success('Facture générée avec succès', {
-        description: `ID de facture: ${invoiceData.invoiceId}`
+        description: `Référence: ${invoiceDetails.reference_number}`
       });
       
-      return mockPdfBlob;
-    } catch (error) {
-      console.error('Erreur lors de la génération de la facture:', error);
-      toast.error('Impossible de générer la facture');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Envoie la facture par email
-   */
-  const sendInvoiceByEmail = async (
-    invoiceData: InvoiceData,
-    email: string
-  ): Promise<boolean> => {
-    setIsLoading(true);
-    
-    try {
-      // Dans une implémentation réelle, ici on appellerait une API pour envoyer l'email
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success('Facture envoyée par email', {
-        description: `Un email a été envoyé à ${email}`
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de la facture:', error);
-      toast.error('Impossible d\'envoyer la facture par email');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Télécharge la facture en PDF
-   */
-  const downloadInvoice = async (
-    ride: TaxiRide,
-    driver: TaxiDriver,
-    userName: string
-  ): Promise<boolean> => {
-    try {
-      const pdfBlob = await generateInvoice(ride, driver, userName);
-      
-      if (!pdfBlob) {
-        return false;
+      if (options?.onSuccess) {
+        options.onSuccess({
+          id: response.invoice_id,
+          url: response.invoice_url
+        });
       }
       
-      // Créer un URL pour le blob
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      
-      // Créer un lien de téléchargement
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `facture-taxi-${ride.id.slice(-6)}.pdf`;
-      
-      // Simuler un clic pour démarrer le téléchargement
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Libérer l'URL
-      URL.revokeObjectURL(blobUrl);
-      
-      return true;
+      return response;
     } catch (error) {
-      console.error('Erreur lors du téléchargement de la facture:', error);
-      toast.error('Impossible de télécharger la facture');
-      return false;
+      console.error('Error generating invoice:', error);
+      toast.error('Erreur lors de la génération de la facture');
+      
+      if (options?.onError && error instanceof Error) {
+        options.onError(error);
+      }
+      
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
-
+  
+  /**
+   * Send an invoice by email
+   */
+  const sendInvoice = async (invoiceId: string, email: string) => {
+    setLoading(true);
+    
+    try {
+      const response = await paymentApi.sendInvoiceByEmail(invoiceId, email);
+      
+      if (response.success) {
+        toast.success('Facture envoyée par email', {
+          description: `Envoyée à ${email}`
+        });
+      } else {
+        toast.error('Erreur lors de l\'envoi de la facture');
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      toast.error('Erreur lors de l\'envoi de la facture');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  /**
+   * Get a formatted invoice for display
+   */
+  const getFormattedInvoice = (invoice: TaxiInvoice) => {
+    const issuedDate = format(
+      new Date(invoice.issued_at),
+      'dd MMMM yyyy',
+      { locale: fr }
+    );
+    
+    return {
+      ...invoice,
+      formattedDate: issuedDate,
+      formattedTotal: formatCurrency(invoice.total),
+      formattedSubtotal: formatCurrency(invoice.subtotal),
+      formattedTax: formatCurrency(invoice.tax),
+      formattedDiscount: invoice.discount > 0 ? formatCurrency(invoice.discount) : null
+    };
+  };
+  
   return {
-    isLoading,
-    currentInvoice,
+    loading,
+    invoiceData,
     generateInvoice,
-    sendInvoiceByEmail,
-    downloadInvoice
+    sendInvoice,
+    getFormattedInvoice
   };
 }

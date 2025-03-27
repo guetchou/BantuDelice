@@ -1,7 +1,7 @@
 
 import { apiRequest } from "./core";
 
-// Types pour les paiements
+// Types for payments
 export interface PaymentPreAuthRequest {
   amount: number;
   currency: string;
@@ -38,53 +38,77 @@ export interface PaymentResponse {
   receipt_url?: string;
 }
 
-// Fonctions pour l'API de paiement
+// Payment API functions
 export const paymentApi = {
-  // Pré-autorisation du paiement pour une course
+  // Pre-authorize payment for a ride
   preAuthorize: async (data: PaymentPreAuthRequest): Promise<PaymentResponse> => {
     return apiRequest('/payments/pre-authorize', 'POST', data);
   },
   
-  // Capture d'un paiement pré-autorisé (débit effectif)
+  // Capture a pre-authorized payment (actual debit)
   capture: async (data: PaymentCaptureRequest): Promise<PaymentResponse> => {
     return apiRequest(`/payments/capture`, 'POST', data);
   },
   
-  // Annulation d'une pré-autorisation
+  // Cancel a pre-authorization
   cancelPreAuth: async (authorizationId: string): Promise<PaymentResponse> => {
     return apiRequest(`/payments/pre-authorize/${authorizationId}/cancel`, 'POST');
   },
   
-  // Remboursement d'un paiement capturé
+  // Refund a captured payment
   refund: async (data: PaymentRefundRequest): Promise<PaymentResponse> => {
     return apiRequest(`/payments/refund`, 'POST', data);
   },
   
-  // Obtention des détails d'une transaction
+  // Get transaction details
   getTransaction: async (transactionId: string): Promise<PaymentResponse> => {
     return apiRequest(`/payments/transactions/${transactionId}`);
   },
   
-  // Création d'une facture pour une course
-  createInvoice: async (rideId: string): Promise<{ invoice_id: string; invoice_url: string; }> => {
-    return apiRequest(`/payments/invoices`, 'POST', { ride_id: rideId });
+  // Create an invoice for a ride
+  createInvoice: async (rideId: string, data?: {
+    include_tip?: boolean;
+    custom_amount?: number;
+    additional_items?: Array<{name: string; amount: number}>;
+    customer_email?: string;
+    send_email?: boolean;
+  }): Promise<{ invoice_id: string; invoice_url: string; }> => {
+    return apiRequest(`/payments/invoices`, 'POST', { ride_id: rideId, ...data });
   },
   
-  // Obtention d'une facture
-  getInvoice: async (invoiceId: string): Promise<any> => {
+  // Get invoice details
+  getInvoice: async (invoiceId: string): Promise<{
+    id: string;
+    ride_id: string;
+    user_id: string;
+    driver_id: string;
+    subtotal: number;
+    tax: number;
+    discount: number;
+    total: number;
+    payment_method: string;
+    currency: string;
+    issued_at: string;
+    due_at?: string;
+    paid_at?: string;
+    status: 'draft' | 'issued' | 'paid' | 'cancelled';
+    invoice_url?: string;
+    pdf_url?: string;
+    reference_number: string;
+  }> => {
     return apiRequest(`/payments/invoices/${invoiceId}`);
   },
   
-  // Envoi d'une facture par email
+  // Send invoice by email
   sendInvoiceByEmail: async (invoiceId: string, email: string): Promise<{ success: boolean; message: string; }> => {
     return apiRequest(`/payments/invoices/${invoiceId}/send`, 'POST', { email });
   },
   
-  // Vérification d'un code promo
+  // Validate a promo code
   validatePromoCode: async (code: string, amount: number, vehicleType?: string): Promise<{ 
     valid: boolean; 
     discount: number; 
-    discount_type: string;
+    discount_type: 'percentage' | 'fixed_amount' | 'free_ride';
     final_amount: number;
     message: string;
   }> => {
@@ -93,5 +117,15 @@ export const paymentApi = {
       amount,
       vehicle_type: vehicleType
     });
+  },
+  
+  // Apply payment to a ride
+  applyPayment: async (rideId: string, paymentData: {
+    amount: number;
+    payment_method: string;
+    tip?: number;
+    promo_code?: string;
+  }): Promise<PaymentResponse> => {
+    return apiRequest(`/payments/rides/${rideId}/pay`, 'POST', paymentData);
   }
 };
