@@ -1,3 +1,4 @@
+
 /**
  * Estimates the time required for a taxi journey
  * @param distance Distance in kilometers
@@ -50,7 +51,7 @@ export function estimateTime(
   
   // Adjust based on weather conditions
   if (weatherCondition) {
-    const weatherSpeedFactor = {
+    const weatherSpeedFactor: Record<string, number> = {
       clear: 1,
       rain: 0.9,
       fog: 0.8,

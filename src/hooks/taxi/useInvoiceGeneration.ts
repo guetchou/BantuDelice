@@ -21,7 +21,7 @@ export function useInvoiceGeneration(options?: UseInvoiceGenerationOptions) {
    */
   const generateInvoice = async (
     rideId: string,
-    options?: {
+    invoiceOptions?: {
       includeTip?: boolean;
       customAmount?: number;
       additionalItems?: Array<{name: string; amount: number}>;
@@ -33,11 +33,11 @@ export function useInvoiceGeneration(options?: UseInvoiceGenerationOptions) {
     
     try {
       const response = await paymentApi.createInvoice(rideId, {
-        include_tip: options?.includeTip,
-        custom_amount: options?.customAmount,
-        additional_items: options?.additionalItems,
-        customer_email: options?.customerEmail,
-        send_email: options?.sendEmail
+        include_tip: invoiceOptions?.includeTip,
+        custom_amount: invoiceOptions?.customAmount,
+        additional_items: invoiceOptions?.additionalItems,
+        customer_email: invoiceOptions?.customerEmail,
+        send_email: invoiceOptions?.sendEmail
       });
       
       // Fetch the full invoice details
