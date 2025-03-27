@@ -1,124 +1,123 @@
 
-import { PricingFactors, PriceEstimate } from './types';
-import { 
-  BASE_PRICES, 
-  PRICE_PER_KM, 
-  PRICE_PER_MINUTE, 
-  TIME_MULTIPLIERS,
-  DEMAND_LEVELS,
-  TRAFFIC_LEVELS,
-  SHARED_RIDE_DISCOUNT,
-  LOYALTY_DISCOUNTS,
-  DEFAULT_CURRENCY
-} from './constants';
+import { TaxiPricingParams, TaxiFare } from '@/types/taxi';
+import { formatCurrency } from '@/utils/formatters';
 
 /**
- * Détermine le multiplicateur selon l'heure de la journée
+ * Calcule le prix d'une course de taxi
+ * @param params Paramètres de tarification
+ * @returns Détails du tarif
  */
-function getTimeMultiplier(time: Date | string): number {
-  const date = typeof time === 'string' ? new Date(time) : time;
-  const hour = date.getHours();
+export function calculatePrice(params: TaxiPricingParams): TaxiFare {
+  // Prix de base par type de véhicule
+  const baseFares = {
+    standard: 1000,
+    comfort: 1500,
+    premium: 2500,
+    van: 2000
+  };
+
+  // Tarif par kilomètre par type de véhicule
+  const perKmRates = {
+    standard: 300,
+    comfort: 400,
+    premium: 600,
+    van: 500
+  };
+
+  // Tarif par minute par type de véhicule
+  const perMinuteRates = {
+    standard: 15,
+    comfort: 20,
+    premium: 30,
+    van: 25
+  };
+
+  // Calculer le prix de base
+  const baseFare = baseFares[params.vehicle_type];
   
-  if (hour >= 0 && hour < 5) {
-    return TIME_MULTIPLIERS.night;
-  } else if ((hour >= 5 && hour < 7) || (hour >= 19 && hour < 22)) {
-    return TIME_MULTIPLIERS.peak;
-  } else if (hour >= 7 && hour < 19) {
-    return TIME_MULTIPLIERS.standard;
-  } else {
-    return TIME_MULTIPLIERS.offPeak;
+  // Calculer le prix basé sur la distance
+  const distanceFare = params.distance_km * perKmRates[params.vehicle_type];
+  
+  // Calculer le prix basé sur le temps
+  const timeFare = params.duration_min * perMinuteRates[params.vehicle_type];
+  
+  // Déterminer s'il s'agit d'une heure de pointe
+  let peakHoursMultiplier = 1.0;
+  if (params.time_of_day) {
+    const hour = new Date(params.time_of_day).getHours();
+    // Heures de pointe : 7h-9h et 17h-19h en semaine
+    if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
+      peakHoursMultiplier = 1.25; // +25% en heure de pointe
+    }
   }
+  
+  // Appliquer les remises
+  let subscriptionDiscount = 0;
+  if (params.subscription_discount && params.subscription_discount > 0) {
+    subscriptionDiscount = (baseFare + distanceFare + timeFare) * (params.subscription_discount / 100);
+  }
+  
+  let promoDiscount = 0;
+  if (params.promo_code) {
+    // Exemple simple : 10% de remise avec un code promo
+    promoDiscount = (baseFare + distanceFare + timeFare) * 0.1;
+  }
+  
+  // Calculer les taxes (TVA à 18%)
+  const subtotal = (baseFare + distanceFare + timeFare) * peakHoursMultiplier - subscriptionDiscount - promoDiscount;
+  const taxes = subtotal * 0.18;
+  
+  // Calculer le total
+  const total = subtotal + taxes;
+  
+  // Arrondir à l'entier
+  const roundedTotal = Math.round(total);
+  
+  return {
+    base_fare: baseFare,
+    distance_fare: distanceFare,
+    time_fare: timeFare,
+    peak_hours_multiplier: peakHoursMultiplier,
+    subscription_discount: subscriptionDiscount,
+    promo_discount: promoDiscount,
+    taxes: taxes,
+    total: roundedTotal,
+    currency: 'XAF'
+  };
 }
 
 /**
- * Calcule le prix d'une course selon les facteurs fournis
+ * Estime le prix d'une course de taxi de manière simple
+ * @param distance Distance en kilomètres
+ * @param vehicleType Type de véhicule
+ * @returns Prix estimé
  */
-export function calculatePrice(factors: PricingFactors): PriceEstimate {
-  const { 
-    distance, 
-    duration, 
-    vehicleType, 
-    time,
-    isSharedRide = false,
-    loyaltyLevel = 0,
-    trafficMultiplier = 1,
-    demandMultiplier = 1,
-    basePrice
-  } = factors;
-  
-  // Prix de base selon le type de véhicule (ou prix personnalisé si fourni)
-  const basePriceValue = basePrice || BASE_PRICES[vehicleType];
-  
-  // Prix selon la distance
-  const distancePrice = distance * PRICE_PER_KM[vehicleType];
-  
-  // Prix selon la durée
-  const durationPrice = duration * PRICE_PER_MINUTE[vehicleType];
-  
-  // Multiplicateur selon l'heure
-  const timeMultiplier = getTimeMultiplier(time);
-  const timeSurcharge = (basePriceValue + distancePrice + durationPrice) * (timeMultiplier - 1);
-  
-  // Prix avant réductions
-  let subtotal = basePriceValue + distancePrice + durationPrice + timeSurcharge;
-  
-  // Ajout des surcharges de trafic et de demande
-  const trafficSurcharge = subtotal * (trafficMultiplier - 1);
-  const demandSurcharge = subtotal * (demandMultiplier - 1);
-  
-  subtotal += trafficSurcharge + demandSurcharge;
-  
-  // Application des réductions
-  const sharedDiscount = isSharedRide ? subtotal * SHARED_RIDE_DISCOUNT : 0;
-  const loyaltyDiscount = LOYALTY_DISCOUNTS[loyaltyLevel] ? subtotal * LOYALTY_DISCOUNTS[loyaltyLevel] : 0;
-  
-  // Prix final
-  const totalPrice = Math.max(0, Math.round(subtotal - sharedDiscount - loyaltyDiscount));
-  
-  // Détails pour l'affichage
-  const breakdown = [
-    `Prix de base: ${basePriceValue} ${DEFAULT_CURRENCY}`,
-    `Distance (${distance} km): ${Math.round(distancePrice)} ${DEFAULT_CURRENCY}`,
-    `Durée (${duration} min): ${Math.round(durationPrice)} ${DEFAULT_CURRENCY}`
-  ];
-  
-  if (timeMultiplier !== 1) {
-    breakdown.push(`Supplément horaire: ${Math.round(timeSurcharge)} ${DEFAULT_CURRENCY}`);
-  }
-  
-  if (trafficMultiplier !== 1) {
-    breakdown.push(`Supplément trafic: ${Math.round(trafficSurcharge)} ${DEFAULT_CURRENCY}`);
-  }
-  
-  if (demandMultiplier !== 1) {
-    breakdown.push(`Supplément demande: ${Math.round(demandSurcharge)} ${DEFAULT_CURRENCY}`);
-  }
-  
-  if (isSharedRide) {
-    breakdown.push(`Réduction trajet partagé: -${Math.round(sharedDiscount)} ${DEFAULT_CURRENCY}`);
-  }
-  
-  if (loyaltyDiscount > 0) {
-    breakdown.push(`Réduction fidélité (niveau ${loyaltyLevel}): -${Math.round(loyaltyDiscount)} ${DEFAULT_CURRENCY}`);
-  }
-  
-  breakdown.push(`Prix total: ${totalPrice} ${DEFAULT_CURRENCY}`);
+export function estimatePrice(
+  distance: number,
+  vehicleType: 'standard' | 'comfort' | 'premium' | 'van' = 'standard'
+): { amount: number; formatted: string } {
+  const result = calculatePrice({
+    distance_km: distance,
+    duration_min: distance * 3, // Estimation : 3 minutes par km
+    vehicle_type: vehicleType
+  });
   
   return {
-    basePrice: basePriceValue,
-    distancePrice,
-    durationPrice,
-    surcharges: {
-      timeOfDay: timeSurcharge,
-      demand: demandSurcharge,
-      traffic: trafficSurcharge
-    },
-    discounts: {
-      shared: sharedDiscount,
-      loyalty: loyaltyDiscount
-    },
-    totalPrice,
-    currency: DEFAULT_CURRENCY,
-    breakdown
+    amount: result.total,
+    formatted: formatCurrency(result.total)
+  };
+}
+
+/**
+ * Compare les prix entre différents types de véhicules
+ * @param distance Distance en kilomètres
+ * @returns Comparaison des prix
+ */
+export function comparePrices(distance: number): Record<string, { amount: number; formatted: string }> {
+  return {
+    standard: estimatePrice(distance, 'standard'),
+    comfort: estimatePrice(distance, 'comfort'),
+    premium: estimatePrice(distance, 'premium'),
+    van: estimatePrice(distance, 'van')
   };
 }

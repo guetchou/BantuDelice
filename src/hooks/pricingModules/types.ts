@@ -1,61 +1,58 @@
 
+import { TaxiVehicleType, PaymentMethod } from '@/types/taxi';
+
 export interface PricingFactors {
-  distance: number; // en kilomètres
-  duration: number; // en minutes
-  vehicleType: 'standard' | 'comfort' | 'premium' | 'van';
-  time: Date | string; // heure de la journée
-  isSharedRide?: boolean;
-  numberOfPassengers?: number;
-  promoCode?: string;
-  hasSubscription?: boolean;
-  subscriptionType?: string;
-  loyaltyLevel?: number;
-  cityZone?: string;
-  trafficMultiplier?: number;
-  demandMultiplier?: number;
-  basePrice?: number;
+  basePrice: number;
+  perKmRate: number;
+  perMinuteRate: number;
+  vehicleTypeMultiplier: Record<TaxiVehicleType, number>;
+  timeOfDayFactor: (hour: number) => number;
+  weatherFactor: (condition: string) => number;
+  specialEventFactor: (date: Date) => number;
+  subscriptionDiscountRate: (subscriptionId: string | null) => number;
 }
 
 export interface PriceEstimate {
-  basePrice: number;
-  distancePrice: number;
-  durationPrice: number;
-  surcharges: {
-    timeOfDay?: number;
-    vehicleType?: number;
-    demand?: number;
-    traffic?: number;
-  };
-  discounts: {
-    promo?: number;
-    loyalty?: number;
-    subscription?: number;
-    shared?: number;
-  };
-  totalPrice: number;
+  baseFare: number;
+  distanceFare: number;
+  timeFare: number;
+  totalBeforeTax: number;
+  tax: number;
+  total: number;
   currency: string;
-  breakdown: string[];
+  breakdown: {
+    base: number;
+    distance: number;
+    time: number;
+    vehicleType: number;
+    timeOfDay: number;
+    weather: number;
+    discount: number;
+    tax: number;
+  };
+  formattedTotal: string;
 }
 
 export interface PriceRange {
   min: number;
   max: number;
-  currency: string;
+  typical: number;
+  formattedRange: string;
+  formattedTypical: string;
 }
 
 export interface BusinessRateEstimate {
-  totalPrice: number;
-  costPerEmployee: number;
-  monthlyCost: number;
-  discount: number;
-  currency: string;
+  monthlyTotal: number;
+  perRideDiscount: number;
+  estimatedSavings: number;
+  formattedTotal: string;
+  formattedSavings: string;
+  minimumRidesForDiscount: number;
 }
 
-export interface PromoCodeValidation {
-  valid: boolean;
-  discount: number;
-  message?: string;
-  expiresAt?: string;
+export interface SubscriptionDiscount {
+  discountPercentage: number;
+  monthlyLimit: number;
+  remainingRides: number;
+  applicableVehicleTypes: TaxiVehicleType[];
 }
-
-export type TimeOfDayMultiplier = 'standard' | 'offPeak' | 'peak' | 'night';

@@ -5,6 +5,8 @@ import { TaxiRide, TaxiDriver } from '@/types/taxi';
 import { taxiRideService, taxiRideRequestService } from '@/services/apiService';
 import { toast } from 'sonner';
 
+type CreateRideData = Partial<TaxiRide>;
+
 /**
  * Hook pour la création et la gestion des courses de taxi
  */
@@ -17,7 +19,7 @@ export function useTaxiRideCreation() {
   /**
    * Crée une nouvelle course de taxi
    */
-  const createRide = async (rideData: Partial<TaxiRide>): Promise<string | null> => {
+  const createRide = async (rideData: CreateRideData): Promise<string | null> => {
     setLoading(true);
     
     try {
@@ -27,7 +29,7 @@ export function useTaxiRideCreation() {
       }
       
       // Créer l'objet de course complet avec les valeurs par défaut
-      const completeRideData: Partial<TaxiRide> = {
+      const completeRideData: CreateRideData = {
         status: 'pending',
         pickup_time_type: rideData.pickup_time_type || 'now',
         created_at: new Date().toISOString(),

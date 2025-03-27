@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { TaxiRide, TaxiDriver } from '@/types/taxi';
+import { TaxiRide, TaxiDriver, TaxiLocation } from '@/types/taxi';
 import { taxiRideService, taxiDriverService, taxiRideRequestService } from '@/services/apiService';
 import { toast } from 'sonner';
 
@@ -53,19 +53,23 @@ export function useTaxiRideTracking(rideId?: string) {
       setRide(rideData);
       
       // Configurer les points de départ et d'arrivée
-      setPickupLocation({
-        latitude: rideData.pickup_latitude,
-        longitude: rideData.pickup_longitude,
-        label: 'Départ',
-        icon: 'pickup'
-      });
+      if (rideData.pickup_latitude && rideData.pickup_longitude) {
+        setPickupLocation({
+          latitude: rideData.pickup_latitude,
+          longitude: rideData.pickup_longitude,
+          label: 'Départ',
+          icon: 'pickup'
+        });
+      }
       
-      setDestinationLocation({
-        latitude: rideData.destination_latitude,
-        longitude: rideData.destination_longitude,
-        label: 'Destination',
-        icon: 'destination'
-      });
+      if (rideData.destination_latitude && rideData.destination_longitude) {
+        setDestinationLocation({
+          latitude: rideData.destination_latitude,
+          longitude: rideData.destination_longitude,
+          label: 'Destination',
+          icon: 'destination'
+        });
+      }
       
       // Si un chauffeur est assigné, récupérer ses informations
       if (rideData.driver_id) {
@@ -78,8 +82,8 @@ export function useTaxiRideTracking(rideId?: string) {
       } else {
         // Sinon, générer un itinéraire fictif pour la démo
         generateDemoRoute(
-          [rideData.pickup_latitude, rideData.pickup_longitude],
-          [rideData.destination_latitude, rideData.destination_longitude]
+          [rideData.pickup_latitude || 0, rideData.pickup_longitude || 0],
+          [rideData.destination_latitude || 0, rideData.destination_longitude || 0]
         );
       }
       
@@ -113,12 +117,14 @@ export function useTaxiRideTracking(rideId?: string) {
       setDriver(driverData);
       
       // Définir la position initiale du chauffeur
-      setDriverLocation({
-        latitude: driverData.current_latitude,
-        longitude: driverData.current_longitude,
-        label: driverData.name,
-        icon: 'driver'
-      });
+      if (driverData.current_location) {
+        setDriverLocation({
+          latitude: driverData.current_location.latitude,
+          longitude: driverData.current_location.longitude,
+          label: driverData.name,
+          icon: 'driver'
+        });
+      }
     } catch (error) {
       console.error('Erreur lors de la récupération du chauffeur:', error);
       // Ne pas afficher d'erreur à l'utilisateur ici, car c'est secondaire
