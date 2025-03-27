@@ -85,3 +85,13 @@ export const userService = createApiService('users');
 export const paymentService = createApiService('payments');
 export const loyaltyService = createApiService('loyalty_points');
 export const deliveryService = createApiService('deliveries');
+
+// Services pour le module Taxi
+export const taxiRideService = createApiService('taxi_rides');
+export const taxiDriverService = createApiService('taxi_drivers');
+export const taxiRatingService = createApiService('taxi_ratings');
+export const taxiLocationService = createApiService('taxi_favorite_locations');
+export const taxiMessageService = createApiService('taxi_messages');
+export const taxiSubscriptionService = createApiService('taxi_subscriptions');
+export const taxiRideRequestService = createApiService('taxi_ride_requests');
+export const taxiPaymentService = createApiService('taxi_payments');

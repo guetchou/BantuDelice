@@ -1,30 +1,38 @@
 
+/**
+ * Estime le temps nécessaire pour un trajet en taxi
+ * @param distance Distance en kilomètres
+ * @param trafficLevel Niveau de trafic ('light', 'moderate', 'heavy', 'severe')
+ * @param vehicleType Type de véhicule ('standard', 'comfort', 'premium', 'van')
+ * @returns Temps estimé en minutes
+ */
 export function estimateTime(
   distance: number, 
-  isRushHour = false, 
-  timeOfDay: 'day' | 'night' = 'day', 
-  useExpressLane = false
+  trafficLevel: 'light' | 'moderate' | 'heavy' | 'severe' = 'moderate',
+  vehicleType: 'standard' | 'comfort' | 'premium' | 'van' = 'standard'
 ): number {
-  // Vitesse moyenne en ville: ~30 km/h (0.5 km/min)
-  let baseTime = Math.ceil(distance / 0.5);
+  // Vitesse moyenne en km/h selon le niveau de trafic
+  const avgSpeedByTraffic = {
+    light: 45,
+    moderate: 30,
+    heavy: 20,
+    severe: 12
+  };
   
-  // Ajustements pour les conditions
-  if (isRushHour) {
-    baseTime = Math.ceil(baseTime * 1.4); // 40% plus lent pendant les heures de pointe
-  }
+  // Ajustement de la vitesse selon le type de véhicule
+  const vehicleSpeedFactor = {
+    standard: 1,
+    comfort: 1.05,
+    premium: 1.1,
+    van: 0.95
+  };
   
-  if (timeOfDay === 'night') {
-    baseTime = Math.ceil(baseTime * 0.8); // 20% plus rapide la nuit (moins de trafic)
-  }
+  // Calcul de la vitesse ajustée
+  const adjustedSpeed = avgSpeedByTraffic[trafficLevel] * vehicleSpeedFactor[vehicleType];
   
-  if (useExpressLane) {
-    baseTime = Math.ceil(baseTime * 0.75); // 25% plus rapide en utilisant les voies express
-  }
+  // Conversion en minutes (vitesse en km/h -> minutes)
+  const timeInMinutes = (distance / adjustedSpeed) * 60;
   
-  if (distance > 20) {
-    // Pour les longues distances, la vitesse moyenne augmente
-    baseTime = Math.ceil(baseTime * 0.9); // 10% plus rapide sur les longues distances
-  }
-  
-  return baseTime;
+  // Arrondi à la minute supérieure avec un minimum de 5 minutes
+  return Math.max(5, Math.ceil(timeInMinutes));
 }

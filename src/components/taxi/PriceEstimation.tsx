@@ -1,66 +1,58 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { TrendingUp, Route, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatPrice } from './booking-form/bookingFormUtils';
 
 interface PriceEstimationProps {
   estimatedPrice: number;
   distance?: number;
+  range?: { min: number; max: number };
+  breakdown?: string[];
 }
 
 const PriceEstimation: React.FC<PriceEstimationProps> = ({
   estimatedPrice,
-  distance
+  distance,
+  range,
+  breakdown
 }) => {
-  const formatCurrency = (amount: number) => {
-    return `${amount.toLocaleString()} FCFA`;
-  };
-  
-  // Estimate time (roughly 2 minutes per km)
-  const estimatedTime = distance ? Math.max(10, Math.round(distance * 2)) : 15;
-  
   return (
-    <Card className="bg-gray-50 border-gray-200">
-      <div className="p-4">
-        <h3 className="text-lg font-medium mb-3 flex items-center">
-          <TrendingUp className="mr-2 h-5 w-5 text-primary" />
-          Estimation du trajet
-        </h3>
-        
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center text-gray-600">
-              <Route className="mr-2 h-4 w-4" />
-              <span>Distance estimée</span>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex justify-between items-center">
+          <span>Estimation du prix</span>
+          {distance && <span className="text-sm font-normal text-muted-foreground">~{distance} km</span>}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex justify-center items-center">
+            <div className="text-2xl font-bold text-primary">
+              {range ? (
+                <span>{formatPrice(range.min)} - {formatPrice(range.max)}</span>
+              ) : (
+                <span>{formatPrice(estimatedPrice)}</span>
+              )}
             </div>
-            <span className="font-medium">
-              {distance ? `${distance.toFixed(1)} km` : 'Calcul...'}
-            </span>
           </div>
           
-          <div className="flex justify-between items-center">
-            <div className="flex items-center text-gray-600">
-              <Clock className="mr-2 h-4 w-4" />
-              <span>Durée estimée</span>
+          {breakdown && breakdown.length > 0 && (
+            <div className="mt-4 text-sm space-y-1 text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-wider mb-2">Détails du prix</p>
+              {breakdown.map((item, index) => (
+                <div key={index} className="flex justify-between">
+                  <span>{item.split(':')[0]}</span>
+                  <span>{item.split(':')[1]}</span>
+                </div>
+              ))}
             </div>
-            <span className="font-medium">
-              {estimatedTime} minutes
-            </span>
-          </div>
+          )}
           
-          <div className="pt-3 border-t border-gray-200">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700 font-medium">Prix estimé</span>
-              <span className="text-xl font-bold text-primary">
-                {formatCurrency(estimatedPrice)}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Le prix peut varier en fonction du trafic et de l'itinéraire exact
-            </p>
+          <div className="text-xs text-muted-foreground mt-2">
+            <p>Le prix final peut varier selon le trafic et l'itinéraire emprunté.</p>
           </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

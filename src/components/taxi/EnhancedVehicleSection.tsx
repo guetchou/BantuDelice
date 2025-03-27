@@ -1,102 +1,115 @@
 
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Car, Truck, CreditCard, Bike } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Car, Bus, TrendingUp, Users } from "lucide-react";
+
+// Types de véhicules disponibles
+const vehicleTypes = [
+  {
+    id: 'standard',
+    name: 'Standard',
+    icon: Car,
+    description: 'Berline confortable pour 1-4 personnes',
+    basePrice: 500,
+    eta: '5-10 min'
+  },
+  {
+    id: 'comfort',
+    name: 'Confort',
+    icon: Car,
+    description: 'Plus d\'espace, climatisation, eau offerte',
+    basePrice: 800,
+    eta: '6-12 min'
+  },
+  {
+    id: 'premium',
+    name: 'Premium',
+    icon: TrendingUp,
+    description: 'Service haut de gamme, véhicule de luxe',
+    basePrice: 1200,
+    eta: '7-15 min'
+  },
+  {
+    id: 'van',
+    name: 'Van',
+    icon: Users,
+    description: 'Parfait pour les groupes jusqu\'à 6 personnes',
+    basePrice: 1500,
+    eta: '8-15 min'
+  }
+];
 
 interface EnhancedVehicleSectionProps {
   selectedVehicleType: string;
-  onVehicleSelect: (type: string) => void;
+  onVehicleSelect: (vehicleType: string) => void;
+  isLoading?: boolean;
 }
 
 const EnhancedVehicleSection: React.FC<EnhancedVehicleSectionProps> = ({
   selectedVehicleType,
-  onVehicleSelect
+  onVehicleSelect,
+  isLoading = false
 }) => {
-  const vehicleTypes = [
-    {
-      id: 'standard',
-      name: 'Standard',
-      description: 'Véhicules confortables pour 1-4 personnes',
-      icon: Car,
-      basePrice: '~3000 FCFA',
-      features: ['Climatisation', '4 places', '2 bagages']
-    },
-    {
-      id: 'comfort',
-      name: 'Confort',
-      description: 'Véhicules spacieux avec équipements supplémentaires',
-      icon: Car,
-      basePrice: '~4000 FCFA',
-      features: ['Climatisation', '4 places', '3 bagages', 'Bouteille d\'eau']
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      description: 'Berlines et SUV haut de gamme',
-      icon: CreditCard,
-      basePrice: '~6000 FCFA',
-      features: ['Climatisation', '4 places', '4 bagages', 'WiFi', 'Eau & Snacks']
-    },
-    {
-      id: 'van',
-      name: 'Van',
-      description: 'Pour les groupes ou les bagages volumineux',
-      icon: Truck,
-      basePrice: '~7000 FCFA',
-      features: ['Climatisation', '7 places', '7 bagages', 'WiFi']
-    }
-  ];
-
   return (
     <div className="space-y-4">
-      <Label htmlFor="vehicle-type">Type de véhicule</Label>
-      <RadioGroup 
-        value={selectedVehicleType} 
-        onValueChange={onVehicleSelect}
-        className="space-y-3"
-      >
+      <div>
+        <Label className="text-base">Type de véhicule</Label>
+        <p className="text-sm text-muted-foreground mb-3">
+          Choisissez le type de véhicule qui vous convient le mieux
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 gap-3">
         {vehicleTypes.map((vehicle) => {
-          const VehicleIcon = vehicle.icon;
+          const isSelected = selectedVehicleType === vehicle.id;
+          
           return (
-            <div
+            <Card
               key={vehicle.id}
-              className={`relative flex items-center border rounded-lg p-4 transition-all cursor-pointer ${
-                selectedVehicleType === vehicle.id
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+              className={cn(
+                "border cursor-pointer transition-all hover:border-primary/50",
+                isSelected && "border-primary bg-primary/5"
+              )}
               onClick={() => onVehicleSelect(vehicle.id)}
             >
-              <RadioGroupItem
-                value={vehicle.id}
-                id={vehicle.id}
-                className="absolute top-4 left-4"
-              />
-              <div className="ml-8 flex-1">
-                <div className="flex justify-between">
-                  <div>
-                    <h3 className="font-medium text-base">{vehicle.name}</h3>
-                    <p className="text-sm text-gray-500">{vehicle.description}</p>
+              <CardContent className="p-3">
+                <div className="flex items-center space-x-4">
+                  <div className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted",
+                    isSelected && "bg-primary/20 text-primary"
+                  )}>
+                    <vehicle.icon className="h-5 w-5" />
                   </div>
-                  <div className="ml-2 text-right">
-                    <VehicleIcon className="h-6 w-6 mb-2 text-gray-700 ml-auto" />
-                    <span className="text-sm font-medium">{vehicle.basePrice}</span>
+                  
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium">{vehicle.name}</p>
+                      <p className="font-semibold text-sm">
+                        {isLoading ? (
+                          <span className="inline-block h-4 w-16 animate-pulse bg-muted rounded"></span>
+                        ) : (
+                          <>
+                            <span className="text-primary font-semibold">
+                              {vehicle.basePrice} FCFA
+                            </span>
+                            <span className="text-xs text-muted-foreground ml-1">Base</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <p className="text-muted-foreground">{vehicle.description}</p>
+                      <p className="text-xs text-muted-foreground">ETA: {vehicle.eta}</p>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-                  {vehicle.features.map((feature, idx) => (
-                    <span key={idx} className="text-xs text-gray-600 flex items-center">
-                      <span className="mr-1">•</span> {feature}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           );
         })}
-      </RadioGroup>
+      </div>
     </div>
   );
 };

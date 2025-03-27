@@ -1,68 +1,83 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookingFormState } from './types';
-import { calculateDistance } from '@/utils/deliveryOptimization';
+import { useTaxiPricing } from '@/hooks/useTaxiPricing';
 
-export function usePriceCalculation(formState: BookingFormState) {
-  const [estimatedPrice, setEstimatedPrice] = useState(0);
+export const usePriceCalculation = (formState: BookingFormState) => {
+  const [estimatedPrice, setEstimatedPrice] = useState<number>(0);
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
+  const [priceBreakdown, setPriceBreakdown] = useState<string[]>([]);
+  const { calculatePrice, getPriceRange } = useTaxiPricing();
 
-  const calculateEstimatedPrice = () => {
-    if (
-      formState.pickupLatitude && 
-      formState.pickupLongitude && 
-      formState.destinationLatitude && 
-      formState.destinationLongitude
-    ) {
-      // Calculate distance
+  useEffect(() => {
+    const calculateEstimatedPrice = () => {
+      // Vérifier que les coordonnées sont disponibles
+      if (!formState.pickupLatitude || !formState.destinationLatitude) {
+        return;
+      }
+
+      // Calculer la distance approximative (formule de Haversine)
       const distance = calculateDistance(
         formState.pickupLatitude,
-        formState.pickupLongitude,
+        formState.pickupLongitude!,
         formState.destinationLatitude,
-        formState.destinationLongitude
+        formState.destinationLongitude!
       );
-      
-      // Base price calculations
-      let basePrice = 1000; // Base fare
-      
-      // Add distance-based fare
-      const farePerKm = {
-        standard: 300,
-        comfort: 400,
-        premium: 600,
-        van: 700
-      };
-      
-      const rate = farePerKm[formState.vehicleType as keyof typeof farePerKm] || farePerKm.standard;
-      const distanceFare = distance * rate;
-      
-      // Calculate total
-      let totalPrice = basePrice + distanceFare;
-      
-      // Apply shared ride discount if applicable
-      if (formState.isSharedRide) {
-        const discountPercentage = 15 + (formState.maxPassengers * 5); // 15% base + 5% per additional passenger
-        totalPrice = totalPrice * (1 - (discountPercentage / 100));
-      }
-      
-      // Round to nearest 100
-      totalPrice = Math.ceil(totalPrice / 100) * 100;
-      
-      setEstimatedPrice(totalPrice);
-    }
-  };
 
-  // Update estimated price when relevant fields change
-  useEffect(() => {
+      // Calculer une durée approximative (en minutes)
+      const duration = Math.ceil(distance * 3); // Approximation: 3 minutes par kilomètre
+
+      // Facteurs pour le calcul du prix
+      const pricingFactors = {
+        distance,
+        duration,
+        vehicleType: formState.vehicleType as 'standard' | 'comfort' | 'premium' | 'van',
+        time: new Date(),
+        isSharedRide: formState.isSharedRide,
+        numberOfPassengers: formState.maxPassengers
+      };
+
+      // Calculer le prix estimé
+      const priceEstimate = calculatePrice(pricingFactors);
+      setEstimatedPrice(priceEstimate.totalPrice);
+      setPriceBreakdown(priceEstimate.breakdown);
+
+      // Calculer la fourchette de prix
+      const range = getPriceRange(pricingFactors);
+      setPriceRange({ min: range.min, max: range.max });
+    };
+
     calculateEstimatedPrice();
   }, [
-    formState.pickupLatitude, 
-    formState.pickupLongitude, 
-    formState.destinationLatitude, 
+    formState.pickupLatitude,
+    formState.pickupLongitude,
+    formState.destinationLatitude,
     formState.destinationLongitude,
     formState.vehicleType,
     formState.isSharedRide,
     formState.maxPassengers
   ]);
 
-  return { estimatedPrice };
+  return {
+    estimatedPrice,
+    priceRange,
+    priceBreakdown
+  };
+};
+
+// Calculer la distance entre deux points (Haversine)
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(degrees: number): number {
+  return degrees * (Math.PI / 180);
 }

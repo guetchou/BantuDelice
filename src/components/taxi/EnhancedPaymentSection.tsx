@@ -1,85 +1,59 @@
 
 import React from 'react';
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Wallet, CreditCard, Banknote, QrCode, Phone } from "lucide-react";
-import { formatCurrency } from "@/utils/formatCurrency";
+import { Card, CardContent } from "@/components/ui/card";
+import PaymentMethodSelector from './PaymentMethodSelector';
+import { formatPrice } from './booking-form/bookingFormUtils';
 
 interface EnhancedPaymentSectionProps {
   paymentMethod: string;
   onPaymentMethodChange: (method: string) => void;
-  estimatedPrice?: number;
-  showDetails?: boolean;
+  estimatedPrice: number;
 }
 
-const EnhancedPaymentSection = ({ 
-  paymentMethod, 
+const EnhancedPaymentSection: React.FC<EnhancedPaymentSectionProps> = ({
+  paymentMethod,
   onPaymentMethodChange,
-  estimatedPrice,
-  showDetails = false
-}: EnhancedPaymentSectionProps) => {
+  estimatedPrice
+}) => {
   return (
     <div className="space-y-4">
-      <Label htmlFor="payment-method">Mode de paiement</Label>
-      <RadioGroup value={paymentMethod} onValueChange={onPaymentMethodChange} className="space-y-2">
-        <div className="flex items-center space-x-2 border rounded-lg p-3">
-          <RadioGroupItem value="mobile_money" id="mobile_money" />
-          <Label htmlFor="mobile_money" className="flex-1 flex items-center">
-            <Phone className="h-4 w-4 mr-2 text-blue-500" />
-            Mobile Money
-          </Label>
+      <div className="flex justify-between items-start">
+        <div>
+          <Label className="text-base">Moyen de paiement</Label>
+          <p className="text-sm text-muted-foreground mb-3">
+            Choisissez comment vous souhaitez payer votre course
+          </p>
         </div>
-        <div className="flex items-center space-x-2 border rounded-lg p-3">
-          <RadioGroupItem value="cash" id="cash" />
-          <Label htmlFor="cash" className="flex-1 flex items-center">
-            <Banknote className="h-4 w-4 mr-2 text-green-500" />
-            Paiement en espèces
-          </Label>
+        <div className="text-right">
+          <p className="text-sm text-muted-foreground">Montant estimé</p>
+          <p className="text-xl font-bold text-primary">{formatPrice(estimatedPrice)}</p>
         </div>
-        <div className="flex items-center space-x-2 border rounded-lg p-3">
-          <RadioGroupItem value="wallet" id="wallet" />
-          <Label htmlFor="wallet" className="flex-1 flex items-center">
-            <Wallet className="h-4 w-4 mr-2 text-purple-500" />
-            Portefeuille électronique
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2 border rounded-lg p-3">
-          <RadioGroupItem value="card" id="card" />
-          <Label htmlFor="card" className="flex-1 flex items-center">
-            <CreditCard className="h-4 w-4 mr-2 text-amber-500" />
-            Carte bancaire
-          </Label>
-        </div>
-      </RadioGroup>
+      </div>
       
-      {estimatedPrice && (
-        <div className="mt-3 p-3 bg-muted/30 rounded-lg">
-          {showDetails ? (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Prix de base</span>
-                <span>{formatCurrency(Math.round(estimatedPrice * 0.8))}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Frais de service</span>
-                <span>{formatCurrency(Math.round(estimatedPrice * 0.15))}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Taxes</span>
-                <span>{formatCurrency(Math.round(estimatedPrice * 0.05))}</span>
-              </div>
-              <div className="flex justify-between font-medium pt-2 border-t mt-2">
-                <span>Montant total:</span>
-                <span>{formatCurrency(estimatedPrice)}</span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Montant estimé:</span>
-              <span className="font-semibold">{formatCurrency(estimatedPrice)}</span>
-            </div>
-          )}
-        </div>
+      <PaymentMethodSelector
+        value={paymentMethod}
+        onChange={onPaymentMethodChange}
+      />
+      
+      {paymentMethod === 'mobile_money' && (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardContent className="p-3 text-sm">
+            <p>
+              <span className="font-medium">Note:</span> Vous recevrez un code de paiement à la fin de votre course. Aucun paiement n'est prélevé maintenant.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {paymentMethod === 'card' && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="p-3 text-sm">
+            <p>
+              <span className="font-medium">Note:</span> Votre carte sera débitée uniquement à la fin de votre course. Une pré-autorisation sera effectuée pour vérifier la validité de votre carte.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

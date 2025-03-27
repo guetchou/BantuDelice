@@ -1,28 +1,28 @@
 
-import { PriceRange } from './types';
-import { getDetailedEstimate } from './quickEstimates';
+import { PricingFactors, PriceRange } from './types';
+import { calculatePrice } from './basicPricing';
+import { DEFAULT_CURRENCY } from './constants';
 
-// Calcul d'une estimation de fourchette de prix
-export function getPriceRange(
-  distance: number, 
-  vehicleType: 'standard' | 'comfort' | 'premium' | 'van',
-  options: {
-    isRushHour?: boolean;
-    timeOfDay?: 'day' | 'night';
-    isWeekend?: boolean;
-  } = {}
-): PriceRange {
-  const baseEstimate = getDetailedEstimate(distance, vehicleType, options);
+/**
+ * Calcule une fourchette de prix pour un trajet
+ */
+export function getPriceRange(factors: PricingFactors): PriceRange {
+  // Calculer le prix de base
+  const estimate = calculatePrice(factors);
   
-  // Fourchette basse: -10% du prix estimé
-  const minPrice = Math.ceil(baseEstimate.total * 0.9);
+  // Créer une fourchette avec des marges d'incertitude
+  const basePrice = estimate.totalPrice;
   
-  // Fourchette haute: +15% du prix estimé (pour tenir compte des variations possibles)
-  const maxPrice = Math.ceil(baseEstimate.total * 1.15);
+  // La marge d'incertitude augmente avec la distance
+  const uncertaintyFactor = Math.min(0.2, 0.1 + (factors.distance * 0.01));
+  
+  // Calculer les valeurs min et max
+  const min = Math.round(basePrice * (1 - uncertaintyFactor));
+  const max = Math.round(basePrice * (1 + uncertaintyFactor));
   
   return {
-    min: minPrice,
-    max: maxPrice,
-    formattedRange: `${minPrice} - ${maxPrice} FCFA`
+    min,
+    max,
+    currency: DEFAULT_CURRENCY
   };
 }
