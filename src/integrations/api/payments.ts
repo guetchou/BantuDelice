@@ -1,72 +1,97 @@
 
 import { apiRequest } from "./core";
 
-// Payment API functions
+// Types pour les paiements
+export interface PaymentPreAuthRequest {
+  amount: number;
+  currency: string;
+  payment_method: string;
+  customer_id?: string;
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PaymentCaptureRequest {
+  authorization_id: string;
+  amount: number;
+  tip?: number;
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PaymentRefundRequest {
+  transaction_id: string;
+  amount?: number;
+  reason?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PaymentResponse {
+  success: boolean;
+  transaction_id?: string;
+  authorization_id?: string;
+  status: 'not_started' | 'pre_authorized' | 'authorized' | 'captured' | 'refunded' | 'failed';
+  message: string;
+  amount: number;
+  currency: string;
+  timestamp: string;
+  receipt_url?: string;
+}
+
+// Fonctions pour l'API de paiement
 export const paymentApi = {
-  processMobileMoneyPayment: async (paymentData: {
-    phoneNumber: string;
-    amount: number;
-    provider: 'mtn' | 'airtel' | 'orange';
-    description?: string;
-    reference?: string;
-  }) => {
-    return apiRequest('/payments/mobile-money', 'POST', paymentData);
+  // Pré-autorisation du paiement pour une course
+  preAuthorize: async (data: PaymentPreAuthRequest): Promise<PaymentResponse> => {
+    return apiRequest('/payments/pre-authorize', 'POST', data);
   },
   
-  checkPaymentStatus: async (transactionId: string) => {
-    return apiRequest(`/payments/status/${transactionId}`, 'GET');
+  // Capture d'un paiement pré-autorisé (débit effectif)
+  capture: async (data: PaymentCaptureRequest): Promise<PaymentResponse> => {
+    return apiRequest(`/payments/capture`, 'POST', data);
   },
   
-  getWalletBalance: async () => {
-    return apiRequest('/payments/wallet/balance', 'GET');
+  // Annulation d'une pré-autorisation
+  cancelPreAuth: async (authorizationId: string): Promise<PaymentResponse> => {
+    return apiRequest(`/payments/pre-authorize/${authorizationId}/cancel`, 'POST');
   },
   
-  withdrawFunds: async (data: {
-    amount: number;
-    destination: string;
-    provider: 'mtn' | 'airtel' | 'orange' | 'bank';
-  }) => {
-    return apiRequest('/payments/withdraw', 'POST', data);
+  // Remboursement d'un paiement capturé
+  refund: async (data: PaymentRefundRequest): Promise<PaymentResponse> => {
+    return apiRequest(`/payments/refund`, 'POST', data);
   },
   
-  getUserPaymentMethods: async () => {
-    return apiRequest('/payments/methods', 'GET');
+  // Obtention des détails d'une transaction
+  getTransaction: async (transactionId: string): Promise<PaymentResponse> => {
+    return apiRequest(`/payments/transactions/${transactionId}`);
   },
   
-  addPaymentMethod: async (data: {
-    type: 'mobile' | 'card' | 'bank';
-    provider?: string;
-    accountNumber?: string;
-    phoneNumber?: string;
-    isDefault?: boolean;
-  }) => {
-    return apiRequest('/payments/methods', 'POST', data);
+  // Création d'une facture pour une course
+  createInvoice: async (rideId: string): Promise<{ invoice_id: string; invoice_url: string; }> => {
+    return apiRequest(`/payments/invoices`, 'POST', { ride_id: rideId });
   },
   
-  deletePaymentMethod: async (methodId: string) => {
-    return apiRequest(`/payments/methods/${methodId}`, 'DELETE');
+  // Obtention d'une facture
+  getInvoice: async (invoiceId: string): Promise<any> => {
+    return apiRequest(`/payments/invoices/${invoiceId}`);
   },
   
-  setDefaultPaymentMethod: async (methodId: string) => {
-    return apiRequest(`/payments/methods/${methodId}/default`, 'PATCH');
+  // Envoi d'une facture par email
+  sendInvoiceByEmail: async (invoiceId: string, email: string): Promise<{ success: boolean; message: string; }> => {
+    return apiRequest(`/payments/invoices/${invoiceId}/send`, 'POST', { email });
   },
   
-  // Refund handling
-  requestRefund: async (data: {
-    order_id: string;
-    payment_id: string;
-    amount: number;
-    reason: string;
-    refund_type: 'original_payment' | 'wallet_credit' | 'cashback';
-  }) => {
-    return apiRequest('/payments/refunds', 'POST', data);
-  },
-  
-  getRefundStatus: async (refundId: string) => {
-    return apiRequest(`/payments/refunds/${refundId}`, 'GET');
-  },
-  
-  getAllRefunds: async () => {
-    return apiRequest('/payments/refunds', 'GET');
+  // Vérification d'un code promo
+  validatePromoCode: async (code: string, amount: number, vehicleType?: string): Promise<{ 
+    valid: boolean; 
+    discount: number; 
+    discount_type: string;
+    final_amount: number;
+    message: string;
+  }> => {
+    return apiRequest('/payments/promo-codes/validate', 'POST', { 
+      code, 
+      amount,
+      vehicle_type: vehicleType
+    });
   }
 };
