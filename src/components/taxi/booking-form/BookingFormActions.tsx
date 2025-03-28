@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronsRight, ChevronLeft, Loader2, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 interface BookingFormActionsProps {
   currentStep: number;
@@ -24,13 +24,12 @@ const BookingFormActions: React.FC<BookingFormActionsProps> = ({
 }) => {
   const isFirstStep = currentStep === 1;
   const isLastStep = currentStep === totalSteps;
-
+  
   return (
     <div className="flex justify-between w-full">
       {!isFirstStep ? (
-        <Button
-          type="button"
-          variant="outline"
+        <Button 
+          variant="outline" 
           onClick={onPrevStep}
           disabled={loading}
         >
@@ -38,44 +37,33 @@ const BookingFormActions: React.FC<BookingFormActionsProps> = ({
           Retour
         </Button>
       ) : (
-        <div></div> // Empty div to maintain layout with flex justify-between
+        <div></div> // Placeholder pour l'alignement
       )}
 
-      {isLastStep ? (
-        <Button
-          type="button"
-          onClick={onSubmit}
-          disabled={loading || !canProceed}
-          className="ml-auto"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Traitement en cours...
-            </>
-          ) : (
-            <>
-              <Check className="mr-2 h-4 w-4" />
-              Confirmer la réservation
-            </>
-          )}
-        </Button>
-      ) : (
-        <Button
-          type="button"
+      {!isLastStep ? (
+        <Button 
           onClick={onNextStep}
           disabled={loading || !canProceed}
-          className="ml-auto"
+          className="bg-primary hover:bg-primary/90"
+        >
+          Suivant
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      ) : (
+        <Button 
+          onClick={onSubmit}
+          disabled={loading || !canProceed}
+          className="bg-green-600 hover:bg-green-700"
         >
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Traitement en cours...
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              Traitement...
             </>
           ) : (
             <>
-              Continuer
-              <ChevronsRight className="ml-2 h-4 w-4" />
+              Confirmer
+              <Check className="ml-2 h-4 w-4" />
             </>
           )}
         </Button>

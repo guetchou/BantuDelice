@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { CheckCircle, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Check, MapPin, Navigation, ArrowRight } from 'lucide-react';
 
 interface BookingConfirmationProps {
   rideId: string;
@@ -16,67 +15,52 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   pickupAddress,
   destinationAddress
 }) => {
-  const navigate = useNavigate();
-  
-  const viewRideDetails = () => {
-    navigate(`/taxi/ride/${rideId}`);
-  };
-  
   return (
-    <Card className="bg-white border-green-100 shadow-lg animate-in fade-in-50 zoom-in-95 duration-300">
-      <CardHeader className="pb-2 bg-green-50 border-b border-green-100">
-        <CardTitle className="flex items-center gap-2 text-green-700">
-          <CheckCircle className="h-6 w-6 text-green-600" />
-          Réservation confirmée
-        </CardTitle>
-      </CardHeader>
+    <div className="flex flex-col items-center justify-center py-6">
+      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+        <Check className="text-green-500 w-10 h-10" />
+      </div>
       
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          <div className="rounded-lg bg-green-50 p-4 text-center">
-            <p className="text-sm text-green-700 font-medium">
-              Votre course a été réservée avec succès!
-            </p>
-            <p className="text-xs text-green-600 mt-1">
-              Référence: {rideId.substring(0, 8)}
-            </p>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex gap-3">
-              <div className="mt-1">
-                <div className="h-3 w-3 rounded-full bg-primary"></div>
-                <div className="h-12 w-0.5 bg-gray-200 mx-auto"></div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Départ</p>
-                <p className="font-medium">{pickupAddress}</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-3">
-              <div className="mt-1">
-                <div className="h-3 w-3 rounded-full bg-orange-500"></div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Destination</p>
-                <p className="font-medium">{destinationAddress}</p>
-              </div>
-            </div>
+      <h2 className="text-2xl font-bold text-center mb-2">
+        Réservation confirmée !
+      </h2>
+      
+      <p className="text-muted-foreground text-center mb-6">
+        Votre taxi est en route pour venir vous chercher
+      </p>
+      
+      <div className="w-full space-y-4 mb-6">
+        <div className="flex items-start gap-3 text-sm">
+          <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-muted-foreground">Point de départ</p>
+            <p className="font-medium">{pickupAddress}</p>
           </div>
         </div>
-      </CardContent>
+        
+        <div className="flex items-start gap-3 text-sm">
+          <Navigation className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-muted-foreground">Destination</p>
+            <p className="font-medium">{destinationAddress}</p>
+          </div>
+        </div>
+      </div>
       
-      <CardFooter className="pt-2">
-        <Button 
-          onClick={viewRideDetails} 
-          className="w-full"
-        >
-          Suivre ma course
-          <ChevronRight className="ml-1 h-4 w-4" />
+      <div className="w-full space-y-4">
+        <Button asChild className="w-full bg-primary">
+          <Link to={`/taxi/ride/${rideId}`}>
+            Suivre votre course <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
         </Button>
-      </CardFooter>
-    </Card>
+        
+        <Button asChild variant="outline" className="w-full">
+          <Link to="/taxi">
+            Retour à l'accueil
+          </Link>
+        </Button>
+      </div>
+    </div>
   );
 };
 

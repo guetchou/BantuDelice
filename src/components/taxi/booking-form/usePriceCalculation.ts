@@ -1,83 +1,94 @@
 
 import { useState, useEffect } from 'react';
 import { BookingFormState } from './types';
-import { useTaxiPricing } from '@/hooks/useTaxiPricing';
+import { estimatePrice } from '@/hooks/pricingModules/quickEstimates';
 
 export const usePriceCalculation = (formState: BookingFormState) => {
   const [estimatedPrice, setEstimatedPrice] = useState<number>(0);
-  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
-  const [priceBreakdown, setPriceBreakdown] = useState<string[]>([]);
-  const { calculatePrice, getPriceRange } = useTaxiPricing();
 
   useEffect(() => {
-    const calculateEstimatedPrice = () => {
-      // Vérifier que les coordonnées sont disponibles
-      if (!formState.pickupLatitude || !formState.destinationLatitude) {
-        return;
+    // Calculer le prix estimé seulement si les coordonnées sont définies
+    if (
+      formState.pickupLatitude &&
+      formState.pickupLongitude &&
+      formState.destinationLatitude &&
+      formState.destinationLongitude
+    ) {
+      // Calculer la distance
+      const distance = getDistance();
+      
+      // Si une distance valide est disponible, calculer le prix
+      if (distance && distance > 0) {
+        // Déterminer si c'est une heure de pointe
+        const currentHour = new Date().getHours();
+        const isPeakHour = (currentHour >= 7 && currentHour <= 9) || 
+                           (currentHour >= 17 && currentHour <= 19);
+        
+        // Calculer le prix
+        const priceEstimate = calculatePriceEstimate(
+          distance,
+          isPeakHour,
+          formState.vehicleType,
+          formState.isSharedRide
+        );
+        
+        setEstimatedPrice(priceEstimate);
       }
-
-      // Calculer la distance approximative (formule de Haversine)
-      const distance = calculateDistance(
-        formState.pickupLatitude,
-        formState.pickupLongitude!,
-        formState.destinationLatitude,
-        formState.destinationLongitude!
-      );
-
-      // Calculer une durée approximative (en minutes)
-      const duration = Math.ceil(distance * 3); // Approximation: 3 minutes par kilomètre
-
-      // Facteurs pour le calcul du prix
-      const pricingFactors = {
-        distance,
-        duration,
-        vehicleType: formState.vehicleType as 'standard' | 'comfort' | 'premium' | 'van',
-        time: new Date(),
-        isSharedRide: formState.isSharedRide,
-        numberOfPassengers: formState.maxPassengers
-      };
-
-      // Calculer le prix estimé
-      const priceEstimate = calculatePrice(pricingFactors);
-      setEstimatedPrice(priceEstimate.totalPrice);
-      setPriceBreakdown(priceEstimate.breakdown);
-
-      // Calculer la fourchette de prix
-      const range = getPriceRange(pricingFactors);
-      setPriceRange({ min: range.min, max: range.max });
-    };
-
-    calculateEstimatedPrice();
+    }
   }, [
     formState.pickupLatitude,
     formState.pickupLongitude,
     formState.destinationLatitude,
     formState.destinationLongitude,
     formState.vehicleType,
-    formState.isSharedRide,
-    formState.maxPassengers
+    formState.isSharedRide
   ]);
 
+  const getDistance = (): number | null => {
+    if (
+      !formState.pickupLatitude ||
+      !formState.pickupLongitude ||
+      !formState.destinationLatitude ||
+      !formState.destinationLongitude
+    ) {
+      return null;
+    }
+
+    // Utiliser la distance calculée
+    const latDiff = formState.destinationLatitude - formState.pickupLatitude;
+    const lngDiff = formState.destinationLongitude - formState.pickupLongitude;
+    
+    // Distance Euclidienne simplifiée pour démo
+    // Dans une app réelle, on utiliserait des API pour distance routière
+    const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111; // approximation de km
+    
+    return parseFloat(distance.toFixed(2));
+  };
+
+  const calculatePriceEstimate = (
+    distance: number,
+    isPeakHour: boolean,
+    vehicleType: string,
+    isSharedRide: boolean
+  ): number => {
+    // Utiliser le service d'estimation de prix existant
+    const { amount } = estimatePrice(distance, vehicleType as any);
+    
+    // Appliquer une réduction pour les courses partagées
+    let finalPrice = amount;
+    if (isSharedRide) {
+      finalPrice = Math.round(finalPrice * 0.8); // 20% de réduction
+    }
+    
+    // Majoration en heure de pointe
+    if (isPeakHour) {
+      finalPrice = Math.round(finalPrice * 1.2); // 20% de supplément
+    }
+    
+    return finalPrice;
+  };
+
   return {
-    estimatedPrice,
-    priceRange,
-    priceBreakdown
+    estimatedPrice
   };
 };
-
-// Calculer la distance entre deux points (Haversine)
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Rayon de la Terre en km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function toRad(degrees: number): number {
-  return degrees * (Math.PI / 180);
-}
