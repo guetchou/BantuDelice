@@ -13,6 +13,7 @@ export default function TaxiBookingForm() {
     currentStep,
     loading,
     createdRideId,
+    bookingSuccess,
     handleNextStep,
     handlePrevStep,
     handleLocationSelect,
@@ -34,30 +35,35 @@ export default function TaxiBookingForm() {
             Remplissez le formulaire ci-dessous pour réserver votre course
           </CardDescription>
           
-          <StepIndicator currentStep={currentStep} totalSteps={4} />
+          {!bookingSuccess && (
+            <StepIndicator currentStep={currentStep} totalSteps={4} />
+          )}
         </CardHeader>
         
         <CardContent>
           <BookingStepContent
             currentStep={currentStep}
             createdRideId={createdRideId}
+            bookingSuccess={bookingSuccess}
             onLocationSelect={handleLocationSelect}
             onUseCurrentLocation={handleUseCurrentLocation}
             onSelectDriver={handleSelectDriver}
           />
         </CardContent>
         
-        <CardFooter>
-          <BookingFormActions
-            currentStep={currentStep}
-            totalSteps={4}
-            loading={loading}
-            canProceed={validateCurrentStep()}
-            onPrevStep={handlePrevStep}
-            onNextStep={handleNextStep}
-            onSubmit={handleSubmit}
-          />
-        </CardFooter>
+        {!bookingSuccess && (
+          <CardFooter>
+            <BookingFormActions
+              currentStep={currentStep}
+              totalSteps={4}
+              loading={loading}
+              canProceed={validateCurrentStep()}
+              onPrevStep={handlePrevStep}
+              onNextStep={handleNextStep}
+              onSubmit={handleSubmit}
+            />
+          </CardFooter>
+        )}
       </Card>
     </BookingFormProvider>
   );

@@ -8,6 +8,7 @@ import EnhancedVehicleSection from '../EnhancedVehicleSection';
 import EnhancedPickupTimeSection from '../EnhancedPickupTimeSection';
 import EnhancedPaymentSection from '../EnhancedPaymentSection';
 import BookingExtras from '../BookingExtras';
+import BookingConfirmation from './BookingConfirmation';
 import { Separator } from "@/components/ui/separator";
 import { useBookingForm } from './BookingFormContext';
 
@@ -17,6 +18,7 @@ interface BookingStepContentProps {
   onLocationSelect: (address: string, isPickup: boolean) => void;
   onUseCurrentLocation: () => void;
   onSelectDriver: (driver: any) => void;
+  bookingSuccess?: boolean;
 }
 
 const BookingStepContent: React.FC<BookingStepContentProps> = ({
@@ -24,7 +26,8 @@ const BookingStepContent: React.FC<BookingStepContentProps> = ({
   createdRideId,
   onLocationSelect,
   onUseCurrentLocation,
-  onSelectDriver
+  onSelectDriver,
+  bookingSuccess
 }) => {
   const { 
     formState, 
@@ -33,6 +36,17 @@ const BookingStepContent: React.FC<BookingStepContentProps> = ({
     handleSharingEnabled,
     getDistanceEstimate
   } = useBookingForm();
+
+  // If booking is successful, show confirmation
+  if (bookingSuccess && createdRideId) {
+    return (
+      <BookingConfirmation 
+        rideId={createdRideId}
+        pickupAddress={formState.pickupAddress}
+        destinationAddress={formState.destinationAddress}
+      />
+    );
+  }
 
   // Render different content based on current step
   switch (currentStep) {

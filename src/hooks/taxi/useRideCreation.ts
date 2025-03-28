@@ -8,6 +8,7 @@ export function useRideCreation() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [createdRideId, setCreatedRideId] = useState<string | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const createInitialRide = async (formState: any, estimatedPrice: number) => {
     try {
@@ -85,14 +86,19 @@ export function useRideCreation() {
         if (error) throw error;
       }
       
+      // Set booking success state to true
+      setBookingSuccess(true);
+      
       toast.success("Réservation confirmée", {
         description: selectedDriver 
           ? "Le chauffeur a été notifié de votre demande" 
           : "Recherche d'un chauffeur en cours..."
       });
       
-      // Navigate to the ride status page
-      navigate(`/taxi/ride/${createdRideId}`);
+      // We'll delay the navigation to show the confirmation first
+      setTimeout(() => {
+        navigate(`/taxi/ride/${createdRideId}`);
+      }, 5000);
     } catch (error) {
       console.error('Error finalizing booking:', error);
       toast.error("Une erreur est survenue lors de la finalisation de la réservation");
@@ -104,6 +110,7 @@ export function useRideCreation() {
   return {
     loading,
     createdRideId,
+    bookingSuccess,
     createInitialRide,
     handleSubmit
   };

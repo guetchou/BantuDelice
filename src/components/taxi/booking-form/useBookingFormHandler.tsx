@@ -13,7 +13,7 @@ export function useBookingFormHandler() {
   
   const { handleLocationSelect: locationSelectHandler, handleUseCurrentLocation: currentLocationHandler } = useLocationHandler();
   const { selectedDriver, handleSelectDriver } = useDriverSelection();
-  const { loading, createdRideId, createInitialRide, handleSubmit: submitRide } = useRideCreation();
+  const { loading, createdRideId, bookingSuccess, createInitialRide, handleSubmit: submitRide } = useRideCreation();
   const { validateStep } = useFormValidation();
   
   const handleLocationSelect = async (address: string, isPickup: boolean) => {
@@ -58,6 +58,7 @@ export function useBookingFormHandler() {
     loading,
     createdRideId,
     selectedDriver,
+    bookingSuccess,
     handleNextStep,
     handlePrevStep,
     handleLocationSelect,
