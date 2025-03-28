@@ -1,59 +1,83 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { CircleDollarSign, Clock, TrendingUp, Info, Zap } from 'lucide-react';
 import { formatPrice } from './booking-form/bookingFormUtils';
 
 interface PriceEstimationProps {
   estimatedPrice: number;
   distance?: number;
-  range?: { min: number; max: number };
-  breakdown?: string[];
 }
 
-const PriceEstimation: React.FC<PriceEstimationProps> = ({
+const PriceEstimation: React.FC<PriceEstimationProps> = ({ 
   estimatedPrice,
-  distance,
-  range,
-  breakdown
+  distance
 }) => {
+  // Calculer le temps de trajet estimé (3 minutes par km en moyenne)
+  const estimatedDuration = distance ? Math.round(distance * 3) : null;
+  
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex justify-between items-center">
-          <span>Estimation du prix</span>
-          {distance && <span className="text-sm font-normal text-muted-foreground">~{distance} km</span>}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="flex justify-center items-center">
-            <div className="text-2xl font-bold text-primary">
-              {range ? (
-                <span>{formatPrice(range.min)} - {formatPrice(range.max)}</span>
-              ) : (
-                <span>{formatPrice(estimatedPrice)}</span>
-              )}
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-lg font-medium mb-2">Estimation du prix</h3>
+        <p className="text-sm text-gray-500">
+          Voici une estimation du prix de votre trajet basée sur la distance et le type de véhicule.
+        </p>
+      </div>
+      
+      <Card className="bg-green-50 border-green-200">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-green-700">
+                <CircleDollarSign className="h-5 w-5" />
+                <span className="font-medium">Prix estimé</span>
+              </div>
+              <div className="text-2xl font-bold text-green-800">
+                {formatPrice(estimatedPrice)}
+              </div>
             </div>
-          </div>
-          
-          {breakdown && breakdown.length > 0 && (
-            <div className="mt-4 text-sm space-y-1 text-muted-foreground">
-              <p className="text-xs font-medium uppercase tracking-wider mb-2">Détails du prix</p>
-              {breakdown.map((item, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>{item.split(':')[0]}</span>
-                  <span>{item.split(':')[1]}</span>
+            
+            {distance && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-green-700">
+                  <TrendingUp className="h-5 w-5" />
+                  <span className="font-medium">Distance</span>
                 </div>
-              ))}
-            </div>
-          )}
-          
-          <div className="text-xs text-muted-foreground mt-2">
-            <p>Le prix final peut varier selon le trafic et l'itinéraire emprunté.</p>
+                <div className="text-2xl font-bold text-green-800">
+                  {distance} km
+                </div>
+              </div>
+            )}
+            
+            {estimatedDuration && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-green-700">
+                  <Clock className="h-5 w-5" />
+                  <span className="font-medium">Durée estimée</span>
+                </div>
+                <div className="text-2xl font-bold text-green-800">
+                  {estimatedDuration} min
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          
+          {/* Options de paiement */}
+          <div className="mt-4 pt-4 border-t border-green-200">
+            <div className="flex items-start gap-2">
+              <Info className="h-5 w-5 text-green-700 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-green-700">
+                <p>
+                  Ce prix est une estimation et peut varier légèrement en fonction des conditions 
+                  de circulation et du trajet exact.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

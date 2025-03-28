@@ -1,112 +1,209 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { TaxiDriver, TaxiVehicleType } from '@/types/taxi';
 
 export function useRideCreation() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [createdRideId, setCreatedRideId] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-
-  const createInitialRide = async (formState: any, estimatedPrice: number) => {
+  
+  // Crée un trajet initial lors de la sélection de l'emplacement
+  const createInitialRide = async (formState: any, estimatedPrice: number): Promise<boolean> => {
     try {
       setLoading(true);
       
-      // Create the ride
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = (await supabase.auth.getUser()).data.user;
+      
       if (!user) {
-        toast.error("Vous devez être connecté pour réserver un taxi");
-        return false;
+        throw new Error('Utilisateur non connecté');
       }
       
-      const newRideData = {
-        user_id: user.id,
-        pickup_address: formState.pickupAddress,
-        destination_address: formState.destinationAddress,
-        pickup_latitude: formState.pickupLatitude,
-        pickup_longitude: formState.pickupLongitude,
-        destination_latitude: formState.destinationLatitude,
-        destination_longitude: formState.destinationLongitude,
-        pickup_time: formState.pickupTime === 'now' 
-          ? new Date().toISOString() 
-          : formState.scheduledTime,
-        status: 'pending',
-        vehicle_type: formState.vehicleType,
-        payment_method: formState.paymentMethod,
-        estimated_price: estimatedPrice,
-        payment_status: 'pending',
-        is_shared_ride: formState.isSharedRide,
-        max_passengers: formState.maxPassengers,
-        special_instructions: formState.specialInstructions
-      };
+      // Calculer la durée estimée (10 min par km pour cette démo)
+      const distanceKm = calculateDistance(
+        formState.pickupLatitude,
+        formState.pickupLongitude,
+        formState.destinationLatitude,
+        formState.destinationLongitude
+      );
       
+      const durationMin = Math.round(distanceKm * 3); // 3 minutes par km en moyenne
+      
+      // Calculer le moment de création
+      const now = new Date().toISOString();
+      
+      // Créer l'entrée initiale du trajet
       const { data, error } = await supabase
         .from('taxi_rides')
-        .insert(newRideData)
-        .select()
+        .insert({
+          user_id: user.id,
+          pickup_address: formState.pickupAddress,
+          destination_address: formState.destinationAddress,
+          pickup_latitude: formState.pickupLatitude,
+          pickup_longitude: formState.pickupLongitude,
+          destination_latitude: formState.destinationLatitude,
+          destination_longitude: formState.destinationLongitude,
+          pickup_time: formState.pickupTime === 'now' ? now : formState.scheduledTime,
+          pickup_time_type: formState.pickupTime,
+          status: 'pending',
+          estimated_price: estimatedPrice,
+          distance_km: distanceKm,
+          duration_min: durationMin,
+          vehicle_type: formState.vehicleType,
+          created_at: now
+        })
+        .select('id')
         .single();
-        
-      if (error) throw error;
+      
+      if (error) {
+        throw error;
+      }
       
       setCreatedRideId(data.id);
-      
-      toast.success("Votre réservation a été créée");
       return true;
     } catch (error) {
-      console.error('Error creating ride:', error);
-      toast.error("Une erreur est survenue lors de la création de la réservation");
+      console.error('Erreur lors de la création du trajet:', error);
+      toast.error('Erreur lors de la création du trajet');
       return false;
     } finally {
       setLoading(false);
     }
   };
   
-  const handleSubmit = async (createdRideId: string | null, selectedDriver: any) => {
-    if (!createdRideId) {
-      toast.error("Erreur: identifiant de course manquant");
-      return;
-    }
-    
+  // Soumet la réservation finale
+  const handleSubmit = async (rideId: string, selectedDriver: TaxiDriver | null): Promise<boolean> => {
     try {
       setLoading(true);
       
-      // If a driver was selected, request that driver
-      if (selectedDriver) {
-        const { error } = await supabase
-          .from('taxi_ride_requests')
-          .insert({
-            ride_id: createdRideId,
-            driver_id: selectedDriver.id,
-            status: 'pending',
-            requested_at: new Date().toISOString()
-          });
-          
-        if (error) throw error;
+      if (!rideId) {
+        throw new Error('ID de trajet manquant');
       }
       
-      // Set booking success state to true
+      // Mettre à jour le trajet avec les informations finales
+      const updateData: any = {
+        status: 'pending',
+      };
+      
+      // Si un chauffeur a été sélectionné manuellement
+      if (selectedDriver) {
+        updateData.driver_id = selectedDriver.id;
+        updateData.status = 'driver_assigned';
+      }
+      
+      const { error } = await supabase
+        .from('taxi_rides')
+        .update(updateData)
+        .eq('id', rideId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Marquer la réservation comme réussie
       setBookingSuccess(true);
       
-      toast.success("Réservation confirmée", {
-        description: selectedDriver 
-          ? "Le chauffeur a été notifié de votre demande" 
-          : "Recherche d'un chauffeur en cours..."
-      });
+      // Créer une notification pour les chauffeurs ou simuler un appariement automatique
+      if (!selectedDriver) {
+        // Dans une application réelle, on enverrait des notifications aux chauffeurs disponibles
+        await createDriverRequestNotifications(rideId);
+      }
       
-      // We'll delay the navigation to show the confirmation first
-      setTimeout(() => {
-        navigate(`/taxi/ride/${createdRideId}`);
-      }, 5000);
+      return true;
     } catch (error) {
-      console.error('Error finalizing booking:', error);
-      toast.error("Une erreur est survenue lors de la finalisation de la réservation");
+      console.error('Erreur lors de la soumission de la réservation:', error);
+      toast.error('Erreur lors de la réservation du taxi');
+      return false;
     } finally {
       setLoading(false);
     }
   };
-
+  
+  // Calculer la distance entre deux points géographiques
+  const calculateDistance = (
+    lat1: number, 
+    lon1: number, 
+    lat2: number, 
+    lon2: number
+  ): number => {
+    const R = 6371; // Rayon de la Terre en km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance en km
+    
+    return parseFloat(distance.toFixed(2));
+  };
+  
+  // Convertir des degrés en radians
+  const deg2rad = (deg: number): number => {
+    return deg * (Math.PI / 180);
+  };
+  
+  // Simuler la création de notifications pour les chauffeurs
+  const createDriverRequestNotifications = async (rideId: string): Promise<void> => {
+    try {
+      // Dans une application réelle, on enverrait des notifications aux chauffeurs disponibles
+      // Pour cette démo, nous simulons simplement une attente
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simuler un appariement de chauffeur après un délai
+      setTimeout(async () => {
+        try {
+          // Obtenir des informations sur le trajet
+          const { data: rideData, error: rideError } = await supabase
+            .from('taxi_rides')
+            .select('*')
+            .eq('id', rideId)
+            .single();
+          
+          if (rideError) throw rideError;
+          
+          // Si le trajet est toujours en attente, simuler un appariement
+          if (rideData.status === 'pending') {
+            const vehicleType = rideData.vehicle_type as TaxiVehicleType;
+            
+            // Trouver un chauffeur disponible (pour cette démo, on en simule un)
+            const { data: driversData, error: driversError } = await supabase
+              .from('taxi_drivers')
+              .select('*')
+              .eq('is_available', true)
+              .eq('vehicle_type', vehicleType)
+              .limit(1);
+            
+            if (driversError) throw driversError;
+            
+            // S'il y a un chauffeur disponible, l'assigner
+            if (driversData && driversData.length > 0) {
+              const driverId = driversData[0].id;
+              
+              await supabase
+                .from('taxi_rides')
+                .update({
+                  driver_id: driverId,
+                  status: 'driver_assigned'
+                })
+                .eq('id', rideId);
+                
+              // Notifier l'utilisateur
+              toast.success("Un chauffeur a accepté votre course !");
+            }
+          }
+        } catch (error) {
+          console.error('Erreur lors de l\'appariement automatique:', error);
+        }
+      }, 8000); // Simuler un appariement après 8 secondes
+    } catch (error) {
+      console.error('Erreur lors de la création des notifications:', error);
+    }
+  };
+  
   return {
     loading,
     createdRideId,

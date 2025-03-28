@@ -50,7 +50,7 @@ export function useSharedRides(rideId: string | undefined, isSharingEnabled: boo
           estimated_price: ride.estimated_price,
           actual_price: ride.actual_price,
           payment_status: ride.payment_status,
-          vehicle_type: ride.vehicle_type,
+          vehicle_type: ride.vehicle_type as TaxiRide['vehicle_type'],
           payment_method: ride.payment_method,
           pickup_latitude: ride.pickup_latitude,
           pickup_longitude: ride.pickup_longitude,
@@ -65,7 +65,10 @@ export function useSharedRides(rideId: string | undefined, isSharingEnabled: boo
           distance_km: ride.distance_km,
           route_polyline: ride.route_polyline,
           promo_code_applied: ride.promo_code_applied,
-          promo_discount: ride.promo_discount
+          promo_discount: ride.promo_discount,
+          pickup_time_type: ride.pickup_time_type || 'now',
+          duration_min: ride.duration_min || 0,
+          created_at: ride.created_at
         }));
 
         setNearbySharedRides(rides);

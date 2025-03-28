@@ -1,9 +1,11 @@
 
 import React from 'react';
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import PaymentMethodSelector from './PaymentMethodSelector';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatPrice } from './booking-form/bookingFormUtils';
+import { PaymentMethodSelector } from './PaymentMethodSelector';
+import { Card, CardContent } from "@/components/ui/card";
+import { CreditCard, Landmark, Smartphone } from 'lucide-react';
 
 interface EnhancedPaymentSectionProps {
   paymentMethod: string;
@@ -18,39 +20,55 @@ const EnhancedPaymentSection: React.FC<EnhancedPaymentSectionProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-start">
-        <div>
-          <Label className="text-base">Moyen de paiement</Label>
-          <p className="text-sm text-muted-foreground mb-3">
-            Choisissez comment vous souhaitez payer votre course
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-muted-foreground">Montant estimé</p>
-          <p className="text-xl font-bold text-primary">{formatPrice(estimatedPrice)}</p>
-        </div>
+      <div>
+        <h3 className="text-lg font-medium mb-2">Méthode de paiement</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Choisissez comment vous souhaitez payer votre trajet.
+        </p>
       </div>
       
       <PaymentMethodSelector
-        value={paymentMethod}
-        onChange={onPaymentMethodChange}
+        onPaymentMethodChange={onPaymentMethodChange}
       />
       
-      {paymentMethod === 'mobile_money' && (
-        <Card className="border-orange-200 bg-orange-50/50">
-          <CardContent className="p-3 text-sm">
-            <p>
-              <span className="font-medium">Note:</span> Vous recevrez un code de paiement à la fin de votre course. Aucun paiement n'est prélevé maintenant.
+      {/* Détails de paiement conditionnels */}
+      {paymentMethod === 'card' && (
+        <Card className="border border-blue-100 bg-blue-50">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center space-x-2 text-blue-800">
+              <CreditCard className="h-5 w-5" />
+              <span className="font-medium">Paiement par carte</span>
+            </div>
+            <p className="text-sm text-blue-700">
+              Le paiement sera traité de manière sécurisée à la fin de votre course.
             </p>
           </CardContent>
         </Card>
       )}
       
-      {paymentMethod === 'card' && (
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardContent className="p-3 text-sm">
-            <p>
-              <span className="font-medium">Note:</span> Votre carte sera débitée uniquement à la fin de votre course. Une pré-autorisation sera effectuée pour vérifier la validité de votre carte.
+      {paymentMethod === 'mobile_money' && (
+        <Card className="border border-green-100 bg-green-50">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center space-x-2 text-green-800">
+              <Smartphone className="h-5 w-5" />
+              <span className="font-medium">Mobile Money</span>
+            </div>
+            <p className="text-sm text-green-700">
+              Une demande de paiement sera envoyée à votre téléphone avant la fin de votre course.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {paymentMethod === 'cash' && (
+        <Card className="border border-orange-100 bg-orange-50">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center space-x-2 text-orange-800">
+              <Landmark className="h-5 w-5" />
+              <span className="font-medium">Paiement en espèces</span>
+            </div>
+            <p className="text-sm text-orange-700">
+              Préparez {formatPrice(estimatedPrice)} à remettre directement au chauffeur.
             </p>
           </CardContent>
         </Card>

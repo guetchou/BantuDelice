@@ -17,7 +17,8 @@ export type TaxiRideStatus =
   | 'arrived_at_destination'
   | 'completed'
   | 'cancelled'
-  | 'rejected';
+  | 'rejected'
+  | 'accepted'; // Added for compatibility
 
 export type TaxiVehicleType = 'standard' | 'comfort' | 'premium' | 'van';
 
@@ -38,6 +39,15 @@ export interface TaxiDriver {
   total_rides: number;
   is_available: boolean;
   current_location?: TaxiLocation;
+  // New properties added for compatibility
+  current_latitude?: number;
+  current_longitude?: number;
+  photo_url?: string;
+  profile_picture?: string;
+  languages?: string[];
+  years_experience?: number;
+  verification_status?: string;
+  status?: string;
 }
 
 export interface TaxiRide {
@@ -60,6 +70,42 @@ export interface TaxiRide {
   pickup_longitude: number;
   destination_latitude: number;
   destination_longitude: number;
+  // Additional properties for compatibility
+  vehicle_type?: TaxiVehicleType;
+  special_instructions?: string;
+  is_shared_ride?: boolean;
+  max_passengers?: number;
+  current_passengers?: number;
+  estimated_arrival_time?: string;
+  actual_arrival_time?: string;
+  route_polyline?: string;
+  promo_code_applied?: string;
+  promo_discount?: number;
+}
+
+export interface RideShareRequest {
+  id: string;
+  ride_id: string;
+  requester_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  pickup_address: string;
+  destination_address: string;
+  pickup_latitude: number;
+  pickup_longitude: number;
+  destination_latitude: number;
+  destination_longitude: number;
+  created_at?: string;
+}
+
+export interface TaxiRideRequest {
+  id: string;
+  user_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  pickup_address: string;
+  destination_address: string;
+  pickup_time: string;
+  vehicle_type: TaxiVehicleType;
+  created_at: string;
 }
 
 export interface TaxiInvoice {
@@ -97,6 +143,17 @@ export interface TaxiSubscription {
   features: Array<{name: string; value: string | number | boolean}>;
 }
 
+export interface TaxiSubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  billing_cycle: 'monthly' | 'yearly';
+  features: Array<{name: string; value: string | number | boolean}>;
+  popular: boolean;
+  discount_percentage?: number;
+}
+
 export interface TaxiPricingParams {
   distance_km: number;
   duration_min: number;
@@ -105,6 +162,19 @@ export interface TaxiPricingParams {
   is_premium?: boolean;
   promo_code?: string;
   subscription_discount?: number;
+}
+
+export interface PricingFactors {
+  distance?: number;
+  time_of_day?: string;
+  vehicle_type?: TaxiVehicleType;
+  is_premium?: boolean;
+}
+
+export interface PriceRange {
+  min: number;
+  max: number;
+  currency?: string;
 }
 
 export interface TaxiFare {
@@ -116,5 +186,28 @@ export interface TaxiFare {
   promo_discount: number;
   taxes: number;
   total: number;
+  totalPrice?: number; // Added for compatibility
+  currency: string;
+}
+
+export interface SavedLocation {
+  id: string;
+  user_id?: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  is_favorite: boolean;
+  is_current_location?: boolean;
+  last_used: string;
+  created_at: string;
+  name?: string;
+}
+
+export interface BusinessRateEstimate {
+  standard_rate: number;
+  business_rate: number;
+  savings_percentage: number;
+  monthly_savings: number;
+  includes_features: string[];
   currency: string;
 }

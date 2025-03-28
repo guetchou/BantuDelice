@@ -1,272 +1,349 @@
 
-import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Search, SlidersHorizontal, MapPin, 
-  CheckCircle, XCircle, Clock, TrendingUp, 
-} from "lucide-react";
-import Layout from '@/components/Layout';
-import RestaurantCard from '@/components/restaurant/RestaurantCard';
-import type { Restaurant } from '@/types/restaurant';
+  Search, 
+  MapPin, 
+  Clock, 
+  Filter, 
+  ArrowUpDown, 
+  Star,
+  ChevronDown,
+  X
+} from 'lucide-react';
+import ImprovedRestaurantCard from '@/components/restaurants/ImprovedRestaurantCard';
+import { supabase } from '@/integrations/supabase/client';
+import { useRestaurantSearch } from '@/hooks/useRestaurantSearch';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 export default function Restaurants() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [cuisineFilter, setCuisineFilter] = useState<string[]>([]);
-  const [priceFilter, setPriceFilter] = useState<number[]>([]);
-  const [openNowFilter, setOpenNowFilter] = useState(false);
-  const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'time'>('distance');
-  const [availableCuisines, setAvailableCuisines] = useState<string[]>([]);
+  const navigate = useNavigate();
+  const [restaurants, setRestaurants] = useState<any[]>([]);
   
-  const { data: restaurants, isLoading } = useQuery<Restaurant[]>({
-    queryKey: ['restaurants'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  const { 
+    searchQuery, 
+    selectedCategory, 
+    selectedPriceRange,
+    selectedSortBy,
+    cuisineTypes,
+    isLoading,
+    setIsLoading,
+    handleSearchChange,
+    handleCategoryChange,
+    handlePriceRangeChange,
+    handleSortByChange,
+    resetFilters
+  } = useRestaurantSearch();
+  
+  // Obtenir les restaurants lors du changement des filtres
+  useEffect(() => {
+    fetchRestaurants();
+  }, [selectedCategory, selectedPriceRange, selectedSortBy, searchQuery]);
+  
+  const fetchRestaurants = async () => {
+    try {
+      setIsLoading(true);
+      
+      let query = supabase
         .from('restaurants')
         .select('*')
-        .order('average_rating', { ascending: false });
-        
-      if (error) throw error;
+        .order('name');
       
-      return data as Restaurant[];
-    }
-  });
-  
-  useEffect(() => {
-    if (restaurants) {
-      // Extract unique cuisines
-      const cuisines = new Set<string>();
+      // Appliquer les filtres
+      if (searchQuery) {
+        query = query.ilike('name', `%${searchQuery}%`);
+      }
       
-      restaurants.forEach(restaurant => {
-        if (Array.isArray(restaurant.cuisine_type)) {
-          restaurant.cuisine_type.forEach(cuisine => cuisines.add(cuisine));
-        } else if (typeof restaurant.cuisine_type === 'string') {
-          cuisines.add(restaurant.cuisine_type);
+      if (selectedCategory && selectedCategory !== 'Tout') {
+        query = query.eq('cuisine_type', selectedCategory);
+      }
+      
+      // Obtenir les résultats
+      const { data, error } = await query;
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Filtrer par fourchette de prix client-side (comme c'est plus complexe avec Supabase)
+      let filteredData = data;
+      
+      if (selectedPriceRange !== 'all') {
+        // Ces logiques seraient normalement basées sur des champs dans votre base de données
+        filteredData = data.filter(restaurant => {
+          const avgPrice = restaurant.min_order_amount || 5000;
+          switch (selectedPriceRange) {
+            case 'low': return avgPrice < 5000;
+            case 'medium': return avgPrice >= 5000 && avgPrice <= 15000;
+            case 'high': return avgPrice > 15000;
+            default: return true;
+          }
+        });
+      }
+      
+      // Trier les résultats
+      filteredData = filteredData.sort((a, b) => {
+        switch (selectedSortBy) {
+          case 'popularity':
+            return (b.trending ? 1 : 0) - (a.trending ? 1 : 0) || 
+                   (b.rating || 0) - (a.rating || 0);
+          case 'rating':
+            return (b.rating || 0) - (a.rating || 0);
+          case 'price_asc':
+            return (a.min_order_amount || 0) - (b.min_order_amount || 0);
+          case 'price_desc':
+            return (b.min_order_amount || 0) - (a.min_order_amount || 0);
+          case 'nearest':
+            // Simuler la proximité pour cette démo
+            return (a.latitude ? 1 : 0) - (b.latitude ? 1 : 0);
+          default:
+            return 0;
         }
       });
       
-      setAvailableCuisines(Array.from(cuisines));
-    }
-  }, [restaurants]);
-  
-  // Apply filters and sorting
-  const filteredRestaurants = React.useMemo(() => {
-    if (!restaurants) return [];
-    
-    let filtered = [...restaurants];
-    
-    // Apply search query
-    if (searchQuery) {
-      filtered = filtered.filter(restaurant => 
-        restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        restaurant.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (Array.isArray(restaurant.cuisine_type) && 
-          restaurant.cuisine_type.some(cuisine => 
-            cuisine.toLowerCase().includes(searchQuery.toLowerCase())
-          ))
-      );
-    }
-    
-    // Apply cuisine filter
-    if (cuisineFilter.length > 0) {
-      filtered = filtered.filter(restaurant => {
-        if (Array.isArray(restaurant.cuisine_type)) {
-          return restaurant.cuisine_type.some(cuisine => 
-            cuisineFilter.includes(cuisine)
-          );
-        } else {
-          return cuisineFilter.includes(restaurant.cuisine_type as string);
-        }
-      });
-    }
-    
-    // Apply price filter
-    if (priceFilter.length > 0) {
-      filtered = filtered.filter(restaurant => 
-        priceFilter.includes(restaurant.price_range)
-      );
-    }
-    
-    // Apply open now filter
-    if (openNowFilter) {
-      filtered = filtered.filter(restaurant => restaurant.is_open);
-    }
-    
-    // Apply sorting
-    switch (sortBy) {
-      case 'rating':
-        filtered.sort((a, b) => b.average_rating - a.average_rating);
-        break;
-      case 'time':
-        filtered.sort((a, b) => a.average_prep_time - b.average_prep_time);
-        break;
-      case 'distance':
-        // In a real app, you would calculate actual distance
-        // Here we're just using a different sorting for demonstration
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-    }
-    
-    return filtered;
-  }, [restaurants, searchQuery, cuisineFilter, priceFilter, openNowFilter, sortBy]);
-  
-  const toggleCuisineFilter = (cuisine: string) => {
-    if (cuisineFilter.includes(cuisine)) {
-      setCuisineFilter(cuisineFilter.filter(c => c !== cuisine));
-    } else {
-      setCuisineFilter([...cuisineFilter, cuisine]);
+      setRestaurants(filteredData);
+    } catch (error) {
+      console.error('Error fetching restaurants:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  const togglePriceFilter = (price: number) => {
-    if (priceFilter.includes(price)) {
-      setPriceFilter(priceFilter.filter(p => p !== price));
-    } else {
-      setPriceFilter([...priceFilter, price]);
-    }
+  const handleRestaurantClick = (id: string) => {
+    navigate(`/restaurants/${id}`);
   };
   
-  const clearFilters = () => {
-    setCuisineFilter([]);
-    setPriceFilter([]);
-    setOpenNowFilter(false);
-    setSortBy('distance');
-    setSearchQuery('');
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (selectedCategory !== 'Tout') count++;
+    if (selectedPriceRange !== 'all') count++;
+    if (selectedSortBy !== 'popularity') count++;
+    return count;
   };
   
   return (
-    <Layout hideBackButton>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Restaurants</h1>
-        
-        <div className="mb-8 flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Rechercher un restaurant, un plat..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          
-          <Button 
-            variant={filterOpen ? "default" : "outline"} 
-            onClick={() => setFilterOpen(!filterOpen)}
-            size="icon"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-          </Button>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Restaurants</h1>
+      
+      {/* Barre de recherche */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Rechercher un restaurant, une cuisine..."
+            className="pl-10 py-6 text-lg"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
         </div>
-        
-        {filterOpen && (
-          <div className="mb-8 p-4 border rounded-lg animate-fade-in">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold">Filtres</h2>
+      </div>
+      
+      {/* Filtres */}
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <div className="flex flex-wrap gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filtres
+                {getActiveFiltersCount() > 0 && (
+                  <Badge className="ml-1 bg-primary/90 hover:bg-primary">{getActiveFiltersCount()}</Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel>Catégorie</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {cuisineTypes.map(cuisine => (
+                <DropdownMenuCheckboxItem
+                  key={cuisine}
+                  checked={selectedCategory === cuisine}
+                  onCheckedChange={() => handleCategoryChange(cuisine)}
+                >
+                  {cuisine}
+                </DropdownMenuCheckboxItem>
+              ))}
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Fourchette de prix</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={selectedPriceRange === 'all'}
+                onCheckedChange={() => handlePriceRangeChange('all')}
+              >
+                Tous les prix
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedPriceRange === 'low'}
+                onCheckedChange={() => handlePriceRangeChange('low')}
+              >
+                Économique
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedPriceRange === 'medium'}
+                onCheckedChange={() => handlePriceRangeChange('medium')}
+              >
+                Moyen
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedPriceRange === 'high'}
+                onCheckedChange={() => handlePriceRangeChange('high')}
+              >
+                Élevé
+              </DropdownMenuCheckboxItem>
+              
+              <DropdownMenuSeparator />
               <Button 
                 variant="ghost" 
-                onClick={clearFilters} 
-                className="text-sm h-8 px-2"
+                className="w-full justify-start text-muted-foreground hover:text-foreground"
+                onClick={resetFilters}
               >
+                <X className="mr-2 h-4 w-4" />
                 Réinitialiser
               </Button>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium mb-2">Cuisine</h3>
-                <div className="flex flex-wrap gap-2">
-                  {availableCuisines.map(cuisine => (
-                    <Button
-                      key={cuisine}
-                      variant={cuisineFilter.includes(cuisine) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => toggleCuisineFilter(cuisine)}
-                      className="text-xs h-7"
-                    >
-                      {cuisine}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium mb-2">Prix</h3>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4].map(price => (
-                    <Button
-                      key={price}
-                      variant={priceFilter.includes(price) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => togglePriceFilter(price)}
-                      className="text-xs h-7"
-                    >
-                      {Array(price).fill('₣').join('')}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium mb-2">Disponibilité</h3>
-                <Button
-                  variant={openNowFilter ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setOpenNowFilter(!openNowFilter)}
-                  className="flex items-center text-xs h-8"
-                >
-                  {openNowFilter ? (
-                    <CheckCircle className="mr-2 h-3.5 w-3.5" />
-                  ) : (
-                    <XCircle className="mr-2 h-3.5 w-3.5" />
-                  )}
-                  Ouvert maintenant
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div className="mb-6">
-          <Tabs defaultValue={sortBy} onValueChange={(value) => setSortBy(value as any)}>
-            <TabsList className="grid w-full grid-cols-3 h-9">
-              <TabsTrigger value="distance" className="text-xs">
-                <MapPin className="h-3.5 w-3.5 mr-1" />
-                Distance
-              </TabsTrigger>
-              <TabsTrigger value="rating" className="text-xs">
-                <TrendingUp className="h-3.5 w-3.5 mr-1" />
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <ArrowUpDown className="h-4 w-4" />
+                Trier par
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuCheckboxItem
+                checked={selectedSortBy === 'popularity'}
+                onCheckedChange={() => handleSortByChange('popularity')}
+              >
                 Popularité
-              </TabsTrigger>
-              <TabsTrigger value="time" className="text-xs">
-                <Clock className="h-3.5 w-3.5 mr-1" />
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedSortBy === 'rating'}
+                onCheckedChange={() => handleSortByChange('rating')}
+              >
+                <Star className="mr-2 h-4 w-4" />
+                Note
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedSortBy === 'price_asc'}
+                onCheckedChange={() => handleSortByChange('price_asc')}
+              >
+                Prix croissant
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedSortBy === 'price_desc'}
+                onCheckedChange={() => handleSortByChange('price_desc')}
+              >
+                Prix décroissant
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedSortBy === 'nearest'}
+                onCheckedChange={() => handleSortByChange('nearest')}
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                Distance
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedSortBy === 'fastest'}
+                onCheckedChange={() => handleSortByChange('fastest')}
+              >
+                <Clock className="mr-2 h-4 w-4" />
                 Temps de livraison
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Filtres actifs */}
+          {selectedCategory !== 'Tout' && (
+            <Badge variant="secondary" className="gap-1 pl-2 h-9">
+              {selectedCategory}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-5 w-5 ml-1 p-0 text-gray-500 hover:text-gray-700 hover:bg-transparent"
+                onClick={() => handleCategoryChange('Tout')}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          
+          {selectedPriceRange !== 'all' && (
+            <Badge variant="secondary" className="gap-1 pl-2 h-9">
+              Prix: {selectedPriceRange === 'low' ? 'Économique' : selectedPriceRange === 'medium' ? 'Moyen' : 'Élevé'}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-5 w-5 ml-1 p-0 text-gray-500 hover:text-gray-700 hover:bg-transparent"
+                onClick={() => handlePriceRangeChange('all')}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
         </div>
         
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : filteredRestaurants.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRestaurants.map(restaurant => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 border rounded-lg">
-            <p className="text-gray-500">Aucun restaurant ne correspond à votre recherche.</p>
-            <Button variant="link" onClick={clearFilters}>Effacer les filtres</Button>
-          </div>
-        )}
+        <div className="text-sm text-gray-500">
+          {restaurants.length} résultat{restaurants.length > 1 ? 's' : ''} trouvé{restaurants.length > 1 ? 's' : ''}
+        </div>
       </div>
-    </Layout>
+      
+      {/* Affichage des restaurants */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-gray-200 h-48 rounded-t-lg"></div>
+              <div className="border border-gray-200 border-t-0 p-4 rounded-b-lg">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {restaurants.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {restaurants.map((restaurant) => (
+                <ImprovedRestaurantCard
+                  key={restaurant.id}
+                  restaurant={restaurant}
+                  onClick={handleRestaurantClick}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="inline-flex rounded-full bg-yellow-100 p-4 mb-4">
+                <Search className="h-8 w-8 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Aucun restaurant trouvé</h3>
+              <p className="text-gray-500 mb-6">
+                Aucun restaurant ne correspond à vos critères de recherche.
+              </p>
+              <Button onClick={resetFilters}>
+                Réinitialiser les filtres
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }

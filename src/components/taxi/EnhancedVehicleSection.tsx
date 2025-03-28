@@ -1,111 +1,139 @@
 
 import React from 'react';
+import { TaxiVehicleType } from '@/types/taxi';
+import { getVehicleDescription, formatPrice } from './booking-form/bookingFormUtils';
 import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { Car, Bus, TrendingUp, Users } from "lucide-react";
+import { Car, Users, ThumbsUp, CircleDollarSign } from 'lucide-react';
 
-// Types de véhicules disponibles
-const vehicleTypes = [
-  {
-    id: 'standard',
-    name: 'Standard',
-    icon: Car,
-    description: 'Berline confortable pour 1-4 personnes',
-    basePrice: 500,
-    eta: '5-10 min'
+// Images pour les véhicules
+const vehicleImages = {
+  standard: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGF4aXxlbnwwfHwwfHx8MA%3D%3D",
+  comfort: "https://images.unsplash.com/photo-1550355291-bbee04a92027?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fGNhcnxlbnwwfHwwfHx8MA%3D%3D",
+  premium: "https://images.unsplash.com/photo-1588618575327-fa8218b75ea2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8dGF4aXxlbnwwfHwwfHx8MA%3D%3D",
+  van: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fHZhbnxlbnwwfHwwfHx8MA%3D%3D"
+};
+
+// Info des véhicules
+const vehicleInfo = {
+  standard: {
+    name: "Standard",
+    basePrice: 2000,
+    features: [
+      "Capacité: 1-4 personnes",
+      "Climatisation",
+      "Volume bagages: Standard"
+    ],
+    icon: Car
   },
-  {
-    id: 'comfort',
-    name: 'Confort',
-    icon: Car,
-    description: 'Plus d\'espace, climatisation, eau offerte',
-    basePrice: 800,
-    eta: '6-12 min'
+  comfort: {
+    name: "Confort",
+    basePrice: 3000,
+    features: [
+      "Capacité: 1-4 personnes",
+      "Climatisation premium",
+      "Plus d'espace pour les jambes",
+      "Eau offerte"
+    ],
+    icon: ThumbsUp
   },
-  {
-    id: 'premium',
-    name: 'Premium',
-    icon: TrendingUp,
-    description: 'Service haut de gamme, véhicule de luxe',
-    basePrice: 1200,
-    eta: '7-15 min'
+  premium: {
+    name: "Premium",
+    basePrice: 5000,
+    features: [
+      "Capacité: 1-3 personnes",
+      "Véhicule haut de gamme",
+      "Intérieur cuir",
+      "Service personnalisé",
+      "WiFi à bord"
+    ],
+    icon: CircleDollarSign
   },
-  {
-    id: 'van',
-    name: 'Van',
-    icon: Users,
-    description: 'Parfait pour les groupes jusqu\'à 6 personnes',
-    basePrice: 1500,
-    eta: '8-15 min'
+  van: {
+    name: "Van",
+    basePrice: 7000,
+    features: [
+      "Capacité: 4-7 personnes",
+      "Idéal pour groupes",
+      "Grand volume bagages",
+      "Climatisation multi-zone"
+    ],
+    icon: Users
   }
-];
+};
 
 interface EnhancedVehicleSectionProps {
-  selectedVehicleType: string;
-  onVehicleSelect: (vehicleType: string) => void;
-  isLoading?: boolean;
+  selectedVehicleType: TaxiVehicleType;
+  onVehicleSelect: (vehicleType: TaxiVehicleType) => void;
 }
 
 const EnhancedVehicleSection: React.FC<EnhancedVehicleSectionProps> = ({
   selectedVehicleType,
-  onVehicleSelect,
-  isLoading = false
+  onVehicleSelect
 }) => {
   return (
     <div className="space-y-4">
       <div>
-        <Label className="text-base">Type de véhicule</Label>
-        <p className="text-sm text-muted-foreground mb-3">
-          Choisissez le type de véhicule qui vous convient le mieux
+        <h3 className="text-lg font-medium mb-2">Choisissez votre véhicule</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Sélectionnez le type de véhicule qui correspond le mieux à vos besoins.
         </p>
       </div>
       
-      <div className="grid grid-cols-1 gap-3">
-        {vehicleTypes.map((vehicle) => {
-          const isSelected = selectedVehicleType === vehicle.id;
+      <div className="grid grid-cols-1 gap-4">
+        {(Object.keys(vehicleInfo) as TaxiVehicleType[]).map((type) => {
+          const isSelected = type === selectedVehicleType;
+          const info = vehicleInfo[type];
+          const VehicleIcon = info.icon;
           
           return (
-            <Card
-              key={vehicle.id}
-              className={cn(
-                "border cursor-pointer transition-all hover:border-primary/50",
-                isSelected && "border-primary bg-primary/5"
-              )}
-              onClick={() => onVehicleSelect(vehicle.id)}
+            <Card 
+              key={type}
+              className={`cursor-pointer transition-all overflow-hidden ${
+                isSelected 
+                  ? 'border-2 border-primary ring-2 ring-primary/10' 
+                  : 'hover:bg-gray-50 border border-gray-200'
+              }`}
+              onClick={() => onVehicleSelect(type)}
             >
-              <CardContent className="p-3">
-                <div className="flex items-center space-x-4">
-                  <div className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted",
-                    isSelected && "bg-primary/20 text-primary"
-                  )}>
-                    <vehicle.icon className="h-5 w-5" />
-                  </div>
-                  
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">{vehicle.name}</p>
-                      <p className="font-semibold text-sm">
-                        {isLoading ? (
-                          <span className="inline-block h-4 w-16 animate-pulse bg-muted rounded"></span>
-                        ) : (
-                          <>
-                            <span className="text-primary font-semibold">
-                              {vehicle.basePrice} FCFA
-                            </span>
-                            <span className="text-xs text-muted-foreground ml-1">Base</span>
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <p className="text-muted-foreground">{vehicle.description}</p>
-                      <p className="text-xs text-muted-foreground">ETA: {vehicle.eta}</p>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 h-full">
+                <div className="md:col-span-1 h-32 md:h-full overflow-hidden">
+                  <img 
+                    src={vehicleImages[type]} 
+                    alt={`Véhicule ${info.name}`} 
+                    className="h-full w-full object-cover"
+                  />
                 </div>
-              </CardContent>
+                
+                <div className="md:col-span-2">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1.5 rounded-full ${isSelected ? 'bg-primary/10' : 'bg-gray-100'}`}>
+                          <VehicleIcon className={`h-5 w-5 ${isSelected ? 'text-primary' : 'text-gray-500'}`} />
+                        </div>
+                        <h3 className="font-medium">{info.name}</h3>
+                      </div>
+                      
+                      <div className="font-semibold text-lg">
+                        À partir de {formatPrice(info.basePrice)}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 mb-3">
+                      {getVehicleDescription(type)}
+                    </p>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                      {info.features.map((feature, index) => (
+                        <div key={index} className="text-sm flex items-center gap-1.5">
+                          <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </div>
+              </div>
             </Card>
           );
         })}

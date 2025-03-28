@@ -1,122 +1,120 @@
 
-import { useState } from 'react';
-import { TaxiDriver } from '@/types/taxi';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { TaxiDriver, TaxiVehicleType } from '@/types/taxi';
 import { toast } from 'sonner';
 
 export function useDriverSelection() {
+  const [availableDrivers, setAvailableDrivers] = useState<TaxiDriver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<TaxiDriver | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSelectDriver = (driver: TaxiDriver) => {
-    if (selectedDriver && selectedDriver.id === driver.id) {
-      // Désélectionner le chauffeur si déjà sélectionné
-      setSelectedDriver(null);
-      toast.info("Chauffeur désélectionné");
-    } else {
-      // Sélectionner un nouveau chauffeur
-      setSelectedDriver(driver);
-      toast.success(`Chauffeur sélectionné: ${driver.name}`, {
-        description: `Évaluation: ${driver.rating} ★`
-      });
-    }
-  };
-
-  const findNearbyDrivers = async (location: {lat: number, lng: number}, vehicleType: string) => {
-    setIsLoading(true);
-    
+  const [loading, setLoading] = useState(false);
+  
+  // Recherche des chauffeurs disponibles
+  const findAvailableDrivers = async (
+    pickupLatitude: number,
+    pickupLongitude: number,
+    vehicleType: TaxiVehicleType
+  ) => {
     try {
+      setLoading(true);
+      
       // Simuler un délai d'API
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Générer des chauffeurs fictifs
-      const mockDrivers: TaxiDriver[] = [
+      // Dans une application réelle, on rechercherait les chauffeurs à proximité
+      // Pour cette démo, nous simulons des chauffeurs
+      const simulatedDrivers: TaxiDriver[] = [
         {
-          id: '1',
-          user_id: 'user-123',
+          id: 'driver-1',
+          user_id: 'user-1',
           name: 'Jean Dupont',
-          phone: '+242 06 123 4567',
-          email: 'jean.dupont@example.com',
-          profile_image: 'https://randomuser.me/api/portraits/men/32.jpg',
-          vehicle_type: 'standard',
+          phone: '+242123456789',
+          profile_image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300',
+          vehicle_type: vehicleType,
           vehicle_make: 'Toyota',
           vehicle_model: 'Corolla',
           vehicle_color: 'Blanc',
-          vehicle_year: 2019,
-          license_plate: 'BZV 1234',
+          license_plate: 'AB-123-CD',
           rating: 4.8,
-          total_rides: 342,
+          total_rides: 532,
           is_available: true,
-          current_location: {
-            latitude: location.lat + 0.01,
-            longitude: location.lng - 0.01,
-            name: 'Près de Poto-Poto'
-          }
+          current_latitude: pickupLatitude + (Math.random() - 0.5) * 0.01,
+          current_longitude: pickupLongitude + (Math.random() - 0.5) * 0.01,
+          languages: ['Français', 'Lingala'],
+          years_experience: 3
         },
         {
-          id: '2',
-          user_id: 'user-456',
-          name: 'Marie Okemba',
-          phone: '+242 05 234 5678',
-          email: 'marie.o@example.com',
-          profile_image: 'https://randomuser.me/api/portraits/women/44.jpg',
-          vehicle_type: 'comfort',
+          id: 'driver-2',
+          user_id: 'user-2',
+          name: 'Marie Leclerc',
+          phone: '+242198765432',
+          profile_image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300',
+          vehicle_type: vehicleType,
           vehicle_make: 'Hyundai',
-          vehicle_model: 'Accent',
+          vehicle_model: 'Tucson',
           vehicle_color: 'Gris',
-          vehicle_year: 2020,
-          license_plate: 'BZV 5678',
-          rating: 4.6,
-          total_rides: 187,
+          license_plate: 'EF-456-GH',
+          rating: 4.9,
+          total_rides: 867,
           is_available: true,
-          current_location: {
-            latitude: location.lat - 0.005,
-            longitude: location.lng + 0.007,
-            name: 'Près de Bacongo'
-          }
+          current_latitude: pickupLatitude + (Math.random() - 0.5) * 0.01,
+          current_longitude: pickupLongitude + (Math.random() - 0.5) * 0.01,
+          languages: ['Français', 'Anglais'],
+          years_experience: 5
         },
         {
-          id: '3',
-          user_id: 'user-789',
-          name: 'Pascal Nguesso',
-          phone: '+242 06 345 6789',
-          email: 'pascal.n@example.com',
-          profile_image: 'https://randomuser.me/api/portraits/men/67.jpg',
-          vehicle_type: 'premium',
-          vehicle_make: 'Mercedes',
-          vehicle_model: 'Classe E',
+          id: 'driver-3',
+          user_id: 'user-3',
+          name: 'Paul Mbemba',
+          phone: '+242176543210',
+          profile_image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300',
+          vehicle_type: vehicleType,
+          vehicle_make: 'Kia',
+          vehicle_model: 'Sportage',
           vehicle_color: 'Noir',
-          vehicle_year: 2021,
-          license_plate: 'BZV 9012',
-          rating: 4.9,
-          total_rides: 429,
+          license_plate: 'IJ-789-KL',
+          rating: 4.6,
+          total_rides: 341,
           is_available: true,
-          current_location: {
-            latitude: location.lat + 0.008,
-            longitude: location.lng + 0.003,
-            name: 'Près du Boulevard Denis Sassou Nguesso'
-          }
+          current_latitude: pickupLatitude + (Math.random() - 0.5) * 0.01,
+          current_longitude: pickupLongitude + (Math.random() - 0.5) * 0.01,
+          languages: ['Français', 'Kituba'],
+          years_experience: 2
         }
       ];
       
-      // Filtrer selon le type de véhicule si spécifié
-      const filteredDrivers = vehicleType 
-        ? mockDrivers.filter(driver => driver.vehicle_type === vehicleType)
-        : mockDrivers;
+      // Filtre par type de véhicule
+      const filteredDrivers = simulatedDrivers.filter(driver => 
+        driver.vehicle_type === vehicleType
+      );
       
+      setAvailableDrivers(filteredDrivers);
       return filteredDrivers;
     } catch (error) {
       console.error('Erreur lors de la recherche de chauffeurs:', error);
-      toast.error("Erreur lors de la recherche de chauffeurs disponibles");
+      toast.error('Impossible de trouver des chauffeurs disponibles');
       return [];
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
+  
+  // Sélection d'un chauffeur
+  const handleSelectDriver = (driver: TaxiDriver | null) => {
+    setSelectedDriver(driver);
+    
+    if (driver) {
+      toast.success(`Vous avez sélectionné ${driver.name} comme chauffeur`);
+    } else {
+      toast.info('Sélection de chauffeur annulée');
+    }
+  };
+  
   return {
+    availableDrivers,
     selectedDriver,
-    isLoading,
-    handleSelectDriver,
-    findNearbyDrivers
+    loading,
+    findAvailableDrivers,
+    handleSelectDriver
   };
 }

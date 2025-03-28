@@ -1,615 +1,671 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { Car, User, MapPin, Clock, Users, CreditCard, Search, Star, Plus, Minus, Route, TrendingUp, Leaf, Repeat } from "lucide-react";
-import { useRidesharing } from "@/hooks/useRidesharing";
-import { RidesharingSearchFilters, RidesharingTrip } from "@/types/ridesharing";
-import TripCard from "@/components/ridesharing/TripCard";
-import TripSearchForm from "@/components/ridesharing/TripSearchForm";
-import CreateTripForm from "@/components/ridesharing/CreateTripForm";
-import BookingModal from "@/components/ridesharing/BookingModal";
-import RecurringTripsTab from "@/components/ridesharing/RecurringTripsTab";
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { useUser } from '@/hooks/useUser';
+import { 
+  Search,
+  MapPin,
+  Calendar,
+  Clock,
+  Users,
+  Car,
+  ArrowRight,
+  Info,
+  Star,
+  User,
+  Calendar as CalendarIcon,
+  Heart,
+  HeartOff
+} from 'lucide-react';
+import RideForm from '@/components/covoiturage/RideForm';
+import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+// Données simulées pour la démo
+const recentTrips = [
+  {
+    id: 'trip1',
+    origin: 'Centre-ville, Brazzaville',
+    destination: 'Aéroport Maya-Maya, Brazzaville',
+    date: new Date(Date.now() + 3600000 * 24 * 2).toISOString(),
+    price: 2000,
+    driver: {
+      id: 'driver1',
+      name: 'Thomas Ndolo',
+      rating: 4.8,
+      profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300'
+    },
+    seats: 3,
+    status: 'upcoming'
+  },
+  {
+    id: 'trip2',
+    origin: 'Talangaï, Brazzaville',
+    destination: 'Université Marien Ngouabi, Brazzaville',
+    date: new Date(Date.now() - 3600000 * 24 * 1).toISOString(),
+    price: 1500,
+    driver: {
+      id: 'driver2',
+      name: 'Marie Loemba',
+      rating: 4.9,
+      profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300'
+    },
+    seats: 2,
+    status: 'completed'
+  },
+  {
+    id: 'trip3',
+    origin: 'Pointe-Noire Centre',
+    destination: 'Plage BASM, Pointe-Noire',
+    date: new Date(Date.now() - 3600000 * 24 * 5).toISOString(),
+    price: 2500,
+    driver: {
+      id: 'driver3',
+      name: 'Jean Moungala',
+      rating: 4.7,
+      profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300'
+    },
+    seats: 4,
+    status: 'completed'
+  }
+];
+
+// Trajets réguliers simulés
+const recurringTrips = [
+  {
+    id: 'rec1',
+    origin: 'Bacongo, Brazzaville',
+    destination: 'Centre-ville, Brazzaville',
+    days: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'],
+    time: '08:00',
+    returnTime: '18:00',
+    price: 1000,
+    driver: {
+      id: 'driver4',
+      name: 'Alain Massamba',
+      rating: 4.9,
+      profileImage: 'https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=300'
+    },
+    passengers: 2,
+    seats: 4,
+    status: 'active'
+  },
+  {
+    id: 'rec2',
+    origin: 'Moungali, Brazzaville',
+    destination: 'Zone Industrielle, Brazzaville',
+    days: ['Lundi', 'Mercredi', 'Vendredi'],
+    time: '07:30',
+    returnTime: '17:30',
+    price: 1200,
+    driver: {
+      id: 'driver5',
+      name: 'Christelle Moukila',
+      rating: 4.7,
+      profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300'
+    },
+    passengers: 1,
+    seats: 3,
+    status: 'active'
+  }
+];
+
+// Trajets favoris simulés
+const favoriteTrips = [
+  {
+    id: 'fav1',
+    origin: 'Aéroport Maya-Maya, Brazzaville',
+    destination: 'Centre-ville, Brazzaville',
+    price: 2000,
+    seats: 3
+  },
+  {
+    id: 'fav2',
+    origin: 'Université Marien Ngouabi, Brazzaville',
+    destination: 'Bacongo, Brazzaville',
+    price: 1500,
+    seats: 2
+  }
+];
 
 export default function Covoiturage() {
-  usePageTitle({ title: "Covoiturage" });
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('search');
+  const [searchOrigin, setSearchOrigin] = useState('');
+  const [searchDestination, setSearchDestination] = useState('');
+  const [createMode, setCreateMode] = useState<'single' | 'recurring' | null>(null);
+  const [favorites, setFavorites] = useState<string[]>(['fav1']);
   
-  const { user } = useUser();
-  const ridesharing = useRidesharing();
-  const [activeTab, setActiveTab] = useState("search");
-  const [selectedTrip, setSelectedTrip] = useState<RidesharingTrip | null>(null);
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
-  
-  // Mock driver data (in a real app this would come from the backend)
-  const driverData = {
-    "d1": { name: "Thomas Mbengue", avatar: "https://randomuser.me/api/portraits/men/32.jpg", rating: 4.8, trips: 127 },
-    "d2": { name: "Marie Loemba", avatar: "https://randomuser.me/api/portraits/women/44.jpg", rating: 4.9, trips: 89 },
-    "d3": { name: "Paul Moukala", avatar: "https://randomuser.me/api/portraits/men/22.jpg", rating: 4.7, trips: 53 },
-    "d4": { name: "Sandrine Loubota", avatar: "https://randomuser.me/api/portraits/women/28.jpg", rating: 4.6, trips: 32 },
-  };
-
-  // Handle search
-  const handleSearch = async (filters: RidesharingSearchFilters) => {
-    // Si l'utilisateur recherche des trajets récurrents, aller à l'onglet récurrent
-    if (filters.recurringTrip) {
-      setActiveTab("recurring");
-      await ridesharing.findRecurringTripMatches(filters);
-    } else {
-      // Sinon, rechercher des trajets normaux
-      await ridesharing.searchTrips(filters);
-      setActiveTab("results");
-    }
-  };
-  
-  // Handle trip creation
-  const handleCreateTrip = async (tripData: Omit<RidesharingTrip, 'id' | 'driver_id' | 'status' | 'created_at'>) => {
-    const trip = await ridesharing.createTrip(tripData);
-    if (trip) {
-      if (trip.is_recurring) {
-        setActiveTab("recurring");
-      } else {
-        setActiveTab("myTrips");
-      }
-      await ridesharing.fetchMyTrips();
-    }
-  };
-  
-  // Handle trip booking
-  const handleOpenBooking = (trip: RidesharingTrip) => {
-    if (!user) {
-      toast.error("Vous devez être connecté pour réserver un trajet");
+  const handleSearch = () => {
+    if (!searchOrigin || !searchDestination) {
+      toast.error("Veuillez entrer une origine et une destination");
       return;
     }
-    setSelectedTrip(trip);
-    setBookingModalOpen(true);
-  };
-  
-  const handleBookTrip = async (seatsCount: number, specialRequests?: string, paymentMethod?: string) => {
-    if (!selectedTrip) return;
     
-    const booking = await ridesharing.bookTrip(selectedTrip.id, seatsCount, specialRequests);
-    if (booking) {
-      setBookingModalOpen(false);
-      setActiveTab("myBookings");
-      await ridesharing.fetchMyBookings();
-    }
-  };
-  
-  // Handle viewing trip details
-  const handleViewTripDetails = (trip: RidesharingTrip) => {
-    toast.info("Détails du trajet", {
-      description: `${trip.origin_address} → ${trip.destination_address} le ${trip.departure_date}`
+    // Simuler une recherche
+    toast.success("Recherche en cours", {
+      description: `Trajets de ${searchOrigin} à ${searchDestination}`
     });
-    // In a real application, we'd navigate to a trip details page
+    
+    // Reset search
+    setSearchOrigin('');
+    setSearchDestination('');
   };
   
-  // Ensure my trips and bookings are loaded
-  const loadMyTripsAndBookings = async () => {
-    if (user) {
-      if (activeTab === "myTrips" && ridesharing.myTrips.length === 0) {
-        await ridesharing.fetchMyTrips();
-      } else if (activeTab === "myBookings" && ridesharing.myBookings.length === 0) {
-        await ridesharing.fetchMyBookings();
-      }
-    } else {
-      toast.error("Vous devez être connecté pour accéder à vos trajets et réservations");
-    }
+  const handleCreateRide = (type: 'single' | 'recurring') => {
+    setCreateMode(type);
   };
-
+  
+  const handleCancelCreate = () => {
+    setCreateMode(null);
+  };
+  
+  const handleToggleFavorite = (tripId: string) => {
+    setFavorites(prev => 
+      prev.includes(tripId) 
+        ? prev.filter(id => id !== tripId) 
+        : [...prev, tripId]
+    );
+    
+    // Show notification
+    const isFavorite = favorites.includes(tripId);
+    toast.success(
+      isFavorite 
+        ? "Retiré des favoris" 
+        : "Ajouté aux favoris"
+    );
+  };
+  
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString('fr-FR', options);
+  };
+  
   return (
-    <div className="min-h-screen py-12 bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl font-bold mb-4">Covoiturage</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Trouvez un trajet partagé ou proposez le vôtre
-          </p>
-        </motion.div>
-
-        <Card className="mb-10">
-          <CardContent className="p-6">
-            <Tabs 
-              defaultValue="search" 
-              value={activeTab} 
-              onValueChange={(tab) => {
-                setActiveTab(tab);
-                if (tab === "myTrips" || tab === "myBookings") {
-                  loadMyTripsAndBookings();
-                }
-              }}
-            >
-              <TabsList className="grid grid-cols-5 mb-6">
-                <TabsTrigger value="search">
-                  Rechercher
-                </TabsTrigger>
-                <TabsTrigger value="offer">
-                  Proposer
-                </TabsTrigger>
-                <TabsTrigger value="recurring" className="flex items-center gap-1">
-                  <Repeat className="h-4 w-4" />
-                  <span>Trajets réguliers</span>
-                </TabsTrigger>
-                <TabsTrigger value="myTrips">
-                  Mes trajets
-                </TabsTrigger>
-                <TabsTrigger value="myBookings">
-                  Mes réservations
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="search" className="mt-0">
-                <TripSearchForm 
-                  onSearch={handleSearch} 
-                  isLoading={ridesharing.isLoading}
-                />
-              </TabsContent>
-
-              <TabsContent value="offer" className="mt-0">
-                <CreateTripForm 
-                  onCreateTrip={handleCreateTrip} 
-                  isLoading={ridesharing.isLoading}
-                />
-              </TabsContent>
-              
-              <TabsContent value="recurring" className="mt-0">
-                <RecurringTripsTab 
-                  onNavigateToSearch={() => setActiveTab("search")}
-                  onNavigateToCreate={() => setActiveTab("offer")}
-                />
-              </TabsContent>
-
-              <TabsContent value="results" className="mt-0">
-                {ridesharing.trips.length > 0 ? (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Covoiturage</h1>
+      
+      {!createMode ? (
+        <div className="space-y-8">
+          <Tabs 
+            defaultValue="search" 
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
+              <TabsTrigger value="search" className="text-sm">Rechercher</TabsTrigger>
+              <TabsTrigger value="my-trips" className="text-sm">Mes trajets</TabsTrigger>
+              <TabsTrigger value="favorites" className="text-sm">Favoris</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="search" className="space-y-6 mt-6">
+              <Card>
+                <CardContent className="p-6 space-y-6">
                   <div className="space-y-4">
-                    {ridesharing.trips.map(trip => {
-                      const driver = driverData[trip.driver_id as keyof typeof driverData];
-                      return (
-                        <TripCard
-                          key={trip.id}
-                          trip={trip}
-                          driverName={driver?.name || "Chauffeur"}
-                          driverAvatar={driver?.avatar}
-                          driverRating={driver?.rating || 4.5}
-                          totalTrips={driver?.trips || 0}
-                          onBookTrip={() => handleOpenBooking(trip)}
-                          onViewDetails={() => handleViewTripDetails(trip)}
+                    <h2 className="text-xl font-semibold">Trouver un trajet</h2>
+                    
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                        <Input
+                          placeholder="Lieu de départ"
+                          className="pl-10"
+                          value={searchOrigin}
+                          onChange={(e) => setSearchOrigin(e.target.value)}
                         />
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                      <Car className="h-8 w-8 text-gray-400" />
+                      </div>
+                      
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                        <Input
+                          placeholder="Destination"
+                          className="pl-10"
+                          value={searchDestination}
+                          onChange={(e) => setSearchDestination(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                        <Input
+                          type="date"
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
-                    <h3 className="text-xl font-medium mb-2">Aucun trajet trouvé</h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
-                      Essayez de modifier vos critères de recherche ou proposez votre propre trajet.
-                    </p>
+                    
                     <Button 
-                      className="mt-6"
-                      onClick={() => setActiveTab("offer")}
+                      className="w-full" 
+                      size="lg"
+                      onClick={handleSearch}
                     >
-                      Proposer un trajet
+                      <Search className="mr-2 h-4 w-4" />
+                      Rechercher
                     </Button>
                   </div>
-                )}
-              </TabsContent>
+                </CardContent>
+              </Card>
               
-              <TabsContent value="myTrips" className="mt-0">
-                {!user ? (
-                  <div className="text-center py-12">
-                    <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-medium mb-2">Vous n'êtes pas connecté</h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
-                      Connectez-vous pour voir vos trajets.
-                    </p>
-                    <Button className="mt-6">
-                      Se connecter
-                    </Button>
-                  </div>
-                ) : ridesharing.myTrips.length > 0 ? (
-                  <div className="space-y-4">
-                    {ridesharing.myTrips.map(trip => (
-                      <Card key={trip.id} className="overflow-hidden hover:shadow-md transition-all">
-                        <CardContent className="p-6">
-                          <div className="flex flex-col md:flex-row justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <Badge variant={trip.status === 'active' ? 'default' : 'destructive'}>
-                                  {trip.status === 'active' ? 'Actif' : trip.status === 'completed' ? 'Terminé' : 'Annulé'}
-                                </Badge>
-                                {trip.is_recurring && (
-                                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                                    <Repeat className="mr-1 h-3 w-3" />
-                                    Récurrent
-                                  </Badge>
-                                )}
-                                <span className="text-sm text-gray-500">
-                                  ID: {trip.id}
-                                </span>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  className="flex-1 bg-green-600 hover:bg-green-700" 
+                  onClick={() => handleCreateRide('single')}
+                >
+                  <Car className="mr-2 h-4 w-4" />
+                  Proposer un trajet
+                </Button>
+                
+                <Button 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700" 
+                  onClick={() => handleCreateRide('recurring')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  Trajet régulier
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Trajets populaires</h2>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { origin: 'Centre-ville', destination: 'Aéroport Maya-Maya', price: 2000 },
+                    { origin: 'Bacongo', destination: 'Université Marien Ngouabi', price: 1500 },
+                    { origin: 'Pointe-Noire', destination: 'Brazzaville', price: 15000 }
+                  ].map((trip, index) => (
+                    <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col h-full justify-between">
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-3">
+                              <MapPin className="h-4 w-4 text-green-500 mt-1" />
+                              <div>
+                                <p className="text-sm text-gray-500">Départ</p>
+                                <p className="font-medium">{trip.origin}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3">
+                              <MapPin className="h-4 w-4 text-orange-500 mt-1" />
+                              <div>
+                                <p className="text-sm text-gray-500">Destination</p>
+                                <p className="font-medium">{trip.destination}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                            <span className="font-semibold text-primary">
+                              {trip.price.toLocaleString('fr-FR')} FCFA
+                            </span>
+                            <Button size="sm" variant="ghost">
+                              Rechercher
+                              <ArrowRight className="ml-1 h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="my-trips" className="space-y-6 mt-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Mes trajets</h2>
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => handleCreateRide('single')}
+                >
+                  <Car className="h-4 w-4" />
+                  Nouveau trajet
+                </Button>
+              </div>
+              
+              <Tabs defaultValue="upcoming">
+                <TabsList>
+                  <TabsTrigger value="upcoming">À venir</TabsTrigger>
+                  <TabsTrigger value="recurring">Réguliers</TabsTrigger>
+                  <TabsTrigger value="past">Passés</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="upcoming" className="space-y-4 mt-4">
+                  {recentTrips
+                    .filter(trip => trip.status === 'upcoming')
+                    .map(trip => (
+                      <Card key={trip.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex flex-col md:flex-row gap-4">
+                            <div className="space-y-3 flex-1">
+                              <div className="flex justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-gray-500" />
+                                  <span className="font-medium">{formatDate(trip.date)}</span>
+                                </div>
+                                <Badge className="bg-blue-500">{trip.seats} places</Badge>
                               </div>
                               
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                              <div className="flex items-start gap-3">
+                                <MapPin className="h-4 w-4 text-green-500 mt-1" />
                                 <div>
-                                  <div className="flex items-start mb-2">
-                                    <MapPin className="h-5 w-5 text-primary mr-2 mt-1" />
-                                    <div>
-                                      <p className="text-gray-500 text-sm">Départ</p>
-                                      <p className="font-medium">{trip.origin_address}</p>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex items-start">
-                                    <MapPin className="h-5 w-5 text-red-500 mr-2 mt-1" />
-                                    <div>
-                                      <p className="text-gray-500 text-sm">Arrivée</p>
-                                      <p className="font-medium">{trip.destination_address}</p>
-                                    </div>
-                                  </div>
+                                  <p className="text-sm text-gray-500">Départ</p>
+                                  <p className="font-medium">{trip.origin}</p>
                                 </div>
-                                
+                              </div>
+                              
+                              <div className="flex items-start gap-3">
+                                <MapPin className="h-4 w-4 text-orange-500 mt-1" />
                                 <div>
-                                  <div className="flex items-center mb-1">
-                                    <Clock className="h-5 w-5 text-gray-500 mr-2" />
-                                    {trip.is_recurring ? (
-                                      <span>
-                                        {trip.recurrence_pattern?.days_of_week?.map(day => day.substring(0, 3)).join(', ')} à {trip.departure_time}
-                                      </span>
-                                    ) : (
-                                      <span>{trip.departure_date} à {trip.departure_time}</span>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex items-center mb-1">
-                                    <Users className="h-5 w-5 text-gray-500 mr-2" />
-                                    <span>{trip.available_seats} place(s) disponible(s)</span>
-                                  </div>
-                                  
-                                  <div className="flex items-center mb-1">
-                                    <CreditCard className="h-5 w-5 text-gray-500 mr-2" />
-                                    <span>{trip.price_per_seat.toLocaleString()} FCFA par personne</span>
-                                  </div>
+                                  <p className="text-sm text-gray-500">Destination</p>
+                                  <p className="font-medium">{trip.destination}</p>
                                 </div>
                               </div>
                             </div>
                             
-                            <div className="flex flex-col justify-between mt-4 md:mt-0 md:ml-6">
-                              <p className="text-lg font-semibold">{trip.price_per_seat.toLocaleString()} FCFA</p>
+                            <div className="flex flex-col justify-between items-end">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={trip.driver.profileImage} />
+                                  <AvatarFallback>{trip.driver.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium">{trip.driver.name}</p>
+                                  <div className="flex items-center text-sm">
+                                    <Star className="h-3 w-3 text-yellow-500 mr-1" fill="currentColor" />
+                                    <span>{trip.driver.rating}</span>
+                                  </div>
+                                </div>
+                              </div>
                               
-                              <div className="flex flex-col space-y-2 mt-2">
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-primary">
+                                  {trip.price.toLocaleString('fr-FR')} FCFA
+                                </p>
                                 <Button
-                                  variant="outline"
                                   size="sm"
-                                  onClick={() => handleViewTripDetails(trip)}
+                                  variant="default"
+                                  className="mt-2"
                                 >
                                   Détails
                                 </Button>
-                                
-                                {trip.status === 'active' && (
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={async () => {
-                                      const confirmed = window.confirm("Êtes-vous sûr de vouloir annuler ce trajet ?");
-                                      if (confirmed) {
-                                        await ridesharing.cancelTrip(trip.id);
-                                      }
-                                    }}
-                                  >
-                                    Annuler
-                                  </Button>
-                                )}
                               </div>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
                     ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Car className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-medium mb-2">Vous n'avez pas encore proposé de trajets</h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
-                      Commencez à partager vos trajets et économisez de l'argent tout en réduisant votre empreinte carbone.
-                    </p>
-                    <Button 
-                      className="mt-6"
-                      onClick={() => setActiveTab("offer")}
-                    >
-                      Proposer un trajet
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="myBookings" className="mt-0">
-                {!user ? (
-                  <div className="text-center py-12">
-                    <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-medium mb-2">Vous n'êtes pas connecté</h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
-                      Connectez-vous pour voir vos réservations.
-                    </p>
-                    <Button className="mt-6">
-                      Se connecter
-                    </Button>
-                  </div>
-                ) : ridesharing.myBookings.length > 0 ? (
-                  <div className="space-y-4">
-                    {ridesharing.myBookings.map(booking => {
-                      const trip = booking.trip;
-                      const driver = driverData[trip.driver_id as keyof typeof driverData];
-                      
-                      return (
-                        <Card key={booking.id} className="overflow-hidden hover:shadow-md transition-all">
-                          <CardContent className="p-6">
-                            <div className="flex flex-col md:flex-row justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <Badge variant={booking.booking_status === 'confirmed' ? 'default' : booking.booking_status === 'completed' ? 'outline' : 'destructive'}>
-                                    {booking.booking_status === 'confirmed' ? 'Confirmé' : booking.booking_status === 'completed' ? 'Terminé' : 'Annulé'}
-                                  </Badge>
-                                  <Badge variant={booking.payment_status === 'completed' ? 'outline' : 'secondary'}>
-                                    {booking.payment_status === 'pending' ? 'Paiement en attente' : booking.payment_status === 'partial' ? 'Partiellement payé' : booking.payment_status === 'completed' ? 'Payé' : 'Remboursé'}
-                                  </Badge>
-                                  
-                                  {booking.is_recurring && (
-                                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                                      <Repeat className="mr-1 h-3 w-3" />
-                                      Récurrent
-                                    </Badge>
-                                  )}
-                                </div>
-                                
-                                <div className="flex items-center mt-2 mb-4">
-                                  <div className="flex items-center">
-                                    <User className="h-4 w-4 text-gray-500 mr-1" />
-                                    <span className="text-sm">{driver?.name || "Chauffeur"}</span>
-                                  </div>
-                                  <div className="flex items-center ml-4">
-                                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                                    <span className="text-sm">{driver?.rating || 4.5}</span>
+                    
+                  {recentTrips.filter(trip => trip.status === 'upcoming').length === 0 && (
+                    <div className="text-center py-12">
+                      <Info className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Aucun trajet à venir</h3>
+                      <p className="text-gray-500 max-w-md mx-auto mb-4">
+                        Vous n'avez pas de trajets planifiés pour l'instant. Réservez un nouveau trajet ou proposez-en un.
+                      </p>
+                      <Button onClick={() => handleCreateRide('single')}>
+                        Proposer un trajet
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="recurring" className="space-y-4 mt-4">
+                  {recurringTrips.map(trip => (
+                    <Card key={trip.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="space-y-3 flex-1">
+                            <div className="flex justify-between">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-gray-500" />
+                                <div>
+                                  <span className="font-medium">{trip.time} - {trip.returnTime}</span>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {trip.days.map(day => (
+                                      <Badge key={day} variant="outline" className="font-normal text-xs">
+                                        {day.substring(0, 3)}
+                                      </Badge>
+                                    ))}
                                   </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <div className="flex items-start mb-2">
-                                      <MapPin className="h-5 w-5 text-primary mr-2 mt-1" />
-                                      <div>
-                                        <p className="text-gray-500 text-sm">Départ</p>
-                                        <p className="font-medium">{trip.origin_address}</p>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="flex items-start">
-                                      <MapPin className="h-5 w-5 text-red-500 mr-2 mt-1" />
-                                      <div>
-                                        <p className="text-gray-500 text-sm">Arrivée</p>
-                                        <p className="font-medium">{trip.destination_address}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  <div>
-                                    <div className="flex items-center mb-1">
-                                      <Clock className="h-5 w-5 text-gray-500 mr-2" />
-                                      {booking.is_recurring ? (
-                                        <span>
-                                          {booking.booking_days?.map((day: string) => day.substring(0, 3)).join(', ')} à {trip.departure_time}
-                                        </span>
-                                      ) : (
-                                        <span>{trip.departure_date} à {trip.departure_time}</span>
-                                      )}
-                                    </div>
-                                    
-                                    <div className="flex items-center mb-1">
-                                      <Users className="h-5 w-5 text-gray-500 mr-2" />
-                                      <span>{booking.seats_booked} place(s) réservée(s)</span>
-                                    </div>
+                              </div>
+                              <Badge className="bg-green-500">Actif</Badge>
+                            </div>
+                            
+                            <div className="flex items-start gap-3">
+                              <MapPin className="h-4 w-4 text-green-500 mt-1" />
+                              <div>
+                                <p className="text-sm text-gray-500">Départ</p>
+                                <p className="font-medium">{trip.origin}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3">
+                              <MapPin className="h-4 w-4 text-orange-500 mt-1" />
+                              <div>
+                                <p className="text-sm text-gray-500">Destination</p>
+                                <p className="font-medium">{trip.destination}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col justify-between items-end">
+                            <div className="flex items-center gap-2">
+                              <div className="flex -space-x-2">
+                                <Avatar className="h-7 w-7 border-2 border-white">
+                                  <AvatarFallback>P1</AvatarFallback>
+                                </Avatar>
+                                <Avatar className="h-7 w-7 border-2 border-white">
+                                  <AvatarFallback>P2</AvatarFallback>
+                                </Avatar>
+                              </div>
+                              <div>
+                                <p className="text-sm">
+                                  {trip.passengers}/{trip.seats} passagers
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-primary">
+                                {trip.price.toLocaleString('fr-FR')} FCFA
+                              </p>
+                              <p className="text-xs text-gray-500">par trajet</p>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="mt-2"
+                              >
+                                Gérer
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {recurringTrips.length === 0 && (
+                    <div className="text-center py-12">
+                      <CalendarIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Aucun trajet régulier</h3>
+                      <p className="text-gray-500 max-w-md mx-auto mb-4">
+                        Vous n'avez pas de trajets réguliers configurés. Créez un trajet régulier pour vos déplacements quotidiens.
+                      </p>
+                      <Button onClick={() => handleCreateRide('recurring')}>
+                        Créer un trajet régulier
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="past" className="space-y-4 mt-4">
+                  {recentTrips
+                    .filter(trip => trip.status === 'completed')
+                    .map(trip => (
+                      <Card key={trip.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex flex-col md:flex-row gap-4">
+                            <div className="space-y-3 flex-1">
+                              <div className="flex justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-gray-500" />
+                                  <span className="text-gray-600">{formatDate(trip.date)}</span>
+                                </div>
+                                <Badge variant="outline" className="text-gray-500 bg-gray-100">Terminé</Badge>
+                              </div>
+                              
+                              <div className="flex items-start gap-3">
+                                <MapPin className="h-4 w-4 text-green-500 mt-1" />
+                                <div>
+                                  <p className="text-sm text-gray-500">Départ</p>
+                                  <p className="font-medium text-gray-600">{trip.origin}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-start gap-3">
+                                <MapPin className="h-4 w-4 text-orange-500 mt-1" />
+                                <div>
+                                  <p className="text-sm text-gray-500">Destination</p>
+                                  <p className="font-medium text-gray-600">{trip.destination}</p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col justify-between items-end">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={trip.driver.profileImage} />
+                                  <AvatarFallback>{trip.driver.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium text-gray-600">{trip.driver.name}</p>
+                                  <div className="flex items-center text-sm">
+                                    <Star className="h-3 w-3 text-yellow-500 mr-1" fill="currentColor" />
+                                    <span>{trip.driver.rating}</span>
                                   </div>
                                 </div>
                               </div>
                               
-                              <div className="flex flex-col justify-between mt-4 md:mt-0 md:ml-6">
-                                <p className="text-lg font-semibold">{booking.total_price?.toLocaleString()} FCFA</p>
-                                
-                                <div className="flex flex-col space-y-2 mt-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleViewTripDetails(trip)}
-                                  >
-                                    Détails
-                                  </Button>
-                                  
-                                  {booking.booking_status === 'confirmed' && (
-                                    <Button
-                                      variant="destructive"
-                                      size="sm"
-                                      onClick={async () => {
-                                        const confirmed = window.confirm("Êtes-vous sûr de vouloir annuler cette réservation ?");
-                                        if (confirmed) {
-                                          await ridesharing.cancelBooking(booking.id);
-                                        }
-                                      }}
-                                    >
-                                      Annuler
-                                    </Button>
-                                  )}
-                                </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-gray-600">
+                                  {trip.price.toLocaleString('fr-FR')} FCFA
+                                </p>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-2"
+                                >
+                                  Détails
+                                </Button>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Route className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-medium mb-2">Vous n'avez pas encore réservé de trajets</h3>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+            
+            <TabsContent value="favorites" className="space-y-6 mt-6">
+              <h2 className="text-xl font-semibold">Mes trajets favoris</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {favoriteTrips.map(trip => (
+                  <Card 
+                    key={trip.id} 
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between mb-4">
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                          <Users className="h-3 w-3 mr-1" />
+                          {trip.seats} places
+                        </Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-rose-500"
+                          onClick={() => handleToggleFavorite(trip.id)}
+                        >
+                          {favorites.includes(trip.id) ? (
+                            <Heart className="h-5 w-5" fill="currentColor" />
+                          ) : (
+                            <HeartOff className="h-5 w-5" />
+                          )}
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <MapPin className="h-4 w-4 text-green-500 mt-1" />
+                          <div>
+                            <p className="text-sm text-gray-500">Départ</p>
+                            <p className="font-medium">{trip.origin}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-3">
+                          <MapPin className="h-4 w-4 text-orange-500 mt-1" />
+                          <div>
+                            <p className="text-sm text-gray-500">Destination</p>
+                            <p className="font-medium">{trip.destination}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mt-4 pt-3 border-t">
+                        <span className="font-semibold text-primary">
+                          {trip.price.toLocaleString('fr-FR')} FCFA
+                        </span>
+                        <Button size="sm">
+                          Rechercher
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {favoriteTrips.length === 0 && (
+                  <div className="col-span-full text-center py-12">
+                    <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Aucun trajet favori</h3>
                     <p className="text-gray-500 max-w-md mx-auto">
-                      Réservez un trajet pour commencer à économiser sur vos déplacements.
+                      Vous n'avez pas encore de trajets favoris. Ajoutez-en pour y accéder rapidement.
                     </p>
-                    <Button 
-                      className="mt-6"
-                      onClick={() => setActiveTab("search")}
-                    >
-                      Rechercher un trajet
-                    </Button>
                   </div>
                 )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="mb-10"
-        >
-          <h2 className="text-2xl font-semibold mb-6">Trajets populaires</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { from: "Brazzaville", to: "Pointe-Noire", count: 127, image: "https://images.unsplash.com/photo-1629969387384-56cfdd8c8206?q=80&w=500&auto=format&fit=crop" },
-              { from: "Brazzaville", to: "Dolisie", count: 68, image: "https://images.unsplash.com/photo-1590613607026-15c463e30ca5?q=80&w=500&auto=format&fit=crop" },
-              { from: "Pointe-Noire", to: "Brazzaville", count: 114, image: "https://images.unsplash.com/photo-1555881400-58903881a25e?q=80&w=500&auto=format&fit=crop" },
-              { from: "Brazzaville", to: "Oyo", count: 42, image: "https://images.unsplash.com/photo-1573806706598-7f1641f7db46?q=80&w=500&auto=format&fit=crop" }
-            ].map((route, index) => (
-              <Card key={index} className="overflow-hidden cursor-pointer hover:shadow-md transition-all">
-                <div className="h-36 relative">
-                  <img 
-                    src={route.image} 
-                    alt={`${route.from} - ${route.to}`} 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 text-white">
-                    <h3 className="font-semibold">{route.from} → {route.to}</h3>
-                    <p className="text-sm text-gray-300">{route.count} trajets</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Comment ça marche ?</CardTitle>
-            <CardDescription>
-              Participez à des trajets partagés en toute simplicité
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Search className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">1. Trouvez un trajet</h3>
-                <p className="text-gray-500">
-                  Indiquez votre lieu de départ, votre destination et vos dates pour trouver des conducteurs qui font le même trajet.
-                </p>
               </div>
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <CreditCard className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">2. Réservez et payez</h3>
-                <p className="text-gray-500">
-                  Réservez votre place en toute sécurité via notre système de paiement mobile ou en ligne.
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Car className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">3. Voyagez ensemble</h3>
-                <p className="text-gray-500">
-                  Rencontrez le conducteur au lieu de rendez-vous et profitez du trajet tout en partageant les frais.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col md:flex-row gap-4 justify-between items-center">
-            <p className="text-gray-600">
-              Vous avez une voiture ? Proposez des trajets et gagnez de l'argent en partageant vos frais !
-            </p>
-            <Button 
-              onClick={() => setActiveTab("offer")}
-            >
-              Proposer un trajet
+            </TabsContent>
+          </Tabs>
+        </div>
+      ) : (
+        <div className="max-w-2xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">
+              {createMode === 'single' ? 'Proposer un trajet' : 'Proposer un trajet régulier'}
+            </h2>
+            <Button variant="ghost" size="sm" onClick={handleCancelCreate}>
+              Annuler
             </Button>
-          </CardFooter>
-        </Card>
-        
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Leaf className="h-5 w-5 text-green-500 mr-2" />
-              Avantages du covoiturage
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center mb-2">
-                  <TrendingUp className="h-5 w-5 text-green-500 mr-2" />
-                  <h3 className="font-medium">Économies</h3>
-                </div>
-                <p className="text-sm text-gray-500">
-                  Réduisez vos frais de transport de 50% à 75% en partageant les coûts avec d'autres passagers.
-                </p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center mb-2">
-                  <Leaf className="h-5 w-5 text-green-500 mr-2" />
-                  <h3 className="font-medium">Écologie</h3>
-                </div>
-                <p className="text-sm text-gray-500">
-                  Moins de voitures sur la route = moins de pollution. Un trajet partagé peut économiser jusqu'à 2,6 kg de CO2 par 10 km.
-                </p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <div className="flex items-center mb-2">
-                  <Users className="h-5 w-5 text-green-500 mr-2" />
-                  <h3 className="font-medium">Convivialité</h3>
-                </div>
-                <p className="text-sm text-gray-500">
-                  Faites de nouvelles rencontres et partagez des moments agréables pendant vos trajets.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Booking Modal */}
-      {selectedTrip && (
-        <BookingModal
-          trip={selectedTrip}
-          driverName={driverData[selectedTrip.driver_id as keyof typeof driverData]?.name || "Chauffeur"}
-          isOpen={bookingModalOpen}
-          onClose={() => setBookingModalOpen(false)}
-          onBook={handleBookTrip}
-          isLoading={ridesharing.isLoading}
-        />
+          </div>
+          
+          <RideForm isRecurring={createMode === 'recurring'} />
+        </div>
       )}
     </div>
   );

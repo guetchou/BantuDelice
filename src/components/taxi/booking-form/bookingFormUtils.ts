@@ -1,37 +1,68 @@
 
-import { BookingFormState } from './types';
-import { calculateDistance } from '@/utils/locationUtils';
+import { TaxiVehicleType } from '@/types/taxi';
 
-export const initialBookingFormState: BookingFormState = {
-  pickupAddress: '',
-  pickupLatitude: null,
-  pickupLongitude: null,
-  destinationAddress: '',
-  destinationLatitude: null,
-  destinationLongitude: null,
-  pickupTime: 'now',
-  scheduledTime: new Date(Date.now() + 30 * 60 * 1000).toISOString().slice(0, 16),
-  vehicleType: 'standard',
-  paymentMethod: 'cash',
-  specialInstructions: '',
-  promoCode: '',
-  isSharedRide: false,
-  maxPassengers: 1
+export const formatPrice = (price: number): string => {
+  return `${new Intl.NumberFormat('fr-FR').format(price)} FCFA`;
 };
 
-export const getDistanceEstimate = (formState: BookingFormState): number | null => {
-  if (
-    formState.pickupLatitude && 
-    formState.pickupLongitude && 
-    formState.destinationLatitude && 
-    formState.destinationLongitude
-  ) {
-    return calculateDistance(
-      formState.pickupLatitude,
-      formState.pickupLongitude,
-      formState.destinationLatitude,
-      formState.destinationLongitude
-    );
+export const vehicleTypeToFrench = (type: TaxiVehicleType): string => {
+  const translations = {
+    standard: 'Standard',
+    comfort: 'Confort',
+    premium: 'Premium',
+    van: 'Van'
+  };
+  
+  return translations[type] || type;
+};
+
+export const getEstimatedArrivalTime = (minutes: number): string => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + minutes);
+  
+  return now.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+export const formatAddress = (address: string): string => {
+  // Limit address length for UI display
+  if (address && address.length > 40) {
+    return address.substring(0, 37) + '...';
   }
-  return null;
+  return address || '';
+};
+
+export const getVehicleDescription = (vehicleType: TaxiVehicleType): string => {
+  const descriptions = {
+    standard: 'Berline confortable pour 1-4 personnes',
+    comfort: 'Plus d\'espace et de confort pour 1-4 personnes',
+    premium: 'Véhicule haut de gamme pour 1-3 personnes',
+    van: 'Minivan pour 4-7 personnes avec bagages'
+  };
+  
+  return descriptions[vehicleType] || '';
+};
+
+export const getVehicleCapacity = (vehicleType: TaxiVehicleType): number => {
+  const capacities = {
+    standard: 4,
+    comfort: 4,
+    premium: 3,
+    van: 7
+  };
+  
+  return capacities[vehicleType] || 4;
+};
+
+export const getPaymentMethodLabel = (method: string): string => {
+  const labels = {
+    cash: 'Espèces',
+    card: 'Carte bancaire',
+    mobile_money: 'Mobile Money',
+    wallet: 'Portefeuille'
+  };
+  
+  return labels[method] || method;
 };
