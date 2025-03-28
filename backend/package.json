@@ -7,10 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "prod": "pm2 start ecosystem.config.js --env production",
-    "lint": "eslint . --ext .js",
-    "test": "jest",
-    "health-check": "node -e \"require('http').get('http://localhost:5000/health', (res) => console.log(res.statusCode === 200 ? 'OK' : 'FAIL'))\""
+    "prod": "pm2 start server.js --name buntudelice-api"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -24,14 +21,5 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Ambangue/BuntuDelice42.git"
-  },
-  "author": "Buntudelice Team",
-  "license": "MIT"
+  }
 }
