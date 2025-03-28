@@ -61,3 +61,49 @@ export const getPriceRange = (distance: number, vehicleType: TaxiVehicleType): {
   
   return { min, max };
 };
+
+/**
+ * Get a detailed estimate with additional information
+ */
+export const getDetailedEstimate = (
+  distance: number, 
+  vehicleType: TaxiVehicleType, 
+  duration?: number
+): {
+  basePrice: number,
+  bookingFee: number,
+  totalPrice: number,
+  currency: string,
+  estimatedDuration: number
+} => {
+  const rate = BASE_RATES[vehicleType] || BASE_RATES.standard;
+  const basePrice = Math.round(distance * rate);
+  const totalPrice = estimatePrice(distance, vehicleType);
+  const estimatedDuration = duration || Math.round(distance * 3); // ~3 minutes per km if not provided
+  
+  return {
+    basePrice,
+    bookingFee: BOOKING_FEE,
+    totalPrice,
+    currency: 'FCFA',
+    estimatedDuration
+  };
+};
+
+/**
+ * Pricing Module Documentation
+ * 
+ * This module handles taxi fare estimation based on distance and vehicle type.
+ * All prices are calculated in FCFA (Central African CFA franc).
+ * 
+ * Key functions:
+ * - estimatePrice: Calculates the raw price estimate
+ * - getQuickEstimate: Returns a formatted price string
+ * - getPriceRange: Returns a min-max price range for UI display
+ * - getDetailedEstimate: Returns detailed pricing breakdown
+ * 
+ * Constants:
+ * - BASE_RATES: Price per kilometer by vehicle type
+ * - MIN_FARE: Minimum charge by vehicle type
+ * - BOOKING_FEE: Fixed booking fee for all rides
+ */

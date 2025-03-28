@@ -10,8 +10,9 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+      - /app/node_modules # Don't overwrite node_modules
     environment:
       - NODE_ENV=production
       - DB_HOST=db
@@ -21,6 +22,14 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - buntudelice-network
 
   db:
     image: mysql:8.0
@@ -33,9 +42,57 @@ services:
       - MYSQL_PASSWORD=buntudelice_password
     volumes:
       - buntudelice-db-data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "3307:3306"
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "buntudelice", "-pbuntudelice_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - buntudelice-network
 
 volumes:
   buntudelice-db-data:
+    name: buntudelice-db-data
+
+networks:
+  buntudelice-network:
+    name: buntudelice-network
+    driver: bridge
+
+# Documentation
+# This docker-compose file sets up a complete development environment with:
+# 
+# 1. API service (Node.js backend)
+#    - Built using the Dockerfile in the current directory
+#    - Exposes port 5000
+#    - Connects to the MySQL database
+#    - Has healthcheck to ensure the service is running properly
+#    - Automatically restarts unless explicitly stopped
+# 
+# 2. Database service (MySQL 8.0)
+#    - Exposes port 3307 (mapped to MySQL's default 3306)
+#    - Creates a persistent volume for data storage
+#    - Initializes with the schema in init-db.sql
+#    - Uses mysql_native_password for authentication
+#    - Has healthcheck to ensure the database is running properly
+# 
+# 3. Networking
+#    - Creates a dedicated bridge network for secure communication
+# 
+# 4. Volumes
+#    - Persistent volume for database data
+#    - Log directory mapping for API logs
+#    - Environment file mapping
+# 
+# Usage:
+# - Start services: docker-compose up -d
+# - Stop services: docker-compose down
+# - View logs: docker-compose logs -f
+# - Rebuild services: docker-compose up -d --build
+#
+# For production, consider setting up a reverse proxy like Nginx for SSL termination.

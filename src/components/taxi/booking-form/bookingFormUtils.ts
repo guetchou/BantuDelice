@@ -64,5 +64,19 @@ export const getPaymentMethodLabel = (method: string): string => {
     wallet: 'Portefeuille'
   };
   
-  return labels[method] || method;
+  return labels[method as keyof typeof labels] || method;
 };
+
+// Documentation for booking form utilities
+/**
+ * This module provides utilities for the taxi booking form.
+ * 
+ * Functions:
+ * - formatPrice: Formats a number as a price in FCFA
+ * - vehicleTypeToFrench: Translates vehicle types to French
+ * - getEstimatedArrivalTime: Calculates and formats arrival time
+ * - formatAddress: Shortens addresses for display
+ * - getVehicleDescription: Returns description for vehicle types
+ * - getVehicleCapacity: Returns passenger capacity for vehicle types
+ * - getPaymentMethodLabel: Translates payment methods to French
+ */
