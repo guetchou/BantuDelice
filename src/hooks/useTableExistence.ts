@@ -21,12 +21,15 @@ export function useTableExistence(tableName: string, options?: TableExistenceOpt
       setError(null);
 
       try {
-        // Check if a query to the table returns a valid response or an error
+        // Using a simpler approach to check if the table exists
+        // We'll attempt to get just one record with count only
         const { count, error } = await supabase
           .from(tableName)
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true })
+          .limit(1);
 
         if (isMounted) {
+          // If there's no error, the table exists
           setExists(error ? false : true);
         }
       } catch (err) {
