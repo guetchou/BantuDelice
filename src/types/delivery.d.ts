@@ -5,16 +5,16 @@ export interface DeliveryRequest {
   assigned_driver_id?: string;
   order_id: string;
   restaurant_id: string;
-  customer_id: string;
+  customer_id?: string;
   status: DeliveryStatus;
-  pickup_address: string;
-  pickup_latitude: number;
-  pickup_longitude: number;
-  dropoff_address: string;
-  dropoff_latitude: number;
-  dropoff_longitude: number;
+  pickup_address?: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  dropoff_address?: string;
+  dropoff_latitude?: number;
+  dropoff_longitude?: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   estimated_delivery_time?: string;
   actual_delivery_time?: string;
   delivery_notes?: string;
@@ -33,6 +33,14 @@ export interface DeliveryRequest {
   delivery_fee?: number;
   pickup_time?: string;
   delivery_type?: string;
+  cancelled_at?: string;
+  delivery_time?: string;
+  delivery_instructions?: string;
+  distance_km?: number;
+  external_service_id?: string;
+  notes?: string;
+  priority?: string;
+  estimated_distance?: number;
 }
 
 export type DeliveryStatus = 'pending' | 'assigned' | 'accepted' | 'picked_up' | 'delivering' | 'delivered' | 'completed' | 'failed' | 'cancelled';
@@ -46,20 +54,23 @@ export interface DeliveryDriver {
   vehicle_type: 'bike' | 'car' | 'scooter' | 'walk';
   license_plate?: string;
   status: 'available' | 'busy' | 'offline' | 'on_break';
-  last_location_latitude?: number;
-  last_location_longitude?: number;
-  last_active?: string;
-  rating?: number;
-  total_deliveries?: number;
-  profile_image_url?: string;
   verification_status: 'pending' | 'verified' | 'rejected';
   current_latitude?: number;
   current_longitude?: number;
-  distance?: number;
+  last_location_update?: string;
   profile_picture?: string;
   is_external?: boolean;
   average_rating?: number;
   is_available?: boolean;
+  current_location?: { 
+    latitude: number; 
+    longitude: number;
+  };
+  distance?: number;
+  rating?: number;
+  total_deliveries?: number;
+  profile_image_url?: string;
+  last_active?: string;
   commission_rate?: number;
   current_deliveries?: number;
   max_concurrent_deliveries?: number;
@@ -68,6 +79,7 @@ export interface DeliveryDriver {
   years_experience?: number;
   vehicle_model?: string;
   photo_url?: string;
+  total_earnings?: number;
 }
 
 export interface DeliverySettings {
@@ -91,13 +103,14 @@ export interface DeliverySettings {
 
 export interface DeliveryRating {
   id: string;
-  delivery_id: string;
-  customer_id: string;
+  delivery_id?: string;
+  customer_id?: string;
   driver_id: string;
   order_id: string;
   rating: number;
   feedback?: string;
   created_at: string;
+  user_id?: string;
 }
 
 export interface DeliveryStats {
@@ -119,6 +132,7 @@ export interface DeliveryMessage {
   message: string;
   created_at: string;
   read: boolean;
+  order_id?: string;
 }
 
 export interface DeliveryVerification {
@@ -160,6 +174,14 @@ export interface DeliveryRouteStop {
   longitude: number;
   estimated_arrival: string;
   sequence: number;
+  request_id?: string;
+  is_priority?: boolean;
+}
+
+export interface DeliveryLocation {
+  latitude: number;
+  longitude: number;
+  type?: 'pickup' | 'dropoff';
   request_id?: string;
   is_priority?: boolean;
 }

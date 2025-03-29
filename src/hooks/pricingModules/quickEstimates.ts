@@ -5,14 +5,18 @@ const BASE_RATES = {
   standard: 500, // 500 FCFA per km
   comfort: 650,  // 650 FCFA per km
   premium: 800,  // 800 FCFA per km
-  van: 900       // 900 FCFA per km
+  van: 900,      // 900 FCFA per km
+  electric: 700, // 700 FCFA per km
+  scooter: 450   // 450 FCFA per km
 };
 
 const MIN_FARE = {
   standard: 1000,
   comfort: 1500,
   premium: 2500,
-  van: 3000
+  van: 3000,
+  electric: 1800,
+  scooter: 800
 };
 
 const BOOKING_FEE = 500; // 500 FCFA booking fee
@@ -52,12 +56,12 @@ export const getQuickEstimate = (distance: number, vehicleType: TaxiVehicleType)
 /**
  * Generate a price range for display purposes
  */
-export const getPriceRange = (distance: number, vehicleType: TaxiVehicleType): {min: number, max: number} => {
+export const getPriceRange = (distance: number, vehicleType: TaxiVehicleType): {min: number, max: number, currency: string} => {
   const basePrice = estimatePrice(distance, vehicleType);
   
   // Create range of +/- 15%
   const min = Math.floor((basePrice * 0.85) / 100) * 100;
   const max = Math.ceil((basePrice * 1.15) / 100) * 100;
   
-  return { min, max };
+  return { min, max, currency: 'FCFA' };
 };

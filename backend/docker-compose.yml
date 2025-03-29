@@ -10,32 +10,53 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
     environment:
       - NODE_ENV=production
       - DB_HOST=db
       - DB_USER=buntudelice
       - DB_PASSWORD=buntudelice_password
       - DB_NAME=buntudelice
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - db
     restart: unless-stopped
+    networks:
+      - buntudelice-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 500M
 
   db:
     image: mysql:8.0
     container_name: buntudelice-db
     restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_password}
       - MYSQL_DATABASE=buntudelice
       - MYSQL_USER=buntudelice
-      - MYSQL_PASSWORD=buntudelice_password
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-buntudelice_password}
     volumes:
       - buntudelice-db-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "3307:3306"
     command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - buntudelice-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "buntudelice", "-p$$MYSQL_PASSWORD"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   buntudelice-db-data:
+
+networks:
+  buntudelice-network:
+    driver: bridge

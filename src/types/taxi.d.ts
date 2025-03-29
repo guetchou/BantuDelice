@@ -18,9 +18,10 @@ export type TaxiRideStatus =
   | 'completed'
   | 'cancelled'
   | 'rejected'
-  | 'accepted'; // Added for compatibility
+  | 'accepted'
+  | 'in_progress'; // Added to fix incompatibility errors
 
-export type TaxiVehicleType = 'standard' | 'comfort' | 'premium' | 'van';
+export type TaxiVehicleType = 'standard' | 'comfort' | 'premium' | 'van' | 'electric' | 'scooter';
 
 export interface TaxiDriver {
   id: string;
@@ -39,7 +40,7 @@ export interface TaxiDriver {
   total_rides: number;
   is_available: boolean;
   current_location?: TaxiLocation;
-  // New properties added for compatibility
+  // Additional properties added for compatibility
   current_latitude?: number;
   current_longitude?: number;
   photo_url?: string;
@@ -48,6 +49,8 @@ export interface TaxiDriver {
   years_experience?: number;
   verification_status?: string;
   status?: string;
+  verified?: boolean;
+  average_rating?: number;
 }
 
 export interface TaxiRide {
@@ -81,6 +84,7 @@ export interface TaxiRide {
   route_polyline?: string;
   promo_code_applied?: string;
   promo_discount?: number;
+  ride_id?: string;
 }
 
 export interface RideShareRequest {
@@ -95,6 +99,7 @@ export interface RideShareRequest {
   destination_latitude: number;
   destination_longitude: number;
   created_at?: string;
+  user_id?: string;
 }
 
 export interface TaxiRideRequest {
@@ -106,6 +111,7 @@ export interface TaxiRideRequest {
   pickup_time: string;
   vehicle_type: TaxiVehicleType;
   created_at: string;
+  ride_id?: string;
 }
 
 export interface TaxiInvoice {
@@ -152,6 +158,8 @@ export interface TaxiSubscriptionPlan {
   features: Array<{name: string; value: string | number | boolean}>;
   popular: boolean;
   discount_percentage?: number;
+  duration?: string;
+  max_rides?: number;
 }
 
 export interface TaxiPricingParams {
@@ -166,6 +174,8 @@ export interface TaxiPricingParams {
 
 export interface PricingFactors {
   distance?: number;
+  distance_km?: number;
+  duration_min?: number;
   time_of_day?: string;
   vehicle_type?: TaxiVehicleType;
   is_premium?: boolean;
@@ -188,6 +198,7 @@ export interface TaxiFare {
   total: number;
   totalPrice?: number; // Added for compatibility
   currency: string;
+  amount?: number;
 }
 
 export interface SavedLocation {

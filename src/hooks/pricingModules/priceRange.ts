@@ -1,28 +1,46 @@
 
-import { PricingFactors, PriceRange } from './types';
-import { calculatePrice } from './basicPricing';
-import { DEFAULT_CURRENCY } from './constants';
+import { estimatePrice } from './quickEstimates';
+import { TaxiVehicleType, PricingFactors, PriceRange, TaxiPricingParams } from '@/types/taxi';
 
 /**
- * Calcule une fourchette de prix pour un trajet
+ * Get a price range for a given route and vehicle type
  */
-export function getPriceRange(factors: PricingFactors): PriceRange {
-  // Calculer le prix de base
-  const estimate = calculatePrice(factors);
+export const getPriceRange = (factors: PricingFactors): PriceRange => {
+  if (!factors.vehicle_type || !factors.distance_km) {
+    return { min: 0, max: 0, currency: 'FCFA' };
+  }
   
-  // Créer une fourchette avec des marges d'incertitude
-  const basePrice = estimate.totalPrice;
-  
-  // La marge d'incertitude augmente avec la distance
-  const uncertaintyFactor = Math.min(0.2, 0.1 + (factors.distance * 0.01));
-  
-  // Calculer les valeurs min et max
-  const min = Math.round(basePrice * (1 - uncertaintyFactor));
-  const max = Math.round(basePrice * (1 + uncertaintyFactor));
-  
-  return {
-    min,
-    max,
-    currency: DEFAULT_CURRENCY
+  // Convert the pricing factors to the required params format
+  const params: TaxiPricingParams = {
+    distance_km: factors.distance_km || 0,
+    duration_min: factors.duration_min || 0,
+    vehicle_type: factors.vehicle_type,
+    is_premium: factors.is_premium,
+    time_of_day: factors.time_of_day
   };
-}
+  
+  // Calculate the base price
+  const basePrice = estimatePrice(params.distance_km, params.vehicle_type);
+  
+  // Calculate the price range
+  const min = Math.floor((basePrice * 0.85) / 100) * 100;
+  const max = Math.ceil((basePrice * 1.15) / 100) * 100;
+  
+  return { min, max, currency: 'FCFA' };
+};
+
+/**
+ * Format a price range as a string
+ * e.g. "2,500 - 3,000 FCFA"
+ */
+export const formatPriceRange = (range: PriceRange): string => {
+  const formatter = new Intl.NumberFormat('fr-FR');
+  return `${formatter.format(range.min)} - ${formatter.format(range.max)} FCFA`;
+};
+
+/**
+ * Get an average price from a price range
+ */
+export const getAveragePrice = (range: PriceRange): number => {
+  return Math.round((range.min + range.max) / 2);
+};

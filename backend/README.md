@@ -42,8 +42,52 @@ This is the backend API for the Buntudelice application, providing authenticatio
 
 1. Build and start the containers
    ```
+   npm run docker:up
+   ```
+   
+   Or manually:
+   ```
    docker-compose up -d
    ```
+
+2. Stop the containers:
+   ```
+   npm run docker:down
+   ```
+   
+   Or manually:
+   ```
+   docker-compose down
+   ```
+
+3. View logs:
+   ```
+   docker-compose logs -f api
+   ```
+
+## Environment Variables
+
+Create a `.env` file with the following variables:
+
+```dotenv
+NODE_ENV=development
+PORT=5000
+
+# Database configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=buntudelice
+DB_PASSWORD=your_password
+DB_NAME=buntudelice
+
+# JWT configuration
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=7d
+
+# Feature flags
+FEATURE_CHATBOT=true
+FEATURE_ANALYTICS=true
+```
 
 ## API Documentation
 
@@ -88,6 +132,15 @@ The application supports feature flags for toggling functionality:
 
 Configure these in the `.env` file.
 
+## Security Measures
+
+1. Use `helmet` middleware for setting secure HTTP headers
+2. Rate limiting for API endpoints
+3. Input validation and sanitization
+4. JWT token authentication with expiration
+5. Secure storage of sensitive data
+6. Non-root user in Docker container
+
 ## Monitoring
 
 The application uses PM2 for production process management:
@@ -100,3 +153,20 @@ This allows for:
 - Automatic restarts on crashes
 - Load balancing
 - Runtime performance and error logging
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Errors**
+   - Verify database credentials in `.env`
+   - Check if MySQL server is running
+
+2. **JWT Token Issues**
+   - Check if JWT_SECRET is properly set in environment
+   - Verify token expiration time
+
+3. **Docker Issues**
+   - Run `docker-compose logs` to view container logs
+   - Check port mappings if services are unavailable
+

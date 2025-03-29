@@ -2,68 +2,58 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface TableExistenceOptions {
-  tableName: string;
-  schema?: string;
+export interface TableExistenceOptions {
+  refreshInterval?: number;
 }
 
-interface UseTableExistenceResult {
-  exists: boolean;
-  loading: boolean;
-  error: Error | null;
-}
-
-export const useTableExistence = (
-  options: TableExistenceOptions | string
-): UseTableExistenceResult => {
-  const [exists, setExists] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  // Handle both string and options object
-  const tableName = typeof options === 'string' 
-    ? options 
-    : options.tableName;
-  
-  const schema = typeof options === 'string' 
-    ? 'public' 
-    : options.schema || 'public';
+export function useTableExistence(tableName: string, options?: TableExistenceOptions) {
+  const [exists, setExists] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkTableExistence = async () => {
+    let isMounted = true;
+    let timer: NodeJS.Timeout | null = null;
+
+    const checkTableExists = async () => {
+      if (!isMounted) return;
+      setLoading(true);
+      setError(null);
+
       try {
-        setLoading(true);
-        
-        // Query the information_schema.tables to check if the table exists
-        const { data, error } = await supabase
-          .from('information_schema.tables')
-          .select('table_name')
-          .eq('table_schema', schema)
-          .eq('table_name', tableName)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') {
-          throw error;
+        // Check if a query to the table returns a valid response or an error
+        const { count, error } = await supabase
+          .from(tableName)
+          .select('*', { count: 'exact', head: true });
+
+        if (isMounted) {
+          setExists(error ? false : true);
         }
-        
-        // Table exists if data is not null
-        setExists(!!data);
       } catch (err) {
-        console.error(`Error checking if table ${tableName} exists:`, err);
-        setError(err instanceof Error ? err : new Error(String(err)));
-        
-        // Fallback behavior: assume table exists if error occurs
-        // This is to prevent breaking existing functionality
-        setExists(true);
+        if (isMounted) {
+          setExists(false);
+          setError(err instanceof Error ? err.message : 'Unknown error checking table existence');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
-    
-    checkTableExistence();
-  }, [tableName, schema]);
-  
-  return { exists, loading, error };
-};
 
-export default useTableExistence;
+    // Initial check
+    checkTableExists();
+
+    // Set up periodic checks if requested
+    if (options?.refreshInterval) {
+      timer = setInterval(checkTableExists, options.refreshInterval);
+    }
+
+    return () => {
+      isMounted = false;
+      if (timer) clearInterval(timer);
+    };
+  }, [tableName, options?.refreshInterval]);
+
+  return { exists, loading, error };
+}

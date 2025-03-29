@@ -10,7 +10,9 @@ export const vehicleTypeToFrench = (type: TaxiVehicleType): string => {
     standard: 'Standard',
     comfort: 'Confort',
     premium: 'Premium',
-    van: 'Van'
+    van: 'Van',
+    electric: 'Électrique',
+    scooter: 'Scooter'
   };
   
   return translations[type] || type;
@@ -39,7 +41,9 @@ export const getVehicleDescription = (vehicleType: TaxiVehicleType): string => {
     standard: 'Berline confortable pour 1-4 personnes',
     comfort: 'Plus d\'espace et de confort pour 1-4 personnes',
     premium: 'Véhicule haut de gamme pour 1-3 personnes',
-    van: 'Minivan pour 4-7 personnes avec bagages'
+    van: 'Minivan pour 4-7 personnes avec bagages',
+    electric: 'Véhicule électrique écologique pour 1-4 personnes',
+    scooter: 'Scooter rapide pour 1 personne en ville'
   };
   
   return descriptions[vehicleType] || '';
@@ -50,7 +54,9 @@ export const getVehicleCapacity = (vehicleType: TaxiVehicleType): number => {
     standard: 4,
     comfort: 4,
     premium: 3,
-    van: 7
+    van: 7,
+    electric: 4,
+    scooter: 1
   };
   
   return capacities[vehicleType] || 4;
