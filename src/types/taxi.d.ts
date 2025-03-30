@@ -4,50 +4,19 @@ export type TaxiVehicleType = 'standard' | 'premium' | 'suv' | 'van' | 'motorcyc
 export type TaxiRideStatus = 
   | 'pending'
   | 'accepted'
-  | 'driver_assigned'
+  | 'driver_assigned' 
   | 'driver_en_route'
   | 'driver_arrived'
-  | 'ride_in_progress'
+  | 'ride_in_progress' 
   | 'arrived_at_destination'
   | 'completed'
   | 'cancelled';
 
+export type TaxiDriverStatus = 'available' | 'busy' | 'offline';
+
 export type PaymentMethod = 'cash' | 'card' | 'mobile' | 'wallet';
 
-export interface TaxiLocation {
-  address: string;
-  latitude: number;
-  longitude: number;
-  is_favorite?: boolean;
-  last_used?: string;
-  name?: string;
-  type?: 'home' | 'work' | 'recent' | 'other';
-}
-
-export interface TaxiDriver {
-  id: string;
-  user_id: string;
-  name: string;
-  phone: string;
-  vehicle_type: TaxiVehicleType;
-  status: 'available' | 'busy' | 'offline';
-  rating: number;
-  current_latitude?: number;
-  current_longitude?: number;
-  is_available: boolean;
-  verification_status: 'pending' | 'verified' | 'rejected';
-  profile_picture?: string;
-  vehicle_make?: string;
-  vehicle_model?: string;
-  license_plate?: string;
-  photo_url?: string;
-  average_rating?: number;
-  last_location_update?: string;
-  total_earnings?: number;
-  total_deliveries?: number;
-  commission_rate?: number;
-  created_at?: string;
-}
+export type PaymentStatus = 'pending' | 'paid' | 'failed';
 
 export interface TaxiRide {
   id: string;
@@ -61,17 +30,18 @@ export interface TaxiRide {
   destination_longitude: number;
   pickup_time: string;
   pickup_time_type: 'now' | 'scheduled';
-  distance_km: number;
-  duration_min: number;
   status: TaxiRideStatus;
   estimated_price: number;
   actual_price: number;
-  payment_status: 'pending' | 'paid' | 'failed';
   payment_method: PaymentMethod;
-  rating?: number;
-  rating_comment?: string;
-  created_at: string;
+  payment_status: PaymentStatus;
   vehicle_type: TaxiVehicleType;
+  distance_km: number;
+  duration_min: number;
+  notes?: string;
+  created_at: string;
+  
+  // Optional fields
   special_instructions?: string;
   is_shared_ride?: boolean;
   max_passengers?: number;
@@ -83,94 +53,92 @@ export interface TaxiRide {
   promo_discount?: number;
 }
 
+export interface TaxiDriver {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  vehicle_type: TaxiVehicleType;
+  vehicle_color?: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_year?: number;
+  license_plate?: string;
+  current_latitude: number;
+  current_longitude: number;
+  status: TaxiDriverStatus;
+  average_rating: number;
+  total_rides?: number;
+  is_available: boolean;
+  created_at: string;
+  last_location_update: string;
+  profile_image?: string;
+  languages?: string[];
+  years_experience?: number;
+}
+
 export interface TaxiRideRequest {
   id: string;
-  user_id: string;
-  driver_id?: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  pickup_location: TaxiLocation;
-  destination_location: TaxiLocation;
-  estimated_price: number;
-  vehicle_type: TaxiVehicleType;
-  requested_at: string;
-  pickup_time?: string;
-  comments?: string;
-}
-
-export interface TaxiFare {
-  base_fare: number;
-  per_km_rate: number;
-  per_minute_rate: number;
-  minimum_fare: number;
-  cancellation_fee: number;
-  service_fee: number;
-  discount?: number;
-  total: number;
-  currency: string;
-  distance_fare?: number;
-}
-
-export interface TaxiSubscriptionPlan {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  discount_percentage?: number;
-  benefits: string[];
-  max_rides?: number;
-  validity_days: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at?: string;
-  popular?: boolean;
-  duration?: string;
-  features?: string[];
-}
-
-export interface TaxiInvoice {
-  id: string;
-  user_id: string;
   ride_id: string;
-  amount: number;
-  issue_date: string;
-  due_date: string;
-  status: 'pending' | 'paid' | 'overdue';
-  payment_method?: PaymentMethod;
-  payment_date?: string;
-  issued_at?: string;
-  subtotal?: number;
-}
-
-export interface BusinessRateEstimate {
-  monthly_discount: number;
-  per_ride_price: number;
-  standard_price: number;
-  savings_amount: number;
-  savings_percentage: number;
-}
-
-export interface PricingFactors {
-  vehicle_type: TaxiVehicleType;
-  distance_km?: number;
-  duration_min?: number;
-  is_premium?: boolean;
-  time_of_day?: 'day' | 'night' | 'peak';
-  subscription_discount?: number;
-  promo_code?: string;
-}
-
-export interface TaxiPricingParams {
-  distance_km: number;
-  duration_min: number;
-  vehicle_type: TaxiVehicleType;
-  is_premium?: boolean;
-  time_of_day?: 'day' | 'night' | 'peak';
-  subscription_discount?: number;
-  promo_code?: string;
+  driver_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  responded_at?: string;
 }
 
 export interface PriceRange {
   min: number;
   max: number;
   currency: string;
+}
+
+export interface TaxiFare {
+  basePrice: number;
+  perKmPrice: number;
+  perMinutePrice: number;
+  serviceFee: number;
+  total: number;
+  currency: string;
+}
+
+export interface PricingFactors {
+  time_of_day: 'morning' | 'afternoon' | 'evening' | 'night';
+  day_of_week: 'weekday' | 'weekend';
+  distance_km: number;
+  duration_min: number;
+  demand_level: 'low' | 'medium' | 'high' | 'surge';
+  location_zone?: string;
+}
+
+export interface TaxiInvoice {
+  id: string;
+  ride_id: string;
+  user_id: string;
+  amount: number;
+  payment_method: PaymentMethod;
+  status: 'pending' | 'paid' | 'overdue';
+  created_at: string;
+  paid_at?: string;
+  due_date: string;
+  invoice_number: string;
+}
+
+export interface BusinessRateEstimate {
+  monthlyDiscount: number;
+  standardRate: number;
+  businessRate: number;
+  annualSavings: number;
+}
+
+export interface SavedLocation {
+  id?: string;
+  user_id?: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  is_favorite?: boolean;
+  is_current_location?: boolean;
+  last_used?: string;
+  created_at?: string;
 }

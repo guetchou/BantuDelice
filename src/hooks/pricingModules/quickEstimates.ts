@@ -104,3 +104,24 @@ export const getDetailedEstimate = (distance_km: number, duration_min: number, v
     currency: 'FCFA'
   };
 };
+
+/**
+ * Get a price range estimate for a ride
+ */
+export const getPriceRange = (distance_km: number, vehicleType: TaxiVehicleType) => {
+  const estimate = estimatePrice(distance_km, vehicleType);
+  
+  return {
+    min: Math.floor(estimate * 0.85 / 100) * 100, // 15% below estimate, rounded to nearest 100
+    max: Math.ceil(estimate * 1.2 / 100) * 100,   // 20% above estimate, rounded to nearest 100
+    currency: 'FCFA'
+  };
+};
+
+/**
+ * Get a quick estimate as a formatted string
+ */
+export const getQuickEstimate = (distance_km: number, vehicleType: TaxiVehicleType): string => {
+  const price = estimatePrice(distance_km, vehicleType);
+  return `${price.toLocaleString()} FCFA`;
+};

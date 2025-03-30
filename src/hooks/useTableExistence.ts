@@ -1,126 +1,101 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/config/supabase';
 
-export interface TableExistenceOptions {
-  refreshInterval?: number;
+interface UseTableExistenceResult {
+  exists: boolean;
+  loading: boolean;
+  error: Error | null;
 }
 
-export interface MultiTableExistenceOptions extends TableExistenceOptions {
-  tables: string[];
-}
-
-export function useTableExistence(tableName: string, options?: TableExistenceOptions) {
+/**
+ * A hook to check if a table exists in the database
+ * 
+ * @param tableName The name of the table to check
+ * @returns An object with exists, loading, and error properties
+ */
+export function useTableExistence(tableName: string): UseTableExistenceResult {
   const [exists, setExists] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-    let timer: NodeJS.Timeout | null = null;
-
-    const checkTableExists = async () => {
-      if (!isMounted) return;
-      setLoading(true);
-      setError(null);
-
+    async function checkTableExists() {
       try {
-        // Using a simpler approach to check if the table exists
-        const { error } = await supabase
-          .from(tableName)
-          .select('*', { count: 'exact', head: true })
-          .limit(1);
+        setLoading(true);
+        // This query will return an empty array if the table doesn't exist
+        // but won't throw an error
+        const { data, error: queryError } = await supabase
+          .rpc('check_table_existence', { table_name: tableName });
 
-        if (isMounted) {
-          // If there's no error, the table exists
-          setExists(error ? false : true);
+        if (queryError) {
+          console.error('Error checking table existence:', queryError);
+          setError(queryError);
+          return;
         }
+        
+        setExists(data === true);
       } catch (err) {
-        if (isMounted) {
-          setExists(false);
-          setError(err instanceof Error ? err.message : 'Unknown error checking table existence');
-        }
+        console.error('Error in useTableExistence:', err);
+        setError(err as Error);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
-    };
-
-    // Initial check
-    checkTableExists();
-
-    // Set up periodic checks if requested
-    if (options?.refreshInterval) {
-      timer = setInterval(checkTableExists, options.refreshInterval);
     }
 
-    return () => {
-      isMounted = false;
-      if (timer) clearInterval(timer);
-    };
-  }, [tableName, options?.refreshInterval]);
+    checkTableExists();
+  }, [tableName]);
 
   return { exists, loading, error };
 }
 
-export function useMultiTableExistence(options: MultiTableExistenceOptions) {
-  const [tableStatus, setTableStatus] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Creates a new table if it doesn't exist
+ * 
+ * @param tableName The name of the table to create
+ * @param columns The columns definition for the table
+ * @returns A promise that resolves when the table is created or rejects with an error
+ */
+export async function createTableIfNotExists(
+  tableName: string, 
+  columns: Record<string, string>
+): Promise<{ success: boolean; message: string }> {
+  try {
+    // First check if table exists
+    const { data, error } = await supabase
+      .rpc('check_table_existence', { table_name: tableName });
 
-  useEffect(() => {
-    let isMounted = true;
-    let timer: NodeJS.Timeout | null = null;
-
-    const checkTablesExist = async () => {
-      if (!isMounted) return;
-      setLoading(true);
-      setError(null);
-
-      try {
-        const results: Record<string, boolean> = {};
-
-        for (const table of options.tables) {
-          try {
-            const { error } = await supabase
-              .from(table)
-              .select('*', { count: 'exact', head: true })
-              .limit(1);
-            
-            results[table] = !error;
-          } catch (err) {
-            results[table] = false;
-          }
-        }
-
-        if (isMounted) {
-          setTableStatus(results);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Unknown error checking tables existence');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Initial check
-    checkTablesExist();
-
-    // Set up periodic checks if requested
-    if (options?.refreshInterval) {
-      timer = setInterval(checkTablesExist, options.refreshInterval);
+    if (error) {
+      console.error(`Error checking if ${tableName} exists:`, error);
+      return { success: false, message: error.message };
     }
 
-    return () => {
-      isMounted = false;
-      if (timer) clearInterval(timer);
-    };
-  }, [options.tables, options.refreshInterval]);
+    // If table already exists, return early
+    if (data === true) {
+      return { success: true, message: `Table ${tableName} already exists` };
+    }
 
-  return { tableStatus, loading, error, allExist: Object.values(tableStatus).every(Boolean) };
+    // Build the column definitions
+    const columnDefinitions = Object.entries(columns)
+      .map(([name, type]) => `"${name}" ${type}`)
+      .join(', ');
+
+    // Execute create table SQL
+    const { error: createError } = await supabase
+      .rpc('execute_sql', { 
+        sql_query: `CREATE TABLE IF NOT EXISTS "${tableName}" (${columnDefinitions})` 
+      });
+
+    if (createError) {
+      console.error(`Error creating table ${tableName}:`, createError);
+      return { success: false, message: createError.message };
+    }
+
+    console.log(`Table ${tableName} created successfully`);
+    return { success: true, message: `Table ${tableName} created successfully` };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error(`Unexpected error creating table ${tableName}:`, err);
+    return { success: false, message: errorMessage };
+  }
 }

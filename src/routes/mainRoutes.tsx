@@ -29,6 +29,7 @@ import TaxiSubscriptionDetails from "@/pages/taxi/SubscriptionDetails";
 import TaxiBusinessPage from "@/pages/taxi/Business";
 import TaxiVehicleComparison from "@/pages/taxi/VehicleComparison";
 import Taxi from "@/pages/Taxi";
+import Index from "@/pages/Index";
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 const mainRoutes: RouteObject[] = [
@@ -40,7 +41,8 @@ const mainRoutes: RouteObject[] = [
         path: "/",
         element: <MainLayout />,
         children: [
-          { index: true, element: <Home /> },
+          { index: true, element: <Index /> },
+          { path: "home", element: <Home /> },
           
           // Restaurant Routes
           { path: "restaurants", element: <Restaurants /> },
