@@ -17,7 +17,10 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
     "docker:restart": "docker-compose restart",
-    "docker:rebuild": "docker-compose down && docker-compose up -d --build"
+    "docker:rebuild": "docker-compose down && docker-compose up -d --build",
+    "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d",
+    "docker:prod:logs": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f",
+    "docker:prod:down": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml down"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

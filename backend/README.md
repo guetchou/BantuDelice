@@ -1,172 +1,108 @@
 
 # Buntudelice Backend API
 
-This is the backend API for the Buntudelice application, providing authentication, restaurant, and order management services.
+This repository contains the backend API for the Buntudelice application.
 
-## Features
-
-- User authentication (login/register)
-- Restaurant listing and filtering
-- Order management
-- Real-time delivery tracking
-- Feature flags for modular functionality
-- Docker containerization
-- CI/CD integration with GitHub Actions
-
-## Setup and Installation
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- MySQL 8.0+
-- Docker and Docker Compose (optional)
+- Node.js (v18 or higher)
+- MySQL (v8.0 or higher)
+- Docker and Docker Compose (optional, for containerized deployment)
 
-### Local Development Setup
+### Installation
 
 1. Clone the repository
-2. Install dependencies
-   ```
-   npm install
-   ```
-3. Create a `.env` file based on `.env.example`
-   ```
-   cp .env.example .env
-   ```
-4. Configure your MySQL database
-5. Start the development server
-   ```
-   npm run dev
-   ```
-
-### Using Docker
-
-1. Build and start the containers
-   ```
-   npm run docker:up
-   ```
-   
-   Or manually:
-   ```
-   docker-compose up -d
-   ```
-
-2. Stop the containers:
-   ```
-   npm run docker:down
-   ```
-   
-   Or manually:
-   ```
-   docker-compose down
-   ```
-
-3. View logs:
-   ```
-   docker-compose logs -f api
-   ```
-
-## Environment Variables
-
-Create a `.env` file with the following variables:
-
-```dotenv
-NODE_ENV=development
-PORT=5000
-
-# Database configuration
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=buntudelice
-DB_PASSWORD=your_password
-DB_NAME=buntudelice
-
-# JWT configuration
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=7d
-
-# Feature flags
-FEATURE_CHATBOT=true
-FEATURE_ANALYTICS=true
+```
+git clone https://github.com/your-organization/buntudelice-backend.git
+cd buntudelice-backend
 ```
 
-## API Documentation
+2. Install dependencies
+```
+npm install
+```
 
-### Authentication
+3. Configure environment variables
+```
+cp .env.example .env
+```
+Edit the `.env` file with your configuration.
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user profile
+4. Run the migrations
+```
+npm run migrate
+```
 
-### Restaurants
+5. Seed the database (optional)
+```
+npm run seed
+```
 
-- `GET /api/restaurants` - List restaurants with optional filtering
-- `GET /api/restaurants/:id` - Get restaurant details
-- `GET /api/restaurants/:id/menu` - Get restaurant menu items
+### Running the Application
 
-### Orders
+#### Development mode
+```
+npm run dev
+```
 
-- `GET /api/orders` - List user's orders
-- `GET /api/orders/:id` - Get order details
-- `POST /api/orders` - Create a new order
-- `PATCH /api/orders/:id` - Update order details
-
-## CI/CD Pipeline
-
-This project uses GitHub Actions for continuous integration and deployment:
-
-1. On push to any branch: 
-   - Run tests and linting
-
-2. On push to main branch:
-   - Run tests and linting
-   - Build Docker image
-   - Push to Docker registry
-   - Deploy to production server
-
-## Feature Flags
-
-The application supports feature flags for toggling functionality:
-
-- `FEATURE_CHATBOT` - Enable/disable chat support
-- `FEATURE_ANALYTICS` - Enable/disable analytics collection
-
-Configure these in the `.env` file.
-
-## Security Measures
-
-1. Use `helmet` middleware for setting secure HTTP headers
-2. Rate limiting for API endpoints
-3. Input validation and sanitization
-4. JWT token authentication with expiration
-5. Secure storage of sensitive data
-6. Non-root user in Docker container
-
-## Monitoring
-
-The application uses PM2 for production process management:
-
+#### Production mode
+```
+npm start
+```
+or using PM2:
 ```
 npm run prod
 ```
 
-This allows for:
-- Automatic restarts on crashes
-- Load balancing
-- Runtime performance and error logging
+### Docker Deployment
 
-## Troubleshooting
+#### Development
 
-### Common Issues
+Build and start the containers:
+```
+npm run docker:build
+npm run docker:up
+```
 
-1. **Database Connection Errors**
-   - Verify database credentials in `.env`
-   - Check if MySQL server is running
+View logs:
+```
+npm run docker:logs
+```
 
-2. **JWT Token Issues**
-   - Check if JWT_SECRET is properly set in environment
-   - Verify token expiration time
+Stop the containers:
+```
+npm run docker:down
+```
 
-3. **Docker Issues**
-   - Run `docker-compose logs` to view container logs
-   - Check port mappings if services are unavailable
+#### Production
 
+Start production containers:
+```
+npm run docker:prod
+```
+
+View logs:
+```
+npm run docker:prod:logs
+```
+
+Stop the containers:
+```
+npm run docker:prod:down
+```
+
+## API Documentation
+
+API documentation is available at `/api/docs` when the server is running.
+
+## Running Tests
+
+```
+npm test
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -16,7 +16,9 @@ export const getPriceRange = (factors: PricingFactors): PriceRange => {
     duration_min: factors.duration_min || 0,
     vehicle_type: factors.vehicle_type,
     is_premium: factors.is_premium,
-    time_of_day: factors.time_of_day
+    time_of_day: factors.time_of_day,
+    subscription_discount: factors.subscription_discount,
+    promo_code: factors.promo_code
   };
   
   // Calculate the base price
@@ -35,7 +37,7 @@ export const getPriceRange = (factors: PricingFactors): PriceRange => {
  */
 export const formatPriceRange = (range: PriceRange): string => {
   const formatter = new Intl.NumberFormat('fr-FR');
-  return `${formatter.format(range.min)} - ${formatter.format(range.max)} FCFA`;
+  return `${formatter.format(range.min)} - ${formatter.format(range.max)} ${range.currency}`;
 };
 
 /**

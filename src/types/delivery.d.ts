@@ -7,7 +7,8 @@ export type DeliveryStatus =
   | 'delivering'
   | 'delivered'
   | 'completed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'failed';
 
 export interface DeliveryDriver {
   id: string;
@@ -19,22 +20,31 @@ export interface DeliveryDriver {
   current_latitude?: number;
   current_longitude?: number;
   vehicle_type: 'car' | 'motorcycle' | 'bicycle' | 'scooter';
-  status: 'available' | 'busy' | 'offline';
+  status: 'available' | 'busy' | 'offline' | 'on_break';
   average_rating: number;
   total_deliveries: number;
   total_earnings: number;
   commission_rate: number;
   is_available: boolean;
+  is_external?: boolean;
   verification_status: 'pending' | 'verified' | 'rejected';
   created_at: string;
   updated_at?: string;
   last_location_update: string;
   current_location?: [number, number];
+  distance?: number;
+  current_deliveries?: number;
+  max_concurrent_deliveries?: number;
+  license_plate?: string;
+  vehicle_model?: string;
 }
 
 export interface DeliveryLocation {
   latitude: number;
   longitude: number;
+  request_id?: string;
+  type?: 'pickup' | 'dropoff';
+  is_priority?: boolean;
 }
 
 export interface DeliveryMessage {
@@ -75,7 +85,8 @@ export interface DeliveryRequest {
   delivery_instructions?: string;
   pickup_time?: string;
   distance_km?: number;
-  delivery_type?: 'standard' | 'express' | 'scheduled';
+  distance?: number;
+  delivery_type?: 'standard' | 'express' | 'scheduled' | 'restaurant';
   created_at: string;
 }
 
@@ -107,6 +118,9 @@ export interface DeliverySettings {
   max_distance: number;
   external_service_enabled: boolean;
   service_fee_percentage: number;
+  estimated_delivery_time?: number;
+  accepted_external_services?: string[];
+  auto_accept_orders?: boolean;
 }
 
 export interface DeliveryRoute {
@@ -128,6 +142,11 @@ export interface DeliveryRoute {
   status: 'planning' | 'in_progress' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;
+  delivery_requests?: string[];
+  waypoints?: DeliveryLocation[];
+  total_distance?: number;
+  start_time?: string;
+  estimated_end_time?: string;
 }
 
 export interface DeliveryWallet {
@@ -149,3 +168,17 @@ export interface DeliveryTransaction {
   order_id?: string;
   created_at: string;
 }
+
+export interface ExternalDeliveryService {
+  id: string;
+  name: string;
+  api_key?: string;
+  base_url: string;
+  is_active: boolean;
+  service_fee: number;
+  credentials?: any;
+  created_at: string;
+  updated_at?: string;
+}
+
+export type DeliveryType = 'standard' | 'express' | 'scheduled' | 'restaurant';
