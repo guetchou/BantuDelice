@@ -1,18 +1,19 @@
 
-import React, { ReactNode, useRef, CSSProperties } from 'react';
-import { MapContainer as LeafletMapContainer } from 'react-leaflet/MapContainer';
-import { TileLayer as LeafletTileLayer } from 'react-leaflet/TileLayer';
-import { Marker as LeafletMarker } from 'react-leaflet/Marker';
-import { Popup as LeafletPopup } from 'react-leaflet/Popup';
-import { Circle as LeafletCircle } from 'react-leaflet/Circle';
-import { Polyline as LeafletPolyline } from 'react-leaflet/Polyline';
-import 'leaflet/dist/leaflet.css';
+import React, { ReactNode } from 'react';
 import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icons in Leaflet with webpack
+// Fix for Leaflet's default marker icon
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Define custom Leaflet icon
 const DefaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -21,99 +22,65 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Create custom icons
-export const restaurantIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/562/562678.png',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
-});
-
-export const deliveryIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3128/3128826.png',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
-});
-
-export const customerIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/1077/1077063.png',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
-});
-
-export const taxiIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/1186/1186424.png',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
-});
-
-interface MapContainerProps {
-  children: ReactNode;
+interface MapProps {
   center: [number, number];
   zoom: number;
-  scrollWheelZoom?: boolean;
   className?: string;
-  style?: CSSProperties;
+  style?: React.CSSProperties;
+  children?: ReactNode;
+  scrollWheelZoom?: boolean;
 }
 
-export const MapContainer: React.FC<MapContainerProps> = ({
-  children,
+export const Map: React.FC<MapProps> = ({
   center,
   zoom,
-  scrollWheelZoom = true,
   className = '',
-  style = {}
+  style = {},
+  children,
+  scrollWheelZoom = true
 }) => {
   return (
-    <LeafletMapContainer
+    <MapContainer
       center={center}
       zoom={zoom}
       scrollWheelZoom={scrollWheelZoom}
       className={className}
-      style={style}
+      style={{ height: '100%', width: '100%', ...style }}
     >
-      <LeafletTileLayer
+      <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {children}
-    </LeafletMapContainer>
+    </MapContainer>
   );
 };
 
-interface MarkerProps {
-  children?: ReactNode;
+interface CustomMarkerProps {
   position: [number, number];
-  icon?: any;
+  children?: ReactNode;
+  icon?: L.Icon;
   eventHandlers?: any;
 }
 
-export const Marker: React.FC<MarkerProps> = ({ 
-  children, 
-  position, 
+export const CustomMarker: React.FC<CustomMarkerProps> = ({
+  position,
+  children,
   icon = DefaultIcon,
   eventHandlers = {}
 }) => {
   return (
-    <LeafletMarker 
+    <Marker 
       position={position} 
       icon={icon}
       eventHandlers={eventHandlers}
     >
-      {children}
-    </LeafletMarker>
+      {children && <Popup>{children}</Popup>}
+    </Marker>
   );
 };
 
-export const Popup: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <LeafletPopup>{children}</LeafletPopup>;
-};
-
-interface CircleProps {
-  children?: ReactNode;
+interface CustomCircleProps {
   center: [number, number];
   radius: number;
   pathOptions?: {
@@ -121,26 +88,27 @@ interface CircleProps {
     fillColor: string;
     fillOpacity: number;
   };
+  children?: ReactNode;
 }
 
-export const Circle: React.FC<CircleProps> = ({ 
-  children, 
-  center, 
+export const CustomCircle: React.FC<CustomCircleProps> = ({
+  center,
   radius,
-  pathOptions = { color: 'blue', fillColor: 'blue', fillOpacity: 0.2 }
+  pathOptions = { color: 'blue', fillColor: 'blue', fillOpacity: 0.2 },
+  children
 }) => {
   return (
-    <LeafletCircle 
-      center={center} 
-      radius={radius} 
+    <Circle
+      center={center}
+      radius={radius}
       pathOptions={pathOptions}
     >
-      {children}
-    </LeafletCircle>
+      {children && <Popup>{children}</Popup>}
+    </Circle>
   );
 };
 
-interface PolylineProps {
+interface CustomPolylineProps {
   positions: [number, number][];
   color?: string;
   weight?: number;
@@ -148,33 +116,20 @@ interface PolylineProps {
   dashArray?: string;
 }
 
-export const Polyline: React.FC<PolylineProps> = ({ 
+export const CustomPolyline: React.FC<CustomPolylineProps> = ({
   positions,
-  color = "blue",
+  color = 'blue',
   weight = 3,
   opacity = 0.7,
-  dashArray = ""
+  dashArray = ''
 }) => {
   return (
-    <LeafletPolyline 
-      positions={positions} 
+    <Polyline
+      positions={positions}
       pathOptions={{ color, weight, opacity, dashArray }}
     />
   );
 };
 
-export default {
-  MapContainer,
-  TileLayer: LeafletTileLayer,
-  Marker,
-  Popup,
-  Circle,
-  Polyline,
-  icons: {
-    default: DefaultIcon,
-    restaurant: restaurantIcon,
-    delivery: deliveryIcon,
-    customer: customerIcon,
-    taxi: taxiIcon
-  }
-};
+export default Map;
+export { CustomMarker, CustomCircle, CustomPolyline };

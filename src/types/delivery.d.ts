@@ -21,6 +21,10 @@ export interface DeliveryDriver {
   verification_status: 'pending' | 'verified' | 'rejected';
   languages?: string[];
   years_experience?: number;
+  distance?: number;
+  is_external?: boolean;
+  current_deliveries?: number;
+  max_concurrent_deliveries?: number;
 }
 
 export interface DeliveryRequest {
@@ -52,6 +56,8 @@ export interface DeliveryRequest {
   distance_km?: number;
   delivery_type: 'standard' | 'express' | 'scheduled';
   created_at: string;
+  is_priority?: boolean;
+  distance?: number;
 }
 
 export type DeliveryStatus = 
@@ -62,7 +68,8 @@ export type DeliveryStatus =
   | 'in_transit'
   | 'delivered'
   | 'failed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'delivering';
 
 export interface DeliverySettings {
   id?: string;
@@ -82,6 +89,9 @@ export interface DeliverySettings {
   auto_assign_drivers: boolean;
   created_at?: string;
   updated_at?: string;
+  estimated_delivery_time?: number;
+  accepted_external_services?: string[];
+  auto_accept_orders?: boolean;
 }
 
 export interface DeliveryLocation {
@@ -101,4 +111,34 @@ export interface DeliveryRoute {
   status: 'active' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;
+  start_time?: string;
+  estimated_end_time?: string;
+  waypoints?: DeliveryLocation[];
+  delivery_requests?: string[];
+  total_distance?: number;
 }
+
+export interface DeliveryMessage {
+  id: string;
+  order_id: string;
+  sender_id: string;
+  sender_type: "driver" | "customer";
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface ExternalDeliveryService {
+  id: string;
+  name: string;
+  logo_url?: string;
+  api_key?: string;
+  is_active: boolean;
+  base_fee: number;
+  price_per_km: number;
+  service_area?: any;
+  created_at: string;
+  updated_at?: string;
+}
+
+export type DeliveryType = 'restaurant' | 'external' | 'platform';

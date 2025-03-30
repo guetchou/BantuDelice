@@ -1,12 +1,12 @@
 
-export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'in_transit' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'in_transit' | 'delivered' | 'cancelled' | 'prepared' | 'accepted';
 
 export interface Order {
   id: string;
   user_id: string;
   restaurant_id: string;
   status: OrderStatus;
-  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
+  payment_status: 'pending' | 'paid' | 'failed' | 'refunded' | 'completed';
   delivery_status: 'pending' | 'assigned' | 'in_transit' | 'delivered' | 'failed';
   subtotal: number;
   tax: number;
@@ -28,6 +28,10 @@ export interface Order {
   estimated_delivery_time?: string;
   actual_delivery_time?: string;
   order_items: OrderItem[];
+  total_amount?: number;
+  estimated_preparation_time?: number;
+  loyalty_points_earned?: number;
+  delivered_at?: string;
 }
 
 export interface OrderItem {
@@ -40,6 +44,9 @@ export interface OrderItem {
   total_price: number;
   options?: OrderItemOption[];
   notes?: string;
+  special_instructions?: string;
+  item_name?: string;
+  combo_item?: any;
 }
 
 export interface OrderItemOption {
@@ -47,4 +54,25 @@ export interface OrderItemOption {
   name: string;
   value: string;
   price: number;
+  quantity?: number;
+}
+
+export interface CartItem {
+  id: string;
+  menu_item_id: string;
+  quantity: number;
+  name: string;
+  price: number;
+  total: number;
+  options?: CartItemOption[];
+  notes?: string;
+  combo_item?: any;
+}
+
+export interface CartItemOption {
+  id: string;
+  name: string;
+  value: string;
+  price: number;
+  quantity: number;
 }

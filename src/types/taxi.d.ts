@@ -1,5 +1,5 @@
 
-export type TaxiVehicleType = 'standard' | 'premium' | 'suv' | 'van' | 'motorcycle' | 'bicycle' | 'scooter' | 'car';
+export type TaxiVehicleType = 'standard' | 'premium' | 'suv' | 'van' | 'motorcycle' | 'bicycle' | 'scooter' | 'car' | 'comfort' | 'bike' | 'walk' | 'electric';
 
 export type TaxiRideStatus = 
   | 'pending'
@@ -10,13 +10,15 @@ export type TaxiRideStatus =
   | 'ride_in_progress' 
   | 'arrived_at_destination'
   | 'completed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'rejected'
+  | 'in_progress';
 
-export type TaxiDriverStatus = 'available' | 'busy' | 'offline';
+export type TaxiDriverStatus = 'available' | 'busy' | 'offline' | 'in_shared_ride';
 
-export type PaymentMethod = 'cash' | 'card' | 'mobile' | 'wallet';
+export type PaymentMethod = 'cash' | 'card' | 'mobile' | 'wallet' | 'mobile_money';
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'overdue' | 'completed';
 
 export interface TaxiRide {
   id: string;
@@ -51,6 +53,8 @@ export interface TaxiRide {
   route_polyline?: string;
   promo_code_applied?: string;
   promo_discount?: number;
+  rating?: number;
+  rating_comment?: string;
 }
 
 export interface TaxiDriver {
@@ -76,6 +80,13 @@ export interface TaxiDriver {
   profile_image?: string;
   languages?: string[];
   years_experience?: number;
+  profile_picture?: string;
+  photo_url?: string;
+  rating?: number;
+  current_location?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface TaxiRideRequest {
@@ -85,6 +96,7 @@ export interface TaxiRideRequest {
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   responded_at?: string;
+  requested_at?: string;
 }
 
 export interface PriceRange {
@@ -100,15 +112,21 @@ export interface TaxiFare {
   serviceFee: number;
   total: number;
   currency: string;
+  base_fare?: number;
 }
 
 export interface PricingFactors {
-  time_of_day: 'morning' | 'afternoon' | 'evening' | 'night';
+  time_of_day: 'morning' | 'afternoon' | 'evening' | 'night' | 'peak';
   day_of_week: 'weekday' | 'weekend';
   distance_km: number;
   duration_min: number;
   demand_level: 'low' | 'medium' | 'high' | 'surge';
   location_zone?: string;
+  vehicle_type?: TaxiVehicleType;
+  is_premium?: boolean;
+  subscription_discount?: number;
+  promo_code?: string;
+  distance?: number;
 }
 
 export interface TaxiInvoice {
@@ -117,11 +135,16 @@ export interface TaxiInvoice {
   user_id: string;
   amount: number;
   payment_method: PaymentMethod;
-  status: 'pending' | 'paid' | 'overdue';
+  status: 'pending' | 'paid' | 'overdue' | 'cancelled' | 'draft' | 'issued';
   created_at: string;
   paid_at?: string;
   due_date: string;
   invoice_number: string;
+  issued_at?: string;
+  total?: number;
+  subtotal?: number;
+  tax?: number;
+  discount?: number;
 }
 
 export interface BusinessRateEstimate {
@@ -141,4 +164,43 @@ export interface SavedLocation {
   is_current_location?: boolean;
   last_used?: string;
   created_at?: string;
+}
+
+export interface TaxiLocation {
+  latitude: number;
+  longitude: number;
+  timestamp?: string;
+  accuracy?: number;
+  speed?: number;
+  heading?: number;
+}
+
+export interface RideShareRequest {
+  id: string;
+  user_id: string;
+  ride_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  seats_requested: number;
+}
+
+export interface TaxiSubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  price_monthly: number;
+  price_yearly: number;
+  features: string[];
+  discount_percentage: number;
+  max_rides_per_month: number;
+  is_popular: boolean;
+}
+
+export interface TaxiPricingParams {
+  distance_km: number;
+  duration_min: number;
+  vehicle_type: TaxiVehicleType;
+  time_of_day: 'morning' | 'afternoon' | 'evening' | 'night';
+  is_premium?: boolean;
+  subscription_type?: string;
 }

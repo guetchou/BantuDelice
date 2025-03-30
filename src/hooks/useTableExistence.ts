@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/config/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseTableExistenceResult {
   exists: boolean;
