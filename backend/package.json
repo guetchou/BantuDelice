@@ -20,7 +20,10 @@
     "docker:rebuild": "docker-compose down && docker-compose up -d --build",
     "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d",
     "docker:prod:logs": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f",
-    "docker:prod:down": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml down"
+    "docker:prod:down": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml down",
+    "docker:init": "mkdir -p db && mkdir -p traefik && mkdir -p logs && mkdir -p uploads",
+    "docker:setup": "npm run docker:init && npm run docker:build && npm run docker:up",
+    "docker:prod:setup": "npm run docker:init && npm run docker:build && npm run docker:prod"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

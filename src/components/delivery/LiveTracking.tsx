@@ -6,8 +6,6 @@ import { useToast } from '@/hooks/use-toast';
 import { MapPin, MapIcon } from 'lucide-react';
 import { useTableExistence } from '@/hooks/useTableExistence';
 import { OrderTrackingRoutePoint } from '@/types/orderTracking';
-import { LeafletMap, LeafletTileLayer, LeafletMarker, LeafletPopup } from 'react-leaflet';
-import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 interface LiveTrackingProps {
@@ -22,7 +20,7 @@ const LiveTracking = ({ orderId }: LiveTrackingProps) => {
   const [restaurant, setRestaurant] = useState<{ name: string; latitude: number; longitude: number } | null>(null);
   const [deliveryAddress, setDeliveryAddress] = useState<{ address: string; latitude: number; longitude: number } | null>(null);
   const { toast } = useToast();
-  const { exists: trackingTableExists } = useTableExistence({ tables: ["delivery_tracking"] });
+  const { exists: trackingTableExists } = useTableExistence("delivery_tracking");
   
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -101,43 +99,49 @@ const LiveTracking = ({ orderId }: LiveTrackingProps) => {
     const fetchTrackingData = async () => {
       // If tracking table exists, get real-time tracking data
       if (trackingTableExists) {
-        const { data: trackingData, error: trackingError } = await supabase
-          .from('delivery_tracking')
-          .select('*')
-          .eq('order_id', orderId)
-          .order('timestamp', { ascending: true });
+        try {
+          const { data: trackingData, error: trackingError } = await supabase
+            .from('delivery_tracking')
+            .select('*')
+            .eq('order_id', orderId)
+            .order('updated_at', { ascending: true });
+            
+          if (trackingError) throw trackingError;
           
-        if (trackingError) throw trackingError;
-        
-        if (trackingData && trackingData.length > 0) {
-          setDeliveryRoute(
-            trackingData.map(point => ({
-              latitude: point.latitude,
-              longitude: point.longitude,
-              timestamp: point.updated_at,
-              status: point.status
-            }))
-          );
-          
-          // Set current location to the most recent
-          const latest = trackingData[trackingData.length - 1];
-          setCurrentLocation([latest.latitude, latest.longitude]);
+          if (trackingData && trackingData.length > 0) {
+            setDeliveryRoute(
+              trackingData.map(point => ({
+                latitude: point.latitude || 0,
+                longitude: point.longitude || 0,
+                timestamp: point.updated_at,
+                status: point.status
+              }))
+            );
+            
+            // Set current location to the most recent
+            const latest = trackingData[trackingData.length - 1];
+            if (latest.latitude && latest.longitude) {
+              setCurrentLocation([latest.latitude, latest.longitude]);
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching tracking data:', err);
         }
       }
     };
     
     fetchOrderDetails();
-  }, [orderId, trackingTableExists]);
+  }, [orderId, trackingTableExists, toast]);
   
   // For demo purposes, simulate a moving driver if no tracking data
   useEffect(() => {
     if (!trackingTableExists && restaurant && deliveryAddress && !currentLocation) {
       // Start from restaurant
-      let position = [restaurant.latitude, restaurant.longitude];
+      let position = [restaurant.latitude, restaurant.longitude] as [number, number];
       
       // Create a path between restaurant and delivery address
       const simulateMovement = setInterval(() => {
-        const target = [deliveryAddress.latitude, deliveryAddress.longitude];
+        const target = [deliveryAddress.latitude, deliveryAddress.longitude] as [number, number];
         const newLat = position[0] + (target[0] - position[0]) * 0.05;
         const newLng = position[1] + (target[1] - position[1]) * 0.05;
         
@@ -215,26 +219,6 @@ const LiveTracking = ({ orderId }: LiveTrackingProps) => {
       ? currentLocation 
       : [0, 0] as [number, number];
 
-  const createCustomIcon = (iconName: 'restaurant' | 'home' | 'delivery') => {
-    const colors = {
-      restaurant: '#8B5CF6', // purple
-      home: '#2DD4BF', // teal
-      delivery: '#F59E0B', // amber
-    };
-    
-    const color = colors[iconName];
-    return divIcon({
-      className: '',
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-      html: `
-        <div style="background-color: ${color}; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px ${color};">
-          <div style="background-color: white; width: 8px; height: 8px; border-radius: 50%;"></div>
-        </div>
-      `
-    });
-  };
-  
   return (
     <Card className="w-full overflow-hidden">
       <CardHeader className="px-6 py-4">
@@ -259,6 +243,6 @@ const LiveTracking = ({ orderId }: LiveTrackingProps) => {
       </CardContent>
     </Card>
   );
-}
+};
 
 export default LiveTracking;

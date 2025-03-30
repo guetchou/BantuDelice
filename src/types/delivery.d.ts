@@ -121,6 +121,7 @@ export interface DeliverySettings {
   estimated_delivery_time?: number;
   accepted_external_services?: string[];
   auto_accept_orders?: boolean;
+  delivery_hours?: any;
 }
 
 export interface DeliveryRoute {
@@ -179,6 +180,8 @@ export interface ExternalDeliveryService {
   credentials?: any;
   created_at: string;
   updated_at?: string;
+  base_fee?: number;
+  fee_per_km?: number;
 }
 
 export type DeliveryType = 'standard' | 'express' | 'scheduled' | 'restaurant';

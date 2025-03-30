@@ -6,6 +6,11 @@ services:
     restart: always
     environment:
       - NODE_ENV=production
+      - DB_HOST=db
+      - DB_USER=buntudelice
+      - DB_PASSWORD=${MYSQL_PASSWORD:-buntudelice_password}
+      - DB_NAME=buntudelice
+      - JWT_SECRET=${JWT_SECRET:-buntudelice_secret_key}
     volumes:
       - ./logs:/app/logs:ro
     deploy:
@@ -22,8 +27,8 @@ services:
   db:
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_password}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-buntudelice_password}
     deploy:
       resources:
         limits:

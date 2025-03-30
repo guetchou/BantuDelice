@@ -16,9 +16,9 @@ services:
       - NODE_ENV=production
       - DB_HOST=db
       - DB_USER=buntudelice
-      - DB_PASSWORD=buntudelice_password
+      - DB_PASSWORD=${MYSQL_PASSWORD:-buntudelice_password}
       - DB_NAME=buntudelice
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-buntudelice_secret_key}
     depends_on:
       - db
     restart: unless-stopped

@@ -82,12 +82,16 @@ export function useMultiTableExistence(options: MultiTableExistenceOptions) {
         const results: Record<string, boolean> = {};
 
         for (const table of options.tables) {
-          const { error } = await supabase
-            .from(table)
-            .select('*', { count: 'exact', head: true })
-            .limit(1);
-
-          results[table] = !error;
+          try {
+            const { error } = await supabase
+              .from(table)
+              .select('*', { count: 'exact', head: true })
+              .limit(1);
+            
+            results[table] = !error;
+          } catch (err) {
+            results[table] = false;
+          }
         }
 
         if (isMounted) {

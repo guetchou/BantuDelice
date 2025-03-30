@@ -1,67 +1,106 @@
 
 import { TaxiVehicleType } from '@/types/taxi';
 
-const BASE_RATES = {
-  standard: 500, // 500 FCFA per km
-  comfort: 650,  // 650 FCFA per km
-  premium: 800,  // 800 FCFA per km
-  van: 900,      // 900 FCFA per km
-  electric: 700, // 700 FCFA per km
-  scooter: 450   // 450 FCFA per km
-};
-
-const MIN_FARE = {
-  standard: 1000,
-  comfort: 1500,
-  premium: 2500,
-  van: 3000,
-  electric: 1800,
-  scooter: 800
-};
-
-const BOOKING_FEE = 500; // 500 FCFA booking fee
-
 /**
- * Provides a quick fare estimate based on distance and vehicle type
- * @param distance Distance in kilometers
- * @param vehicleType Type of vehicle
- * @returns Estimated fare in FCFA
+ * Estimates the price for a ride based on distance and vehicle type
+ * 
+ * @param distance_km Distance in kilometers
+ * @param vehicleType Type of vehicle requested
+ * @returns Estimated price in FCFA
  */
-export const estimatePrice = (distance: number, vehicleType: TaxiVehicleType): number => {
-  // Apply the rate based on vehicle type
-  const rate = BASE_RATES[vehicleType] || BASE_RATES.standard;
-  const minFare = MIN_FARE[vehicleType] || MIN_FARE.standard;
+export const estimatePrice = (distance_km: number, vehicleType: TaxiVehicleType): number => {
+  // Base prices for different vehicle types (in FCFA)
+  const basePrices = {
+    standard: 1000,
+    premium: 1500,
+    suv: 1800,
+    van: 2000,
+    motorcycle: 800,
+    bicycle: 500,
+    scooter: 700,
+    car: 1000
+  };
   
-  // Calculate the base fare
-  let fare = Math.round(distance * rate);
+  // Per kilometer rates for different vehicle types (in FCFA)
+  const perKmRates = {
+    standard: 300,
+    premium: 400,
+    suv: 450,
+    van: 500,
+    motorcycle: 200,
+    bicycle: 150,
+    scooter: 180,
+    car: 300
+  };
   
-  // Apply minimum fare if applicable
-  fare = Math.max(fare, minFare);
+  // Calculate the price based on base price and distance
+  const basePrice = basePrices[vehicleType];
+  const distanceCharge = perKmRates[vehicleType] * distance_km;
   
-  // Add booking fee
-  fare += BOOKING_FEE;
+  // Total price calculation with rounding to nearest 100 FCFA
+  const totalPrice = Math.round((basePrice + distanceCharge) / 100) * 100;
   
-  // Round to nearest 100 FCFA
-  return Math.ceil(fare / 100) * 100;
-};
-
-/**
- * Get a quick price estimate formatted as a string
- */
-export const getQuickEstimate = (distance: number, vehicleType: TaxiVehicleType): string => {
-  const price = estimatePrice(distance, vehicleType);
-  return `${new Intl.NumberFormat('fr-FR').format(price)} FCFA`;
+  // Ensure minimum price
+  return Math.max(totalPrice, basePrices[vehicleType]);
 };
 
 /**
- * Generate a price range for display purposes
+ * Get a detailed estimate with breakdown of costs
  */
-export const getPriceRange = (distance: number, vehicleType: TaxiVehicleType): {min: number, max: number, currency: string} => {
-  const basePrice = estimatePrice(distance, vehicleType);
+export const getDetailedEstimate = (distance_km: number, duration_min: number, vehicleType: TaxiVehicleType) => {
+  // Base prices for different vehicle types (in FCFA)
+  const basePrices = {
+    standard: 1000,
+    premium: 1500,
+    suv: 1800,
+    van: 2000,
+    motorcycle: 800,
+    bicycle: 500,
+    scooter: 700,
+    car: 1000
+  };
   
-  // Create range of +/- 15%
-  const min = Math.floor((basePrice * 0.85) / 100) * 100;
-  const max = Math.ceil((basePrice * 1.15) / 100) * 100;
+  // Per kilometer rates for different vehicle types (in FCFA)
+  const perKmRates = {
+    standard: 300,
+    premium: 400,
+    suv: 450,
+    van: 500,
+    motorcycle: 200,
+    bicycle: 150,
+    scooter: 180,
+    car: 300
+  };
   
-  return { min, max, currency: 'FCFA' };
+  // Per minute waiting rates (in FCFA)
+  const perMinuteRates = {
+    standard: 20,
+    premium: 30,
+    suv: 35,
+    van: 40,
+    motorcycle: 15,
+    bicycle: 10,
+    scooter: 12,
+    car: 20
+  };
+  
+  // Calculate the components of the price
+  const basePrice = basePrices[vehicleType];
+  const distanceCharge = perKmRates[vehicleType] * distance_km;
+  const timeCharge = perMinuteRates[vehicleType] * duration_min;
+  const serviceFee = Math.round((basePrice + distanceCharge + timeCharge) * 0.05); // 5% service fee
+  
+  // Total price calculation with rounding to nearest 100 FCFA
+  const subtotal = basePrice + distanceCharge + timeCharge;
+  const totalPrice = Math.round((subtotal + serviceFee) / 100) * 100;
+  
+  return {
+    basePrice,
+    distanceCharge,
+    timeCharge,
+    serviceFee,
+    subtotal,
+    totalPrice,
+    currency: 'FCFA'
+  };
 };
