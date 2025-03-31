@@ -72,3 +72,33 @@ export function calculateDistance(
 function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
 }
+
+export function formatDate(date: Date | string, format: string = 'short'): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  
+  if (format === 'short') {
+    return d.toLocaleDateString('fr-FR');
+  } else if (format === 'long') {
+    return d.toLocaleDateString('fr-FR', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  } else if (format === 'time') {
+    return d.toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  } else if (format === 'datetime') {
+    return d.toLocaleDateString('fr-FR', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+  
+  return d.toLocaleDateString('fr-FR');
+}

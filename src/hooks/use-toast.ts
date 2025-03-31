@@ -10,11 +10,11 @@ export type ToastProps = {
 };
 
 export const useToast = () => {
-  const { toast } = useShadcnToast();
+  const { toast: shadcnToast } = useShadcnToast();
 
   return {
     toast: ({ title, description, variant = "default", action, duration = 5000 }: ToastProps) => {
-      return toast({
+      return shadcnToast({
         title,
         description,
         variant,
@@ -26,3 +26,15 @@ export const useToast = () => {
 };
 
 export { ToastAction } from "@/components/ui/toast";
+
+// For backwards compatibility with directly imported toast
+export const toast = ({ title, description, variant = "default", action, duration = 5000 }: ToastProps) => {
+  const { toast: internalToast } = useToast();
+  return internalToast({
+    title,
+    description,
+    variant,
+    action,
+    duration,
+  });
+};

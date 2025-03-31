@@ -6,14 +6,18 @@ import { Card } from "@/components/ui/card";
 import { Copy, Share2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useApiAuth } from "@/contexts/ApiAuthContext";
+import useFeature from "@/utils/featureFlags";
 
 const ReferralProgram = () => {
   const { user } = useApiAuth();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const isEnabled = useFeature('referral_program');
   
-  // Générer un code de parrainage basé sur l'email ou un ID utilisateur
-  const referralCode = user ? `BUNTUDELIVERY_${user.email?.substring(0, 5).toUpperCase()}${Math.floor(Math.random() * 1000)}` : "BUNTUDELIVERY";
+  // Generate a referral code based on email or user ID
+  const referralCode = user 
+    ? `BUNTUDELIVERY_${user.email?.substring(0, 5).toUpperCase()}${Math.floor(Math.random() * 1000)}` 
+    : "BUNTUDELIVERY";
   const referralLink = `https://buntudelice.com/signup?ref=${referralCode}`;
 
   const handleCopy = () => {
@@ -42,6 +46,10 @@ const ReferralProgram = () => {
       handleCopy();
     }
   };
+
+  if (!isEnabled) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">

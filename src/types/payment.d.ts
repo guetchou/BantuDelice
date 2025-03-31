@@ -1,190 +1,81 @@
 
-export interface Payment {
+// Payment method types
+export type PaymentMethod = 'mobile' | 'wallet' | 'company' | 'subscription';
+
+// Payment statuses
+export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
+
+// Transaction interface
+export interface Transaction {
   id: string;
-  order_id: string;
   user_id: string;
   amount: number;
-  payment_method: string;
-  payment_provider: string;
+  type: 'deposit' | 'withdrawal' | 'payment' | 'refund' | 'credit';
+  status: PaymentStatus;
+  created_at: string;
+  updated_at: string;
+  reference?: string;
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
+// Payment details for orders
+export interface PaymentDetails {
+  method: PaymentMethod;
   status: PaymentStatus;
   transaction_id?: string;
-  metadata?: Record<string, any>;
-  created_at: string;
-  updated_at?: string;
-}
-
-export type PaymentInsert = Omit<Payment, 'id' | 'created_at' | 'updated_at'>;
-export type PaymentUpdate = Partial<PaymentInsert>;
-
-export interface PaymentMethod {
-  id: string;
-  user_id: string;
-  payment_type: 'mobile' | 'card' | 'bank';
-  provider?: string;
-  account_number?: string;
-  last_four: string;
-  is_default: boolean;
-  metadata?: Record<string, any>;
-  created_at: string;
-  updated_at?: string;
-}
-
-export type PaymentMethodInsert = Omit<PaymentMethod, 'id' | 'created_at' | 'updated_at'>;
-export type PaymentMethodUpdate = Partial<PaymentMethodInsert>;
-
-export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded' | 'partially_refunded';
-
-export interface UserPaymentMethod {
-  id: string;
-  user_id: string;
-  payment_type: 'mobile' | 'card' | 'bank' | 'cashdelivery';
-  provider?: string;
-  last_four: string;
-  is_default: boolean;
-  metadata?: Record<string, any>;
-  last_used?: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface PaymentGateway {
-  id: string;
-  name: string;
-  type: 'mobile_money' | 'card' | 'bank' | 'cash';
-  is_active: boolean;
-  configuration: Record<string, any>;
-  fee_percentage?: number;
-  fee_fixed?: number;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface PaymentCommission {
-  id: string;
-  service_type: 'restaurant' | 'delivery' | 'taxi' | 'other';
-  rate: number;
-  fixed_amount?: number;
-  min_amount?: number;
-  max_amount?: number;
-  is_percentage: boolean;
-  effective_from: string;
-  effective_to?: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  billing_cycle: 'monthly' | 'quarterly' | 'yearly';
-  features: string[];
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface MobileMoneyProvider {
-  id: string;
-  name: string;
-  code: 'mtn' | 'airtel' | 'orange';
-  logo_url?: string;
-  country_codes: string[];
-  is_active: boolean;
-  min_amount?: number;
-  max_amount?: number;
-  configuration: Record<string, any>;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface MobileMoneyTransaction {
-  id: string;
-  user_id: string;
-  provider: 'mtn' | 'airtel' | 'orange';
-  phone_number: string;
   amount: number;
   currency: string;
-  status: PaymentStatus;
-  transaction_reference: string;
-  provider_reference?: string;
-  metadata?: Record<string, any>;
-  created_at: string;
-  completed_at?: string;
-  failed_at?: string;
-  error_message?: string;
+  receipt_url?: string;
+  processor_response?: string;
+  paid_at?: string;
 }
 
-export interface Refund {
-  id: string;
-  payment_id: string;
-  order_id?: string;
-  amount: number;
-  reason: string;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
-  refund_type: 'original_payment' | 'wallet_credit' | 'cashback';
-  refunded_at?: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface CashbackPromotion {
-  id: string;
-  name: string;
-  description: string;
-  rate: number;
-  is_percentage: boolean;
-  min_order_amount?: number;
-  start_date: string;
-  end_date?: string;
-  payment_methods?: ('mtn' | 'airtel' | 'orange' | 'card' | 'wallet')[];
-  user_type?: 'new' | 'existing' | 'all';
-  is_active: boolean;
-  created_at: string;
-  updated_at?: string;
-}
-
-// Define cashback related interfaces
-export interface Cashback {
+// Wallet interface
+export interface Wallet {
   id: string;
   user_id: string;
   balance: number;
-  lifetime_earned: number;
-  tier: 'bronze' | 'silver' | 'gold';
-  tier_progress: number;
-  last_updated: string;
-  expiry_date?: string;
+  currency: string;
   created_at: string;
+  updated_at: string;
+  last_transaction_at?: string;
 }
 
-export interface CashbackTransaction {
+// Mobile payment provider
+export interface MobilePaymentProvider {
+  id: string;
+  name: string;
+  logo_url: string;
+  country_code: string;
+  is_active: boolean;
+  processing_fee?: number;
+  minimum_amount?: number;
+}
+
+// Payment form data
+export interface PaymentFormData {
+  cardNumber?: string;
+  cardHolder?: string;
+  expiryDate?: string;
+  cvv?: string;
+  mobileNumber?: string;
+  emailAddress?: string;
+  savePaymentMethod?: boolean;
+  provider?: string;
+}
+
+// Saved payment method
+export interface SavedPaymentMethod {
   id: string;
   user_id: string;
-  amount: number;
-  type: 'earned' | 'used' | 'expired' | 'transferred' | 'received' | 'refunded';
-  reference_id?: string;
-  reference_type?: 'order' | 'transfer' | 'promotion' | 'refund';
-  receiver_id?: string;
-  sender_id?: string;
-  description?: string;
+  type: 'card' | 'mobile' | 'bank';
+  last_four?: string;
+  provider?: string;
+  expires?: string;
+  is_default: boolean;
   created_at: string;
-}
-
-export interface CashbackTransfer {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  amount: number;
-  status: 'pending' | 'completed' | 'failed';
-  description?: string;
-  created_at: string;
-}
-
-export interface CashbackTier {
-  name: 'bronze' | 'silver' | 'gold';
-  minimum_points: number;
-  cashback_rate: number;
-  benefits: string[];
-  icon: string;
-  color: string;
+  updated_at: string;
+  label?: string;
+  icon?: string;
 }

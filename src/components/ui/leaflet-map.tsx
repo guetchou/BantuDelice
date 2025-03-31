@@ -1,7 +1,14 @@
 
 import React, { ReactNode } from 'react';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline } from 'react-leaflet';
+import { 
+  MapContainer as LeafletMapContainer, 
+  TileLayer as LeafletTileLayer, 
+  Marker as LeafletMarker, 
+  Popup as LeafletPopup, 
+  Circle as LeafletCircle, 
+  Polyline as LeafletPolyline 
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for Leaflet's default marker icon
@@ -40,19 +47,19 @@ export const Map: React.FC<MapProps> = ({
   scrollWheelZoom = true
 }) => {
   return (
-    <MapContainer
+    <LeafletMapContainer
       center={center}
       zoom={zoom}
       scrollWheelZoom={scrollWheelZoom}
       className={className}
       style={{ height: '100%', width: '100%', ...style }}
     >
-      <TileLayer
+      <LeafletTileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {children}
-    </MapContainer>
+    </LeafletMapContainer>
   );
 };
 
@@ -70,13 +77,13 @@ export const CustomMarker: React.FC<MarkerProps> = ({
   eventHandlers = {}
 }) => {
   return (
-    <Marker 
+    <LeafletMarker 
       position={position} 
       icon={icon}
       eventHandlers={eventHandlers}
     >
-      {children && <Popup>{children}</Popup>}
-    </Marker>
+      {children && <LeafletPopup>{children}</LeafletPopup>}
+    </LeafletMarker>
   );
 };
 
@@ -98,13 +105,13 @@ export const CustomCircle: React.FC<CircleProps> = ({
   children
 }) => {
   return (
-    <Circle
+    <LeafletCircle
       center={center}
       pathOptions={pathOptions}
       radius={radius}
     >
-      {children && <Popup>{children}</Popup>}
-    </Circle>
+      {children && <LeafletPopup>{children}</LeafletPopup>}
+    </LeafletCircle>
   );
 };
 
@@ -124,11 +131,12 @@ export const CustomPolyline: React.FC<PolylineProps> = ({
   dashArray = ''
 }) => {
   return (
-    <Polyline
+    <LeafletPolyline
       positions={positions}
       pathOptions={{ color, weight, opacity, dashArray }}
     />
   );
 };
 
-export default MapContainer;
+export { LeafletMapContainer as MapContainer, LeafletTileLayer as TileLayer, LeafletMarker as Marker, LeafletPopup as Popup };
+export default LeafletMapContainer;

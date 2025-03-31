@@ -1,257 +1,244 @@
 
 import React, { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { CreditCard, Banknote, Smartphone } from "lucide-react";
-import PaymentButton from "./PaymentButton";
-import { formatPrice } from '@/components/taxi/booking-form/bookingFormUtils';
-import { toast } from 'sonner';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader2 } from "lucide-react";
+import { PaymentFormData } from '@/types/payment';
 
 interface PaymentFormProps {
   amount: number;
   orderId: string;
-  onPaymentComplete: () => Promise<void>;
+  onPaymentComplete: () => void;
   description?: string;
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({
-  amount,
-  orderId,
-  onPaymentComplete,
-  description = 'Paiement'
+export const PaymentForm: React.FC<PaymentFormProps> = ({ 
+  amount, 
+  orderId, 
+  onPaymentComplete, 
+  description = "Paiement"
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState<string>('mobile_money');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [cardNumber, setCardNumber] = useState<string>('');
-  const [cardExpiry, setCardExpiry] = useState<string>('');
-  const [cardCvv, setCardCvv] = useState<string>('');
-  const [cardName, setCardName] = useState<string>('');
-  
-  const handlePayment = async () => {
-    setIsProcessing(true);
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'mobile' | 'cash'>('mobile');
+  const [formData, setFormData] = useState<PaymentFormData>({
+    mobileNumber: '',
+    provider: 'orange_money'
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (paymentMethod === 'mobile' && !formData.mobileNumber) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez fournir un numéro de téléphone valide",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
-      // Validation basique des données de paiement
-      if (paymentMethod === 'mobile_money' && !phoneNumber) {
-        throw new Error('Veuillez entrer un numéro de téléphone');
-      } else if (paymentMethod === 'card') {
-        if (!cardNumber || !cardExpiry || !cardCvv || !cardName) {
-          throw new Error('Veuillez remplir tous les champs de la carte');
-        }
-      }
+      setIsProcessing(true);
       
-      // Simuler un appel API de paiement
+      // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simuler le succès du paiement
-      toast.success("Paiement effectué avec succès");
+      toast({
+        title: "Paiement réussi",
+        description: "Votre paiement a été traité avec succès."
+      });
       
-      // Appeler le callback de succès de paiement
-      await onPaymentComplete();
+      onPaymentComplete();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue lors du paiement';
-      toast.error(errorMessage);
+      console.error('Erreur de paiement:', error);
+      toast({
+        title: "Échec du paiement",
+        description: "Une erreur s'est produite lors du traitement de votre paiement. Veuillez réessayer.",
+        variant: "destructive"
+      });
     } finally {
       setIsProcessing(false);
     }
   };
-  
-  const formatMobileNumber = (value: string) => {
-    // Formater le numéro de téléphone pour l'affichage (ex: 06 123 45 67)
-    return value.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
-  };
-  
-  const formatCardNumber = (value: string) => {
-    // Formater le numéro de carte pour l'affichage (ex: 1234 5678 9012 3456)
-    return value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
-  };
-  
-  const formatExpiryDate = (value: string) => {
-    // Formater la date d'expiration (MM/YY)
-    return value.replace(/\D/g, '').replace(/(\d{2})(\d{0,2})/, '$1/$2').substring(0, 5);
-  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-semibold">Détails du paiement</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <CardTitle className="mb-2">Méthode de paiement</CardTitle>
+          <RadioGroup 
+            value={paymentMethod} 
+            onValueChange={(value) => setPaymentMethod(value as 'card' | 'mobile' | 'cash')}
+            className="grid grid-cols-3 gap-4 mb-6"
+          >
+            <div className="border rounded-lg p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/10">
+              <RadioGroupItem value="mobile" id="mobile" className="sr-only" />
+              <Label htmlFor="mobile" className="cursor-pointer flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                </div>
+                <span className="text-sm font-medium">Mobile Money</span>
+              </Label>
+            </div>
+
+            <div className="border rounded-lg p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/10">
+              <RadioGroupItem value="card" id="card" className="sr-only" />
+              <Label htmlFor="card" className="cursor-pointer flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                </div>
+                <span className="text-sm font-medium">Carte bancaire</span>
+              </Label>
+            </div>
+
+            <div className="border rounded-lg p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/10">
+              <RadioGroupItem value="cash" id="cash" className="sr-only" />
+              <Label htmlFor="cash" className="cursor-pointer flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+                </div>
+                <span className="text-sm font-medium">Espèces</span>
+              </Label>
+            </div>
+          </RadioGroup>
         </div>
-        <div className="text-2xl font-bold text-primary">
-          {formatPrice(amount)}
+
+        {paymentMethod === 'mobile' && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="mobileNumber">Numéro de téléphone</Label>
+              <Input
+                id="mobileNumber"
+                name="mobileNumber"
+                placeholder="Exemple: 07XXXXXXXX"
+                value={formData.mobileNumber}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="provider">Choisir un opérateur</Label>
+              <RadioGroup 
+                value={formData.provider || 'orange_money'} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, provider: value }))}
+                className="grid grid-cols-3 gap-2"
+              >
+                <div className="border rounded-lg p-3 text-center cursor-pointer hover:bg-muted/50 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/10">
+                  <RadioGroupItem value="orange_money" id="orange_money" className="sr-only" />
+                  <Label htmlFor="orange_money" className="cursor-pointer text-sm">Orange Money</Label>
+                </div>
+                <div className="border rounded-lg p-3 text-center cursor-pointer hover:bg-muted/50 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/10">
+                  <RadioGroupItem value="mtn_momo" id="mtn_momo" className="sr-only" />
+                  <Label htmlFor="mtn_momo" className="cursor-pointer text-sm">MTN MoMo</Label>
+                </div>
+                <div className="border rounded-lg p-3 text-center cursor-pointer hover:bg-muted/50 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/10">
+                  <RadioGroupItem value="airtel_money" id="airtel_money" className="sr-only" />
+                  <Label htmlFor="airtel_money" className="cursor-pointer text-sm">Airtel Money</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+        )}
+
+        {paymentMethod === 'card' && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="cardNumber">Numéro de carte</Label>
+              <Input
+                id="cardNumber"
+                name="cardNumber"
+                placeholder="0000 0000 0000 0000"
+                value={formData.cardNumber || ''}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="expiryDate">Date d'expiration</Label>
+                <Input
+                  id="expiryDate"
+                  name="expiryDate"
+                  placeholder="MM/AA"
+                  value={formData.expiryDate || ''}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cvv">CVV</Label>
+                <Input
+                  id="cvv"
+                  name="cvv"
+                  placeholder="123"
+                  type="password"
+                  maxLength={4}
+                  value={formData.cvv || ''}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="cardHolder">Nom du titulaire</Label>
+              <Input
+                id="cardHolder"
+                name="cardHolder"
+                placeholder="Nom complet"
+                value={formData.cardHolder || ''}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          </div>
+        )}
+
+        {paymentMethod === 'cash' && (
+          <div className="space-y-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-amber-800 text-sm">
+                Vous paierez en espèces au moment de la livraison. Assurez-vous d'avoir le montant exact.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="pt-4 border-t">
+          <div className="flex justify-between mb-2">
+            <span className="text-muted-foreground">Montant total:</span>
+            <span className="font-semibold">{amount.toLocaleString('fr-FR')} FCFA</span>
+          </div>
+          
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Traitement en cours...
+              </>
+            ) : (
+              `Payer ${amount.toLocaleString('fr-FR')} FCFA`
+            )}
+          </Button>
         </div>
       </div>
-      
-      <Tabs 
-        defaultValue="mobile_money" 
-        value={paymentMethod}
-        onValueChange={setPaymentMethod}
-        className="w-full"
-      >
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="mobile_money" className="flex items-center gap-2 text-xs sm:text-sm">
-            <Smartphone className="h-4 w-4" />
-            <span className="hidden sm:inline">Mobile Money</span>
-          </TabsTrigger>
-          <TabsTrigger value="card" className="flex items-center gap-2 text-xs sm:text-sm">
-            <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Carte</span>
-          </TabsTrigger>
-          <TabsTrigger value="cash" className="flex items-center gap-2 text-xs sm:text-sm">
-            <Banknote className="h-4 w-4" />
-            <span className="hidden sm:inline">Espèces</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        {/* Mobile Money */}
-        <TabsContent value="mobile_money" className="pt-6">
-          <Card>
-            <CardContent className="pt-6 pb-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Numéro de téléphone Mobile Money</Label>
-                <Input
-                  id="phone"
-                  placeholder="06 123 45 67"
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    // Ne garder que les chiffres
-                    const digits = e.target.value.replace(/\D/g, '');
-                    if (digits.length <= 8) {
-                      setPhoneNumber(digits);
-                    }
-                  }}
-                  className="pl-12"
-                />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <span className="text-sm text-gray-500">+242</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <div className="flex-1 flex items-center gap-2">
-                  <img src="/assets/mobile-money/mtn-momo-logo.png" alt="MTN MoMo" className="h-5" />
-                  <span>MTN MoMo</span>
-                </div>
-                <div className="flex-1 flex items-center gap-2">
-                  <img src="/assets/mobile-money/airtel-logo.png" alt="Airtel Money" className="h-5" />
-                  <span>Airtel Money</span>
-                </div>
-              </div>
-              
-              <div className="bg-blue-50 p-3 rounded-md border border-blue-100 text-blue-600 text-sm">
-                <p>Un code de confirmation sera envoyé à ce numéro après validation.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Carte Bancaire */}
-        <TabsContent value="card" className="pt-6">
-          <Card>
-            <CardContent className="pt-6 pb-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="card-name">Nom sur la carte</Label>
-                <Input
-                  id="card-name"
-                  placeholder="Ex: JEAN DUPONT"
-                  value={cardName}
-                  onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="card-number">Numéro de carte</Label>
-                <div className="relative">
-                  <Input
-                    id="card-number"
-                    placeholder="1234 5678 9012 3456"
-                    value={cardNumber}
-                    onChange={(e) => {
-                      const formattedValue = formatCardNumber(e.target.value);
-                      if (formattedValue.replace(/\s/g, '').length <= 16) {
-                        setCardNumber(formattedValue);
-                      }
-                    }}
-                  />
-                  <div className="absolute inset-y-0 right-3 flex items-center">
-                    <CreditCard className="h-5 w-5 text-gray-400" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="expiry">Date d'expiration</Label>
-                  <Input
-                    id="expiry"
-                    placeholder="MM/YY"
-                    value={cardExpiry}
-                    onChange={(e) => {
-                      const formattedValue = formatExpiryDate(e.target.value);
-                      setCardExpiry(formattedValue);
-                    }}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="cvv">Code de sécurité (CVV)</Label>
-                  <Input
-                    id="cvv"
-                    type="password"
-                    placeholder="123"
-                    value={cardCvv}
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, '');
-                      if (digits.length <= 3) {
-                        setCardCvv(digits);
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-blue-50 p-3 rounded-md border border-blue-100 text-blue-600 text-sm">
-                <p>Vos données de carte sont sécurisées et cryptées.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Espèces */}
-        <TabsContent value="cash" className="pt-6">
-          <Card>
-            <CardContent className="pt-6 pb-6 space-y-4">
-              <div className="text-center space-y-3">
-                <Banknote className="h-12 w-12 mx-auto text-primary" />
-                <h3 className="text-lg font-medium">Paiement en espèces</h3>
-                <p className="text-sm text-muted-foreground">
-                  Vous paierez directement au chauffeur à la fin de la course.
-                </p>
-              </div>
-              
-              <Separator />
-              
-              <div className="bg-amber-50 p-3 rounded-md border border-amber-100 text-amber-700 text-sm">
-                <p>Assurez-vous d'avoir le montant exact pour faciliter la transaction.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      
-      <div className="pt-4">
-        <PaymentButton
-          isProcessing={isProcessing}
-          handlePayment={handlePayment}
-        />
-      </div>
-    </div>
+    </form>
   );
 };
 
