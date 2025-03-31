@@ -41,8 +41,8 @@ export const Map: React.FC<MapProps> = ({
 }) => {
   return (
     <MapContainer
-      center={center}
-      zoom={zoom}
+      defaultCenter={center}
+      defaultZoom={zoom}
       scrollWheelZoom={scrollWheelZoom}
       className={className}
       style={{ height: '100%', width: '100%', ...style }}
@@ -100,8 +100,8 @@ export const CustomCircle: React.FC<CircleProps> = ({
   return (
     <Circle
       center={center}
-      radius={radius}
       pathOptions={pathOptions}
+      radius={radius}
     >
       {children && <Popup>{children}</Popup>}
     </Circle>

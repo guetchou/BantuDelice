@@ -9,6 +9,9 @@ export interface CartItem {
   options?: CartItemOption[];
   notes?: string;
   combo_item?: any;
+  restaurant_id?: string;
+  image_url?: string;
+  special_instructions?: string;
 }
 
 export interface CartItemOption {
