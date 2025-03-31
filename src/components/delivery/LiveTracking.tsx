@@ -12,13 +12,25 @@ interface LiveTrackingProps {
   orderId: string;
 }
 
+interface RestaurantLocation {
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
+interface DeliveryAddressLocation {
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
 const LiveTracking = ({ orderId }: LiveTrackingProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [deliveryRoute, setDeliveryRoute] = useState<OrderTrackingRoutePoint[]>([]);
-  const [restaurant, setRestaurant] = useState<{ name: string; latitude: number; longitude: number } | null>(null);
-  const [deliveryAddress, setDeliveryAddress] = useState<{ address: string; latitude: number; longitude: number } | null>(null);
+  const [restaurant, setRestaurant] = useState<RestaurantLocation | null>(null);
+  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddressLocation | null>(null);
   const { toast } = useToast();
   const { exists: trackingTableExists } = useTableExistence("delivery_tracking");
   
@@ -44,10 +56,11 @@ const LiveTracking = ({ orderId }: LiveTrackingProps) => {
         if (orderError) throw orderError;
         
         if (orderData?.restaurants) {
+          const restaurantData = orderData.restaurants as any;
           setRestaurant({
-            name: orderData.restaurants.name || 'Restaurant',
-            latitude: orderData.restaurants.latitude || 0,
-            longitude: orderData.restaurants.longitude || 0
+            name: restaurantData.name || 'Restaurant',
+            latitude: restaurantData.latitude || 0,
+            longitude: restaurantData.longitude || 0
           });
         }
         
@@ -55,10 +68,11 @@ const LiveTracking = ({ orderId }: LiveTrackingProps) => {
         // This would typically come from a geocoding service in a real app
         // For now using dummy coordinates slightly offset from restaurant
         if (orderData?.restaurants) {
+          const restaurantData = orderData.restaurants as any;
           setDeliveryAddress({
             address: orderData.delivery_address || 'Unknown address',
-            latitude: (orderData.restaurants.latitude || 0) + 0.01,
-            longitude: (orderData.restaurants.longitude || 0) + 0.015
+            latitude: (restaurantData.latitude || 0) + 0.01,
+            longitude: (restaurantData.longitude || 0) + 0.015
           });
         }
         

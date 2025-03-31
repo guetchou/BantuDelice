@@ -53,7 +53,7 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
               <ShoppingBag className="w-4 h-4 mr-2" />
               Restaurant
             </TabsTrigger>
-            {deliveryRequest && deliveryRequest.assigned_driver_id && tablesExist.delivery_driver_ratings && (
+            {deliveryRequest && deliveryRequest.driver_id && tablesExist.delivery_driver_ratings && (
               <TabsTrigger value="driver" className="flex-1">
                 <User className="w-4 h-4 mr-2" />
                 Livreur
@@ -70,12 +70,12 @@ const DeliveryOrderComplete = ({ orderId, restaurantId }: DeliveryOrderCompleteP
             />
           </TabsContent>
           
-          {deliveryRequest && deliveryRequest.assigned_driver_id && tablesExist.delivery_driver_ratings && (
+          {deliveryRequest && deliveryRequest.driver_id && tablesExist.delivery_driver_ratings && (
             <TabsContent value="driver" className="pt-4">
               <DriverRatingTab
                 deliveryId={deliveryRequest.id}
                 orderId={orderId}
-                driverId={deliveryRequest.assigned_driver_id}
+                driverId={deliveryRequest.driver_id}
                 hasRated={hasRatedDriver}
                 onRatingSubmitted={handleDriverRatingSubmitted}
               />

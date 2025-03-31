@@ -1,27 +1,24 @@
 
-import { TaxiVehicleType, PaymentMethod } from '@/types/taxi';
-
 export interface BookingFormState {
   pickupAddress: string;
-  pickupLatitude: number | null;
-  pickupLongitude: number | null;
+  pickupLatitude?: number;
+  pickupLongitude?: number;
   destinationAddress: string;
-  destinationLatitude: number | null;
-  destinationLongitude: number | null;
+  destinationLatitude?: number;
+  destinationLongitude?: number;
   pickupTime: 'now' | 'scheduled';
-  scheduledTime: string;
-  vehicleType: TaxiVehicleType;
-  paymentMethod: PaymentMethod;
-  specialInstructions: string;
-  promoCode: string;
+  scheduledTime?: string;
+  vehicleType: string;
+  paymentMethod: string;
+  promoCode?: string;
+  specialInstructions?: string;
   isSharedRide: boolean;
-  maxPassengers: number;
 }
 
 export interface BookingFormContextType {
   formState: BookingFormState;
-  estimatedPrice: number;
   updateFormState: (updates: Partial<BookingFormState>) => void;
-  handleSharingEnabled: (enabled: boolean, maxPassengers: number) => void;
+  estimatedPrice: number;
+  handleSharingEnabled: (enabled: boolean) => void;
   getDistanceEstimate: () => number | null;
 }

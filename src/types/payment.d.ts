@@ -79,3 +79,29 @@ export interface SavedPaymentMethod {
   label?: string;
   icon?: string;
 }
+
+// Cashback interfaces
+export interface Cashback {
+  id: string;
+  user_id: string;
+  amount: number;
+  status: PaymentStatus;
+  source: string;
+  created_at: string;
+  updated_at: string;
+  expires_at?: string;
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  lifetime_earned: number;
+}
+
+export interface CashbackTransaction {
+  id: string;
+  user_id: string;
+  cashback_id: string;
+  amount: number;
+  type: 'earn' | 'redeem' | 'expire';
+  reference_id?: string;
+  reference_type?: string;
+  created_at: string;
+  description?: string;
+}

@@ -74,30 +74,29 @@ export const formatRelativeTime = (dateString: string): string => {
 /**
  * Format a message time (shows time only for today's messages, or date for older ones)
  */
-export const formatMessageTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  const today = new Date();
+export function formatMessageTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
   
-  // If the message is from today, show only the time
-  if (date.toDateString() === today.toDateString()) {
+  // If less than 24 hours ago, show time
+  if (diffInHours < 24) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
   
-  // If the message is from yesterday, show "Yesterday" + time
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) {
-    return `Hier, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  // If less than 7 days ago, show day of week
+  if (diffInHours < 168) {
+    return date.toLocaleDateString([], { weekday: 'short' }) + ' ' + 
+           date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
   
-  // Otherwise, show the full date and time
+  // Otherwise show full date
   return date.toLocaleDateString([], { 
-    day: 'numeric', 
-    month: 'short',
-    hour: '2-digit', 
-    minute: '2-digit' 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
   });
-};
+}
 
 export default {
   formatDate,

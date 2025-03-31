@@ -1,7 +1,8 @@
 
+import React from 'react';
+import L from 'leaflet';
 import { Marker, Popup } from 'react-leaflet';
-import { divIcon } from 'leaflet';
-import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
+import { DeliveryDriver, DeliveryRequest, DeliveryStatus } from '@/types/delivery';
 
 interface DriverMarkerProps {
   driver: DeliveryDriver;
@@ -11,11 +12,13 @@ export const DriverMarker = ({ driver }: DriverMarkerProps) => {
   // Vérifier si le livreur a des coordonnées
   if (!driver.current_latitude || !driver.current_longitude) return null;
   
+  // Créer une icône personnalisée
+  const driverIcon = createDriverIcon(driver.vehicle_type || 'bike');
+  
   return (
     <Marker
       key={driver.id}
       position={[driver.current_latitude, driver.current_longitude]}
-      icon={createDriverIcon(driver.vehicle_type || 'bike')}
     >
       <Popup>
         <div className="text-sm font-medium">{driver.name}</div>
@@ -43,7 +46,6 @@ export const CustomerMarker = ({ delivery }: CustomerMarkerProps) => {
     <Marker
       key={delivery.id}
       position={[delivery.delivery_latitude, delivery.delivery_longitude]}
-      icon={customerIcon}
     >
       <Popup>
         <div className="text-sm font-medium">Livraison #{delivery.id.substring(0, 8)}</div>
@@ -61,7 +63,7 @@ export const CustomerMarker = ({ delivery }: CustomerMarkerProps) => {
 
 export const RestaurantMarker = ({ position }: { position: [number, number] }) => {
   return (
-    <Marker position={position} icon={restaurantIcon}>
+    <Marker position={position}>
       <Popup>
         <div className="text-sm font-medium">Restaurant</div>
       </Popup>
@@ -77,7 +79,7 @@ export const createDriverIcon = (vehicleType: string) => {
     ? '<div class="driver-marker car"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg></div>'
     : '<div class="driver-marker"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></div>';
 
-  return divIcon({
+  return L.divIcon({
     html,
     className: 'driver-icon',
     iconSize: [40, 40],
@@ -86,7 +88,7 @@ export const createDriverIcon = (vehicleType: string) => {
 };
 
 // Créer une icône pour les restaurants
-export const restaurantIcon = divIcon({
+export const restaurantIcon = L.divIcon({
   html: '<div class="restaurant-marker"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 15v5"/><path d="M12 15v5"/><path d="M8 15v5"/><path d="M3 11h18"/><path d="M12 4v7"/><path d="M19 4v15"/><path d="M5 4v15"/></svg></div>',
   className: 'restaurant-icon',
   iconSize: [40, 40],
@@ -94,7 +96,7 @@ export const restaurantIcon = divIcon({
 });
 
 // Créer une icône pour les clients
-export const customerIcon = divIcon({
+export const customerIcon = L.divIcon({
   html: '<div class="customer-marker"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>',
   className: 'customer-icon',
   iconSize: [40, 40],

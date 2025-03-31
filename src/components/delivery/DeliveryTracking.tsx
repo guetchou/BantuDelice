@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useTableExistence } from '@/hooks/useTableExistence';
 import DeliveryRating from '@/components/delivery/DeliveryRating';
-import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
+import { DeliveryDriver, DeliveryRequest, DeliveryStatus } from '@/types/delivery';
 
 interface DeliveryTrackingProps {
   orderId: string;
@@ -19,7 +19,7 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
   const [deliveryData, setDeliveryData] = useState<DeliveryRequest | null>(null);
   const [driver, setDriver] = useState<DeliveryDriver | null>(null);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
-  const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null);
+  const [deliveryStatus, setDeliveryStatus] = useState<DeliveryStatus | null>(null);
   const [showRating, setShowRating] = useState(false);
   const { toast } = useToast();
   const { exists: deliveryTrackingExists } = useTableExistence('delivery_tracking');
@@ -47,21 +47,23 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
         }
         
         if (requestData) {
-          setDeliveryData(requestData);
-          setDeliveryStatus(requestData.status);
+          setDeliveryData(requestData as DeliveryRequest);
+          if (requestData.status) {
+            setDeliveryStatus(requestData.status as DeliveryStatus);
+          }
           
           // If there's an assigned driver, get driver info
-          if (requestData.assigned_driver_id && deliveryDriversExists) {
+          if (requestData.driver_id && deliveryDriversExists) {
             const { data: driverData, error: driverError } = await supabase
               .from('delivery_drivers')
               .select('*')
-              .eq('id', requestData.assigned_driver_id)
+              .eq('id', requestData.driver_id)
               .single();
               
             if (driverError) throw driverError;
             
             if (driverData) {
-              setDriver(driverData);
+              setDriver(driverData as DeliveryDriver);
             }
           }
         }
@@ -77,8 +79,8 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
             
           if (trackingError) throw trackingError;
           
-          if (trackingData && trackingData.length > 0) {
-            setDeliveryStatus(trackingData[0].status);
+          if (trackingData && trackingData.length > 0 && trackingData[0].status) {
+            setDeliveryStatus(trackingData[0].status as DeliveryStatus);
           }
         }
         
@@ -120,11 +122,11 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
         table: 'delivery_tracking',
         filter: `order_id=eq.${orderId}`
       }, (payload) => {
-        if (payload.new) {
-          setDeliveryStatus(payload.new.status);
+        if (payload.new && (payload.new as any).status) {
+          setDeliveryStatus((payload.new as any).status as DeliveryStatus);
           
           // If delivered, show rating option
-          if (payload.new.status === 'delivered') {
+          if ((payload.new as any).status === 'delivered') {
             setShowRating(true);
           }
         }
@@ -144,8 +146,8 @@ const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
           setDeliveryData(payload.new as DeliveryRequest);
           
           // If there's an assigned driver, reload driver info
-          if (payload.new.assigned_driver_id && deliveryDriversExists) {
-            fetchDriverInfo(payload.new.assigned_driver_id);
+          if ((payload.new as any).driver_id && deliveryDriversExists) {
+            fetchDriverInfo((payload.new as any).driver_id);
           }
         }
       })

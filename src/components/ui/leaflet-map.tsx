@@ -48,14 +48,11 @@ export const Map: React.FC<MapProps> = ({
 }) => {
   return (
     <LeafletMapContainer
-      center={center}
-      zoom={zoom}
       scrollWheelZoom={scrollWheelZoom}
       className={className}
       style={{ height: '100%', width: '100%', ...style }}
     >
       <LeafletTileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {children}
@@ -79,7 +76,6 @@ export const CustomMarker: React.FC<MarkerProps> = ({
   return (
     <LeafletMarker 
       position={position} 
-      icon={icon}
       eventHandlers={eventHandlers}
     >
       {children && <LeafletPopup>{children}</LeafletPopup>}
@@ -108,7 +104,6 @@ export const CustomCircle: React.FC<CircleProps> = ({
     <LeafletCircle
       center={center}
       pathOptions={pathOptions}
-      radius={radius}
     >
       {children && <LeafletPopup>{children}</LeafletPopup>}
     </LeafletCircle>

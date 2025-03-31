@@ -72,10 +72,16 @@ export const usePriceCalculation = (formState: BookingFormState) => {
     isSharedRide: boolean
   ): number => {
     // Utiliser le service d'estimation de prix existant
-    const { amount } = estimatePrice(distance, vehicleType as any);
+    const priceEstimate = estimatePrice(distance, vehicleType as any);
+    let finalPrice = 0;
+    
+    if (typeof priceEstimate === 'number') {
+      finalPrice = priceEstimate;
+    } else if (typeof priceEstimate === 'object' && priceEstimate !== null) {
+      finalPrice = priceEstimate.amount || 0;
+    }
     
     // Appliquer une réduction pour les courses partagées
-    let finalPrice = amount;
     if (isSharedRide) {
       finalPrice = Math.round(finalPrice * 0.8); // 20% de réduction
     }

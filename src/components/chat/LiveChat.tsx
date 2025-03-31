@@ -35,7 +35,7 @@ const LiveChat = () => {
 
     const loadMessages = async () => {
       try {
-        setLoading(true);
+        setIsLoading(true);
         
         const { data, error } = await supabase
           .from('chat_messages')
@@ -45,7 +45,7 @@ const LiveChat = () => {
             message,
             created_at,
             is_bot,
-            profiles(first_name, last_name, avatar_url)
+            profiles:profiles(first_name, last_name, avatar_url)
           `)
           .or(`user_id.eq.${user.id},is_bot.eq.true`)
           .order('created_at', { ascending: true })
@@ -72,7 +72,7 @@ const LiveChat = () => {
         console.error('Error loading messages:', error);
         toast.error("Impossible de charger les messages");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 

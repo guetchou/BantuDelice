@@ -35,6 +35,7 @@ export interface DeliveryRequest {
   restaurant_id: string;
   customer_id: string;
   driver_id?: string;
+  assigned_driver_id?: string;
   pickup_address: string;
   delivery_address: string;
   status: DeliveryStatus;
@@ -51,10 +52,15 @@ export interface DeliveryRequest {
   requested_at?: string;
   accepted_at?: string;
   completed_at?: string;
+  delivery_latitude?: number;
+  delivery_longitude?: number;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  delivery_fee?: number;
 }
 
-export type DeliveryStatus = 'pending' | 'accepted' | 'in_progress' | 'in_transit' | 'delivered' | 'cancelled' | 'failed';
-export type DeliveryType = 'standard' | 'scheduled' | 'express';
+export type DeliveryStatus = 'pending' | 'assigned' | 'accepted' | 'in_progress' | 'picked_up' | 'in_transit' | 'delivering' | 'delivered' | 'cancelled' | 'failed';
+export type DeliveryType = 'standard' | 'scheduled' | 'express' | 'restaurant';
 
 export interface DeliverySettings {
   id: string;
@@ -65,8 +71,21 @@ export interface DeliverySettings {
   delivery_fee_per_km: number;
   delivery_fee_min: number;
   auto_accept_orders?: boolean;
+  auto_assign_drivers?: boolean;
   estimated_delivery_time?: number;
   accepted_external_services?: string[];
+  allow_restaurant_delivery?: boolean;
+  allow_external_delivery?: boolean;
+  default_delivery_fee?: number;
+  free_delivery_threshold?: number;
+  max_delivery_distance?: number;
+  delivery_hours?: DeliveryHours[];
+}
+
+export interface DeliveryHours {
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+  open: string;
+  close: string;
 }
 
 export interface DeliveryRoute {
@@ -76,6 +95,11 @@ export interface DeliveryRoute {
   created_at: string;
   estimated_completion_time: string;
   status: 'active' | 'completed' | 'cancelled';
+  waypoints?: any[];
+  delivery_requests?: string[];
+  total_distance?: number;
+  start_time?: string;
+  estimated_end_time?: string;
 }
 
 export interface DeliveryMessage {
@@ -96,4 +120,6 @@ export interface ExternalDeliveryService {
   is_active: boolean;
   estimated_pickup_time: number;
   coverage_area: string[] | { lat: number; lng: number }[];
+  base_fee?: number;
+  fee_per_km?: number;
 }
