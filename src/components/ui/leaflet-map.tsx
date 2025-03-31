@@ -41,8 +41,8 @@ export const Map: React.FC<MapProps> = ({
 }) => {
   return (
     <MapContainer
-      defaultCenter={center}
-      defaultZoom={zoom}
+      center={center}
+      zoom={zoom}
       scrollWheelZoom={scrollWheelZoom}
       className={className}
       style={{ height: '100%', width: '100%', ...style }}
@@ -131,4 +131,4 @@ export const CustomPolyline: React.FC<PolylineProps> = ({
   );
 };
 
-export default Map;
+export default MapContainer;

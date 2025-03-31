@@ -1,165 +1,231 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Instagram, Youtube, ArrowRight, Users, Lightbulb, TrendingUp, DollarSign } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { Instagram, YoutubeIcon, Twitter, Link } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Create a custom TikTok icon since it's not available in lucide-react
-const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    {...props}
-  >
-    <path d="M9 12a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm10-7a3 3 0 0 0-3-3h-4a.08.08 0 0 0-.07.07v10.36a2.32 2.32 0 0 1-2.93 2.92A2.57 2.57 0 0 1 7 12.62a2.48 2.48 0 0 1 2.5-2.45c.15-.01.87.14.87.14V7.3c-1.78.2-3.37.8-4.57 1.94A6.32 6.32 0 0 0 3 14.57a6.62 6.62 0 0 0 11 4.65c.08-.06.18-.14.24-.21a6.5 6.5 0 0 0 1.77-4.4V8.17a6.8 6.8 0 0 0 4.01 1.26V6.43a3.88 3.88 0 0 1-1.02-.13z" />
-  </svg>
-);
-
-// Assure qu'il y a un export default pour ce composant
 const InfluencerCampaigns = () => {
   const { toast } = useToast();
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-
-  const handlePlatformSelect = (platform: string) => {
-    setSelectedPlatform(platform);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    platform: "",
+    followers: "",
+    message: "",
+    socialLink: ""
+  });
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Formulaire soumis:", formData);
     
-    toast({
-      title: "Plateforme sélectionnée",
-      description: `Vous avez sélectionné la plateforme ${platform}.`,
-    });
+    // Simulation d'envoi du formulaire
+    setTimeout(() => {
+      toast({
+        title: "Demande envoyée!",
+        description: "Notre équipe examinera votre candidature et vous contactera sous peu.",
+      });
+      
+      // Réinitialiser le formulaire
+      setFormData({
+        name: "",
+        email: "",
+        platform: "",
+        followers: "",
+        message: "",
+        socialLink: ""
+      });
+    }, 1000);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4 mb-4">
-        <Users className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-bold">Campagnes d'Influence</h2>
-      </div>
-      
+    <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-xl">
-              <Instagram className="mr-2 h-5 w-5 text-pink-500" />
-              Instagram
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Engagez des influenceurs Instagram pour promouvoir vos produits à travers des posts, stories et reels.
-            </p>
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm">
-                <span>Portée estimée:</span>
-                <span className="font-medium">50k - 100k</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Budget minimum:</span>
-                <span className="font-medium">300 000 FCFA</span>
-              </div>
+        <Card className="overflow-hidden">
+          <div className="h-3 bg-pink-500"></div>
+          <CardContent className="pt-6">
+            <div className="flex justify-center mb-4">
+              <Instagram className="h-10 w-10 text-pink-500" />
             </div>
-            <Button 
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600" 
-              onClick={() => handlePlatformSelect('Instagram')}
-            >
-              Créer une campagne <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <h3 className="text-lg font-semibold text-center mb-2">Instagram</h3>
+            <p className="text-sm text-gray-600 text-center">Partagez vos expériences culinaires avec votre communauté.</p>
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-xl">
-              <TikTokIcon className="mr-2 h-5 w-5 text-black" />
-              TikTok
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Créez des tendances virales avec des influenceurs TikTok pour atteindre une audience jeune et engagée.
-            </p>
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm">
-                <span>Portée estimée:</span>
-                <span className="font-medium">100k - 250k</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Budget minimum:</span>
-                <span className="font-medium">250 000 FCFA</span>
-              </div>
+        <Card className="overflow-hidden">
+          <div className="h-3 bg-red-500"></div>
+          <CardContent className="pt-6">
+            <div className="flex justify-center mb-4">
+              <YoutubeIcon className="h-10 w-10 text-red-500" />
             </div>
-            <Button 
-              className="w-full bg-gradient-to-r from-black to-gray-800 hover:from-black hover:to-gray-900" 
-              onClick={() => handlePlatformSelect('TikTok')}
-            >
-              Créer une campagne <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <h3 className="text-lg font-semibold text-center mb-2">YouTube</h3>
+            <p className="text-sm text-gray-600 text-center">Créez des vidéos d'unboxing de nos plats et services.</p>
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-red-50 to-white border-red-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-xl">
-              <Youtube className="mr-2 h-5 w-5 text-red-500" />
-              YouTube
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Collaborez avec des créateurs YouTube pour des présentations détaillées et des tests de vos produits.
-            </p>
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm">
-                <span>Portée estimée:</span>
-                <span className="font-medium">30k - 80k</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Budget minimum:</span>
-                <span className="font-medium">400 000 FCFA</span>
-              </div>
+        <Card className="overflow-hidden">
+          <div className="h-3 bg-blue-400"></div>
+          <CardContent className="pt-6">
+            <div className="flex justify-center mb-4">
+              <Twitter className="h-10 w-10 text-blue-400" />
             </div>
-            <Button 
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700" 
-              onClick={() => handlePlatformSelect('YouTube')}
-            >
-              Créer une campagne <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <h3 className="text-lg font-semibold text-center mb-2">Twitter</h3>
+            <p className="text-sm text-gray-600 text-center">Partagez votre expérience en temps réel avec vos abonnés.</p>
           </CardContent>
         </Card>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
-          <Lightbulb className="h-6 w-6 text-blue-500 flex-shrink-0" />
-          <div>
-            <h3 className="font-medium mb-1">Idées personnalisées</h3>
-            <p className="text-sm text-gray-600">Nos experts peuvent concevoir des campagnes uniques adaptées à vos besoins.</p>
+      <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-lg">
+        <h3 className="text-xl font-semibold mb-6 text-center">Ce que nous offrons</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3">
+            <div className="bg-orange-100 rounded-full p-2 mt-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-orange-500">
+                <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-medium">Commissions sur ventes</h4>
+              <p className="text-sm text-gray-600">Gagnez jusqu'à 10% sur les commandes effectuées via votre lien.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="bg-orange-100 rounded-full p-2 mt-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-orange-500">
+                <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-medium">Repas et services gratuits</h4>
+              <p className="text-sm text-gray-600">Testez nos services premium pour vos contenus.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="bg-orange-100 rounded-full p-2 mt-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-orange-500">
+                <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-medium">Code promo exclusif</h4>
+              <p className="text-sm text-gray-600">Offrez une réduction spéciale à votre audience.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3">
+            <div className="bg-orange-100 rounded-full p-2 mt-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-orange-500">
+                <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-medium">Mise en avant</h4>
+              <p className="text-sm text-gray-600">Promotion de votre profil sur nos réseaux et notre app.</p>
+            </div>
           </div>
         </div>
-        
-        <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
-          <TrendingUp className="h-6 w-6 text-green-500 flex-shrink-0" />
-          <div>
-            <h3 className="font-medium mb-1">Analyse de performance</h3>
-            <p className="text-sm text-gray-600">Suivez l'impact de vos campagnes avec des rapports détaillés.</p>
+      </div>
+      
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Devenir Influenceur Partenaire</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium mb-1">Nom</label>
+              <Input 
+                id="name" 
+                name="name" 
+                value={formData.name} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+              <Input 
+                id="email" 
+                name="email" 
+                type="email" 
+                value={formData.email} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="platform" className="block text-sm font-medium mb-1">Plateforme principale</label>
+              <Input 
+                id="platform" 
+                name="platform" 
+                placeholder="Instagram, YouTube, TikTok, etc." 
+                value={formData.platform} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="followers" className="block text-sm font-medium mb-1">Nombre d'abonnés</label>
+              <Input 
+                id="followers" 
+                name="followers" 
+                type="number" 
+                value={formData.followers} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
+            
+            <div className="sm:col-span-2">
+              <label htmlFor="socialLink" className="block text-sm font-medium mb-1">Lien de votre profil</label>
+              <div className="flex gap-2">
+                <Input 
+                  id="socialLink" 
+                  name="socialLink" 
+                  placeholder="https://" 
+                  value={formData.socialLink} 
+                  onChange={handleChange} 
+                  required 
+                />
+                {formData.socialLink && (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => window.open(formData.socialLink, '_blank')}
+                  >
+                    <Link className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <div className="sm:col-span-2">
+              <label htmlFor="message" className="block text-sm font-medium mb-1">Comment souhaitez-vous collaborer?</label>
+              <Textarea 
+                id="message" 
+                name="message" 
+                rows={4} 
+                value={formData.message} 
+                onChange={handleChange} 
+                required 
+              />
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-lg">
-          <DollarSign className="h-6 w-6 text-amber-500 flex-shrink-0" />
-          <div>
-            <h3 className="font-medium mb-1">ROI optimisé</h3>
-            <p className="text-sm text-gray-600">Maximisez votre investissement avec des stratégies ciblées et mesurables.</p>
-          </div>
-        </div>
+          
+          <Button type="submit" className="w-full">Envoyer ma candidature</Button>
+        </form>
       </div>
     </div>
   );
