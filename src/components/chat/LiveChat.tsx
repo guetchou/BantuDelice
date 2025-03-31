@@ -35,6 +35,8 @@ const LiveChat = () => {
 
     const loadMessages = async () => {
       try {
+        setLoading(true);
+        
         const { data, error } = await supabase
           .from('chat_messages')
           .select(`
@@ -69,6 +71,8 @@ const LiveChat = () => {
       } catch (error) {
         console.error('Error loading messages:', error);
         toast.error("Impossible de charger les messages");
+      } finally {
+        setLoading(false);
       }
     };
 

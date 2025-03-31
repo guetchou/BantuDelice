@@ -25,6 +25,14 @@ export interface Restaurant {
   opening_date?: string;
   special_features?: string[];
   free_delivery_min?: number;
+  business_hours?: BusinessHours;
+  trending?: boolean;
+  delivery_fee?: number;
+  minimum_order?: number;
+  total_ratings?: number;
+  average_prep_time?: number;
+  status?: string;
+  payment_methods?: string[];
 }
 
 export interface BusinessHours {
@@ -35,6 +43,15 @@ export interface BusinessHours {
   friday?: { open: string; close: string };
   saturday?: { open: string; close: string };
   sunday?: { open: string; close: string };
+  regular?: {
+    monday?: { open: string; close: string };
+    tuesday?: { open: string; close: string };
+    wednesday?: { open: string; close: string };
+    thursday?: { open: string; close: string };
+    friday?: { open: string; close: string };
+    saturday?: { open: string; close: string };
+    sunday?: { open: string; close: string };
+  };
 }
 
 export interface Reservation {
@@ -108,4 +125,88 @@ export interface UserProfile {
   phone?: string;
   avatar_url?: string;
   role?: string;
+}
+
+export interface MenuItem {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  description?: string;
+  price: number;
+  image_url?: string;
+  category?: string;
+  available?: boolean;
+  dietary_preferences?: string[];
+  cuisine_type?: string;
+  customization_options?: any[];
+  popularity_score?: number;
+  profit_margin?: number;
+  average_rating?: number;
+  nutritional_score?: number;
+  created_at?: string;
+}
+
+export interface Table {
+  id: string;
+  restaurant_id: string;
+  table_number: string;
+  capacity: number;
+  is_accessible: boolean;
+  status: 'available' | 'occupied' | 'reserved' | 'maintenance';
+  location?: string;
+}
+
+export interface RestaurantFilters {
+  cuisine?: string[];
+  price_range?: string[];
+  rating?: number;
+  open_now?: boolean;
+  distance?: number;
+  dietary?: string[];
+  search?: string;
+  sort_by?: 'distance' | 'rating' | 'price_low' | 'price_high';
+}
+
+export type RestaurantViewMode = 'grid' | 'list' | 'map';
+
+export interface MenuPromotion {
+  id: string;
+  restaurant_id: string;
+  title: string;
+  description?: string;
+  discount_type: 'percentage' | 'fixed_amount' | 'free_delivery' | 'free_item';
+  discount_value: number;
+  active: boolean;
+  conditions?: {
+    min_order_value?: number;
+    applicable_items?: string[];
+    max_uses_per_customer?: number;
+  };
+  valid_from?: string;
+  valid_to?: string;
+  promotion_hours?: {
+    start_time: string;
+    end_time: string;
+    days: string[];
+  };
+  menu_item_ids?: string[];
+  min_order_value?: number;
+  coupon_code?: string;
+}
+
+export type BusinessDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
+export interface RestaurantDetails extends Restaurant {
+  business_hours: BusinessHours;
+  delivery_settings?: DeliverySettings;
+  popular_items?: MenuItem[];
+  categories?: string[];
+}
+
+export interface DeliverySettings {
+  delivery_fee: number;
+  minimum_order: number;
+  delivery_radius: number;
+  estimated_delivery_time: number;
+  free_delivery_threshold?: number;
 }

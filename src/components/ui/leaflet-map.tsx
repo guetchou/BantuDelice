@@ -56,14 +56,14 @@ export const Map: React.FC<MapProps> = ({
   );
 };
 
-interface CustomMarkerProps {
+interface MarkerProps {
   position: [number, number];
   children?: ReactNode;
   icon?: L.Icon;
   eventHandlers?: any;
 }
 
-export const CustomMarker: React.FC<CustomMarkerProps> = ({
+export const CustomMarker: React.FC<MarkerProps> = ({
   position,
   children,
   icon = DefaultIcon,
@@ -80,7 +80,7 @@ export const CustomMarker: React.FC<CustomMarkerProps> = ({
   );
 };
 
-interface CustomCircleProps {
+interface CircleProps {
   center: [number, number];
   radius: number;
   pathOptions?: {
@@ -91,7 +91,7 @@ interface CustomCircleProps {
   children?: ReactNode;
 }
 
-export const CustomCircle: React.FC<CustomCircleProps> = ({
+export const CustomCircle: React.FC<CircleProps> = ({
   center,
   radius,
   pathOptions = { color: 'blue', fillColor: 'blue', fillOpacity: 0.2 },
@@ -108,7 +108,7 @@ export const CustomCircle: React.FC<CustomCircleProps> = ({
   );
 };
 
-interface CustomPolylineProps {
+interface PolylineProps {
   positions: [number, number][];
   color?: string;
   weight?: number;
@@ -116,7 +116,7 @@ interface CustomPolylineProps {
   dashArray?: string;
 }
 
-export const CustomPolyline: React.FC<CustomPolylineProps> = ({
+export const CustomPolyline: React.FC<PolylineProps> = ({
   positions,
   color = 'blue',
   weight = 3,
@@ -132,4 +132,3 @@ export const CustomPolyline: React.FC<CustomPolylineProps> = ({
 };
 
 export default Map;
-export { CustomMarker, CustomCircle, CustomPolyline };

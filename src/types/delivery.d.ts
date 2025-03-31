@@ -92,13 +92,14 @@ export interface DeliverySettings {
   estimated_delivery_time?: number;
   accepted_external_services?: string[];
   auto_accept_orders?: boolean;
+  delivery_hours?: any;
 }
 
 export interface DeliveryLocation {
   latitude: number;
   longitude: number;
   request_id?: string;
-  type?: 'pickup' | 'dropoff' | 'driver'; 
+  type?: 'pickup' | 'dropoff' | 'driver' | 'delivery'; 
   is_priority?: boolean;
 }
 
@@ -136,6 +137,7 @@ export interface ExternalDeliveryService {
   is_active: boolean;
   base_fee: number;
   price_per_km: number;
+  fee_per_km?: number;
   service_area?: any;
   created_at: string;
   updated_at?: string;
