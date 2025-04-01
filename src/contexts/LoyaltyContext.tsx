@@ -2,16 +2,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface LoyaltyPoints {
-  points: number;
-  tier_name: string;
-  points_to_next_tier: number | null;
-  benefits: string[];
-}
+import { Cashback } from '@/types/wallet';
 
 interface LoyaltyContextType {
-  loyaltyPoints: LoyaltyPoints | null;
+  loyaltyPoints: Cashback | null;
   isLoading: boolean;
   error: string | null;
   refetchLoyaltyPoints: () => Promise<void>;
@@ -20,61 +14,62 @@ interface LoyaltyContextType {
 const LoyaltyContext = createContext<LoyaltyContextType | undefined>(undefined);
 
 export function LoyaltyProvider({ children }: { children: ReactNode }) {
-  const [loyaltyPoints, setLoyaltyPoints] = useState<LoyaltyPoints | null>(null);
+  const [loyaltyPoints, setLoyaltyPoints] = useState<Cashback | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchLoyaltyPoints = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (!data.user) {
         setLoyaltyPoints(null);
         return;
       }
 
-      let { data, error } = await supabase
+      let { data: loyaltyData, error } = await supabase
         .from('loyalty_points')
-        .select('points, tier_name, points_to_next_tier, benefits')
-        .eq('user_id', user.id)
+        .select('*')
+        .eq('user_id', data.user.id)
         .maybeSingle();
 
       if (error) throw error;
 
       // Si aucune entrée n'existe, on en crée une
-      if (!data) {
+      if (!loyaltyData) {
         const { data: newLoyaltyPoints, error: insertError } = await supabase
           .from('loyalty_points')
           .insert([
             { 
-              user_id: user.id,
+              user_id: data.user.id,
               points: 0,
+              balance: 0,
               tier_name: 'Bronze',
+              tier: 'bronze',
+              tier_progress: 0,
               points_to_next_tier: 1000,
               benefits: ['Accès aux récompenses de base']
             }
           ])
-          .select('points, tier_name, points_to_next_tier, benefits')
+          .select()
           .single();
 
         if (insertError) throw insertError;
-        data = newLoyaltyPoints;
+        loyaltyData = newLoyaltyPoints;
       }
 
-      if (data) {
-        const parsedBenefits = data.benefits && typeof data.benefits === 'string' 
-          ? JSON.parse(data.benefits)
-          : Array.isArray(data.benefits) 
-            ? data.benefits 
+      if (loyaltyData) {
+        const parsedBenefits = loyaltyData.benefits && typeof loyaltyData.benefits === 'string' 
+          ? JSON.parse(loyaltyData.benefits)
+          : Array.isArray(loyaltyData.benefits) 
+            ? loyaltyData.benefits 
             : [];
 
         setLoyaltyPoints({
-          points: data.points,
-          tier_name: data.tier_name,
-          points_to_next_tier: data.points_to_next_tier,
+          ...loyaltyData,
           benefits: parsedBenefits.map((benefit: any) => String(benefit))
-        });
+        } as Cashback);
       }
     } catch (err) {
       console.error('Error fetching loyalty points:', err);

@@ -5,7 +5,7 @@ import { Trophy, Award, Medal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Cashback } from '@/types/payment';
+import { Cashback } from '@/types/wallet';
 
 interface LeaderboardUser {
   user_id: string;
@@ -29,10 +29,10 @@ const CashbackLeaderboard = ({ limit = 10 }: { limit?: number }) => {
     const fetchLeaderboard = async () => {
       try {
         setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data } = await supabase.auth.getUser();
         
-        if (user) {
-          setCurrentUserId(user.id);
+        if (data.user) {
+          setCurrentUserId(data.user.id);
         }
 
         // Simulation de données en attendant que la table soit créée

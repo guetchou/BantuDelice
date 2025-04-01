@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Send } from 'lucide-react';
@@ -73,9 +74,9 @@ export default function DeliveryChat({ orderId, userType }: DeliveryChatProps) {
     if (!newMessage.trim()) return;
 
     setIsLoading(true);
-    const { data: userData } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
     
-    if (!userData.user) {
+    if (!data.user) {
       toast({
         title: "Erreur",
         description: "Vous devez être connecté pour envoyer un message",
@@ -89,7 +90,7 @@ export default function DeliveryChat({ orderId, userType }: DeliveryChatProps) {
       .insert({
         order_id: orderId,
         sender_type: userType,
-        sender_id: userData.user.id,
+        sender_id: data.user.id,
         message: newMessage.trim()
       });
 

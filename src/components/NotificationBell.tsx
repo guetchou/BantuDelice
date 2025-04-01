@@ -27,19 +27,19 @@ const NotificationBell = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        const { data } = await supabase.auth.getUser();
+        if (!data.user) return;
 
-        const { data, error } = await supabase
+        const { data: notificationsData, error } = await supabase
           .from("notifications")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", data.user.id)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
 
-        setNotifications(data || []);
-        setUnreadCount(data?.filter(n => !n.read).length || 0);
+        setNotifications(notificationsData || []);
+        setUnreadCount(notificationsData?.filter(n => !n.read).length || 0);
       } catch (error) {
         console.error("Error fetching notifications:", error);
         toast({

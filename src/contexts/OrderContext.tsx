@@ -21,22 +21,22 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   const fetchOrders = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (!data.user) {
         setOrders([]);
         return;
       }
 
-      let { data, error: supabaseError } = await supabase
+      let { data: ordersData, error: supabaseError } = await supabase
         .from('orders')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', data.user.id)
         .order('created_at', { ascending: false });
 
       if (supabaseError) throw supabaseError;
 
-      const typedOrders = (data || []).map(order => ({
+      const typedOrders = (ordersData || []).map(order => ({
         ...order,
         status: order.status as OrderStatus,
         payment_status: order.payment_status as Order['payment_status'],
