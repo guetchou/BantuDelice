@@ -1,221 +1,163 @@
 
 /**
- * Utilitaires pour les calculs géographiques
- */
-
-/**
- * Calcule la distance entre deux points en kilomètres (formule de Haversine)
+ * Calculate the distance between two points in kilometers
+ * Uses the Haversine formula
+ * 
+ * @param lat1 Latitude of point 1
+ * @param lon1 Longitude of point 1
+ * @param lat2 Latitude of point 2
+ * @param lon2 Longitude of point 2
+ * @returns Distance in kilometers
  */
 export function calculateDistance(
-  lat1: number, 
-  lon1: number, 
-  lat2: number, 
+  lat1: number,
+  lon1: number,
+  lat2: number,
   lon2: number
 ): number {
-  const R = 6371; // Rayon de la Terre en km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
+  // Convert latitude and longitude from degrees to radians
+  const radiansLat1 = (lat1 * Math.PI) / 180;
+  const radiansLon1 = (lon1 * Math.PI) / 180;
+  const radiansLat2 = (lat2 * Math.PI) / 180;
+  const radiansLon2 = (lon2 * Math.PI) / 180;
+
+  // Haversine formula
+  const dlon = radiansLon2 - radiansLon1;
+  const dlat = radiansLat2 - radiansLat1;
+  const a =
+    Math.sin(dlat / 2) ** 2 +
+    Math.cos(radiansLat1) * Math.cos(radiansLat2) * Math.sin(dlon / 2) ** 2;
+  const c = 2 * Math.asin(Math.sqrt(a));
   
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  // Radius of earth in kilometers
+  const r = 6371;
   
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-  
-  return parseFloat(distance.toFixed(2));
+  // Calculate the result
+  return c * r;
 }
 
 /**
- * Convertit des degrés en radians
+ * Calculate the estimated duration of a journey in minutes based on distance and travel mode
+ * 
+ * @param distanceKm Distance in kilometers
+ * @param mode Travel mode (car, bike, walk)
+ * @returns Estimated duration in minutes
  */
-export function toRad(value: number): number {
-  return value * Math.PI / 180;
+export function calculateDuration(
+  distanceKm: number, 
+  mode: 'car' | 'bike' | 'walk' = 'car'
+): number {
+  // Average speeds in km/h
+  const speeds = {
+    car: 40, // Average urban speed for car
+    bike: 15, // Average speed for bicycle
+    walk: 5   // Average walking speed
+  };
+  
+  // Calculate time in hours
+  const timeHours = distanceKm / speeds[mode];
+  
+  // Convert to minutes
+  const timeMinutes = timeHours * 60;
+  
+  // Round to nearest minute
+  return Math.round(timeMinutes);
 }
 
 /**
- * Décode un polyline encodé en série de points [lat, lon]
- * Algorithme basé sur l'encodage polyline de Google Maps
+ * Calculate a point at a certain distance from a starting point
+ * in a specified direction (bearing)
+ * 
+ * @param lat Starting latitude
+ * @param lon Starting longitude
+ * @param distance Distance in kilometers
+ * @param bearing Direction in degrees (0 = North, 90 = East, etc.)
+ * @returns New coordinates [latitude, longitude]
  */
-export function decodePolyline(encoded: string): [number, number][] {
-  const points: [number, number][] = [];
-  let index = 0;
-  const len = encoded.length;
-  let lat = 0;
-  let lng = 0;
+export function calculatePointFromDistance(
+  lat: number,
+  lon: number,
+  distance: number,
+  bearing: number
+): [number, number] {
+  const R = 6371; // Earth's radius in km
+  
+  // Convert to radians
+  const latRad = (lat * Math.PI) / 180;
+  const lonRad = (lon * Math.PI) / 180;
+  const bearingRad = (bearing * Math.PI) / 180;
+  
+  // Calculate angular distance
+  const angularDistance = distance / R;
+  
+  // Calculate new latitude
+  const newLatRad = Math.asin(
+    Math.sin(latRad) * Math.cos(angularDistance) +
+    Math.cos(latRad) * Math.sin(angularDistance) * Math.cos(bearingRad)
+  );
+  
+  // Calculate new longitude
+  const newLonRad = lonRad + Math.atan2(
+    Math.sin(bearingRad) * Math.sin(angularDistance) * Math.cos(latRad),
+    Math.cos(angularDistance) - Math.sin(latRad) * Math.sin(newLatRad)
+  );
+  
+  // Convert back to degrees
+  const newLat = (newLatRad * 180) / Math.PI;
+  const newLon = (newLonRad * 180) / Math.PI;
+  
+  return [newLat, newLon];
+}
 
-  while (index < len) {
-    let b;
-    let shift = 0;
-    let result = 0;
+/**
+ * Generate a simplified polyline between two points
+ * (with a few intermediate points to make it look like a realistic route)
+ * 
+ * @param point1 Starting point [latitude, longitude]
+ * @param point2 Ending point [latitude, longitude]
+ * @param numPoints Number of intermediate points
+ * @param variabilityFactor How much the route can deviate (higher = more variation)
+ * @returns Array of points representing the polyline
+ */
+export function generateRoutePolyline(
+  point1: [number, number],
+  point2: [number, number],
+  numPoints: number = 5,
+  variabilityFactor: number = 0.2
+): Array<[number, number]> {
+  const [lat1, lon1] = point1;
+  const [lat2, lon2] = point2;
+  
+  const points: Array<[number, number]> = [point1];
+  
+  // Direct distance between the points
+  const distance = calculateDistance(lat1, lon1, lat2, lon2);
+  
+  // Maximum deviation in km
+  const maxDeviation = distance * variabilityFactor;
+  
+  // Generate intermediate points
+  for (let i = 1; i < numPoints; i++) {
+    // Linear interpolation between points
+    const ratio = i / numPoints;
+    const lat = lat1 + (lat2 - lat1) * ratio;
+    const lon = lon1 + (lon2 - lon1) * ratio;
     
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
+    // Add some randomness to make the route look more realistic
+    // (perpendicular to the straight line)
+    const bearing = (Math.atan2(lon2 - lon1, lat2 - lat1) * 180 / Math.PI + 90) % 360;
     
-    const dlat = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
-    lat += dlat;
+    // Random distance (negative or positive) to deviate
+    const deviationDistance = (Math.random() - 0.5) * 2 * maxDeviation;
     
-    shift = 0;
-    result = 0;
+    // Calculate the new point with deviation
+    const [newLat, newLon] = calculatePointFromDistance(lat, lon, deviationDistance, bearing);
     
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    
-    const dlng = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
-    lng += dlng;
-
-    points.push([lat * 1e-5, lng * 1e-5]);
+    points.push([newLat, newLon]);
   }
+  
+  // Add the final point
+  points.push(point2);
   
   return points;
-}
-
-/**
- * Encode une série de points [lat, lon] en polyline
- */
-export function encodePolyline(points: [number, number][]): string {
-  let output = '';
-  let factor = 1e5;
-  
-  let prevLat = 0;
-  let prevLng = 0;
-
-  for (const point of points) {
-    const lat = Math.round(point[0] * factor);
-    const lng = Math.round(point[1] * factor);
-
-    output += encodeNumber(lat - prevLat);
-    output += encodeNumber(lng - prevLng);
-
-    prevLat = lat;
-    prevLng = lng;
-  }
-
-  return output;
-}
-
-/**
- * Encode un nombre pour le polyline
- */
-function encodeNumber(num: number): string {
-  let output = '';
-  
-  num = num < 0 ? ~(num << 1) : (num << 1);
-  
-  while (num >= 0x20) {
-    output += String.fromCharCode((0x20 | (num & 0x1f)) + 63);
-    num >>= 5;
-  }
-  
-  output += String.fromCharCode(num + 63);
-  
-  return output;
-}
-
-/**
- * Calcule le centre géographique d'une liste de points
- */
-export function calculateCenter(points: [number, number][]): [number, number] {
-  if (points.length === 0) return [0, 0];
-  
-  let totalLat = 0;
-  let totalLng = 0;
-  
-  for (const point of points) {
-    totalLat += point[0];
-    totalLng += point[1];
-  }
-  
-  return [totalLat / points.length, totalLng / points.length];
-}
-
-/**
- * Calcule les limites (bounds) d'une liste de points
- */
-export function calculateBounds(points: [number, number][]): {
-  north: number;
-  south: number;
-  east: number;
-  west: number;
-} {
-  if (points.length === 0) {
-    return { north: 0, south: 0, east: 0, west: 0 };
-  }
-  
-  let north = points[0][0];
-  let south = points[0][0];
-  let east = points[0][1];
-  let west = points[0][1];
-  
-  for (let i = 1; i < points.length; i++) {
-    const [lat, lng] = points[i];
-    
-    if (lat > north) north = lat;
-    if (lat < south) south = lat;
-    if (lng > east) east = lng;
-    if (lng < west) west = lng;
-  }
-  
-  return { north, south, east, west };
-}
-
-/**
- * Vérifie si un point est à l'intérieur d'un polygone (ray casting algorithm)
- */
-export function isPointInPolygon(
-  point: [number, number], 
-  polygon: [number, number][]
-): boolean {
-  const [x, y] = point;
-  let inside = false;
-  
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i][1];
-    const yi = polygon[i][0];
-    const xj = polygon[j][1];
-    const yj = polygon[j][0];
-    
-    const intersect = ((yi > y) !== (yj > y))
-        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-        
-    if (intersect) inside = !inside;
-  }
-  
-  return inside;
-}
-
-/**
- * Génère un point aléatoire dans un rayon donné autour d'un centre
- */
-export function generateRandomPoint(
-  centerLat: number,
-  centerLng: number,
-  radiusKm: number
-): [number, number] {
-  // Convertir le rayon de km en degrés (approximatif)
-  const radiusLat = radiusKm / 111.32; // 1 degré de latitude = ~111.32 km
-  const radiusLng = radiusKm / (111.32 * Math.cos(toRad(centerLat))); // Ajuster pour la longitude
-  
-  // Générer un angle aléatoire en radians
-  const angle = Math.random() * Math.PI * 2;
-  
-  // Générer une distance aléatoire dans le rayon (racine carrée pour distribution uniforme)
-  const distance = Math.sqrt(Math.random()) * radiusKm;
-  
-  // Convertir la distance en degrés
-  const distanceLat = (distance / 111.32) * Math.cos(angle);
-  const distanceLng = (distance / (111.32 * Math.cos(toRad(centerLat)))) * Math.sin(angle);
-  
-  // Calculer les nouvelles coordonnées
-  const newLat = centerLat + distanceLat;
-  const newLng = centerLng + distanceLng;
-  
-  return [newLat, newLng];
 }
