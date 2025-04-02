@@ -1,141 +1,80 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { calculateDistance } from '@/utils/locationUtils';
-import { TaxiVehicleType, PaymentMethod } from '@/types/taxi';
-import { useTaxiPricing } from '@/hooks/taxi/useTaxiPricing';
+import { TaxiDriver, TaxiVehicleType, PaymentMethod } from '@/types/taxi';
 
-// Interface pour l'état du formulaire
-interface BookingFormState {
+export interface BookingFormState {
   pickupAddress: string;
-  pickupLatitude: number | null;
-  pickupLongitude: number | null;
+  pickupCoordinates?: [number, number];
   destinationAddress: string;
-  destinationLatitude: number | null;
-  destinationLongitude: number | null;
+  destinationCoordinates?: [number, number];
+  vehicleType: TaxiVehicleType;
   pickupTime: 'now' | 'scheduled';
   scheduledTime: string;
-  vehicleType: TaxiVehicleType;
   paymentMethod: PaymentMethod;
-  specialInstructions: string;
   promoCode: string;
-  isRoundTrip: boolean;
-  returnTime: string;
-  isSharingEnabled: boolean;
-  maxPassengers: number;
+  contactName: string;
+  contactPhone: string;
+  specialInstructions: string;
+  selectedDriver: TaxiDriver | null;
+  estimatedPrice: number;
+  estimatedDistance: number;
+  estimatedDuration: number;
 }
 
-// Valeurs par défaut
-const defaultFormState: BookingFormState = {
-  pickupAddress: '',
-  pickupLatitude: null,
-  pickupLongitude: null,
-  destinationAddress: '',
-  destinationLatitude: null,
-  destinationLongitude: null,
-  pickupTime: 'now',
-  scheduledTime: '',
-  vehicleType: 'standard',
-  paymentMethod: 'cash',
-  specialInstructions: '',
-  promoCode: '',
-  isRoundTrip: false,
-  returnTime: '',
-  isSharingEnabled: false,
-  maxPassengers: 1
-};
-
-// Interface du contexte
 interface BookingFormContextType {
   formState: BookingFormState;
-  estimatedPrice: number;
-  updateFormState: (update: Partial<BookingFormState>) => void;
-  resetForm: () => void;
-  getDistanceEstimate: () => number | null;
-  handleSharingEnabled: (enabled: boolean) => void;
+  setFormState: React.Dispatch<React.SetStateAction<BookingFormState>>;
+  updateFormField: <K extends keyof BookingFormState>(
+    field: K, 
+    value: BookingFormState[K]
+  ) => void;
 }
 
-// Création du contexte
 const BookingFormContext = createContext<BookingFormContextType | undefined>(undefined);
 
-// Props du provider
-interface BookingFormProviderProps {
-  children: ReactNode;
-}
+export const initialFormState: BookingFormState = {
+  pickupAddress: '',
+  pickupCoordinates: undefined,
+  destinationAddress: '',
+  destinationCoordinates: undefined,
+  vehicleType: 'standard',
+  pickupTime: 'now',
+  scheduledTime: new Date(Date.now() + 30 * 60 * 1000).toISOString().slice(0, 16),
+  paymentMethod: 'cash',
+  promoCode: '',
+  contactName: '',
+  contactPhone: '',
+  specialInstructions: '',
+  selectedDriver: null,
+  estimatedPrice: 0,
+  estimatedDistance: 0,
+  estimatedDuration: 0
+};
 
-// Provider du contexte
-export const BookingFormProvider: React.FC<BookingFormProviderProps> = ({ children }) => {
-  const [formState, setFormState] = useState<BookingFormState>(defaultFormState);
-  const { calculatePrice } = useTaxiPricing();
-  
-  // Met à jour l'état du formulaire
-  const updateFormState = (update: Partial<BookingFormState>) => {
-    setFormState(prevState => ({ ...prevState, ...update }));
+export const BookingFormProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [formState, setFormState] = useState<BookingFormState>(initialFormState);
+
+  const updateFormField = <K extends keyof BookingFormState>(
+    field: K, 
+    value: BookingFormState[K]
+  ) => {
+    setFormState(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
-  
-  // Réinitialise le formulaire
-  const resetForm = () => {
-    setFormState(defaultFormState);
-  };
-  
-  // Calcule la distance estimée entre les points de départ et d'arrivée
-  const getDistanceEstimate = (): number | null => {
-    const { pickupLatitude, pickupLongitude, destinationLatitude, destinationLongitude } = formState;
-    
-    if (
-      pickupLatitude !== null && 
-      pickupLongitude !== null && 
-      destinationLatitude !== null && 
-      destinationLongitude !== null
-    ) {
-      return calculateDistance(
-        pickupLatitude,
-        pickupLongitude,
-        destinationLatitude,
-        destinationLongitude
-      );
-    }
-    
-    return null;
-  };
-  
-  // Gère l'activation du partage de trajet
-  const handleSharingEnabled = (enabled: boolean) => {
-    updateFormState({ 
-      isSharingEnabled: enabled,
-      maxPassengers: enabled ? 2 : 1 // Par défaut, partagé avec 1 autre personne
-    });
-  };
-  
-  // Calcule le prix estimé
-  const distance = getDistanceEstimate();
-  const estimatedPrice = distance 
-    ? calculatePrice(distance, formState.vehicleType) 
-    : 0;
-  
-  // Valeur du contexte
-  const contextValue: BookingFormContextType = {
-    formState,
-    estimatedPrice,
-    updateFormState,
-    resetForm,
-    getDistanceEstimate,
-    handleSharingEnabled
-  };
-  
+
   return (
-    <BookingFormContext.Provider value={contextValue}>
+    <BookingFormContext.Provider value={{ formState, setFormState, updateFormField }}>
       {children}
     </BookingFormContext.Provider>
   );
 };
 
-// Hook personnalisé pour utiliser le contexte
-export const useBookingForm = (): BookingFormContextType => {
+export const useBookingForm = () => {
   const context = useContext(BookingFormContext);
-  
   if (context === undefined) {
     throw new Error('useBookingForm must be used within a BookingFormProvider');
   }
-  
   return context;
 };

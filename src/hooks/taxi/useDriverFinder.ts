@@ -41,10 +41,16 @@ export function useDriverFinder() {
           user_id: "u1",
           name: "Jean Dupont",
           phone: "+242612345678",
-          vehicle_type: vehicleType || "standard",
-          vehicle_model: "Toyota Corolla",
-          license_plate: "BZV 1234",
-          photo_url: "https://randomuser.me/api/portraits/men/1.jpg",
+          vehicle_type: vehicleType as TaxiVehicleType || "standard",
+          vehicle_info: {
+            make: "Toyota",
+            model: "Corolla",
+            year: 2019,
+            color: "Silver",
+            license_plate: "BZV 1234"
+          },
+          license_number: "DL-123456",
+          status: 'available',
           rating: 4.8,
           is_available: true,
           current_latitude: pickupLatitude + (Math.random() * 0.02 - 0.01),
@@ -52,7 +58,10 @@ export function useDriverFinder() {
           total_rides: 284,
           years_experience: 3,
           languages: ["Français", "Lingala"],
-          verified: true
+          verified: true,
+          photo_url: "https://randomuser.me/api/portraits/men/1.jpg",
+          vehicle_model: "Toyota Corolla",
+          license_plate: "BZV 1234"
         },
         {
           id: "d2",
@@ -60,9 +69,15 @@ export function useDriverFinder() {
           name: "Marie Mbemba",
           phone: "+242698765432",
           vehicle_type: "premium",
-          vehicle_model: "Mercedes C-Class",
-          license_plate: "BZV 5678",
-          photo_url: "https://randomuser.me/api/portraits/women/2.jpg",
+          vehicle_info: {
+            make: "Mercedes",
+            model: "C-Class",
+            year: 2021,
+            color: "Black",
+            license_plate: "BZV 5678"
+          },
+          license_number: "DL-789012",
+          status: 'available',
           rating: 4.9,
           is_available: true,
           current_latitude: pickupLatitude + (Math.random() * 0.02 - 0.01),
@@ -70,7 +85,10 @@ export function useDriverFinder() {
           total_rides: 412,
           years_experience: 5,
           languages: ["Français", "Anglais"],
-          verified: true
+          verified: true,
+          photo_url: "https://randomuser.me/api/portraits/women/2.jpg",
+          vehicle_model: "Mercedes C-Class",
+          license_plate: "BZV 5678"
         },
         {
           id: "d3",
@@ -78,9 +96,15 @@ export function useDriverFinder() {
           name: "David Moussa",
           phone: "+242654321987",
           vehicle_type: "standard",
-          vehicle_model: "Hyundai Elantra",
-          license_plate: "BZV 9012",
-          photo_url: "https://randomuser.me/api/portraits/men/3.jpg",
+          vehicle_info: {
+            make: "Hyundai",
+            model: "Elantra",
+            year: 2020,
+            color: "White",
+            license_plate: "BZV 9012"
+          },
+          license_number: "DL-345678",
+          status: 'available',
           rating: 4.6,
           is_available: true,
           current_latitude: pickupLatitude + (Math.random() * 0.02 - 0.01),
@@ -88,7 +112,10 @@ export function useDriverFinder() {
           total_rides: 156,
           years_experience: 2,
           languages: ["Français"],
-          verified: true
+          verified: true,
+          photo_url: "https://randomuser.me/api/portraits/men/3.jpg",
+          vehicle_model: "Hyundai Elantra",
+          license_plate: "BZV 9012"
         }
       ];
       

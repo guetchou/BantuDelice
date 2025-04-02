@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { TaxiRideStatus } from '@/types/taxi';
+import { CheckCircle, Clock, MapPin, Navigation, Ban, Car, Flag } from 'lucide-react';
 
 interface StatusHeaderProps {
   rideId: string;
@@ -10,39 +9,84 @@ interface StatusHeaderProps {
 }
 
 export const StatusHeader: React.FC<StatusHeaderProps> = ({ rideId, status }) => {
-  const getStatusInfo = (status: TaxiRideStatus) => {
+  const getStatusInfo = () => {
     switch (status) {
       case 'pending':
-        return { badge: 'En attente', variant: 'outline' };
+        return {
+          title: 'En attente',
+          description: 'Recherche d\'un chauffeur',
+          icon: <Clock className="h-5 w-5 text-yellow-500" />
+        };
       case 'driver_assigned':
-        return { badge: 'Accepté', variant: 'outline' };
+      case 'accepted':
+        return {
+          title: 'Chauffeur attribué',
+          description: 'Un chauffeur a accepté votre course',
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />
+        };
       case 'driver_en_route':
-        return { badge: 'En route', variant: 'outline' };
+        return {
+          title: 'En approche',
+          description: 'Le chauffeur se dirige vers vous',
+          icon: <Navigation className="h-5 w-5 text-blue-500" />
+        };
       case 'driver_arrived':
-        return { badge: 'Arrivé', variant: 'outline' };
+        return {
+          title: 'Chauffeur arrivé',
+          description: 'Votre chauffeur vous attend',
+          icon: <MapPin className="h-5 w-5 text-green-500" />
+        };
       case 'ride_in_progress':
-        return { badge: 'En cours', variant: 'outline' };
+      case 'in_progress':
+        return {
+          title: 'En cours',
+          description: 'Course en cours',
+          icon: <Car className="h-5 w-5 text-blue-500" />
+        };
       case 'arrived_at_destination':
-        return { badge: 'Arrivé', variant: 'outline' };
+        return {
+          title: 'Arrivé',
+          description: 'Arrivé à destination',
+          icon: <Flag className="h-5 w-5 text-green-500" />
+        };
       case 'completed':
-        return { badge: 'Terminé', variant: 'outline' };
+        return {
+          title: 'Terminée',
+          description: 'Course terminée avec succès',
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />
+        };
       case 'cancelled':
-        return { badge: 'Annulé', variant: 'destructive' };
+        return {
+          title: 'Annulée',
+          description: 'Course annulée',
+          icon: <Ban className="h-5 w-5 text-red-500" />
+        };
       case 'rejected':
-        return { badge: 'Rejeté', variant: 'destructive' };
+        return {
+          title: 'Rejetée',
+          description: 'Aucun chauffeur disponible',
+          icon: <Ban className="h-5 w-5 text-red-500" />
+        };
       default:
-        return { badge: 'Inconnu', variant: 'outline' };
+        return {
+          title: 'État inconnu',
+          description: 'Statut de la course inconnu',
+          icon: <Clock className="h-5 w-5 text-gray-500" />
+        };
     }
   };
 
-  const statusInfo = getStatusInfo(status);
+  const { title, description, icon } = getStatusInfo();
 
   return (
-    <div className="flex justify-between items-center">
-      <CardTitle className="text-lg">Suivi de votre course</CardTitle>
-      <Badge variant={statusInfo.variant === 'destructive' ? 'destructive' : 'outline'} className="uppercase">
-        {statusInfo.badge}
-      </Badge>
+    <div className="flex items-center justify-between">
+      <div className="flex gap-2 items-center">
+        {icon}
+        <div>
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
     </div>
   );
 };

@@ -6,14 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Navigation, MapPinned, CornerDownLeft, Phone, MessageCircle, Loader2 } from "lucide-react";
 import { ComboboxPopover } from "@/components/ui/combobox";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
+import TaxiMap from './TaxiMap';
 
 interface LocationSectionProps {
   pickupAddress: string;
   setPickupAddress: (address: string) => void;
   destinationAddress: string;
   setDestinationAddress: (address: string) => void;
-  onLocationSelect: (address: string, isPickup: boolean) => void;
+  onLocationSelect: (address: string, isPickup: boolean, coordinates?: [number, number]) => void;
   onUseCurrentLocation: () => void;
 }
 
@@ -32,6 +33,10 @@ const LocationSection: React.FC<LocationSectionProps> = ({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
+  const [isSelectingOnMap, setIsSelectingOnMap] = useState<'pickup' | 'destination' | null>(null);
+  const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | undefined>();
+  const [destinationCoordinates, setDestinationCoordinates] = useState<[number, number] | undefined>();
+  const [showMap, setShowMap] = useState(false);
   
   const pickupInputRef = useRef<HTMLInputElement>(null);
   const destInputRef = useRef<HTMLInputElement>(null);
@@ -73,7 +78,8 @@ const LocationSection: React.FC<LocationSectionProps> = ({
           // We'll show the button for the user to click
           console.log("Geolocation permission will be requested when needed");
         } else {
-          toast.error("Accès à la géolocalisation bloqué", {
+          toast({
+            title: "Accès à la géolocalisation bloqué",
             description: "Veuillez activer l'accès à votre position dans les paramètres de votre navigateur."
           });
         }
@@ -136,11 +142,27 @@ const LocationSection: React.FC<LocationSectionProps> = ({
     }
   };
   
+  // Handle map location selection
+  const handleMapLocationSelect = (coordinates: [number, number], address: string) => {
+    if (isSelectingOnMap === 'pickup') {
+      setPickupAddress(address);
+      setPickupCoordinates(coordinates);
+      onLocationSelect(address, true, coordinates);
+      setIsSelectingOnMap(null);
+    } else if (isSelectingOnMap === 'destination') {
+      setDestinationAddress(address);
+      setDestinationCoordinates(coordinates);
+      onLocationSelect(address, false, coordinates);
+      setIsSelectingOnMap(null);
+    }
+  };
+  
   // Handle sending chat message for location precision
   const handleSendChatMessage = () => {
     if (!chatMessage.trim()) return;
     
-    toast.success("Message envoyé", {
+    toast({
+      title: "Message envoyé",
       description: "Un agent vous contactera pour préciser votre adresse."
     });
     
@@ -151,9 +173,21 @@ const LocationSection: React.FC<LocationSectionProps> = ({
   
   // Call for assistance
   const handleCallForAssistance = () => {
-    toast.success("Appel en cours...", {
+    toast({
+      title: "Appel en cours...",
       description: "Un agent va vous contacter pour préciser votre adresse."
     });
+  };
+
+  // Toggle map view
+  const toggleMapView = () => {
+    setShowMap(!showMap);
+  };
+
+  // Select location on map
+  const selectLocationOnMap = (type: 'pickup' | 'destination') => {
+    setIsSelectingOnMap(type);
+    setShowMap(true);
   };
   
   return (
@@ -198,14 +232,10 @@ const LocationSection: React.FC<LocationSectionProps> = ({
                   size="icon" 
                   variant="ghost" 
                   className="h-8 w-8"
-                  onClick={() => {
-                    if (pickupAddress) {
-                      onLocationSelect(pickupAddress, true);
-                    }
-                  }}
-                  title="Rechercher cette adresse"
+                  onClick={() => selectLocationOnMap('pickup')}
+                  title="Sélectionner sur la carte"
                 >
-                  <CornerDownLeft className="h-4 w-4" />
+                  <MapPin className="h-4 w-4" />
                 </Button>
               </div>
               
@@ -239,21 +269,28 @@ const LocationSection: React.FC<LocationSectionProps> = ({
                     onLocationSelect(destinationAddress, false);
                   }
                 }}
-                className="pr-10"
+                className="pr-20"
               />
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                onClick={() => {
-                  if (destinationAddress) {
-                    onLocationSelect(destinationAddress, false);
-                  }
-                }}
-                title="Rechercher cette adresse"
-              >
-                <CornerDownLeft className="h-4 w-4" />
-              </Button>
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8"
+                  onClick={() => selectLocationOnMap('destination')}
+                  title="Sélectionner sur la carte"
+                >
+                  <MapPin className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8 text-primary"
+                  onClick={toggleMapView}
+                  title="Voir sur la carte"
+                >
+                  <Navigation className="h-4 w-4" />
+                </Button>
+              </div>
               
               {/* Destination Suggestions */}
               {showDestSuggestions && suggestions.length > 0 && (
@@ -270,6 +307,20 @@ const LocationSection: React.FC<LocationSectionProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Map View */}
+      {showMap && (
+        <div className="h-[300px] w-full rounded-lg overflow-hidden border border-gray-200">
+          <TaxiMap
+            pickupCoordinates={pickupCoordinates}
+            destinationCoordinates={destinationCoordinates}
+            onPickupSelect={handleMapLocationSelect}
+            onDestinationSelect={handleMapLocationSelect}
+            isSelectingPickup={isSelectingOnMap === 'pickup'}
+            isSelectingDestination={isSelectingOnMap === 'destination'}
+          />
+        </div>
+      )}
       
       {/* Assistance Options */}
       <div className="flex items-center justify-center space-x-4 py-2">
@@ -321,7 +372,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
       )}
       
       {/* Recent Addresses Section */}
-      {!chatOpen && (
+      {!chatOpen && !showMap && (
         <Card>
           <CardContent className="pt-4">
             <p className="text-sm font-medium mb-2">Adresses récentes</p>

@@ -1,6 +1,8 @@
 
-export type TaxiVehicleType = 'standard' | 'premium' | 'comfort' | 'van';
-export type TaxiRideStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
+export type TaxiVehicleType = 'standard' | 'premium' | 'comfort' | 'van' | 'electric';
+export type TaxiRideStatus = 'pending' | 'accepted' | 'driver_assigned' | 'driver_en_route' | 'driver_arrived' | 'ride_in_progress' | 'arrived_at_destination' | 'completed' | 'cancelled' | 'rejected';
+export type PaymentMethod = 'cash' | 'card' | 'wallet' | 'mobile_money' | 'business_account';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 export interface TaxiDriver {
   id: string;
@@ -8,20 +10,21 @@ export interface TaxiDriver {
   name: string;
   phone: string;
   email?: string;
-  license_number: string;
+  license_number?: string;
   vehicle_type: TaxiVehicleType;
-  vehicle_info: {
+  vehicle_info?: {
     make: string;
     model: string;
     year: number;
     color: string;
     license_plate: string;
   };
-  status: 'offline' | 'available' | 'busy';
+  status: 'offline' | 'available' | 'busy' | 'in_shared_ride';
   rating: number;
   total_rides: number;
   is_available?: boolean;
   photo_url?: string;
+  profile_image?: string;
   current_latitude?: number;
   current_longitude?: number;
   current_location?: {
@@ -30,6 +33,12 @@ export interface TaxiDriver {
     timestamp: string;
   };
   languages?: string[];
+  years_experience?: number;
+  verified?: boolean;
+  location?: [number, number];
+  license_plate?: string;
+  vehicle_model?: string;
+  profile_picture?: string;
 }
 
 export interface TaxiRide {
@@ -59,6 +68,8 @@ export interface TaxiRide {
   is_shared_ride?: boolean;
   max_passengers?: number;
   route_polyline?: string;
+  current_passengers?: number;
+  estimated_arrival_time?: string;
 }
 
 export interface TaxiRideRequest {
@@ -76,6 +87,9 @@ export interface TaxiPricingParams {
   duration_min: number;
   vehicle_type: TaxiVehicleType;
   time_of_day: string;
+  subscription_discount?: number;
+  promo_code?: string;
+  is_premium?: boolean;
 }
 
 export interface TaxiFare {
@@ -86,6 +100,7 @@ export interface TaxiFare {
   surge_multiplier?: number;
   total?: number;
   peak_hours_multiplier?: number;
+  subscription_discount?: number;
 }
 
 export interface TaxiPriceEstimate {
@@ -107,6 +122,13 @@ export interface PricingFactors {
   perKmRate: number;
   perMinRate: number;
   serviceFee: number;
+  vehicle_type?: TaxiVehicleType;
+  distance_km?: number;
+  duration_min?: number;
+  time_of_day?: string;
+  subscription_discount?: number;
+  promo_code?: string;
+  is_premium?: boolean;
 }
 
 export interface PriceRange {
@@ -114,3 +136,61 @@ export interface PriceRange {
   max: number;
   currency: string;
 }
+
+export interface TaxiLocation {
+  latitude: number;
+  longitude: number;
+  address?: string;
+  timestamp?: number;
+}
+
+export interface RideShareRequest {
+  id: string;
+  ride_id: string;
+  requester_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  pickup_address: string;
+  pickup_latitude: number;
+  pickup_longitude: number;
+  created_at: string;
+}
+
+export interface TaxiSubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  billing_cycle: 'monthly' | 'quarterly' | 'annual';
+  features: string[];
+  discount_percentage: number;
+  max_rides_per_month: number | null;
+  priority_booking: boolean;
+  cancellation_fee_waiver: boolean;
+  status: 'active' | 'inactive';
+}
+
+export interface TaxiInvoice {
+  id: string;
+  ride_id: string;
+  user_id: string;
+  amount: number;
+  tax_amount: number;
+  total_amount: number;
+  issue_date: string;
+  due_date: string;
+  status: 'pending' | 'paid' | 'overdue';
+  payment_method?: PaymentMethod;
+  payment_date?: string;
+  invoice_number: string;
+}
+
+export type RideStatus = 
+  | 'pending' 
+  | 'driver_assigned' 
+  | 'driver_en_route' 
+  | 'driver_arrived' 
+  | 'ride_in_progress' 
+  | 'arrived_at_destination' 
+  | 'completed' 
+  | 'cancelled' 
+  | 'rejected';

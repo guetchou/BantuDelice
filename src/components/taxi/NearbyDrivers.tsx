@@ -1,10 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Clock, Shield, Languages } from "lucide-react";
-import { useTaxiDriverSelection } from '@/hooks/useTaxiDriverSelection';
-import { TaxiDriver } from '@/types/taxi';
+import { TaxiDriver, TaxiVehicleType } from '@/types/taxi';
 
 interface NearbyDriversProps {
   pickupLatitude: number;
@@ -14,6 +13,8 @@ interface NearbyDriversProps {
   vehicleType: string;
   onSelectDriver: (driver: TaxiDriver) => void;
   rideId: string;
+  availableDrivers?: TaxiDriver[];
+  selectedDriver: TaxiDriver | null;
 }
 
 const NearbyDrivers: React.FC<NearbyDriversProps> = ({
@@ -23,107 +24,55 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
   destinationLongitude,
   vehicleType,
   onSelectDriver,
-  rideId
+  rideId,
+  availableDrivers = [],
+  selectedDriver
 }) => {
-  const {
-    isLoading,
-    nearbyDrivers,
-    selectedDriver,
-    findOptimalDrivers,
-    handleSelectDriver
-  } = useTaxiDriverSelection();
+  const isLoading = availableDrivers.length === 0;
   
-  const [searchingForDrivers, setSearchingForDrivers] = useState(true);
-  const [foundDrivers, setFoundDrivers] = useState<TaxiDriver[]>([]);
-
-  useEffect(() => {
-    // Simulate fetching nearby drivers
-    const fetchDrivers = async () => {
-      setSearchingForDrivers(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Mock data for demo purposes
-        const mockDrivers: TaxiDriver[] = [
-          {
-            id: '1',
-            user_id: 'user-123',
-            name: 'Jean Dupont',
-            phone: '+242 06 123 4567',
-            vehicle_type: vehicleType as TaxiVehicleType,
-            license_plate: 'BZV 1234',
-            rating: 4.8,
-            is_available: true,
-            current_latitude: pickupLatitude + 0.01,
-            current_longitude: pickupLongitude - 0.01,
-            photo_url: 'https://randomuser.me/api/portraits/men/32.jpg',
-            vehicle_model: 'Toyota Corolla', 
-            languages: ['Français', 'Lingala'],
-            years_experience: 5,
-            total_rides: 342,
-            verified: true,
-            location: [pickupLatitude + 0.01, pickupLongitude - 0.01],
-            status: 'available'
-          },
-          {
-            id: '2',
-            user_id: 'user-456',
-            name: 'Marie Okemba',
-            phone: '+242 05 234 5678',
-            vehicle_type: vehicleType as TaxiVehicleType,
-            license_plate: 'BZV 5678',
-            rating: 4.6,
-            is_available: true,
-            current_latitude: pickupLatitude - 0.005,
-            current_longitude: pickupLongitude + 0.007,
-            photo_url: 'https://randomuser.me/api/portraits/women/44.jpg',
-            vehicle_model: 'Hyundai Accent',
-            languages: ['Français', 'Anglais'],
-            years_experience: 3,
-            total_rides: 187,
-            verified: true,
-            location: [pickupLatitude - 0.005, pickupLongitude + 0.007],
-            status: 'available'
-          },
-          {
-            id: '3',
-            user_id: 'user-789',
-            name: 'Pascal Moukala',
-            phone: '+242 06 345 6789',
-            vehicle_type: vehicleType as TaxiVehicleType,
-            license_plate: 'BZV 9012',
-            rating: 4.9,
-            is_available: true,
-            current_latitude: pickupLatitude + 0.008,
-            current_longitude: pickupLongitude + 0.002,
-            photo_url: 'https://randomuser.me/api/portraits/men/67.jpg',
-            vehicle_model: 'Honda Civic',
-            languages: ['Français', 'Kituba'],
-            years_experience: 7,
-            total_rides: 520,
-            verified: true,
-            location: [pickupLatitude + 0.008, pickupLongitude + 0.002],
-            status: 'available'
-          }
-        ];
-        
-        setFoundDrivers(mockDrivers);
-      } catch (error) {
-        console.error('Error fetching drivers:', error);
-      } finally {
-        setSearchingForDrivers(false);
-      }
-    };
+  // Calculate estimated arrival time based on distance
+  const getEstimatedArrival = (driver: TaxiDriver): string => {
+    if (!driver.current_latitude || !driver.current_longitude) return '10 min';
     
-    fetchDrivers();
-  }, [pickupLatitude, pickupLongitude, vehicleType]);
-
-  const handleDriverSelect = (driver: TaxiDriver) => {
-    handleSelectDriver(driver);
-    onSelectDriver(driver);
+    // Simple distance calculation
+    const distance = calculateDistance(
+      pickupLatitude, 
+      pickupLongitude, 
+      driver.current_latitude, 
+      driver.current_longitude
+    );
+    
+    // Rough estimate: 2 min per km + 3 min base
+    const minutes = Math.ceil(distance * 2) + 3;
+    return `${minutes} min`;
+  };
+  
+  // Calculate distance between two points
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in km
+    return distance;
+  };
+  
+  const deg2rad = (deg: number): number => {
+    return deg * (Math.PI / 180);
   };
 
-  if (searchingForDrivers) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Recherche de chauffeurs à proximité...</h3>
@@ -147,15 +96,15 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">
-        {foundDrivers.length > 0 
+        {availableDrivers.length > 0 
           ? 'Chauffeurs disponibles à proximité' 
           : 'Aucun chauffeur disponible pour le moment'}
       </h3>
       
-      {foundDrivers.map((driver) => (
+      {availableDrivers.map((driver) => (
         <div 
           key={driver.id}
-          onClick={() => handleDriverSelect(driver)}
+          onClick={() => onSelectDriver(driver)}
           className={`border rounded-lg p-4 space-y-3 cursor-pointer transition-all ${
             selectedDriver?.id === driver.id 
               ? 'border-primary bg-primary/5' 
@@ -165,7 +114,7 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
               <img 
-                src={driver.photo_url || 'https://via.placeholder.com/48'} 
+                src={driver.photo_url || driver.profile_image || 'https://via.placeholder.com/48'} 
                 alt={driver.name} 
                 className="h-full w-full object-cover"
               />
@@ -178,18 +127,21 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
                   <span className="ml-1 text-sm">{driver.rating}</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-500">{driver.vehicle_model} • {driver.license_plate}</p>
+              <p className="text-sm text-gray-500">
+                {driver.vehicle_model || driver.vehicle_info?.model || 'Véhicule standard'} • 
+                {driver.license_plate || driver.vehicle_info?.license_plate || 'N/A'}
+              </p>
             </div>
           </div>
           
           <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <MapPin className="h-4 w-4 text-primary" />
-              <span>7 min</span>
+              <span>{getEstimatedArrival(driver)}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4 text-primary" />
-              <span>{driver.years_experience} ans d'expérience</span>
+              <span>{driver.years_experience || 3} ans d'expérience</span>
             </div>
             <div className="flex items-center gap-1">
               <Shield className="h-4 w-4 text-green-500" />
@@ -206,7 +158,7 @@ const NearbyDrivers: React.FC<NearbyDriversProps> = ({
           <Button 
             onClick={(e) => {
               e.stopPropagation();
-              handleDriverSelect(driver);
+              onSelectDriver(driver);
             }}
             className={`w-full ${
               selectedDriver?.id === driver.id 
