@@ -1,9 +1,10 @@
 
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useAppNavigation } from "@/utils/navigation";
 
-export const BackButton = () => {
+export const BackButton: React.FC = () => {
   const { goBack, currentPath } = useAppNavigation();
 
   // Ne pas afficher le bouton retour sur les pages principales
