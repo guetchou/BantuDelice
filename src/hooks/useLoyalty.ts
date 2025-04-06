@@ -1,167 +1,145 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { loyaltyService } from '@/services/apiService';
-import { useToast } from '@/hooks/use-toast';
-import pb from '@/lib/pocketbase';
-import { LoyaltyTier } from '@/types/loyalty';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from './use-toast';
+import { Cashback } from '@/types/wallet';
 
-interface UseLoyaltyProps {
+interface LoyaltyHookOptions {
   userId?: string;
 }
 
-interface LoyaltyStatus {
-  id: string;
-  user_id: string;
-  points: number;
-  lifetime_points: number;
-  tier_name: LoyaltyTier;
-  points_to_next_tier: number | null;
-  created_at: string;
-  updated_at: string;
+type LoyaltyStatus = Partial<Cashback> & {
+  points?: number;
+  lifetime_points?: number;
 }
 
-export function useLoyalty({ userId }: UseLoyaltyProps = {}) {
+export function useLoyalty(options?: LoyaltyHookOptions) {
   const [status, setStatus] = useState<LoyaltyStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const fetchLoyaltyStatus = useCallback(async () => {
+  
+  const fetchLoyaltyStatus = async () => {
+    if (!options?.userId) {
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setIsLoading(true);
-      setError(null);
+      // Fetch loyalty status from the API
+      const { data, error } = await supabase
+        .from('loyalty_points')
+        .select('*')
+        .eq('user_id', options.userId)
+        .single();
       
-      // Récupérer l'utilisateur actuel si userId n'est pas fourni
-      let currentUserId = userId;
-      if (!currentUserId) {
-        if (pb.authStore.isValid) {
-          currentUserId = pb.authStore.model?.id;
-        } else {
-          setIsLoading(false);
-          return;
-        }
+      if (error) {
+        throw error;
       }
       
-      // Chercher le statut de fidélité de l'utilisateur
-      const response = await loyaltyService.getAll({ user_id: currentUserId });
-      
-      if (response.error) {
-        throw response.error;
-      }
-      
-      if (response.data && response.data.length > 0) {
-        setStatus(response.data[0] as unknown as LoyaltyStatus);
-      } else {
-        // Créer un nouveau statut si aucun n'existe
-        const defaultStatus = {
-          user_id: currentUserId,
-          points: 0,
-          lifetime_points: 0,
-          tier_name: 'bronze' as LoyaltyTier,
-          points_to_next_tier: 100,
-          benefits: JSON.stringify(['5% de remise sur la prochaine commande']),
-        };
+      if (data) {
+        // Handle benefits which might be stored as a JSON string
+        const parsedBenefits = data.benefits && typeof data.benefits === 'string' 
+          ? JSON.parse(data.benefits)
+          : Array.isArray(data.benefits) 
+            ? data.benefits 
+            : [];
         
-        const createResponse = await loyaltyService.create(defaultStatus);
-        if (createResponse.error) {
-          throw createResponse.error;
-        }
-        setStatus(createResponse.data as unknown as LoyaltyStatus);
+        setStatus({
+          ...data,
+          benefits: parsedBenefits,
+          tier_name: data.tier_name || data.tier,
+          tier: data.tier || data.tier_name
+        });
+      } else {
+        // No loyalty record found
+        setStatus(null);
       }
-      
-    } catch (err) {
-      console.error('Erreur lors de la récupération du statut de fidélité:', err);
-      setError(err instanceof Error ? err : new Error(String(err)));
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger votre statut de fidélité",
-        variant: "destructive",
-      });
+    } catch (err: any) {
+      console.error('Error fetching loyalty status:', err);
+      setError(err.message || 'Failed to fetch loyalty status');
     } finally {
       setIsLoading(false);
     }
-  }, [userId, toast]);
-
-  const addPoints = useCallback(async (pointsToAdd: number, reason: string = 'Achat') => {
-    if (!status?.id) {
-      await fetchLoyaltyStatus();
-      if (!status?.id) return;
+  };
+  
+  const addPoints = async (points: number, reason: string = 'Points earned') => {
+    if (!options?.userId || !status) {
+      console.error('Cannot add points: userId or status is missing');
+      return;
     }
     
+    setIsLoading(true);
+    
     try {
-      const newPoints = status.points + pointsToAdd;
-      const newLifetimePoints = status.lifetime_points + pointsToAdd;
+      // Add points to the user's balance
+      const newPoints = (status.points || 0) + points;
+      const newLifetimePoints = (status.lifetime_points || 0) + points;
       
-      // Déterminer le nouveau niveau
-      let newTier = status.tier_name;
-      let pointsToNextTier = status.points_to_next_tier;
+      // Update loyalty status in database
+      const { error: updateError } = await supabase
+        .from('loyalty_points')
+        .update({
+          points: newPoints,
+          lifetime_points: newLifetimePoints,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', options.userId);
       
-      if (newPoints >= 1000) {
-        newTier = 'diamond';
-        pointsToNextTier = null;
-      } else if (newPoints >= 500) {
-        newTier = 'gold';
-        pointsToNextTier = 1000 - newPoints;
-      } else if (newPoints >= 200) {
-        newTier = 'silver';
-        pointsToNextTier = 500 - newPoints;
-      } else {
-        pointsToNextTier = 200 - newPoints;
+      if (updateError) {
+        throw updateError;
       }
       
-      // Mise à jour du statut
-      const response = await loyaltyService.update(status.id, {
-        points: newPoints,
-        lifetime_points: newLifetimePoints,
-        tier_name: newTier,
-        points_to_next_tier: pointsToNextTier,
-        updated_at: new Date().toISOString()
-      });
-      
-      if (response.error) {
-        throw response.error;
-      }
-      
-      setStatus(response.data as unknown as LoyaltyStatus);
-      
-      // Notification de l'utilisateur
-      toast({
-        title: "Points ajoutés",
-        description: `${pointsToAdd} points ajoutés à votre compte de fidélité (${reason})`,
-      });
-      
-      // Si l'utilisateur a changé de niveau
-      if (newTier !== status.tier_name) {
-        toast({
-          title: "Niveau augmenté!",
-          description: `Félicitations! Vous êtes maintenant au niveau ${newTier}`,
-          variant: "success"
+      // Record the transaction
+      const { error: transactionError } = await supabase
+        .from('loyalty_transactions')
+        .insert({
+          user_id: options.userId,
+          amount: points,
+          type: 'earn',
+          description: reason,
+          created_at: new Date().toISOString()
         });
+      
+      if (transactionError) {
+        console.error('Error recording loyalty transaction:', transactionError);
       }
       
-      return response.data;
+      // Update local state
+      setStatus(prev => prev ? {
+        ...prev,
+        points: newPoints,
+        lifetime_points: newLifetimePoints
+      } : null);
       
-    } catch (err) {
-      console.error('Erreur lors de l\'ajout de points:', err);
+      toast({
+        title: "Points ajoutés !",
+        description: `${points} points ont été ajoutés à votre compte de fidélité.`,
+        variant: "default"
+      });
+      
+      return { success: true };
+      
+    } catch (err: any) {
+      console.error('Error adding loyalty points:', err);
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter des points",
-        variant: "destructive",
+        description: "Impossible d'ajouter des points de fidélité.",
+        variant: "destructive"
       });
-      return null;
+      return { success: false, error: err.message };
+    } finally {
+      setIsLoading(false);
     }
-  }, [status, fetchLoyaltyStatus, toast]);
-
-  // Récupérer les points au chargement initial
-  useEffect(() => {
-    fetchLoyaltyStatus();
-  }, [fetchLoyaltyStatus]);
-
+  };
+  
   return {
     status,
     isLoading,
     error,
     fetchLoyaltyStatus,
-    addPoints,
+    addPoints
   };
 }

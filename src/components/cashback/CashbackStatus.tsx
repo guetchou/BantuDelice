@@ -94,14 +94,23 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
 
   // Create a properly typed Cashback object from the status
   const cashbackStatus: Cashback = {
-    ...status,
-    tier_name: status.tier_name || status.tier,
+    id: status.id || '',
+    user_id: status.user_id || '',
+    balance: status.balance || 0,
+    lifetime_earned: status.lifetime_earned || status.lifetime_points || 0,
+    tier: status.tier || status.level || 'bronze',
+    tier_name: status.tier_name || status.tier || status.level || 'bronze',
+    tier_progress: status.tier_progress || 0,
     points_to_next_tier: status.points_to_next_tier || 0,
-    benefits: status.benefits ? (
-      typeof status.benefits === 'string' ? 
-        JSON.parse(status.benefits) : 
-        status.benefits
-    ) : []
+    benefits: Array.isArray(status.benefits) 
+      ? status.benefits 
+      : typeof status.benefits === 'string' 
+        ? JSON.parse(status.benefits) 
+        : [],
+    last_updated: status.updated_at || status.last_updated || new Date().toISOString(),
+    created_at: status.created_at || new Date().toISOString(),
+    points: status.points || 0,
+    lifetime_points: status.lifetime_points || 0,
   };
 
   const getTierIcon = () => {
@@ -124,8 +133,8 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
 
   const getProgress = () => {
     if (!cashbackStatus.points_to_next_tier) return 100;
-    const totalPointsNeeded = status.points + cashbackStatus.points_to_next_tier;
-    return (status.points / totalPointsNeeded) * 100;
+    const totalPointsNeeded = (status.points || 0) + cashbackStatus.points_to_next_tier;
+    return ((status.points || 0) / totalPointsNeeded) * 100;
   };
 
   const currentTier = tierDetails[cashbackStatus.tier_name.toLowerCase()] || tierDetails.bronze;
@@ -153,12 +162,12 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
           </div>
           <Progress value={getProgress()} className={getTierColor()} />
           <div className="text-xs text-gray-500">
-            {status.points}/{nextTier.minimum_points} points pour atteindre le niveau {nextTier.name}
+            {status.points || 0}/{nextTier.minimum_points} points pour atteindre le niveau {nextTier.name}
           </div>
         </div>
       )}
 
-      {showDetailedInfo && (
+      {showDetailedInfo && cashbackStatus.benefits && cashbackStatus.benefits.length > 0 && (
         <div className="space-y-4">
           <h3 className="font-semibold flex items-center gap-2">
             <Gift className="h-5 w-5" />
@@ -177,7 +186,7 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
 
       <div className="mt-6 pt-6 border-t">
         <p className="text-sm text-gray-500">
-          Points accumulés depuis le début : {status.lifetime_points}
+          Points accumulés depuis le début : {status.lifetime_points || cashbackStatus.lifetime_earned || 0}
         </p>
       </div>
     </Card>
