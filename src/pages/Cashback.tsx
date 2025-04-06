@@ -32,7 +32,14 @@ const CashbackPage = () => {
           balance: 7500,
           lifetime_earned: 12000,
           tier: 'silver',
+          tier_name: 'Silver',
           tier_progress: 70, // 70% progress to gold
+          points_to_next_tier: 3000,
+          benefits: [
+            '7% de cashback sur chaque commande', 
+            'Accès aux offres promotionnelles',
+            'Livraison gratuite une fois par mois'
+          ],
           last_updated: new Date().toISOString(),
           created_at: new Date().toISOString()
         };

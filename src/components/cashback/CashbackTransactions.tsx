@@ -4,9 +4,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, ArrowDownLeft, CreditCard, Send, Gift } from "lucide-react";
 import { formatCurrency } from "@/utils/formatCurrency";
-import { CashbackTransaction } from "@/types/payment";
+import { CashbackTransaction, CashbackTransactionType } from "@/types/wallet";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+
+// Define a mapping from backend types to our CashbackTransactionType
+const mapTransactionType = (type: string): CashbackTransactionType => {
+  const map: Record<string, CashbackTransactionType> = {
+    'earned': 'earn',
+    'used': 'redeem',
+    'transferred': 'redeem',
+    'received': 'earn',
+    'refunded': 'earn',
+    'expired': 'expire'
+  };
+  return map[type] || 'earn';
+};
 
 const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
   const [transactions, setTransactions] = useState<CashbackTransaction[]>([]);
@@ -30,7 +43,7 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
             id: '1',
             user_id: userId,
             amount: 500,
-            type: 'earned',
+            type: 'earn',
             reference_id: 'order-123',
             reference_type: 'order',
             description: 'Cashback pour commande #123',
@@ -40,7 +53,7 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
             id: '2',
             user_id: userId,
             amount: 200,
-            type: 'used',
+            type: 'redeem',
             reference_id: 'order-124',
             reference_type: 'order',
             description: 'Utilisé pour commande #124',
@@ -50,7 +63,7 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
             id: '3',
             user_id: userId,
             amount: 300,
-            type: 'received',
+            type: 'earn',
             sender_id: 'user-456',
             reference_type: 'transfer',
             description: 'Reçu de Marie',
@@ -60,7 +73,7 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
             id: '4',
             user_id: userId,
             amount: 150,
-            type: 'transferred',
+            type: 'redeem',
             receiver_id: 'user-789',
             reference_type: 'transfer',
             description: 'Envoyé à Amadou',
@@ -70,7 +83,7 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
             id: '5',
             user_id: userId,
             amount: 100,
-            type: 'earned',
+            type: 'earn',
             reference_id: 'promotion-123',
             reference_type: 'promotion',
             description: 'Bonus fidélité',
@@ -80,7 +93,7 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
             id: '6',
             user_id: userId,
             amount: 75,
-            type: 'refunded',
+            type: 'earn',
             reference_id: 'refund-123',
             reference_type: 'refund',
             description: 'Remboursement commande annulée',
@@ -99,71 +112,61 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
     fetchTransactions();
   }, [showAll, limit]);
 
-  const getTransactionIcon = (type: string) => {
-    switch(type) {
-      case 'earned':
-        return <ArrowDownLeft className="h-5 w-5 text-green-500" />;
-      case 'used':
-        return <CreditCard className="h-5 w-5 text-amber-500" />;
-      case 'transferred':
-        return <Send className="h-5 w-5 text-indigo-500" />;
-      case 'received':
-        return <Gift className="h-5 w-5 text-purple-500" />;
-      case 'refunded':
-        return <ArrowDownLeft className="h-5 w-5 text-blue-500" />;
-      case 'expired':
-        return <ArrowUpRight className="h-5 w-5 text-red-500" />;
-      default:
-        return <CreditCard className="h-5 w-5" />;
+  const getTransactionIcon = (type: CashbackTransactionType, referenceType?: string) => {
+    if (type === 'earn' && referenceType === 'transfer') {
+      return <Gift className="h-5 w-5 text-purple-500" />;
+    } else if (type === 'earn') {
+      return <ArrowDownLeft className="h-5 w-5 text-green-500" />;
+    } else if (type === 'redeem' && referenceType === 'transfer') {
+      return <Send className="h-5 w-5 text-indigo-500" />;
+    } else if (type === 'redeem') {
+      return <CreditCard className="h-5 w-5 text-amber-500" />;
+    } else if (type === 'expire') {
+      return <ArrowUpRight className="h-5 w-5 text-red-500" />;
+    } else {
+      return <CreditCard className="h-5 w-5" />;
     }
   };
 
-  const getTransactionColor = (type: string) => {
+  const getTransactionColor = (type: CashbackTransactionType) => {
     switch(type) {
-      case 'earned':
-      case 'received':
-      case 'refunded':
+      case 'earn':
         return 'text-green-500';
-      case 'used':
-      case 'transferred':
-      case 'expired':
+      case 'redeem':
+      case 'expire':
         return 'text-red-500';
       default:
         return '';
     }
   };
 
-  const getTransactionPrefix = (type: string) => {
+  const getTransactionPrefix = (type: CashbackTransactionType) => {
     switch(type) {
-      case 'earned':
-      case 'received':
-      case 'refunded':
+      case 'earn':
         return '+';
-      case 'used':
-      case 'transferred':
-      case 'expired':
+      case 'redeem':
+      case 'expire':
         return '-';
       default:
         return '';
     }
   };
 
-  const getTransactionLabel = (type: string) => {
-    switch(type) {
-      case 'earned':
-        return 'Cashback gagné';
-      case 'used':
-        return 'Utilisé pour commande';
-      case 'transferred':
-        return 'Transfert envoyé';
-      case 'received':
-        return 'Transfert reçu';
-      case 'refunded':
-        return 'Remboursement';
-      case 'expired':
-        return 'Expiré';
-      default:
-        return type;
+  const getTransactionLabel = (type: CashbackTransactionType, referenceType?: string) => {
+    if (type === 'earn' && referenceType === 'order') {
+      return 'Cashback gagné';
+    } else if (type === 'earn' && referenceType === 'transfer') {
+      return 'Transfert reçu';
+    } else if (type === 'earn' && referenceType === 'refund') {
+      return 'Remboursement';
+    } else if (type === 'redeem' && referenceType === 'order') {
+      return 'Utilisé pour commande';
+    } else if (type === 'redeem' && referenceType === 'transfer') {
+      return 'Transfert envoyé';
+    } else if (type === 'expire') {
+      return 'Expiré';
+    } else {
+      return type;
     }
   };
 
@@ -199,10 +202,10 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
                 <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-muted rounded-full">
-                      {getTransactionIcon(transaction.type)}
+                      {getTransactionIcon(transaction.type, transaction.reference_type)}
                     </div>
                     <div>
-                      <p className="font-medium text-sm">{getTransactionLabel(transaction.type)}</p>
+                      <p className="font-medium text-sm">{getTransactionLabel(transaction.type, transaction.reference_type)}</p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(transaction.created_at), 'dd MMM yyyy', { locale: fr })}
                       </p>

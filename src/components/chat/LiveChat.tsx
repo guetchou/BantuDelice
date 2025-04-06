@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,7 @@ const LiveChat = () => {
             message,
             created_at,
             is_bot,
-            profiles:profiles(first_name, last_name, avatar_url)
+            profiles(first_name, last_name, avatar_url)
           `)
           .or(`user_id.eq.${user.id},is_bot.eq.true`)
           .order('created_at', { ascending: true })
@@ -129,7 +128,7 @@ const LiveChat = () => {
       // Simulate bot response
       setTimeout(async () => {
         const botResponses = [
-          "Merci pour votre message! Un agent va vous répondre sous peu.",
+          "Merci pour votre message! Un agent vous contactera par chat pour préciser votre adresse.",
           "Votre question est importante pour nous. Nous y répondrons dans les plus brefs délais.",
           "Nous avons bien reçu votre message et nous traitons votre demande.",
           "Merci de nous avoir contactés. Un membre de notre équipe vous répondra bientôt."
