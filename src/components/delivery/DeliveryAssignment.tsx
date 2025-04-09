@@ -147,8 +147,8 @@ const DeliveryAssignment = ({
       const optimalDriver = await findOptimalDriver({
         id: orderId,
         delivery_address: deliveryAddress,
-        latitude: deliveryLatitude || restaurantLocation.latitude + 0.01,
-        longitude: deliveryLongitude || restaurantLocation.longitude + 0.01,
+        latitude: deliveryLatitude || 0, 
+        longitude: deliveryLongitude || 0,
         total_amount: 0
       });
 

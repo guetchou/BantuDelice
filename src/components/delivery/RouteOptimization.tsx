@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { MapPin, LocateFixed, ArrowUp, ArrowDown, Package, MapIcon, Clock, RotateCw, PlusCircle, Bike, Car, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, LocateFixed, ArrowUp, ArrowDown, Package, MapIcon, Clock, RotateCw, PlusCircle, Bike, Car, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import { calculateDistance, estimateDeliveryTime } from '@/utils/deliveryOptimization';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Toggle } from '@/components/ui/toggle';
@@ -20,6 +20,15 @@ import {
 
 interface RouteOptimizationProps {
   driverId: string;
+}
+
+// Enhanced DeliveryLocation with additional properties needed for route optimization
+interface EnhancedDeliveryLocation {
+  latitude: number;
+  longitude: number;
+  request_id?: string;
+  type?: 'pickup' | 'delivery';
+  is_priority?: boolean;
 }
 
 export default function RouteOptimization({ driverId }: RouteOptimizationProps) {
@@ -100,13 +109,13 @@ export default function RouteOptimization({ driverId }: RouteOptimizationProps) 
       }
       
       // Start from driver's current position
-      const startPoint = {
+      const startPoint: EnhancedDeliveryLocation = {
         latitude: driver.current_latitude,
         longitude: driver.current_longitude
       };
       
       // Calculate all distances between points
-      const points = [
+      const points: EnhancedDeliveryLocation[] = [
         startPoint,
         ...selectedRequestsData.map(req => ({
           request_id: req.id,
@@ -127,7 +136,7 @@ export default function RouteOptimization({ driverId }: RouteOptimizationProps) 
       // For simplicity, use a basic nearest neighbor algorithm
       // In a real application, you'd use a more sophisticated algorithm
       let currentPoint = points[0];
-      const visitedPoints = [currentPoint];
+      const visitedPoints: EnhancedDeliveryLocation[] = [currentPoint];
       const remainingPoints = points.slice(1);
       
       // For each request, we need to visit both pickup and delivery points
@@ -646,64 +655,70 @@ export default function RouteOptimization({ driverId }: RouteOptimizationProps) 
               )}
             </ScrollArea>
             
-            <div className="mt-4 flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                {selectedRequests.length} livraison(s) sélectionnée(s)
+         
+
+
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between">
+                <span>Sélectionnés:</span>
+                <span>{selectedRequests.length}</span>
               </div>
-              <Button 
-                onClick={optimizeRoute}
-                disabled={selectedRequests.length === 0 || isCalculating}
-              >
-                {isCalculating ? 'Calcul en cours...' : 'Optimiser l\'itinéraire'}
-              </Button>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={optimizeRoute}
+                  disabled={selectedRequests.length === 0 || isCalculating}
+                  className="flex-1"
+                >
+                  {isCalculating ? "Optimisation..." : "Optimiser l'itinéraire"}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setSelectedRequests([])}
+                  disabled={selectedRequests.length === 0}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </Button>
+              </div>
+              
+              {optimizedRoute && (
+                <div className="mt-4 space-y-4">
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Itinéraire optimisé</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Distance totale:</span>
+                        <span>{optimizedRoute.totalDistance.toFixed(1)} km</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Durée estimée:</span>
+                        <span>{Math.floor(optimizedRoute.totalDuration / 60)} min</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Nombre de livraisons:</span>
+                        <span>{optimizedRoute.requestIds.length}</span>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      className="w-full mt-4" 
+                      onClick={createRoute}
+                    >
+                      Créer l'itinéraire
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-            
-            {optimizedRoute && (
-              <div className="mt-4 p-4 border rounded-lg bg-muted/10">
-                <h4 className="font-medium mb-2">Itinéraire optimisé</h4>
-                <div className="text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span>Distance totale:</span>
-                    <span className="font-medium">{optimizedRoute.totalDistance.toFixed(1)} km</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Durée estimée:</span>
-                    <span className="font-medium">{Math.round(optimizedRoute.totalDuration / 60)} minutes</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Nombre d'arrêts:</span>
-                    <span className="font-medium">{optimizedRoute.waypoints.length}</span>
-                  </div>
-                </div>
-                <div className="mt-4 flex justify-end">
-                  <Button onClick={createRoute}>
-                    Créer l'itinéraire
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
           
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Itinéraires actifs</h3>
-              <Button variant="outline" size="sm" onClick={() => setShowMap(!showMap)}>
-                <MapIcon className="h-4 w-4 mr-2" />
-                {showMap ? 'Masquer la carte' : 'Voir la carte'}
-              </Button>
-            </div>
-            
-            {showMap && (
-              <div className="mb-4 h-[200px] bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <MapIcon className="h-8 w-8 mx-auto mb-2" />
-                  Carte des itinéraires
-                </div>
-              </div>
-            )}
+            <h3 className="text-lg font-semibold mb-4">Itinéraires actifs</h3>
             
             {activeRoutes.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-muted-foreground border rounded-lg">
                 Aucun itinéraire actif
               </div>
             ) : (
@@ -715,82 +730,62 @@ export default function RouteOptimization({ driverId }: RouteOptimizationProps) 
                     onOpenChange={() => toggleRouteExpand(route.id)}
                     className="border rounded-lg overflow-hidden"
                   >
-                    <div className="p-3 bg-muted/10 flex justify-between items-center">
-                      <div>
-                        <div className="font-medium">
-                          Itinéraire #{route.id.slice(0, 8)}
+                    <div className="p-4 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <MapIcon className="h-5 w-5 text-primary" />
+                          <div>
+                            <h4 className="font-semibold">Itinéraire #{route.id.slice(0, 8)}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {route.delivery_requests.length} livraisons • {route.total_distance?.toFixed(1)} km
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {route.delivery_requests.length} livraison(s) • {route.total_distance.toFixed(1)} km
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                          Actif
-                        </Badge>
+                        
                         <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            {openRouteId === route.id ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            {openRouteId === route.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           </Button>
                         </CollapsibleTrigger>
                       </div>
                     </div>
                     
                     <CollapsibleContent>
-                      <div className="p-3 space-y-3">
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Début:</span>{' '}
-                            {new Date(route.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      <div className="p-4 space-y-4">
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span>Début:</span>
+                            <span>{new Date(route.start_time).toLocaleTimeString()}</span>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Fin estimée:</span>{' '}
-                            {new Date(route.estimated_end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          <div className="flex justify-between">
+                            <span>Fin estimée:</span>
+                            <span>{new Date(route.estimated_end_time).toLocaleTimeString()}</span>
                           </div>
                         </div>
                         
                         <div className="space-y-2">
-                          <div className="text-sm font-medium">Arrêts:</div>
-                          
-                          {route.waypoints.map((waypoint, index) => {
-                            const request = getRequestById(waypoint.request_id);
-                            if (!request) return null;
-                            
-                            return (
-                              <div 
-                                key={`${waypoint.request_id}-${waypoint.type}-${index}`}
-                                className="flex items-center justify-between p-2 bg-muted/30 rounded"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center text-xs">
-                                    {index + 1}
-                                  </div>
+                          <h5 className="font-medium text-sm">Livraisons</h5>
+                          <div className="space-y-2">
+                            {route.delivery_requests.map((requestId) => {
+                              const request = getRequestById(requestId);
+                              return request ? (
+                                <div key={requestId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                                   <div>
-                                    <div className="text-sm">
-                                      {waypoint.type === 'pickup' ? 'Récupération' : 'Livraison'}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground truncate max-w-[180px]">
-                                      {waypoint.type === 'pickup' ? request.pickup_address : request.delivery_address}
-                                    </div>
+                                    <div className="font-medium text-sm">{request.delivery_address.split(',')[0]}</div>
+                                    <div className="text-xs text-muted-foreground">#{requestId.slice(-4)}</div>
                                   </div>
-                                </div>
-                                
-                                {waypoint.type === 'delivery' && (
                                   <Button 
                                     size="sm" 
                                     variant="outline"
-                                    onClick={() => completeDelivery(route.id, waypoint.request_id)}
+                                    className="h-7 text-xs"
+                                    onClick={() => completeDelivery(route.id, requestId)}
                                   >
-                                    Terminer
+                                    Terminé
                                   </Button>
-                                )}
-                              </div>
-                            );
-                          })}
+                                </div>
+                              ) : null;
+                            })}
+                          </div>
                         </div>
                       </div>
                     </CollapsibleContent>
@@ -801,12 +796,6 @@ export default function RouteOptimization({ driverId }: RouteOptimizationProps) 
           </div>
         </div>
       </CardContent>
-
-      <CardFooter className="border-t pt-4 flex justify-between">
-        <Button variant="outline" onClick={fetchDriverData}>
-          Actualiser
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

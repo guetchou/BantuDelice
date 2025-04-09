@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import { Card } from '@/components/ui/card';
@@ -439,13 +438,11 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             
             {restaurantLocation && (
               <Marker 
                 position={[restaurantLocation.latitude, restaurantLocation.longitude]}
-                icon={restaurantIcon}
               >
                 <Popup>
                   <div className="p-2">
@@ -459,7 +456,6 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
             {driverLocation && (
               <Marker 
                 position={[driverLocation.latitude, driverLocation.longitude]}
-                icon={deliveryIcon}
               >
                 <Popup>
                   <div className="p-2">
@@ -483,10 +479,6 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
             
             <Polyline 
               positions={getRoute()}
-              color="#F97316"
-              weight={4}
-              opacity={0.7}
-              dashArray="10, 10"
             />
           </MapContainer>
         </div>

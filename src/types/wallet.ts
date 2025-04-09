@@ -46,13 +46,14 @@ export interface WalletSummary {
   current_balance: number;
   available_balance: number;
   pending_earnings: number;
+  balance?: number;
 }
 
 export interface Transaction {
   id: string;
   wallet_id: string;
   amount: number;
-  type: 'deposit' | 'withdrawal' | 'payment' | 'refund';
+  type: 'deposit' | 'withdrawal' | 'payment' | 'refund' | 'withdraw';
   status: 'pending' | 'completed' | 'failed';
   created_at: string;
   description?: string;
@@ -89,4 +90,14 @@ export interface Wallet {
   currency: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface DeliveryLocation {
+  latitude: number;
+  longitude: number;
+  address?: string;
+  type?: 'pickup' | 'dropoff';
+  timestamp?: string;
+  request_id?: string;
+  is_priority?: boolean;
 }
