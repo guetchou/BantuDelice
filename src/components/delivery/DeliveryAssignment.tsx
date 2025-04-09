@@ -1,203 +1,135 @@
-
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { findOptimalDriver } from '@/utils/deliveryOptimization';
-import { supabase } from '@/integrations/supabase/client';
-import { DeliveryDriver } from '@/types/delivery';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Check, MapPin, Star, Info } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { FormEvent } from 'react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
+import { calculateDistance } from '@/utils/distance';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for Leaflet's default marker icon
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface DeliveryAssignmentProps {
-  orderId: string;
-  restaurantLocation: {
-    latitude: number;
-    longitude: number;
-  };
-  deliveryAddress: string;
-  deliveryLatitude?: number;
-  deliveryLongitude?: number;
+  restaurantId: string;
 }
 
-const DeliveryAssignment = ({ 
-  orderId,
-  restaurantLocation,
-  deliveryAddress,
-  deliveryLatitude,
-  deliveryLongitude
-}: DeliveryAssignmentProps) => {
-  const [loading, setLoading] = useState(false);
-  const [assigned, setAssigned] = useState(false);
-  const [method, setMethod] = useState<'auto' | 'manual'>('auto');
-  const [showDriverSelection, setShowDriverSelection] = useState(false);
-  const [availableDrivers, setAvailableDrivers] = useState<DeliveryDriver[]>([]);
-  const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
-  const [loadingDrivers, setLoadingDrivers] = useState(false);
+const DeliveryAssignment = ({ restaurantId }: DeliveryAssignmentProps) => {
+  const { id: deliveryId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const checkAssignment = async () => {
-      const { data } = await supabase
-        .from('delivery_tracking')
-        .select('delivery_user_id')
-        .eq('order_id', orderId)
-        .single();
+  const [deliveryRequest, setDeliveryRequest] = useState<DeliveryRequest | null>(null);
+  const [availableDrivers, setAvailableDrivers] = useState<DeliveryDriver[]>([]);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(false);
+  const [restaurantLocation, setRestaurantLocation] = useState<[number, number]>([48.8566, 2.3522]); // Default to Paris coordinates
+  const [defaultLocation, setDefaultLocation] = useState<[number, number]>([48.8566, 2.3522]); // Default to Paris coordinates
 
-      setAssigned(!!data?.delivery_user_id);
+  useEffect(() => {
+    const fetchDeliveryRequest = async () => {
+      if (!deliveryId) return;
+
+      try {
+        const { data: deliveryData, error: deliveryError } = await supabase
+          .from('delivery_requests')
+          .select('*')
+          .eq('id', deliveryId)
+          .single();
+
+        if (deliveryError) throw deliveryError;
+
+        setDeliveryRequest(deliveryData);
+      } catch (error) {
+        console.error('Error fetching delivery request:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger la demande de livraison",
+          variant: "destructive",
+        });
+      }
     };
 
-    checkAssignment();
-  }, [orderId]);
+    const fetchAvailableDrivers = async () => {
+      try {
+        const { data: driversData, error: driversError } = await supabase
+          .from('delivery_drivers')
+          .select('*')
+          .eq('restaurant_id', restaurantId)
+          .eq('is_available', true);
 
-  // Fetch available drivers when showing driver selection
-  useEffect(() => {
-    if (showDriverSelection) {
-      fetchAvailableDrivers();
-    }
-  }, [showDriverSelection]);
+        if (driversError) throw driversError;
 
-  const fetchAvailableDrivers = async () => {
-    setLoadingDrivers(true);
-    try {
-      // First try restaurant drivers
-      const { data: restaurantDrivers, error } = await supabase
-        .from('delivery_drivers')
-        .select('*')
-        .eq('is_available', true)
-        .eq('status', 'available');
-
-      if (error) throw error;
-
-      // Then try external services
-      const { data: externalDrivers } = await supabase
-        .from('delivery_drivers')
-        .select('*')
-        .eq('is_available', true)
-        .eq('status', 'available')
-        .eq('is_external', true);
-
-      // Combine and sort by distance
-      let allDrivers = [...(restaurantDrivers || []), ...(externalDrivers || [])];
-      
-      // Calculate distance for each driver
-      allDrivers = allDrivers.map(driver => {
-        const distance = calculateDistance(
-          driver.current_latitude,
-          driver.current_longitude,
-          restaurantLocation.latitude,
-          restaurantLocation.longitude
-        );
-        return { ...driver, distance };
-      }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-
-      setAvailableDrivers(allDrivers);
-    } catch (error) {
-      console.error('Error fetching drivers:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de récupérer les livreurs disponibles",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingDrivers(false);
-    }
-  };
-
-  // Calculate distance between two points using Haversine formula
-  const calculateDistance = (lat1?: number, lon1?: number, lat2?: number, lon2?: number): number => {
-    if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
-    
-    const R = 6371; // Earth radius in km
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
-  const toRad = (value: number): number => {
-    return value * Math.PI / 180;
-  };
-
-  const handleAutomaticAssignment = async () => {
-    setLoading(true);
-    try {
-      const optimalDriver = await findOptimalDriver({
-        id: orderId,
-        delivery_address: deliveryAddress,
-        latitude: deliveryLatitude || 0, 
-        longitude: deliveryLongitude || 0,
-        total_amount: 0
-      });
-
-      if (!optimalDriver) {
-        throw new Error('Aucun livreur disponible');
-      }
-
-      // Créer l'enregistrement de suivi
-      const { error } = await supabase
-        .from('delivery_tracking')
-        .insert({
-          order_id: orderId,
-          delivery_user_id: optimalDriver.id,
-          status: 'assigned',
-          latitude: optimalDriver.current_latitude,
-          longitude: optimalDriver.current_longitude
+        setAvailableDrivers(driversData || []);
+      } catch (error) {
+        console.error('Error fetching available drivers:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les livreurs disponibles",
+          variant: "destructive",
         });
+      }
+    };
 
-      if (error) throw error;
+    const fetchRestaurantLocation = async () => {
+      try {
+        const { data: restaurantData, error: restaurantError } = await supabase
+          .from('restaurants')
+          .select('latitude, longitude')
+          .eq('id', restaurantId)
+          .single();
 
-      // Mettre à jour le statut du livreur
-      await supabase
-        .from('delivery_drivers')
-        .update({
-          is_available: false,
-          status: 'busy',
-          current_order_id: orderId
-        })
-        .eq('id', optimalDriver.id);
+        if (restaurantError) throw restaurantError;
 
-      setAssigned(true);
-      toast({
-        title: "Livreur assigné",
-        description: "Un livreur a été assigné à votre commande",
-      });
-    } catch (error) {
-      console.error('Erreur lors de l\'assignation:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'assigner un livreur pour le moment",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+        if (restaurantData && restaurantData.latitude && restaurantData.longitude) {
+          setRestaurantLocation([restaurantData.latitude, restaurantData.longitude]);
+          setDefaultLocation([restaurantData.latitude, restaurantData.longitude]);
+        }
+      } catch (error) {
+        console.error('Error fetching restaurant location:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger la position du restaurant",
+          variant: "destructive",
+        });
+      }
+    };
 
-  const handleManualAssignment = async () => {
-    if (!selectedDriver) {
+    fetchDeliveryRequest();
+    fetchAvailableDrivers();
+    fetchRestaurantLocation();
+    setLoading(false);
+  }, [deliveryId, restaurantId, toast]);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!selectedDriverId || !deliveryRequest) {
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner un livreur",
@@ -206,216 +138,210 @@ const DeliveryAssignment = ({
       return;
     }
 
-    setLoading(true);
+    setFormLoading(true);
+
     try {
-      const selectedDriverData = availableDrivers.find(d => d.id === selectedDriver);
-      
-      if (!selectedDriverData) {
-        throw new Error('Livreur introuvable');
-      }
-
-      // Créer l'enregistrement de suivi
-      const { error } = await supabase
-        .from('delivery_tracking')
-        .insert({
-          order_id: orderId,
-          delivery_user_id: selectedDriver,
+      // Update delivery_requests table
+      const { error: updateDeliveryError } = await supabase
+        .from('delivery_requests')
+        .update({
+          driver_id: selectedDriverId,
           status: 'assigned',
-          latitude: selectedDriverData.current_latitude,
-          longitude: selectedDriverData.current_longitude
-        });
+        })
+        .eq('id', deliveryId);
 
-      if (error) throw error;
+      if (updateDeliveryError) throw updateDeliveryError;
 
-      // Mettre à jour le statut du livreur
-      await supabase
+      // Update delivery_drivers table
+      const { error: updateDriverError } = await supabase
         .from('delivery_drivers')
         .update({
           is_available: false,
-          status: 'busy',
-          current_order_id: orderId
         })
-        .eq('id', selectedDriver);
+        .eq('user_id', selectedDriverId);
 
-      setAssigned(true);
+      if (updateDriverError) throw updateDriverError;
+
       toast({
-        title: "Livreur assigné",
-        description: `Vous avez choisi ${selectedDriverData.name} comme livreur`,
+        title: "Succès",
+        description: "Livreur assigné avec succès",
       });
+
+      navigate(`/restaurants/${restaurantId}/deliveries`);
     } catch (error) {
-      console.error('Erreur lors de l\'assignation manuelle:', error);
+      console.error('Error assigning driver:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'assigner le livreur sélectionné",
+        description: "Impossible d'assigner le livreur",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
-      setShowDriverSelection(false);
+      setFormLoading(false);
     }
   };
 
-  if (assigned) {
-    return (
-      <Card className="p-6">
-        <div className="flex items-center space-x-2 text-green-600 mb-4">
-          <Check className="h-5 w-5" />
-          <p className="font-medium">Un livreur a été assigné à votre commande</p>
-        </div>
-        
-        <Progress value={25} className="h-2 mb-4" />
-        
-        <div className="text-sm text-gray-500">
-          <p>Un livreur se dirige vers le restaurant pour récupérer votre commande.</p>
-          <p className="mt-2">Vous recevrez des notifications à chaque étape de la livraison.</p>
-        </div>
-      </Card>
+  const calculateDriverDistance = (driver: DeliveryDriver) => {
+    if (!deliveryRequest || !driver.current_latitude || !driver.current_longitude) return 'N/A';
+
+    const distance = calculateDistance(
+      [driver.current_latitude, driver.current_longitude],
+      [deliveryRequest.delivery_latitude || defaultLocation[0], deliveryRequest.delivery_longitude || defaultLocation[1]],
+      'km',
+      true
     );
+
+    return `${distance} km`;
+  };
+
+  if (loading) {
+    return <p>Chargement...</p>;
+  }
+
+  if (!deliveryRequest) {
+    return <p>Demande de livraison non trouvée.</p>;
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-bold mb-4">Mode de livraison</h2>
-      
-      <div className="space-y-4">
-        <div className="flex space-x-2">
-          <Button 
-            variant={method === 'auto' ? 'default' : 'outline'} 
-            onClick={() => setMethod('auto')}
-            className="flex-1"
-          >
-            Attribution automatique
-          </Button>
-          <Button 
-            variant={method === 'manual' ? 'default' : 'outline'} 
-            onClick={() => setMethod('manual')}
-            className="flex-1"
-          >
-            Choisir mon livreur
-          </Button>
-        </div>
-        
-        {method === 'auto' ? (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Notre système choisira le meilleur livreur disponible en fonction de la distance et des évaluations.
-            </p>
-            <Button
-              className="w-full"
-              onClick={handleAutomaticAssignment}
-              disabled={loading}
-            >
-              {loading ? "Recherche en cours..." : "Rechercher un livreur"}
+    <div className="container mx-auto mt-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Assigner un livreur</CardTitle>
+          <CardDescription>Assignez un livreur disponible à cette commande.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="deliveryAddress">Adresse de livraison</Label>
+              <Input
+                type="text"
+                id="deliveryAddress"
+                value={deliveryRequest.delivery_address}
+                readOnly
+              />
+            </div>
+            <div>
+              <Label htmlFor="customerName">Nom du client</Label>
+              <Input
+                type="text"
+                id="customerName"
+                value={deliveryRequest.customer_name}
+                readOnly
+              />
+            </div>
+            <div>
+              <Label htmlFor="customerPhone">Téléphone du client</Label>
+              <Input
+                type="text"
+                id="customerPhone"
+                value={deliveryRequest.customer_phone}
+                readOnly
+              />
+            </div>
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={deliveryRequest.notes || ''}
+                readOnly
+              />
+            </div>
+            <div>
+              <Label htmlFor="driver">Livreur</Label>
+              <Select onValueChange={value => setSelectedDriverId(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sélectionner un livreur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDrivers.map(driver => (
+                    <SelectItem key={driver.user_id} value={driver.user_id}>
+                      {driver.name} ({calculateDriverDistance(driver)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" disabled={formLoading} className="w-full">
+              {formLoading ? 'Assignation...' : 'Assigner'}
             </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Choisissez vous-même votre livreur parmi les personnes disponibles.
-            </p>
-            <Dialog open={showDriverSelection} onOpenChange={setShowDriverSelection}>
-              <DialogTrigger asChild>
-                <Button className="w-full">Voir les livreurs disponibles</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Choisir un livreur</DialogTitle>
-                  <DialogDescription>
-                    Sélectionnez le livreur qui vous convient le mieux
-                  </DialogDescription>
-                </DialogHeader>
-                
-                {loadingDrivers ? (
-                  <div className="py-6 flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : availableDrivers.length === 0 ? (
-                  <div className="py-6 text-center">
-                    <p className="text-gray-500">Aucun livreur disponible pour le moment</p>
-                    <Button variant="outline" className="mt-4" onClick={() => setShowDriverSelection(false)}>
-                      Fermer
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <ScrollArea className="max-h-[300px] pr-4">
-                      <div className="space-y-4">
-                        {availableDrivers.map((driver) => (
-                          <div 
-                            key={driver.id}
-                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                              selectedDriver === driver.id 
-                                ? 'border-primary bg-primary/10' 
-                                : 'hover:bg-gray-50'
-                            }`}
-                            onClick={() => setSelectedDriver(driver.id)}
-                          >
-                            <div className="flex items-start space-x-3">
-                              <Avatar className="h-12 w-12">
-                                {driver.profile_picture ? (
-                                  <img src={driver.profile_picture} alt={driver.name} />
-                                ) : (
-                                  <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary font-bold">
-                                    {driver.name.charAt(0)}
-                                  </div>
-                                )}
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex justify-between">
-                                  <h3 className="font-medium">{driver.name}</h3>
-                                  <Badge variant={driver.is_external ? "outline" : "default"}>
-                                    {driver.is_external ? "Externe" : "Restaurant"}
-                                  </Badge>
-                                </div>
-                                
-                                <div className="flex items-center space-x-1 text-yellow-500 mt-1">
-                                  <Star className="h-4 w-4 fill-current" />
-                                  <span className="text-sm">{driver.average_rating.toFixed(1)}</span>
-                                  <span className="text-xs text-gray-500">({driver.total_deliveries} livraisons)</span>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-600">
-                                  <div className="flex items-center space-x-1">
-                                    <MapPin className="h-3 w-3" />
-                                    <span>{driver.distance?.toFixed(1)} km</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    <Info className="h-3 w-3" />
-                                    <span>~{Math.round((driver.distance || 0) * 5) + 10} min</span>
-                                  </div>
-                                </div>
-                                
-                                {driver.is_external && (
-                                  <Badge variant="outline" className="mt-2">
-                                    Frais: {((driver.distance || 0) * 200 + 1000).toFixed(0)} XAF
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                    
-                    <div className="flex justify-end space-x-2 mt-4">
-                      <Button variant="outline" onClick={() => setShowDriverSelection(false)}>
-                        Annuler
-                      </Button>
-                      <Button 
-                        onClick={handleManualAssignment}
-                        disabled={!selectedDriver || loading}
-                      >
-                        {loading ? "Assignation..." : "Choisir ce livreur"}
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </DialogContent>
-            </Dialog>
-          </div>
-        )}
-      </div>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Carte de livraison</CardTitle>
+          <CardDescription>Visualisation de la position du restaurant et de la livraison.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DeliveryMap
+            restaurantLocation={restaurantLocation}
+            deliveryLocation={[deliveryRequest.delivery_latitude || defaultLocation[0], deliveryRequest.delivery_longitude || defaultLocation[1]]}
+            drivers={availableDrivers}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+interface DeliveryMapProps {
+  restaurantLocation: [number, number];
+  deliveryLocation: [number, number];
+  drivers: DeliveryDriver[];
+}
+
+const DeliveryMap = ({ restaurantLocation, deliveryLocation, drivers }: DeliveryMapProps) => {
+  const mapRef = React.useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.setView(restaurantLocation, 13);
+      return;
+    }
+
+    const map = L.map('delivery-map').setView(restaurantLocation, 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [restaurantLocation]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+
+    // Clear existing markers
+    map.eachLayer(layer => {
+      if (layer instanceof L.Marker) {
+        map.removeLayer(layer);
+      }
+    });
+
+    // Add restaurant marker
+    L.marker(restaurantLocation, { icon: DefaultIcon }).addTo(map).bindPopup("Restaurant");
+
+    // Add delivery location marker
+    L.marker(deliveryLocation, { icon: DefaultIcon }).addTo(map).bindPopup("Delivery Location");
+
+    // Add driver markers
+    drivers.forEach(driver => {
+      if (driver.current_latitude && driver.current_longitude) {
+        L.marker([driver.current_latitude, driver.current_longitude], { icon: DefaultIcon })
+          .addTo(map)
+          .bindPopup(driver.name);
+      }
+    });
+  }, [restaurantLocation, deliveryLocation, drivers]);
+
+  return (
+    <div id="delivery-map" style={{ height: '400px', width: '100%' }}></div>
   );
 };
 

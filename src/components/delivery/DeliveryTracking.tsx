@@ -1,357 +1,337 @@
-
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, User, MessageSquare, PhoneCall, Star, Package } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useTableExistence } from '@/hooks/useTableExistence';
-import DeliveryRating from '@/components/delivery/DeliveryRating';
-import { DeliveryDriver, DeliveryRequest, DeliveryStatus } from '@/types/delivery';
+import { CheckCircle, Truck, MapPin, Clock, AlertTriangle, PackageCheck, User, Store } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/utils/formatters";
+import DeliveryChat from './DeliveryChat';
+import DeliveryOrderComplete from './DeliveryOrderComplete';
+import DeliveryDriverMap from './DeliveryDriverMap';
+import { useAuth } from '@/hooks/useAuth';
 
-interface DeliveryTrackingProps {
-  orderId: string;
+interface DeliveryRequest {
+  id: string;
+  restaurant_id: string;
+  customer_id: string;
+  driver_id: string | null;
+  pickup_address: string;
+  delivery_address: string;
+  pickup_latitude: number;
+  pickup_longitude: number;
+  delivery_latitude: number;
+  delivery_longitude: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  order_total: number;
+  customer_name: string;
+  customer_phone: string;
+  restaurant_name: string;
+  restaurant_phone: string;
+  restaurant_address: string;
+  dropoff_address: string;
+  dropoff_latitude: number;
+  dropoff_longitude: number;
+  delivery_fee: number;
 }
 
-const DeliveryTracking = ({ orderId }: DeliveryTrackingProps) => {
+const DeliveryTracking = () => {
+  const { orderId } = useParams<{ orderId: string }>();
+  const [delivery, setDelivery] = useState<DeliveryRequest | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deliveryData, setDeliveryData] = useState<DeliveryRequest | null>(null);
-  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
-  const [ratingSubmitted, setRatingSubmitted] = useState(false);
-  const [deliveryStatus, setDeliveryStatus] = useState<DeliveryStatus | null>(null);
-  const [showRating, setShowRating] = useState(false);
   const { toast } = useToast();
-  const { exists: deliveryTrackingExists } = useTableExistence('delivery_tracking');
-  const { exists: deliveryRequestsExists } = useTableExistence('delivery_requests');
-  const { exists: deliveryDriversExists } = useTableExistence('delivery_drivers');
-  
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isDriver, setIsDriver] = useState(false);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
+
   useEffect(() => {
-    const fetchDeliveryData = async () => {
+    const fetchDelivery = async () => {
+      if (!orderId) return;
+
       try {
-        setLoading(true);
-        
-        if (!deliveryRequestsExists) {
-          return;
-        }
-        
-        // Get delivery request for this order
-        const { data: requestData, error: requestError } = await supabase
+        const { data, error } = await supabase
           .from('delivery_requests')
           .select('*')
-          .eq('order_id', orderId)
+          .eq('id', orderId)
           .single();
-          
-        if (requestError && requestError.code !== 'PGRST116') {
-          throw requestError;
+
+        if (error) throw error;
+
+        if (data) {
+          setDelivery(data);
+          setRestaurantId(data.restaurant_id);
         }
-        
-        if (requestData) {
-          setDeliveryData(requestData as DeliveryRequest);
-          if (requestData.status) {
-            setDeliveryStatus(requestData.status as DeliveryStatus);
-          }
-          
-          // If there's an assigned driver, get driver info
-          if (requestData.driver_id && deliveryDriversExists) {
-            const { data: driverData, error: driverError } = await supabase
-              .from('delivery_drivers')
-              .select('*')
-              .eq('id', requestData.driver_id)
-              .single();
-              
-            if (driverError) throw driverError;
-            
-            if (driverData) {
-              setDriver(driverData as DeliveryDriver);
-            }
-          }
-        }
-        
-        // Check if delivery status is available from tracking data
-        if (deliveryTrackingExists) {
-          const { data: trackingData, error: trackingError } = await supabase
-            .from('delivery_tracking')
-            .select('status')
-            .eq('order_id', orderId)
-            .order('timestamp', { ascending: false })
-            .limit(1);
-            
-          if (trackingError) throw trackingError;
-          
-          if (trackingData && trackingData.length > 0 && trackingData[0].status) {
-            setDeliveryStatus(trackingData[0].status as DeliveryStatus);
-          }
-        }
-        
-        // Check if rating was already submitted
-        const { data: ratingData, error: ratingError } = await supabase
-          .from('delivery_driver_ratings')
-          .select('id')
-          .eq('order_id', orderId)
-          .limit(1);
-          
-        if (ratingError && ratingError.code !== 'PGRST116') {
-          console.error('Error checking rating:', ratingError);
-        }
-        
-        if (ratingData && ratingData.length > 0) {
-          setRatingSubmitted(true);
-        }
-        
-      } catch (err) {
-        console.error('Error fetching delivery data:', err);
+      } catch (error) {
+        console.error('Error fetching delivery:', error);
         toast({
-          title: 'Erreur',
-          description: 'Impossible de charger les données de livraison',
-          variant: 'destructive',
+          title: "Erreur",
+          description: "Impossible de charger les informations de livraison",
+          variant: "destructive",
         });
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchDeliveryData();
-    
-    // Setup real-time updates for delivery status
-    const deliveryChannel = supabase
-      .channel(`delivery-${orderId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'delivery_tracking',
-        filter: `order_id=eq.${orderId}`
-      }, (payload) => {
-        if (payload.new && (payload.new as any).status) {
-          setDeliveryStatus((payload.new as any).status as DeliveryStatus);
+
+    fetchDelivery();
+  }, [orderId, toast]);
+
+  useEffect(() => {
+    const checkDriverStatus = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data: driverData, error: driverError } = await supabase
+          .from('delivery_drivers')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
           
-          // If delivered, show rating option
-          if ((payload.new as any).status === 'delivered') {
-            setShowRating(true);
-          }
+        if (driverError) {
+          // If no driver profile, assume it's not a driver
+          setIsDriver(false);
+        } else {
+          // If driver profile exists, confirm it's a driver
+          setIsDriver(true);
         }
-      })
-      .subscribe();
-      
-    // Get updates to delivery_requests
-    const requestChannel = supabase
-      .channel(`delivery-request-${orderId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'delivery_requests',
-        filter: `order_id=eq.${orderId}`
-      }, (payload) => {
-        if (payload.new) {
-          setDeliveryData(payload.new as DeliveryRequest);
-          
-          // If there's an assigned driver, reload driver info
-          if ((payload.new as any).driver_id && deliveryDriversExists) {
-            fetchDriverInfo((payload.new as any).driver_id);
-          }
-        }
-      })
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(deliveryChannel);
-      supabase.removeChannel(requestChannel);
-    };
-  }, [orderId, deliveryRequestsExists, deliveryDriversExists, deliveryTrackingExists]);
-  
-  const fetchDriverInfo = async (driverId: string) => {
-    const { data, error } = await supabase
-      .from('delivery_drivers')
-      .select('*')
-      .eq('id', driverId)
-      .single();
-      
-    if (error) {
-      console.error('Error fetching driver info:', error);
-      return;
-    }
-    
-    if (data) {
-      setDriver(data);
-    }
-  };
-  
-  const handleCallDriver = () => {
-    if (driver && driver.phone) {
-      window.location.href = `tel:${driver.phone}`;
-    }
-  };
-  
-  const handleRatingSubmitted = () => {
-    setRatingSubmitted(true);
-    toast({
-      title: 'Merci !',
-      description: 'Votre évaluation a été enregistrée',
-    });
-  };
-  
-  const getStatusBadge = () => {
-    if (!deliveryStatus) return null;
-    
-    const statusColors: Record<string, string> = {
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'assigned': 'bg-blue-100 text-blue-800',
-      'accepted': 'bg-blue-100 text-blue-800',
-      'picked_up': 'bg-indigo-100 text-indigo-800',
-      'delivering': 'bg-orange-100 text-orange-800 animate-pulse',
-      'delivered': 'bg-green-100 text-green-800',
-      'completed': 'bg-green-100 text-green-800',
-      'cancelled': 'bg-red-100 text-red-800',
+      } catch (error) {
+        console.error('Error checking driver status:', error);
+        setIsDriver(false);
+      }
     };
     
-    const statusLabels: Record<string, string> = {
-      'pending': 'En attente',
-      'assigned': 'Livreur assigné',
-      'accepted': 'Commande acceptée',
-      'picked_up': 'Commande récupérée',
-      'delivering': 'En livraison',
-      'delivered': 'Livré',
-      'completed': 'Terminé',
-      'cancelled': 'Annulé',
-    };
-    
-    return (
-      <Badge className={statusColors[deliveryStatus] || 'bg-gray-100'}>
-        {statusLabels[deliveryStatus] || deliveryStatus}
-      </Badge>
-    );
+    checkDriverStatus();
+  }, [user?.id]);
+
+  const handleAcceptDelivery = async () => {
+    if (!orderId || !user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('delivery_requests')
+        .update({ driver_id: user.id, status: 'assigned' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setDelivery(prevDelivery => prevDelivery ? { ...prevDelivery, driver_id: user.id, status: 'assigned' } : null);
+      toast({
+        title: "Livraison acceptée",
+        description: "Vous avez accepté cette livraison",
+      });
+    } catch (error) {
+      console.error('Error accepting delivery:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'accepter cette livraison",
+        variant: "destructive",
+      });
+    }
   };
-  
+
+  const handlePickupOrder = async () => {
+    if (!orderId) return;
+
+    try {
+      const { error } = await supabase
+        .from('delivery_requests')
+        .update({ status: 'picked_up' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setDelivery(prevDelivery => prevDelivery ? { ...prevDelivery, status: 'picked_up' } : null);
+      toast({
+        title: "Commande récupérée",
+        description: "Vous avez récupéré la commande",
+      });
+    } catch (error) {
+      console.error('Error picking up order:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut de la commande",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStartDelivery = async () => {
+    if (!orderId) return;
+
+    try {
+      const { error } = await supabase
+        .from('delivery_requests')
+        .update({ status: 'delivering' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setDelivery(prevDelivery => prevDelivery ? { ...prevDelivery, status: 'delivering' } : null);
+      toast({
+        title: "Livraison en cours",
+        description: "Vous avez commencé la livraison",
+      });
+    } catch (error) {
+      console.error('Error starting delivery:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut de la livraison",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCompleteDelivery = async () => {
+    if (!orderId) return;
+
+    try {
+      const { error } = await supabase
+        .from('delivery_requests')
+        .update({ status: 'completed' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setDelivery(prevDelivery => prevDelivery ? { ...prevDelivery, status: 'completed' } : null);
+      toast({
+        title: "Livraison terminée",
+        description: "Vous avez terminé la livraison",
+      });
+    } catch (error) {
+      console.error('Error completing delivery:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de finaliser la livraison",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline"><Clock className="w-4 h-4 mr-2" /> En attente</Badge>;
+      case 'assigned':
+        return <Badge variant="outline" className="text-blue-500 border-blue-500"><Truck className="w-4 h-4 mr-2" /> Assignée</Badge>;
+      case 'picked_up':
+        return <Badge variant="outline" className="text-orange-500 border-orange-500"><PackageCheck className="w-4 h-4 mr-2" /> Récupérée</Badge>;
+      case 'delivering':
+        return <Badge variant="outline" className="text-purple-500 border-purple-500"><Truck className="w-4 h-4 mr-2" /> En livraison</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="text-green-500 border-green-500"><CheckCircle className="w-4 h-4 mr-2" /> Terminée</Badge>;
+      default:
+        return <Badge variant="destructive"><AlertTriangle className="w-4 h-4 mr-2" /> Inconnue</Badge>;
+    }
+  };
+
   if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex justify-center">
-            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <div className="text-center py-8">Chargement des informations de livraison...</div>;
   }
-  
-  // No delivery data or order not in delivery yet
-  if (!deliveryData && !deliveryStatus) {
-    return null; // Don't show anything if no delivery yet
+
+  if (!delivery) {
+    return <div className="text-center py-8">Livraison non trouvée.</div>;
   }
-  
-  const isDeliveryComplete = deliveryStatus === 'delivered' || deliveryStatus === 'completed';
-  
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-xl">
-          <div className="flex items-center">
-            <Package className="h-5 w-5 mr-2" />
-            Suivi de livraison
-          </div>
-          {getStatusBadge()}
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="pt-0">
-        {driver && (
-          <div className="flex items-center p-4 bg-muted/30 rounded-lg mb-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
-              {driver.profile_picture ? (
-                <img 
-                  src={driver.profile_picture} 
-                  alt={driver.name} 
-                  className="h-full w-full rounded-full object-cover"
-                />
-              ) : (
-                <User className="h-6 w-6 text-primary" />
-              )}
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex items-center">
-                <h3 className="font-semibold">{driver.name || 'Livreur'}</h3>
-                {driver.average_rating > 0 && (
-                  <div className="flex items-center ml-2 text-yellow-500">
-                    <Star className="h-3.5 w-3.5 mr-0.5 fill-current" />
-                    <span className="text-sm">{driver.average_rating.toFixed(1)}</span>
-                  </div>
+    <div className="container mx-auto mt-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Suivi de la Livraison #{delivery.id.substring(0, 8)}</CardTitle>
+          <CardDescription>
+            Suivez l'état de votre livraison en temps réel
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Informations de Livraison</h3>
+              <div className="space-y-2">
+                <p>
+                  <Store className="w-4 h-4 inline-block mr-1" /> Restaurant: {delivery.restaurant_name}
+                </p>
+                <p>
+                  <MapPin className="w-4 h-4 inline-block mr-1" /> Adresse de ramassage: {delivery.pickup_address}
+                </p>
+                <p>
+                  <User className="w-4 h-4 inline-block mr-1" /> Client: {delivery.customer_name}
+                </p>
+                <p>
+                  <MapPin className="w-4 h-4 inline-block mr-1" /> Adresse de livraison: {delivery.dropoff_address}
+                </p>
+                <p>
+                  <Clock className="w-4 h-4 inline-block mr-1" /> Date de création: {new Date(delivery.created_at).toLocaleDateString()}
+                </p>
+                <p>
+                  <Clock className="w-4 h-4 inline-block mr-1" /> Dernière mise à jour: {new Date(delivery.updated_at).toLocaleTimeString()}
+                </p>
+                <p>
+                  <Truck className="w-4 h-4 inline-block mr-1" /> Statut: {getStatusBadge(delivery.status)}
+                </p>
+                <p>
+                  <span className="font-semibold">Total de la commande:</span> {formatCurrency(delivery.order_total)}
+                </p>
+                {delivery.delivery_fee && (
+                  <p>
+                    <span className="font-semibold">Frais de livraison:</span> {formatCurrency(delivery.delivery_fee)}
+                  </p>
                 )}
               </div>
-              
-              <p className="text-sm text-muted-foreground">
-                {deliveryStatus === 'accepted' ? 'En route vers le restaurant' :
-                 deliveryStatus === 'picked_up' ? 'A récupéré votre commande' :
-                 deliveryStatus === 'delivering' ? 'En route vers votre adresse' :
-                 isDeliveryComplete ? 'A livré votre commande' : 
-                 'Assigné à votre commande'}
-              </p>
-              
-              {(deliveryStatus === 'picked_up' || deliveryStatus === 'delivering') && (
-                <div className="flex mt-2 space-x-2">
-                  {driver.phone && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      className="h-8 px-2 text-xs"
-                      onClick={handleCallDriver}
-                    >
-                      <PhoneCall className="h-3.5 w-3.5 mr-1" />
-                      Appeler
-                    </Button>
-                  )}
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="h-8 px-2 text-xs"
-                    disabled // For future implementation of in-app messaging
-                  >
-                    <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                    Message
-                  </Button>
-                </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Carte de Livraison</h3>
+              <div className="rounded-lg overflow-hidden">
+                <DeliveryDriverMap restaurantId={delivery.restaurant_id} deliveryId={delivery.id} height="300px" />
+              </div>
+            </div>
+          </div>
+
+          {isDriver && delivery.driver_id === user?.id && delivery.status !== 'completed' && (
+            <div className="flex justify-center gap-4">
+              {delivery.status === 'assigned' && (
+                <Button onClick={handlePickupOrder}>Récupérer la commande</Button>
+              )}
+              {delivery.status === 'picked_up' && (
+                <Button onClick={handleStartDelivery}>Commencer la livraison</Button>
+              )}
+              {delivery.status === 'delivering' && (
+                <Button onClick={handleCompleteDelivery}>Terminer la livraison</Button>
               )}
             </div>
-          </div>
-        )}
-        
-        {deliveryData && (
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <MapPin className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <span className="font-medium">Adresse de livraison</span>
-                <p className="text-sm">
-                  {deliveryData.delivery_address || 'Adresse non disponible'}
-                </p>
-              </div>
+          )}
+
+          {!isDriver && delivery.status !== 'completed' && (
+            <div className="text-center">
+              <p>
+                <Truck className="w-4 h-4 inline-block mr-1" /> Votre commande est {delivery.status}.
+                {delivery.driver_id && (
+                  <span> Un livreur a été assigné à votre commande.</span>
+                )}
+              </p>
             </div>
-            
-            {deliveryData.estimated_duration && (
-              <div className="flex items-start space-x-3">
-                <Clock className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <span className="font-medium">Temps estimé</span>
-                  <p className="text-sm">
-                    {deliveryData.estimated_duration} minutes
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {isDeliveryComplete && !ratingSubmitted && showRating && driver && (
-          <div className="mt-4">
-            <DeliveryRating 
-              orderId={orderId}
-              restaurantId={deliveryData?.restaurant_id || ''} 
-              onRatingSubmitted={handleRatingSubmitted}
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+
+          {delivery.status === 'completed' && (
+            <div className="text-center">
+              <p>
+                <CheckCircle className="w-4 h-4 inline-block mr-1" /> Votre commande a été livrée. Merci!
+              </p>
+            </div>
+          )}
+
+          <h3 className="text-lg font-semibold mb-2">Chat</h3>
+          <DeliveryChat orderId={orderId} userType={isDriver ? 'driver' : 'customer'} />
+
+          {delivery.status === 'completed' && restaurantId && (
+            <DeliveryOrderComplete orderId={orderId} restaurantId={restaurantId} />
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
