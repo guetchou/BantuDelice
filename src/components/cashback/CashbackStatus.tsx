@@ -107,7 +107,7 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
       : typeof status.benefits === 'string' 
         ? JSON.parse(status.benefits) 
         : [],
-    last_updated: status.updated_at || status.last_updated || new Date().toISOString(),
+    last_updated: status.last_updated || new Date().toISOString(),
     created_at: status.created_at || new Date().toISOString(),
     points: status.points || 0,
     lifetime_points: status.lifetime_points || 0,
@@ -133,8 +133,8 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
 
   const getProgress = () => {
     if (!cashbackStatus.points_to_next_tier) return 100;
-    const totalPointsNeeded = (status.points || 0) + cashbackStatus.points_to_next_tier;
-    return ((status.points || 0) / totalPointsNeeded) * 100;
+    const totalPointsNeeded = (cashbackStatus.points || 0) + (cashbackStatus.points_to_next_tier || 0);
+    return ((cashbackStatus.points || 0) / totalPointsNeeded) * 100;
   };
 
   const currentTier = tierDetails[cashbackStatus.tier_name.toLowerCase()] || tierDetails.bronze;
@@ -149,7 +149,7 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
         <div>
           <h2 className="text-xl font-bold">Niveau {cashbackStatus.tier_name}</h2>
           <p className="text-sm text-gray-500">
-            {status.points} points accumulés
+            {cashbackStatus.points} points accumulés
           </p>
         </div>
       </div>
@@ -162,7 +162,7 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
           </div>
           <Progress value={getProgress()} className={getTierColor()} />
           <div className="text-xs text-gray-500">
-            {status.points || 0}/{nextTier.minimum_points} points pour atteindre le niveau {nextTier.name}
+            {cashbackStatus.points || 0}/{nextTier.minimum_points} points pour atteindre le niveau {nextTier.name}
           </div>
         </div>
       )}
@@ -186,7 +186,7 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
 
       <div className="mt-6 pt-6 border-t">
         <p className="text-sm text-gray-500">
-          Points accumulés depuis le début : {status.lifetime_points || cashbackStatus.lifetime_earned || 0}
+          Points accumulés depuis le début : {cashbackStatus.lifetime_points || cashbackStatus.lifetime_earned || 0}
         </p>
       </div>
     </Card>

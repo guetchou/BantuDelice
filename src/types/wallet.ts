@@ -25,7 +25,7 @@ export interface Cashback {
   level?: string;
 }
 
-export type CashbackTransactionType = 'earn' | 'redeem' | 'expire' | 'earned' | 'used' | 'received' | 'transferred' | 'refunded';
+export type CashbackTransactionType = 'earn' | 'redeem' | 'expire' | 'earned' | 'used' | 'received' | 'transferred' | 'refunded' | 'transfer';
 
 export interface CashbackTransaction {
   id: string;

@@ -1,181 +1,157 @@
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ArrowDownLeft, CreditCard, Send, Gift } from "lucide-react";
-import { formatCurrency } from "@/utils/formatCurrency";
-import { CashbackTransaction, CashbackTransactionType } from "@/types/wallet";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowDownIcon, ArrowUpIcon, RefreshCw } from "lucide-react";
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { CashbackTransaction, CashbackTransactionType } from '@/types/wallet';
 
-// Define a mapping from backend types to our CashbackTransactionType
-const mapTransactionType = (type: string): CashbackTransactionType => {
-  const map: Record<string, CashbackTransactionType> = {
-    'earned': 'earn',
-    'used': 'redeem',
-    'transferred': 'redeem',
-    'received': 'earn',
-    'refunded': 'earn',
-    'expired': 'expire'
-  };
-  return map[type] || 'earn';
-};
+interface CashbackTransactionsProps {
+  userId?: string;
+  limit?: number;
+}
 
-const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
+export default function CashbackTransactions({ userId, limit = 5 }: CashbackTransactionsProps) {
   const [transactions, setTransactions] = useState<CashbackTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAll, setShowAll] = useState(false);
-
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "earned" | "used">("all");
+  
   useEffect(() => {
     const fetchTransactions = async () => {
+      setLoading(true);
+      setError(null);
+      
       try {
-        setLoading(true);
+        // Simulation de l'appel API
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Mock user ID
-        const userId = "user-123";
-
-        // Simulation de données - in a real app, this would come from your API
-        const simulatedData: CashbackTransaction[] = [
+        // Données fictives
+        const mockTransactions: CashbackTransaction[] = [
           {
-            id: '1',
-            user_id: userId,
-            amount: 500,
-            type: 'earn',
-            reference_id: 'order-123',
-            reference_type: 'order',
-            description: 'Cashback pour commande #123',
+            id: "tr1",
+            user_id: userId || "user1",
+            amount: 250,
+            type: "earn" as CashbackTransactionType,
+            description: "Points gagnés pour la commande #12345",
             created_at: new Date().toISOString()
           },
           {
-            id: '2',
-            user_id: userId,
+            id: "tr2",
+            user_id: userId || "user1",
+            amount: 500,
+            type: "earn" as CashbackTransactionType,
+            description: "Points bonus pour première commande",
+            created_at: new Date(Date.now() - 86400000).toISOString() // 1 jour avant
+          },
+          {
+            id: "tr3",
+            user_id: userId || "user1",
             amount: 200,
-            type: 'redeem',
-            reference_id: 'order-124',
-            reference_type: 'order',
-            description: 'Utilisé pour commande #124',
-            created_at: new Date(Date.now() - 86400000).toISOString()
+            type: "redeem" as CashbackTransactionType,
+            description: "Points utilisés pour une remise",
+            created_at: new Date(Date.now() - 172800000).toISOString() // 2 jours avant
           },
           {
-            id: '3',
-            user_id: userId,
-            amount: 300,
-            type: 'earn',
-            sender_id: 'user-456',
-            reference_type: 'transfer',
-            description: 'Reçu de Marie',
-            created_at: new Date(Date.now() - 172800000).toISOString()
-          },
-          {
-            id: '4',
-            user_id: userId,
+            id: "tr4",
+            user_id: userId || "user1",
             amount: 150,
-            type: 'redeem',
-            receiver_id: 'user-789',
-            reference_type: 'transfer',
-            description: 'Envoyé à Amadou',
-            created_at: new Date(Date.now() - 259200000).toISOString()
+            type: "earn" as CashbackTransactionType,
+            description: "Points de fidélité mensuels",
+            created_at: new Date(Date.now() - 259200000).toISOString() // 3 jours avant
           },
           {
-            id: '5',
-            user_id: userId,
+            id: "tr5",
+            user_id: userId || "user1",
             amount: 100,
-            type: 'earn',
-            reference_id: 'promotion-123',
-            reference_type: 'promotion',
-            description: 'Bonus fidélité',
-            created_at: new Date(Date.now() - 345600000).toISOString()
+            type: "transfer" as CashbackTransactionType,
+            description: "Points reçus d'un ami",
+            created_at: new Date(Date.now() - 345600000).toISOString() // 4 jours avant
           },
           {
-            id: '6',
-            user_id: userId,
+            id: "tr6",
+            user_id: userId || "user1",
             amount: 75,
-            type: 'earn',
-            reference_id: 'refund-123',
-            reference_type: 'refund',
-            description: 'Remboursement commande annulée',
-            created_at: new Date(Date.now() - 432000000).toISOString()
+            type: "redeem" as CashbackTransactionType,
+            description: "Points utilisés pour une livraison gratuite",
+            created_at: new Date(Date.now() - 432000000).toISOString() // 5 jours avant
           }
         ];
-
-        setTransactions(showAll ? simulatedData : simulatedData.slice(0, limit));
-      } catch (error) {
-        console.error("Error fetching cashback transactions:", error);
+        
+        setTransactions(mockTransactions);
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+        setError("Impossible de charger les transactions");
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchTransactions();
-  }, [showAll, limit]);
-
-  const getTransactionIcon = (type: CashbackTransactionType, referenceType?: string) => {
-    if (type === 'earn' && referenceType === 'transfer') {
-      return <Gift className="h-5 w-5 text-purple-500" />;
-    } else if (type === 'earn') {
-      return <ArrowDownLeft className="h-5 w-5 text-green-500" />;
-    } else if (type === 'redeem' && referenceType === 'transfer') {
-      return <Send className="h-5 w-5 text-indigo-500" />;
-    } else if (type === 'redeem') {
-      return <CreditCard className="h-5 w-5 text-amber-500" />;
-    } else if (type === 'expire') {
-      return <ArrowUpRight className="h-5 w-5 text-red-500" />;
-    } else {
-      return <CreditCard className="h-5 w-5" />;
-    }
-  };
-
-  const getTransactionColor = (type: CashbackTransactionType) => {
-    switch(type) {
-      case 'earn':
-        return 'text-green-500';
-      case 'redeem':
-      case 'expire':
-        return 'text-red-500';
+  }, [userId]);
+  
+  const filteredTransactions = transactions.filter(transaction => {
+    if (activeTab === "all") return true;
+    if (activeTab === "earned") return ["earn", "transfer"].includes(transaction.type);
+    if (activeTab === "used") return transaction.type === "redeem";
+    return true;
+  }).slice(0, limit);
+  
+  const getTransactionIcon = (type: CashbackTransactionType) => {
+    switch (type) {
+      case "earn":
+      case "transfer":
+        return <ArrowDownIcon className="h-4 w-4 text-green-500" />;
+      case "redeem":
+      case "expire":
+        return <ArrowUpIcon className="h-4 w-4 text-red-500" />;
       default:
-        return '';
+        return <RefreshCw className="h-4 w-4 text-blue-500" />;
     }
   };
 
-  const getTransactionPrefix = (type: CashbackTransactionType) => {
-    switch(type) {
-      case 'earn':
-        return '+';
-      case 'redeem':
-      case 'expire':
-        return '-';
-      default:
-        return '';
-    }
-  };
-
-  const getTransactionLabel = (type: CashbackTransactionType, referenceType?: string) => {
-    if (type === 'earn' && referenceType === 'order') {
-      return 'Cashback gagné';
-    } else if (type === 'earn' && referenceType === 'transfer') {
-      return 'Transfert reçu';
-    } else if (type === 'earn' && referenceType === 'refund') {
-      return 'Remboursement';
-    } else if (type === 'redeem' && referenceType === 'order') {
-      return 'Utilisé pour commande';
-    } else if (type === 'redeem' && referenceType === 'transfer') {
-      return 'Transfert envoyé';
-    } else if (type === 'expire') {
-      return 'Expiré';
-    } else {
-      return type;
-    }
-  };
-
-  if (loading && transactions.length === 0) {
+  if (loading) {
     return (
-      <Card className="w-full">
-        <CardContent className="p-6">
-          <div className="h-48 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Transactions</CardTitle>
+          <Tabs value="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">Toutes</TabsTrigger>
+              <TabsTrigger value="earned">Gagnées</TabsTrigger>
+              <TabsTrigger value="used">Utilisées</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <CardContent>
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-4 border-b last:border-0">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div>
+                  <Skeleton className="h-4 w-32 mb-1" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+              <Skeleton className="h-5 w-16" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center text-muted-foreground py-8">
+            {error}
           </div>
         </CardContent>
       </Card>
@@ -183,56 +159,43 @@ const CashbackTransactions = ({ limit = 5 }: { limit?: number }) => {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-semibold">Historique des Transactions</CardTitle>
-        <CardDescription>
-          Suivez vos transactions de cashback et transferts
-        </CardDescription>
+    <Card>
+      <CardHeader>
+        <CardTitle>Transactions</CardTitle>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "earned" | "used")}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all">Toutes</TabsTrigger>
+            <TabsTrigger value="earned">Gagnées</TabsTrigger>
+            <TabsTrigger value="used">Utilisées</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
-        {transactions.length === 0 ? (
-          <div className="text-center p-8 text-muted-foreground">
+      <CardContent>
+        {filteredTransactions.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8">
             Aucune transaction à afficher
           </div>
         ) : (
-          <>
-            <div className="space-y-3">
-              {transactions.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-muted rounded-full">
-                      {getTransactionIcon(transaction.type, transaction.reference_type)}
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{getTransactionLabel(transaction.type, transaction.reference_type)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(transaction.created_at), 'dd MMM yyyy', { locale: fr })}
-                      </p>
-                    </div>
-                  </div>
-                  <div className={`font-semibold ${getTransactionColor(transaction.type)}`}>
-                    {getTransactionPrefix(transaction.type)}
-                    {formatCurrency(transaction.amount)}
+          filteredTransactions.map((transaction) => (
+            <div key={transaction.id} className="flex items-center justify-between py-4 border-b last:border-0">
+              <div className="flex items-center gap-3">
+                <div className="bg-muted h-8 w-8 rounded-full flex items-center justify-center">
+                  {getTransactionIcon(transaction.type)}
+                </div>
+                <div>
+                  <div className="font-medium text-sm">{transaction.description}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {format(new Date(transaction.created_at), "d MMM yyyy 'à' HH:mm", { locale: fr })}
                   </div>
                 </div>
-              ))}
+              </div>
+              <div className={`font-semibold ${["earn", "transfer"].includes(transaction.type) ? "text-green-600" : "text-red-600"}`}>
+                {["earn", "transfer"].includes(transaction.type) ? "+" : "-"}{transaction.amount} pts
+              </div>
             </div>
-            
-            {!showAll && transactions.length >= limit && (
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => setShowAll(true)}
-              >
-                Voir tout l'historique
-              </Button>
-            )}
-          </>
+          ))
         )}
       </CardContent>
     </Card>
   );
-};
-
-export default CashbackTransactions;
+}

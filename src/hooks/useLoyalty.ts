@@ -11,6 +11,7 @@ interface LoyaltyHookOptions {
 type LoyaltyStatus = Partial<Cashback> & {
   points?: number;
   lifetime_points?: number;
+  updated_at?: string;
 }
 
 export function useLoyalty(options?: LoyaltyHookOptions) {
@@ -51,7 +52,8 @@ export function useLoyalty(options?: LoyaltyHookOptions) {
           ...data,
           benefits: parsedBenefits,
           tier_name: data.tier_name || data.tier,
-          tier: data.tier || data.tier_name
+          tier: data.tier || data.tier_name,
+          updated_at: data.updated_at || data.created_at || new Date().toISOString()
         });
       } else {
         // No loyalty record found
