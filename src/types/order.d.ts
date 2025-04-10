@@ -12,13 +12,15 @@ export interface Order {
   payment_method: string;
   delivery_status: string;
   
-  // Propriétés étendues
-  order_items: OrderItem[];
+  // Extended properties
+  order_items?: OrderItem[];
   special_instructions?: string;
   estimated_preparation_time?: number;
   loyalty_points_earned?: number;
   delivered_at?: string;
   cancelled_at?: string;
+  delivery_fee?: number;
+  delivery_instructions?: string;
 }
 
 export type OrderStatus = 
@@ -60,6 +62,7 @@ export interface CartItem {
   image_url?: string;
   options?: CartItemOption[];
   special_instructions?: string;
+  description?: string;
 }
 
 export interface CartItemOption {

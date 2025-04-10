@@ -1,70 +1,69 @@
 
 /**
- * Calcule la distance entre deux points géographiques en utilisant la formule haversine
- * @param point1 [latitude, longitude] du premier point
- * @param point2 [latitude, longitude] du deuxième point
- * @param unit 'km' pour kilomètres ou 'mi' pour miles
- * @param round Arrondir le résultat (true/false)
- * @returns Distance en km ou miles
+ * Calculate distance between two geographic coordinates in kilometers
  */
-export const calculateDistance = (
-  point1: [number, number],
-  point2: [number, number],
-  unit: 'km' | 'mi' = 'km',
-  round: boolean = false
-): number => {
-  const [lat1, lon1] = point1;
-  const [lat2, lon2] = point2;
-  const R = unit === 'km' ? 6371 : 3958.8; // Rayon de la Terre en km ou en miles
-  
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  
-  const a = 
+export function calculateDistance(
+  lat1: number, 
+  lon1: number, 
+  lat2: number, 
+  lon2: number
+): number {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-  
-  return round ? Math.round(distance * 10) / 10 : distance;
-};
-
-// Convertit les degrés en radians
-const toRad = (value: number): number => {
-  return value * Math.PI / 180;
-};
+  const d = R * c; // Distance in km
+  return d;
+}
 
 /**
- * Estime le temps de livraison basé sur la distance
- * @param distance Distance en km
- * @param vehicleType Type de véhicule
- * @returns Temps estimé en secondes
+ * Convert degrees to radians
  */
-export const estimateDeliveryTime = (
-  distance: number,
-  vehicleType: string = 'bike'
-): number => {
-  // Vitesses moyennes en km/h
-  const speeds: Record<string, number> = {
-    'bike': 15,
-    'scooter': 30,
-    'car': 40,
-    'van': 35
-  };
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180);
+}
+
+/**
+ * Format distance in a user-friendly way
+ */
+export function formatDistance(distance: number): string {
+  if (distance < 1) {
+    // Less than 1 km, show in meters
+    return `${Math.round(distance * 1000)} m`;
+  }
+  // 1 km or more, show in km with 1 decimal point
+  return `${distance.toFixed(1)} km`;
+}
+
+/**
+ * Estimate travel time based on distance (rough approximation)
+ * @param distance Distance in kilometers
+ * @param speedKmh Speed in kilometers per hour
+ * @returns Estimated time in minutes
+ */
+export function estimateTravelTime(distance: number, speedKmh = 30): number {
+  // Time = distance / speed (in hours), then convert to minutes
+  return Math.round((distance / speedKmh) * 60);
+}
+
+/**
+ * Format duration in minutes to a user-friendly string
+ */
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
   
-  // Utiliser la vitesse du véhicule ou celle du vélo par défaut
-  const speed = speeds[vehicleType] || speeds.bike;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
   
-  // Convertir en m/s 
-  const speedMps = speed * 1000 / 3600;
+  if (remainingMinutes === 0) {
+    return `${hours} h`;
+  }
   
-  // Temps en secondes = distance (en km) * 1000 / vitesse (en m/s)
-  const timeInSeconds = (distance * 1000) / speedMps;
-  
-  // Ajouter un temps supplémentaire pour les arrêts, feux rouges, etc.
-  const additionalTime = 300; // 5 minutes en secondes
-  
-  return timeInSeconds + additionalTime;
-};
+  return `${hours} h ${remainingMinutes} min`;
+}
