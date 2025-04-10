@@ -6,7 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import type { DeliveryMessage } from '@/types/delivery';
+
+interface DeliveryMessage {
+  id: string;
+  order_id: string;
+  sender_id: string;
+  sender_type: 'driver' | 'customer';
+  message: string;
+  read: boolean;
+  created_at: string;
+}
 
 interface DeliveryChatProps {
   orderId: string;
@@ -20,33 +29,37 @@ export default function DeliveryChat({ orderId, userType }: DeliveryChatProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!orderId) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('delivery_messages')
-          .select('*')
-          .eq('order_id', orderId)
-          .order('created_at');
-        
-        if (error) throw error;
-        
-        if (data) {
-          const typedData = data.map(msg => ({
-            ...msg,
-            sender_type: msg.sender_type as "driver" | "customer"
-          }));
-          setMessages(typedData);
-        }
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-      }
-    };
-    
     fetchMessages();
     subscribeToMessages();
+    
+    return () => {
+      // Cleanup subscription here if needed
+    };
   }, [orderId]);
+
+  const fetchMessages = async () => {
+    if (!orderId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('delivery_messages')
+        .select('*')
+        .eq('order_id', orderId)
+        .order('created_at');
+      
+      if (error) throw error;
+      
+      if (data) {
+        const typedData = data.map(msg => ({
+          ...msg,
+          sender_type: msg.sender_type as "driver" | "customer"
+        }));
+        setMessages(typedData);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
 
   const subscribeToMessages = () => {
     const channel = supabase

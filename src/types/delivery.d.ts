@@ -16,6 +16,10 @@ export interface DeliveryDriver {
   total_deliveries: number;
   status: 'available' | 'busy' | 'offline';
   verified: boolean;
+  current_deliveries?: number;
+  max_concurrent_deliveries?: number;
+  profile_picture?: string;
+  average_rating?: number;
 }
 
 export interface DeliveryLocation {
@@ -45,6 +49,21 @@ export interface DeliveryRequest {
   notes?: string;
   external_service_id?: string;
   cancelled_at?: string;
+  
+  // Propriétés étendues
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  delivery_latitude?: number;
+  delivery_longitude?: number;
+  is_priority?: boolean;
+  is_external?: boolean;
+  requested_at?: string;
+  accepted_at?: string;
+  completed_at?: string;
+  distance?: number;
+  estimated_duration?: number;
+  delivery_fee?: number;
+  restaurant_id?: string;
 }
 
 export type DeliveryStatus = 
@@ -73,4 +92,46 @@ export interface DeliverySettings {
   delivery_fee_per_km: number;
   delivery_time_estimate: number;
   auto_assign_drivers: boolean;
+  
+  // Propriétés étendues
+  estimated_delivery_time?: number;
+  accepted_external_services?: string[];
+  auto_accept_orders?: boolean;
+}
+
+export interface DeliveryRoute {
+  id: string;
+  driver_id: string;
+  delivery_requests: string[];
+  status: 'active' | 'completed' | 'cancelled';
+  start_time: string;
+  estimated_end_time: string;
+  actual_end_time?: string;
+  total_distance?: number;
+  total_duration?: number;
+  waypoints?: any[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeliveryMessage {
+  id: string;
+  order_id: string;
+  sender_id: string;
+  sender_type: 'driver' | 'customer';
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface ExternalDeliveryService {
+  id: string;
+  name: string;
+  api_key?: string;
+  status: 'active' | 'inactive';
+  integration_type: string;
+  base_url?: string;
+  logo_url?: string;
+  delivery_fee_override?: number;
+  priority?: number;
 }

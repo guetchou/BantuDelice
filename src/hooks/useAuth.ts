@@ -1,14 +1,23 @@
 
 import { useState, useEffect } from 'react';
 import pb from '@/lib/pocketbase';
-import { User } from '@/types/user';
+import { User, UserCreateRequest } from '@/types/user';
 
 interface UseAuthReturn {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  isAdmin?: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: Error }>;
   logout: () => void;
+  register: (userData: {
+    email: string;
+    password: string;
+    name?: string;
+    phone?: string;
+  }) => Promise<{ success: boolean; error?: Error }>;
+  updateProfile?: (data: Partial<User>) => Promise<{ success: boolean; error?: Error }>;
 }
 
 export const useAuth = (): UseAuthReturn => {
@@ -26,6 +35,7 @@ export const useAuth = (): UseAuthReturn => {
             email: userData?.email,
             name: userData?.name,
             created: userData?.created,
+            role: userData?.role || 'user',
             // Add other properties as needed
           });
         }
@@ -47,6 +57,7 @@ export const useAuth = (): UseAuthReturn => {
           email: userData?.email,
           name: userData?.name,
           created: userData?.created,
+          role: userData?.role || 'user',
           // Add other properties as needed
         });
       } else {
@@ -71,6 +82,7 @@ export const useAuth = (): UseAuthReturn => {
         email: userData?.email,
         name: userData?.name,
         created: userData?.created,
+        role: userData?.role || 'user',
         // Add other properties as needed
       });
       return { success: true };
@@ -80,17 +92,64 @@ export const useAuth = (): UseAuthReturn => {
     }
   };
 
+  const register = async (userData: {
+    email: string;
+    password: string;
+    name?: string;
+    phone?: string;
+  }) => {
+    try {
+      const data = {
+        email: userData.email,
+        password: userData.password,
+        passwordConfirm: userData.password,
+        name: userData.name || '',
+      };
+      
+      await pb.collection('users').create(data);
+      // Auto login after registration
+      return await login(userData.email, userData.password);
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { success: false, error: error as Error };
+    }
+  };
+
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      await pb.collection('users').update(user.id, data);
+      
+      // Update local user state
+      setUser(prev => prev ? { ...prev, ...data } : null);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Profile update error:', error);
+      return { success: false, error: error as Error };
+    }
+  };
+
   const logout = () => {
     pb.authStore.clear();
     setUser(null);
   };
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+
   return {
     user,
     loading,
+    isLoading: loading,
     isAuthenticated: !!user,
+    isAdmin,
     login,
     logout,
+    register,
+    updateProfile
   };
 };
 

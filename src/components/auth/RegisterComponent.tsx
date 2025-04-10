@@ -36,14 +36,12 @@ const RegisterComponent: React.FC<RegisterComponentProps> = ({ redirectTo = '/au
     
     setLoading(true);
     try {
-      const { success } = await register(
-        formData.email, 
-        formData.password, 
-        {
-          name: formData.name,
-          phone: formData.phone
-        }
-      );
+      const { success } = await register({
+        email: formData.email, 
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone
+      });
       
       if (success) {
         navigate(redirectTo);

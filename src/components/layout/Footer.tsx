@@ -1,93 +1,89 @@
 
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Twitter, Phone, Mail, MapPin } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 
-export default function Footer() {
+const Footer: React.FC = () => {
   return (
-    <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Glassmorphism overlay */}
-      <div className="absolute inset-0 bg-white/5 backdrop-blur-sm" />
-      
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-blue-500/10 to-green-500/10 animate-gradient-x" />
-
-      <div className="container relative mx-auto px-4 py-12">
+    <footer className="bg-gray-100 py-8">
+      <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-              À propos de nous
-            </h3>
-            <p className="text-gray-400">
-              EazyCongo est votre partenaire de confiance pour la livraison de repas
-              congolais authentiques et services de qualité à Brazzaville.
+          <div>
+            <h3 className="text-lg font-bold mb-4">Buntudelice</h3>
+            <p className="text-sm text-gray-600">
+              La meilleure plateforme de livraison de cuisine africaine.
             </p>
           </div>
           
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-              Contact
-            </h3>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2 text-gray-400">
-                <MapPin className="h-4 w-4 text-green-400" />
-                <span>Brazzaville, Congo</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-400">
-                <Phone className="h-4 w-4 text-green-400" />
-                <span>+242 XX XXX XXX</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-400">
-                <Mail className="h-4 w-4 text-green-400" />
-                <span>contact@eazycongo.com</span>
-              </div>
-            </div>
+          <div>
+            <h4 className="font-semibold mb-3">Liens utiles</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/about" className="text-sm text-gray-600 hover:text-primary">
+                  À propos
+                </Link>
+              </li>
+              <li>
+                <Link to="/restaurants" className="text-sm text-gray-600 hover:text-primary">
+                  Restaurants
+                </Link>
+              </li>
+              <li>
+                <Link to="/specialties" className="text-sm text-gray-600 hover:text-primary">
+                  Spécialités
+                </Link>
+              </li>
+            </ul>
           </div>
           
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-              Liens rapides
-            </h3>
-            <div className="space-y-2">
-              <Link to="/" className="block text-gray-400 hover:text-white transition-colors">Accueil</Link>
-              <Link to="/restaurants" className="block text-gray-400 hover:text-white transition-colors">Restaurants</Link>
-              <Link to="/taxi" className="block text-gray-400 hover:text-white transition-colors">Taxi</Link>
-              <Link to="/orders" className="block text-gray-400 hover:text-white transition-colors">Commandes</Link>
-            </div>
+          <div>
+            <h4 className="font-semibold mb-3">Assistance</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/contact" className="text-sm text-gray-600 hover:text-primary">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link to="/faq" className="text-sm text-gray-600 hover:text-primary">
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-sm text-gray-600 hover:text-primary">
+                  Conditions d'utilisation
+                </Link>
+              </li>
+            </ul>
           </div>
           
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-              Suivez-nous
-            </h3>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Facebook className="h-6 w-6" />
+          <div>
+            <h4 className="font-semibold mb-3">Suivez-nous</h4>
+            <div className="flex space-x-3">
+              <a href="#" className="text-gray-600 hover:text-primary">
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path>
+                </svg>
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Twitter className="h-6 w-6" />
+              <a href="#" className="text-gray-600 hover:text-primary">
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"></path>
+                </svg>
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Instagram className="h-6 w-6" />
+              <a href="#" className="text-gray-600 hover:text-primary">
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"></path>
+                </svg>
               </a>
-            </div>
-            <div className="mt-4">
-              <input
-                type="email"
-                placeholder="Votre email"
-                className="w-full px-4 py-2 rounded bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-              <Button className="w-full mt-2 bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600">
-                S'abonner
-              </Button>
             </div>
           </div>
         </div>
         
-        <div className="border-t border-white/10 mt-8 pt-8 text-center text-gray-400">
-          <p>© {new Date().getFullYear()} EazyCongo. Tous droits réservés.</p>
+        <div className="border-t border-gray-200 mt-8 pt-6 text-center text-sm text-gray-600">
+          <p>&copy; {new Date().getFullYear()} Buntudelice. Tous droits réservés.</p>
         </div>
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

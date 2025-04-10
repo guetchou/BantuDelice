@@ -7,10 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { DeliveryDriver, DeliveryLocation, DeliveryRequest } from '@/types/delivery';
 import { calculateDistance } from '@/utils/distance';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Clock, MapPin, Phone, Truck, User } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useMap, MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from '@/components/ui/leaflet-map';
 import L from 'leaflet';
 
 // Define custom icons
@@ -44,6 +44,7 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
   const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [requests, setRequests] = useState<DeliveryRequest[]>([]);
+  const { toast } = useToast();
   
   // Mock data for development
   useEffect(() => {
@@ -218,6 +219,30 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
     return [centerLat, centerLng];
   };
 
+  // Custom driver icon
+  const driverIcon = L.icon({
+    iconUrl: '/assets/driver-marker.png', 
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+  
+  // Custom restaurant icon
+  const restaurantIcon = L.icon({
+    iconUrl: '/assets/restaurant-marker.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+  
+  // Custom customer icon
+  const customerIcon = L.icon({
+    iconUrl: '/assets/customer-marker.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -238,38 +263,45 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
-            {mapMarkers.map((marker, index) => {
-              let icon;
-              
-              switch (marker.type) {
-                case 'driver':
-                  icon = createCustomIcon('/assets/driver-marker.png');
-                  break;
-                case 'pickup':
-                  icon = createCustomIcon('/assets/restaurant-marker.png');
-                  break;
-                case 'dropoff':
-                  icon = createCustomIcon('/assets/customer-marker.png');
-                  break;
-                default:
-                  icon = createCustomIcon('/assets/default-marker.png');
-              }
-              
-              return (
-                <Marker 
-                  key={`marker-${index}`}
-                  position={[marker.latitude, marker.longitude]}
-                  icon={icon}
-                >
-                  <Popup>
-                    <div>
-                      <strong>{marker.name || marker.type}</strong>
-                      {marker.address && <p>{marker.address}</p>}
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
+            {orderLocation && (
+              <Marker 
+                position={[orderLocation.latitude, orderLocation.longitude]}
+                icon={restaurantIcon}
+              >
+                <Popup>
+                  <div>
+                    <strong>Restaurant</strong>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+            {deliveryLocation && (
+              <Marker 
+                position={[deliveryLocation.latitude, deliveryLocation.longitude]}
+                icon={customerIcon}
+              >
+                <Popup>
+                  <div>
+                    <strong>Client</strong>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+            {drivers.map((driver, index) => (
+              <Marker 
+                key={`driver-${index}`}
+                position={[driver.current_latitude, driver.current_longitude]}
+                icon={driverIcon}
+              >
+                <Popup>
+                  <div>
+                    <strong>{driver.name}</strong>
+                    <p>{driver.vehicle_type} - {driver.vehicle_model}</p>
+                    <p>Distance: {calculateDriverDistance(driver)} km</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
           </MapContainer>
         </div>
         

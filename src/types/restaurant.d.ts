@@ -4,57 +4,48 @@ export interface Restaurant {
   name: string;
   description: string;
   address: string;
-  latitude: number;
-  longitude: number;
-  phone: string;
-  email: string;
-  website: string;
-  cuisine_type: string;
-  banner_image_url: string;
-  logo_url: string;
-  rating: number;
-  average_rating: number;
-  min_order: number;
-  delivery_fee: number;
-  is_open: boolean;
-  created_at: string;
-  specialties?: string[];
-  status?: string;
-  business_hours: BusinessHours;
-  opening_hours?: any;
-  payment_methods?: string[];
+  cuisine_type?: string;
+  latitude?: number;
+  longitude?: number;
+  phone?: string;
+  email?: string;
+  website?: string;
+  logo_url?: string;
+  banner_image_url?: string;
+  opening_hours?: BusinessHours;
+  rating?: number;
+  min_order?: number;
+  delivery_fee?: number;
   services?: string[];
-  tags?: string[];
+  payment_methods?: string[];
   features?: string[];
-  trending?: boolean;
-  average_prep_time?: number;
+  specialties?: string[];
+  business_hours?: BusinessHours;
+  
+  // Propriétés supplémentaires
+  min_order_amount?: number;
+  price_range?: string;
+  average_rating?: number;
   total_ratings?: number;
-  special_features?: string[];
-  estimated_delivery_time?: string;
+  average_prep_time?: number;
+  estimated_delivery_time?: number;
+  is_open?: boolean;
+}
+
+export interface BusinessDay {
+  open: string;
+  close: string;
+  is_closed: boolean;
 }
 
 export interface BusinessHours {
-  monday: { open: string; close: string; is_closed?: boolean };
-  tuesday: { open: string; close: string; is_closed?: boolean };
-  wednesday: { open: string; close: string; is_closed?: boolean };
-  thursday: { open: string; close: string; is_closed?: boolean };
-  friday: { open: string; close: string; is_closed?: boolean };
-  saturday: { open: string; close: string; is_closed?: boolean };
-  sunday: { open: string; close: string; is_closed?: boolean };
-  regular?: { [key: string]: { open: string; close: string; is_closed?: boolean } };
-}
-
-export type BusinessDay = keyof BusinessHours;
-
-export interface RestaurantFilters {
-  sort_by?: string;
-  search?: string;
-  open_now?: boolean;
-  price_range?: [number, number];
-  category?: string | string[];
-  cuisine?: string | string[];
-  distance?: number;
-  rating?: number;
+  monday: BusinessDay;
+  tuesday: BusinessDay;
+  wednesday: BusinessDay;
+  thursday: BusinessDay;
+  friday: BusinessDay;
+  saturday: BusinessDay;
+  sunday: BusinessDay;
 }
 
 export interface MenuItem {
@@ -62,41 +53,143 @@ export interface MenuItem {
   name: string;
   description: string;
   price: number;
-  image_url?: string;
-  category: string;
   restaurant_id: string;
+  image_url?: string;
+  category?: string;
   available: boolean;
   created_at: string;
   dietary_preferences?: string[];
-  customization_options?: Record<string, CustomizationOption>;
-  popularity_score?: number;
   cuisine_type?: string;
+  
+  // Propriétés supplémentaires
+  popularity_score?: number;
+  preparation_time?: number;
+  ingredients?: string[];
+  is_vegetarian?: boolean;
+  is_vegan?: boolean;
+  is_gluten_free?: boolean;
+  is_spicy?: boolean;
+  allergens?: string[];
+  profit_margin?: number;
+  nutritional_info?: {
+    calories: number;
+    fat: number;
+    carbs: number;
+    protein: number;
+    sodium: number;
+    fiber: number;
+  };
+  promotional_data?: {
+    is_on_promotion: boolean;
+    discount_type: string;
+    discount_value: number;
+    start_date?: string;
+    end_date?: string;
+  };
+  customization_options?: MenuCustomizationOption[];
   nutritional_score?: number;
+  average_rating?: number;
+}
+
+export interface MenuCustomizationOption {
+  id: string;
+  name: string;
+  required: boolean;
+  multiple: boolean;
+  min_selections?: number;
+  max_selections?: number;
+  values: {
+    id: string;
+    name: string;
+    price: number;
+    default?: boolean;
+  }[];
 }
 
 export interface CustomizationOption {
-  required?: boolean;
-  multiple?: boolean;
-  default?: string;
+  required: boolean;
+  multiple: boolean;
   values: {
-    value: string;
+    name: string;
     price: number;
+    default?: boolean;
   }[];
 }
 
 export interface MenuPromotion {
   id: string;
-  name: string;
+  restaurant_id: string;
+  title: string;
+  description?: string;
   discount_type: 'percentage' | 'fixed_amount' | 'free_delivery';
   discount_value: number;
-  start_date?: string;
-  end_date?: string;
-  conditions?: any;
   active: boolean;
-  menu_item_ids?: string[];
+  conditions?: {
+    min_order_value?: number;
+    applicable_items?: string[];
+    max_uses_per_customer?: number;
+  };
+  
+  // Propriétés supplémentaires
   valid_from?: string;
   valid_to?: string;
-  promotion_hours?: any;
+  promotion_hours?: {
+    start: string;
+    end: string;
+  };
   min_order_value?: number;
+  menu_item_ids?: string[];
   coupon_code?: string;
+}
+
+export interface Table {
+  id: string;
+  table_number: string;
+  capacity: number;
+  minimum_guests: number;
+  maximum_guests: number;
+  location?: string;
+  status: 'available' | 'occupied' | 'reserved' | 'maintenance';
+  is_accessible: boolean;
+}
+
+export interface Reservation {
+  id: string;
+  restaurant_id: string;
+  table_id: string;
+  user_id: string;
+  party_size: number;
+  reservation_date: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
+  special_requests?: string;
+}
+
+export type RestaurantViewMode = 'grid' | 'list' | 'map';
+
+export interface RestaurantFilters {
+  search?: string;
+  sort_by?: 'rating' | 'distance' | 'price' | 'name';
+  price_level?: string[];
+  category?: string[];
+  open_now?: boolean;
+  dietary?: string[];
+  services?: string[];
+  
+  // Propriétés supplémentaires
+  cuisine_type?: string | string[];
+  rating?: number;
+  distance?: number;
+  isOpen?: boolean;
+  hasDelivery?: boolean;
+  hasPickup?: boolean;
+}
+
+export interface RestaurantDetails extends Restaurant {
+  menu_categories: string[];
+  popular_items: MenuItem[];
+  reviews: any[];
+  special_offers: any[];
 }

@@ -2,7 +2,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import pb from '@/lib/pocketbase';
 import { useAuth } from '@/hooks/useAuth';
 import SearchBar from './SearchBar';
 import UserProfileMenu from './UserProfileMenu';
@@ -10,10 +9,10 @@ import { ShoppingCart, Menu } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 
 const Header: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
 
   const handleLogout = async () => {
-    pb.authStore.clear();
+    logout();
     // Redirect to home page or login page
     window.location.href = '/';
   };
