@@ -9,40 +9,43 @@ export interface Restaurant {
   phone: string;
   email: string;
   website?: string;
-  logo_url?: string;
-  banner_image_url?: string;
-  cuisine_type: string;
-  created_at: string;
-  min_order: number;
-  delivery_fee: number;
+  cuisine_type?: string;
   rating?: number;
   average_rating?: number;
-  total_ratings?: number;
-  trending?: boolean;
-  average_prep_time?: number;
-  features?: string[];
-  special_features?: string[];
-  payment_methods?: string[];
+  banner_image_url?: string;
+  logo_url?: string;
+  business_hours?: BusinessHours;
+  special_hours?: { [date: string]: BusinessDay };
+  delivery_fee?: number;
+  min_order?: number;
+  minimum_order?: number; // Deprecated, use min_order instead
   is_open?: boolean;
   status?: string;
-  price_range?: {
-    min: number;
-    max: number;
-    currency?: string;
-  };
-  business_hours: BusinessHours;
+  featured?: boolean;
+  trending?: boolean;
+  categories?: string[];
+  special_features?: string[];
+  delivery_time?: number;
+  user_id?: string;
+  created_at?: string;
+  price_range?: PriceRange;
+  estimated_delivery_time?: number;
 }
 
-export type BusinessDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export interface PriceRange {
+  min: number;
+  max: number;
+  currency?: string;
+}
 
 export interface BusinessHours {
-  monday: { open: string; close: string; is_closed?: boolean };
-  tuesday: { open: string; close: string; is_closed?: boolean };
-  wednesday: { open: string; close: string; is_closed?: boolean };
-  thursday: { open: string; close: string; is_closed?: boolean };
-  friday: { open: string; close: string; is_closed?: boolean };
-  saturday: { open: string; close: string; is_closed?: boolean };
-  sunday: { open: string; close: string; is_closed?: boolean };
+  monday: BusinessDay;
+  tuesday: BusinessDay;
+  wednesday: BusinessDay;
+  thursday: BusinessDay;
+  friday: BusinessDay;
+  saturday: BusinessDay;
+  sunday: BusinessDay;
   regular?: {
     monday: { open: string; close: string; is_closed: boolean };
     tuesday: { open: string; close: string; is_closed: boolean };
@@ -54,163 +57,89 @@ export interface BusinessHours {
   };
 }
 
-export interface RestaurantDetails extends Restaurant {
-  menu_categories: string[];
-  popular_items: MenuItem[];
-  reviews: RestaurantReview[];
-  special_offers: RestaurantPromotion[];
-}
-
-export interface RestaurantReview {
-  id: string;
-  user_id: string;
-  restaurant_id: string;
-  rating: number;
-  comment?: string;
-  created_at: string;
-  user_name?: string;
-  user_avatar?: string;
-}
-
-export interface RestaurantPromotion {
-  id: string;
-  restaurant_id: string;
-  title: string;
-  description?: string;
-  discount_type: 'percentage' | 'fixed_amount' | 'free_delivery';
-  discount_value: number;
-  min_order_value?: number;
-  start_date: string;
-  end_date: string;
-  active: boolean;
-  conditions?: string[];
+export interface BusinessDay {
+  open: string;
+  close: string;
+  is_closed: boolean;
 }
 
 export interface MenuItem {
   id: string;
-  restaurant_id: string;
   name: string;
   description: string;
   price: number;
+  restaurant_id: string;
   category: string;
   image_url?: string;
   available: boolean;
   created_at: string;
   dietary_preferences?: string[];
-  cuisine_type?: string;
-  customization_options?: MenuCustomizationOption[];
+  customization_options?: Record<string, CustomizationOption>;
   popularity_score?: number;
+  cuisine_type?: string;
+  stock_level?: number;
+  featured?: boolean;
+  is_combo?: boolean;
   preparation_time?: number;
   nutritional_info?: {
-    calories: number;
-    fat: number;
-    carbs: number;
-    protein: number;
-    sodium: number;
-    fiber: number;
+    calories?: number;
+    proteins?: number;
+    carbs?: number;
+    fats?: number;
   };
-  nutritional_score?: number;
+  promotional_data?: {
+    is_on_promotion: boolean;
+    discount_type: string;
+    discount_value: number;
+  };
   profit_margin?: number;
-  is_combo?: boolean;
   is_vegetarian?: boolean;
   is_vegan?: boolean;
   is_gluten_free?: boolean;
   is_spicy?: boolean;
   allergens?: string[];
-  ingredients?: string[];
-  stock_level?: number;
-  featured?: boolean;
-  promotional_data?: {
-    is_on_promotion: boolean;
-    discount_type: string;
-    discount_value: number;
-    start_date?: string;
-    end_date?: string;
-  };
 }
 
-export interface MenuCustomizationOption {
-  id: string;
-  name: string;
-  required: boolean;
-  multiple: boolean;
-  max_selections?: number;
-  values: {
-    id: string;
-    name: string;
-    price: number;
-    default?: boolean;
-  }[];
-}
-
-export interface MenuPromotion {
-  id: string;
-  restaurant_id: string;
-  discount_type: 'percentage' | 'fixed_amount' | 'free_delivery' | 'free_item';
-  discount_value: number;
-  start_date: string;
-  end_date: string;
-  active: boolean;
-  title: string;
-  description?: string;
-  valid_from?: string;
-  valid_to?: string;
-  promotion_hours?: {
-    start: string;
-    end: string;
-    days: string[];
-  };
-  conditions: {
-    min_order_value?: number;
-    applicable_items?: string[];
-    max_uses_per_customer?: number;
-  };
-  menu_item_ids?: string[];
-  coupon_code?: string;
-}
-
-export interface MenuAnalysisResult {
-  popularItems: MenuItem[];
-  lowPerformingItems: MenuItem[];
-  trendingCategories: { category: string; count: number }[];
-  mostPopularCategory?: string;
-  profitability: {
-    highProfitItems: MenuItem[];
-    lowProfitItems: MenuItem[];
-  };
-}
-
-export interface MenuRecommendation {
-  id: string;
-  type: 'price_change' | 'promotion' | 'removal' | 'featured';
-  item_id: string;
-  reason: string;
-  expected_impact: string;
-  current_value: number;
-  recommended_value: number;
-  priority: 'high' | 'medium' | 'low';
+export interface CustomizationOption {
+  required?: boolean;
+  multiple?: boolean;
+  default?: string;
+  values?: { value: string; price: number }[];
 }
 
 export interface RestaurantFilters {
-  cuisine_type?: string | string[];
-  price_range?: { min: number; max: number };
-  rating?: number;
+  search?: string;
+  categories?: string[];
+  min_rating?: number;
+  price_range?: [number, number];
+  sort_by?: string;
   open_now?: boolean;
-  distance?: number;
-  sort_by?: 'distance' | 'rating' | 'price_low' | 'price_high' | 'popularity';
-  isOpen?: boolean;
+  cuisine_type?: string;
+  sortBy?: string; // Deprecated, use sort_by instead
+  cuisine?: string; // Deprecated, use cuisine_type instead
+  isOpen?: boolean; // Deprecated, use open_now instead
   hasDelivery?: boolean;
   hasPickup?: boolean;
+}
+
+export interface RestaurantDetails extends Restaurant {
+  menu_categories: { name: string; items: MenuItem[] }[];
+  popular_items: MenuItem[];
+  reviews: any[];
+  special_offers: any[];
+  min_order: number;
 }
 
 export interface Table {
   id: string;
   restaurant_id: string;
-  table_number: string;
   capacity: number;
+  is_available: boolean;
+  table_number: string;
   location?: string;
-  status: 'available' | 'occupied' | 'reserved' | 'maintenance';
-  is_available?: boolean;
+  status: string;
+  minimum_guests?: number;
+  maximum_guests?: number;
   is_accessible?: boolean;
   notes?: string;
 }
@@ -222,11 +151,74 @@ export interface Reservation {
   user_id: string;
   reservation_date: string;
   party_size: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  special_requests?: string;
+  status: string;
+  notes?: string;
 }
 
-export type RestaurantViewMode = 'grid' | 'list' | 'map';
+export interface RestaurantPromotion {
+  id: string;
+  restaurant_id: string;
+  title: string;
+  description?: string;
+  discount_type: 'percentage' | 'fixed_amount' | 'free_delivery' | 'free_item';
+  discount_value: number;
+  min_order_value?: number;
+  conditions?: string[];
+  active: boolean;
+  start_date?: string;
+  end_date?: string;
+  promotion_hours?: {
+    days: string[];
+    start_time: string;
+    end_time: string;
+  };
+  coupon_code?: string;
+}
+
+export type RestaurantPromotionInsert = Omit<RestaurantPromotion, 'id'>;
+
+// Menu related types
+export interface MenuPromotion {
+  id: string;
+  restaurant_id: string;
+  title: string;
+  description?: string;
+  discount_type: 'percentage' | 'fixed_amount' | 'free_delivery' | 'free_item';
+  discount_value: number;
+  min_order_value?: number;
+  active: boolean;
+  valid_from?: string;
+  valid_to?: string;
+  promotion_hours?: {
+    days: string[];
+    start_time: string;
+    end_time: string;
+  };
+  menu_item_ids?: string[];
+  conditions: {
+    min_order_value?: number;
+    applicable_items?: string[];
+    max_uses_per_customer?: number;
+  };
+}
+
+export interface MenuStatistics {
+  mostOrderedItems: MenuItem[];
+  leastOrderedItems: MenuItem[];
+  mostProfitableItems: MenuItem[];
+  itemsWithHighRating: MenuItem[];
+  itemsWithLowRating: MenuItem[];
+  mostPopularCategory?: string;
+  totalItems?: number;
+}
+
+export interface MenuRecommendation {
+  item: MenuItem;
+  reason: string;
+  action: string;
+  impact: {
+    revenue?: number;
+    orders?: number;
+  };
+  type?: string;
+}

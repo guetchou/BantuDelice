@@ -1,176 +1,110 @@
 
-import { useState, useEffect, useContext, createContext, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import pb from '@/lib/pocketbase';
 import { User } from '@/types/user';
-import { useToast } from '@/hooks/use-toast';
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  name?: string;
-  phone?: string;
-}
+import { toast } from 'sonner';
 
 export interface UseAuthReturn {
   user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: { email: string; password: string; passwordConfirm: string; name: string; }) => Promise<void>;
+  logout: () => void;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => void;
-  updateProfile: (data: Partial<User>) => Promise<void>;
-  isAdmin: boolean;
 }
 
-const AuthContext = createContext<UseAuthReturn | undefined>(undefined);
+const AuthContext = createContext<UseAuthReturn | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
-  // Initial auth check
+  // Check if user is already authenticated when the app loads
   useEffect(() => {
-    const checkAuth = async () => {
+    const loadUser = async () => {
       try {
         if (pb.authStore.isValid) {
           const userData = pb.authStore.model;
-          if (userData) {
-            setUser({
-              id: userData.id,
-              email: userData.email,
-              name: userData.name || '',
-              phone: userData.phone || '',
-              role: userData.role || 'user',
-              created_at: userData.created_at || new Date().toISOString()
-            });
-          }
+          setUser({
+            id: userData?.id || '',
+            email: userData?.email || '',
+            name: userData?.name || '',
+            role: userData?.role || 'user',
+            created_at: userData?.created || '',
+          });
         }
       } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('Error loading user:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
-
-    // Subscribe to auth changes
-    pb.authStore.onChange(() => {
-      if (pb.authStore.isValid && pb.authStore.model) {
-        const userData = pb.authStore.model;
-        setUser({
-          id: userData.id,
-          email: userData.email,
-          name: userData.name || '',
-          phone: userData.phone || '',
-          role: userData.role || 'user',
-          created_at: userData.created_at || new Date().toISOString()
-        });
-      } else {
-        setUser(null);
-      }
-    });
+    loadUser();
   }, []);
 
-  // Login
   const login = async (email: string, password: string) => {
     try {
-      await pb.collection('users').authWithPassword(email, password);
-      toast({
-        title: "Connexion réussie",
-        description: "Vous êtes maintenant connecté",
+      setLoading(true);
+      const auth = await pb.collection('users').authWithPassword(email, password);
+      
+      setUser({
+        id: auth.record.id,
+        email: auth.record.email,
+        name: auth.record.name,
+        role: auth.record.role || 'user',
+        created_at: auth.record.created,
       });
-    } catch (error: any) {
+      
+      toast.success('Connexion réussie');
+    } catch (error) {
       console.error('Login error:', error);
-      toast({
-        title: "Erreur de connexion",
-        description: error.message || "Identifiants invalides",
-        variant: "destructive",
-      });
+      toast.error('Échec de la connexion');
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Register
-  const register = async (data: RegisterData) => {
+  const register = async (userData: { email: string; password: string; passwordConfirm: string; name: string; }) => {
     try {
-      const userData = {
-        email: data.email,
-        password: data.password,
-        passwordConfirm: data.password,
-        name: data.name || '',
-        phone: data.phone || '',
-      };
-      
-      await pb.collection('users').create(userData);
-      
-      toast({
-        title: "Inscription réussie",
-        description: "Votre compte a été créé",
+      setLoading(true);
+      const newUser = await pb.collection('users').create({
+        email: userData.email,
+        password: userData.password,
+        passwordConfirm: userData.passwordConfirm,
+        name: userData.name,
+        role: 'user',
       });
       
-      // Auto login
-      await login(data.email, data.password);
-    } catch (error: any) {
-      console.error('Register error:', error);
-      toast({
-        title: "Erreur d'inscription",
-        description: error.message || "Une erreur est survenue",
-        variant: "destructive",
-      });
+      // Auto login after registration
+      await login(userData.email, userData.password);
+      
+      toast.success('Inscription réussie');
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error('Échec de l\'inscription');
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Logout
   const logout = () => {
     pb.authStore.clear();
-    toast({
-      title: "Déconnexion",
-      description: "Vous êtes maintenant déconnecté",
-    });
+    setUser(null);
+    toast.info('Déconnexion réussie');
   };
-
-  // Update profile
-  const updateProfile = async (data: Partial<User>) => {
-    if (!user) throw new Error("Vous devez être connecté");
-    
-    try {
-      await pb.collection('users').update(user.id, data);
-      
-      // Update local state
-      setUser(prev => prev ? { ...prev, ...data } : null);
-      
-      toast({
-        title: "Profil mis à jour",
-        description: "Vos informations ont été mises à jour",
-      });
-    } catch (error: any) {
-      console.error('Update profile error:', error);
-      toast({
-        title: "Erreur de mise à jour",
-        description: error.message || "Une erreur est survenue",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Check if user is admin
-  const isAdmin = user?.role === 'admin';
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        loading,
-        isAuthenticated: !!user,
         login,
         register,
         logout,
-        updateProfile,
-        isAdmin
+        loading,
+        isAuthenticated: !!user,
       }}
     >
       {children}
@@ -178,10 +112,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = (): UseAuthReturn => {
+export default function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}

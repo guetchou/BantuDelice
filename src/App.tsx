@@ -1,41 +1,52 @@
 
-import { createBrowserRouter, Navigate, RouteObject } from 'react-router-dom';
-import Index from './pages/Index';
-import Auth from './pages/Auth';
+import React from 'react';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { ThemeProvider } from '@/components/ui/theme-provider';
+import { CartProvider } from '@/contexts/CartContext';
+import { AuthProvider } from '@/hooks/useAuth';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import RootLayout from './layouts/RootLayout';
 
-const routes: RouteObject[] = [
+// Root layout with providers
+const RootLayout = () => {
+  return (
+    <ThemeProvider defaultTheme="light" storageKey="buntudelice-ui-theme">
+      <AuthProvider>
+        <CartProvider>
+          <Outlet />
+        </CartProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+};
+
+// Define routes
+export const router = createBrowserRouter([
   {
-    path: "/",
     element: <RootLayout />,
     children: [
       {
-        index: true,
-        element: <Index />,
-      },
-      // Ajoutez d'autres routes ici au besoin
-    ],
-  },
-  {
-    path: "/auth",
-    element: <Auth />,
-    children: [
-      {
-        index: true,
-        element: <Navigate to="/auth/login" replace />,
+        path: "/",
+        element: <div className="p-8 text-center">Welcome to BuntuDelice!</div>,
       },
       {
-        path: "login",
+        path: "/auth/login",
         element: <Login />,
       },
       {
-        path: "register",
+        path: "/auth/register",
         element: <Register />,
       },
+      // Add other routes as needed
     ],
   },
-];
+]);
 
-export const router = createBrowserRouter(routes);
+export default function App() {
+  return (
+    <RouterProvider router={router} />
+  );
+}
+
+// Import for the default export reference
+import { RouterProvider } from 'react-router-dom';

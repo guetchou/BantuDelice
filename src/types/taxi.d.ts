@@ -29,6 +29,9 @@ export interface TaxiRide {
   actual_arrival_time?: string;
   estimated_arrival_time?: string;
   current_passengers?: number;
+  is_shared_ride?: boolean;
+  max_passengers?: number;
+  route_polyline?: string;
 }
 
 export type TaxiRideStatus = 
@@ -58,7 +61,7 @@ export interface TaxiDriver {
   vehicle_type: VehicleType;
   vehicle_model: string;
   license_plate: string;
-  photo_url: string;
+  photo_url?: string;
   rating: number;
   is_available: boolean;
   current_latitude: number;
@@ -69,6 +72,16 @@ export interface TaxiDriver {
   // Extended properties
   average_rating?: number;
   vehicle_make?: string;
+  profile_image?: string;
+  profile_picture?: string;
+  vehicle_info?: any;
+  languages?: string[];
+  years_experience?: number;
+  total_rides?: number;
+  current_location?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface TaxiRideRequest {
@@ -95,6 +108,7 @@ export interface TaxiFare {
     tax: number;
     promo_discount?: number;
   };
+  peak_hours_multiplier?: number;
 }
 
 export interface TaxiPricingParams {
@@ -104,6 +118,9 @@ export interface TaxiPricingParams {
   time_of_day: string;
   day_of_week?: string;
   surge_factor?: number;
+  subscription_discount?: number;
+  promo_code?: string;
+  is_premium?: boolean;
 }
 
 export interface PricingFactors {
@@ -111,6 +128,12 @@ export interface PricingFactors {
   day_of_week: string;
   surge_factor: number;
   distance?: number;
+  vehicle_type?: VehicleType;
+  distance_km?: number;
+  duration_min?: number;
+  is_premium?: boolean;
+  subscription_discount?: number;
+  promo_code?: string;
 }
 
 export interface BookingFormState {
@@ -225,6 +248,8 @@ export interface RideShareRequest {
   
   // Extended properties
   destination_address?: string;
+  requested_at?: string;
+  requester_id?: string;
 }
 
 export interface RidesharingTrip {

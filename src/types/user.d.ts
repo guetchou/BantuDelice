@@ -6,9 +6,16 @@ export interface User {
   phone?: string;
   role: string;
   created_at: string;
+  // Add missing properties reported in errors
+  avatar_url?: string;
+  first_name?: string;
+  last_name?: string;
+  status?: string;
+  password?: string;
+  last_login?: string;
 }
 
-export type UserRole = 'user' | 'admin' | 'restaurant' | 'driver';
+export type UserRole = 'user' | 'admin' | 'restaurant' | 'driver' | 'superadmin' | 'restaurant_owner';
 export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
 
 export interface UserPreferences {
@@ -26,6 +33,9 @@ export interface UserCreateRequest {
   phone?: string;
   role?: UserRole;
   avatar_url?: string;
+  // Add missing properties reported in errors
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface UserUpdateRequest {
@@ -36,6 +46,9 @@ export interface UserUpdateRequest {
   status?: UserStatus;
   password?: string;
   avatar_url?: string;
+  // Add missing properties reported in errors
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface UserProfile {

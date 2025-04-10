@@ -7,16 +7,17 @@ export interface DeliveryRequest {
   created_at: string;
   updated_at: string;
   
-  // Location data
+  // Adding missing properties reported in errors
   pickup_latitude?: number;
   pickup_longitude?: number;
   delivery_latitude?: number;
   delivery_longitude?: number;
+  pickup_address?: string;
+  delivery_address?: string;
   
   // Extended properties
   restaurant_id?: string;
   customer_id?: string;
-  delivery_address?: string;
   delivery_instructions?: string;
   estimated_delivery_time?: string;
   actual_delivery_time?: string;
@@ -57,15 +58,28 @@ export interface DeliveryDriver {
   vehicle_type: string;
   status: string;
   
-  // Extended properties
-  average_rating?: number;
-  total_deliveries?: number;
+  // Adding missing properties reported in errors
+  photo_url?: string;
   profile_picture?: string;
+  rating?: number;
+  average_rating?: number;
+  vehicle_info?: {
+    model: string;
+    plate: string;
+    color: string;
+  };
+  languages?: string[];
+  years_experience?: number;
+  total_rides?: number;
+  
+  // Extended properties
+  total_deliveries?: number;
+  profile_image?: string;
   vehicle_model?: string;
   vehicle_make?: string;
   license_plate?: string;
   max_concurrent_deliveries?: number;
-  current_deliveries?: DeliveryRequest[];
+  current_deliveries?: number;
 }
 
 export interface DeliveryLocation {
@@ -73,16 +87,25 @@ export interface DeliveryLocation {
   longitude: number;
   address?: string;
   timestamp?: string;
+  // Add missing properties
+  name?: string;
+  type?: 'pickup' | 'delivery' | 'driver' | 'restaurant' | 'customer';
 }
 
 export interface DeliveryRoute {
   id: string;
   driver_id: string;
-  stops: DeliveryLocation[];
-  created_at: string;
+  // Add missing properties
+  delivery_requests: string[];
   status: string;
   estimated_duration: number;
   total_distance: number;
+  waypoints?: DeliveryLocation[];
+  start_time?: string;
+  estimated_end_time?: string;
+  actual_end_time?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface DeliveryMessage {
@@ -118,6 +141,7 @@ export interface DeliverySettings {
   delivery_fee_per_km: number;
   estimated_delivery_time?: number;
   auto_accept_orders?: boolean;
+  auto_assign_drivers?: boolean;
   accepted_external_services?: string[];
 }
 

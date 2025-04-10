@@ -1,19 +1,105 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { CartItem } from '@/types/order';
+import { toast } from 'sonner';
 
 interface CartContextType {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  updateItem: (id: string, quantity: number) => void;
-  removeItem: (id: string) => void;
+  removeItem: (itemId: string) => void;
+  updateItemQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
-  totalItems: number;
-  totalPrice: number;
+  getItemQuantity: (itemId: string) => number;
+  getTotalPrice: () => number;
+  getTotalItems: () => number;
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+const CartContext = createContext<CartContextType | null>(null);
+
+export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const [items, setItems] = useState<CartItem[]>([]);
+
+  const addItem = (item: CartItem) => {
+    setItems(currentItems => {
+      // Check if item already exists
+      const existingItemIndex = currentItems.findIndex(i => i.id === item.id);
+      
+      // If item already exists, update quantity
+      if (existingItemIndex >= 0) {
+        const updatedItems = [...currentItems];
+        const existingItem = updatedItems[existingItemIndex];
+        updatedItems[existingItemIndex] = {
+          ...existingItem,
+          quantity: existingItem.quantity + item.quantity,
+          total: (existingItem.quantity + item.quantity) * item.price
+        };
+        toast.success(`Quantité de ${item.name} mise à jour`);
+        return updatedItems;
+      }
+      
+      // Otherwise add new item
+      toast.success(`${item.name} ajouté au panier`);
+      return [...currentItems, { ...item, total: item.price * item.quantity }];
+    });
+  };
+
+  const removeItem = (itemId: string) => {
+    setItems(currentItems => {
+      const itemToRemove = currentItems.find(item => item.id === itemId);
+      if (itemToRemove) {
+        toast.info(`${itemToRemove.name} retiré du panier`);
+      }
+      return currentItems.filter(item => item.id !== itemId);
+    });
+  };
+
+  const updateItemQuantity = (itemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeItem(itemId);
+      return;
+    }
+    
+    setItems(currentItems => 
+      currentItems.map(item => 
+        item.id === itemId 
+          ? { ...item, quantity, total: quantity * item.price } 
+          : item
+      )
+    );
+  };
+
+  const clearCart = () => {
+    setItems([]);
+    toast.info('Panier vidé');
+  };
+
+  const getItemQuantity = (itemId: string) => {
+    const item = items.find(item => item.id === itemId);
+    return item ? item.quantity : 0;
+  };
+
+  const getTotalPrice = () => {
+    return items.reduce((total, item) => total + item.total, 0);
+  };
+
+  const getTotalItems = () => {
+    return items.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  return (
+    <CartContext.Provider value={{
+      items,
+      addItem,
+      removeItem,
+      updateItemQuantity,
+      clearCart,
+      getItemQuantity,
+      getTotalPrice,
+      getTotalItems
+    }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
 
 export const useCart = () => {
   const context = useContext(CartContext);
@@ -21,101 +107,4 @@ export const useCart = () => {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-};
-
-export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const { toast } = useToast();
-
-  // Calculate total items and price
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  // Add or update item in cart
-  const addItem = (newItem: CartItem) => {
-    setItems(prevItems => {
-      // Check if item already exists in cart
-      const existingItemIndex = prevItems.findIndex(item => 
-        item.menu_item_id === newItem.menu_item_id && 
-        JSON.stringify(item.options) === JSON.stringify(newItem.options)
-      );
-
-      if (existingItemIndex >= 0) {
-        // Update existing item
-        const updatedItems = [...prevItems];
-        updatedItems[existingItemIndex].quantity += newItem.quantity;
-        updatedItems[existingItemIndex].total = updatedItems[existingItemIndex].price * updatedItems[existingItemIndex].quantity;
-        
-        toast({
-          title: "Panier mis à jour",
-          description: `${newItem.name} a été ajouté au panier`,
-        });
-        
-        return updatedItems;
-      } else {
-        // Add new item
-        toast({
-          title: "Ajouté au panier",
-          description: `${newItem.name} a été ajouté au panier`,
-        });
-        
-        return [...prevItems, { ...newItem, total: newItem.price * newItem.quantity }];
-      }
-    });
-  };
-
-  // Update item quantity
-  const updateItem = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(id);
-      return;
-    }
-
-    setItems(prevItems => 
-      prevItems.map(item => 
-        item.id === id 
-          ? { ...item, quantity, total: item.price * quantity } 
-          : item
-      )
-    );
-  };
-
-  // Remove item from cart
-  const removeItem = (id: string) => {
-    setItems(prevItems => {
-      const itemToRemove = prevItems.find(item => item.id === id);
-      if (itemToRemove) {
-        toast({
-          title: "Retiré du panier",
-          description: `${itemToRemove.name} a été retiré du panier`,
-        });
-      }
-      return prevItems.filter(item => item.id !== id);
-    });
-  };
-
-  // Clear entire cart
-  const clearCart = () => {
-    setItems([]);
-    toast({
-      title: "Panier vidé",
-      description: "Tous les articles ont été retirés du panier",
-    });
-  };
-
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        addItem,
-        updateItem,
-        removeItem,
-        clearCart,
-        totalItems,
-        totalPrice,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
 };
