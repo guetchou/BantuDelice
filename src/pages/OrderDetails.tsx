@@ -93,11 +93,7 @@ export default function OrderDetails() {
 
       {/* Assignation de livreur si nécessaire */}
       {order.status === 'prepared' && order.delivery_status !== 'assigned' && restaurantLocation && (
-        <DeliveryAssignment 
-          orderId={orderId}
-          restaurantLocation={restaurantLocation}
-          deliveryAddress={order.delivery_address || ''}
-        />
+        <DeliveryAssignment restaurantId={order.restaurant_id} />
       )}
 
       {/* Carte de suivi de livraison */}

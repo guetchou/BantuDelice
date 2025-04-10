@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,26 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
 import { calculateDistance } from '@/utils/distance';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 
 // Fix for Leaflet's default marker icon
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface DeliveryAssignmentProps {
   restaurantId: string;
@@ -158,7 +143,7 @@ const DeliveryAssignment = ({ restaurantId }: DeliveryAssignmentProps) => {
         .update({
           is_available: false,
         })
-        .eq('user_id', selectedDriverId);
+        .eq('id', selectedDriverId);
 
       if (updateDriverError) throw updateDriverError;
 
@@ -253,7 +238,7 @@ const DeliveryAssignment = ({ restaurantId }: DeliveryAssignmentProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   {availableDrivers.map(driver => (
-                    <SelectItem key={driver.user_id} value={driver.user_id}>
+                    <SelectItem key={driver.id} value={driver.id}>
                       {driver.name} ({calculateDriverDistance(driver)})
                     </SelectItem>
                   ))}
@@ -272,76 +257,12 @@ const DeliveryAssignment = ({ restaurantId }: DeliveryAssignmentProps) => {
           <CardDescription>Visualisation de la position du restaurant et de la livraison.</CardDescription>
         </CardHeader>
         <CardContent>
-          <DeliveryMap
-            restaurantLocation={restaurantLocation}
-            deliveryLocation={[deliveryRequest.delivery_latitude || defaultLocation[0], deliveryRequest.delivery_longitude || defaultLocation[1]]}
-            drivers={availableDrivers}
-          />
+          <div id="delivery-map" style={{ height: '400px', width: '100%' }}>
+            <p>Carte de livraison ici</p>
+          </div>
         </CardContent>
       </Card>
     </div>
-  );
-};
-
-interface DeliveryMapProps {
-  restaurantLocation: [number, number];
-  deliveryLocation: [number, number];
-  drivers: DeliveryDriver[];
-}
-
-const DeliveryMap = ({ restaurantLocation, deliveryLocation, drivers }: DeliveryMapProps) => {
-  const mapRef = React.useRef<L.Map | null>(null);
-
-  useEffect(() => {
-    if (mapRef.current) {
-      mapRef.current.setView(restaurantLocation, 13);
-      return;
-    }
-
-    const map = L.map('delivery-map').setView(restaurantLocation, 13);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    mapRef.current = map;
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-  }, [restaurantLocation]);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    const map = mapRef.current;
-
-    // Clear existing markers
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
-      }
-    });
-
-    // Add restaurant marker
-    L.marker(restaurantLocation, { icon: DefaultIcon }).addTo(map).bindPopup("Restaurant");
-
-    // Add delivery location marker
-    L.marker(deliveryLocation, { icon: DefaultIcon }).addTo(map).bindPopup("Delivery Location");
-
-    // Add driver markers
-    drivers.forEach(driver => {
-      if (driver.current_latitude && driver.current_longitude) {
-        L.marker([driver.current_latitude, driver.current_longitude], { icon: DefaultIcon })
-          .addTo(map)
-          .bindPopup(driver.name);
-      }
-    });
-  }, [restaurantLocation, deliveryLocation, drivers]);
-
-  return (
-    <div id="delivery-map" style={{ height: '400px', width: '100%' }}></div>
   );
 };
 

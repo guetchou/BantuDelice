@@ -1,8 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+
+export interface CartItemOption {
+  id: string;
+  name: string;
+  value: string;
+  price: number;
+  quantity: number;
+}
 
 export interface CartItem {
   id: string;
@@ -14,14 +20,6 @@ export interface CartItem {
   image_url?: string;
   restaurant_id: string;
   options?: CartItemOption[];
-}
-
-export interface CartItemOption {
-  id: string;
-  name: string;
-  value: string;
-  price: number;
-  quantity: number;
 }
 
 interface CartContextType {
@@ -36,7 +34,17 @@ interface CartContextType {
   canAddFromRestaurant: (restaurantId: string) => boolean;
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+export const CartContext = createContext<CartContextType>({
+  items: [],
+  addItem: () => {},
+  removeItem: () => {},
+  updateQuantity: () => {},
+  clearCart: () => {},
+  getTotal: () => 0,
+  getItemCount: () => 0,
+  getRestaurantId: () => null,
+  canAddFromRestaurant: () => true,
+});
 
 export const useCart = () => {
   const context = useContext(CartContext);
@@ -49,7 +57,6 @@ export const useCart = () => {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   // Load cart from localStorage on mount
   useEffect(() => {

@@ -4,7 +4,7 @@ export interface DeliveryDriver {
   name: string;
   phone: string;
   email?: string;
-  vehicle_type: 'car' | 'bike' | 'motorcycle' | 'scooter';
+  vehicle_type: 'car' | 'bike' | 'motorcycle' | 'scooter' | 'walk';
   status: 'available' | 'busy' | 'offline' | 'on_break';
   current_latitude?: number;
   current_longitude?: number;
@@ -52,14 +52,18 @@ export interface DeliveryRequest {
   requested_at?: string;
   accepted_at?: string;
   completed_at?: string;
+  cancelled_at?: string;
   delivery_latitude?: number;
   delivery_longitude?: number;
   pickup_latitude?: number;
   pickup_longitude?: number;
   delivery_fee?: number;
+  customer_name: string;
+  customer_phone: string;
+  notes?: string;
 }
 
-export type DeliveryStatus = 'pending' | 'assigned' | 'accepted' | 'in_progress' | 'picked_up' | 'in_transit' | 'delivering' | 'delivered' | 'cancelled' | 'failed';
+export type DeliveryStatus = 'pending' | 'assigned' | 'accepted' | 'in_progress' | 'picked_up' | 'in_transit' | 'delivering' | 'delivered' | 'cancelled' | 'failed' | 'completed';
 export type DeliveryType = 'standard' | 'scheduled' | 'express' | 'restaurant';
 
 export interface DeliverySettings {

@@ -34,6 +34,7 @@ const OrderProgress = ({ status: initialStatus, orderId }: OrderProgressProps) =
         <OrderProgressSteps 
           status={status} 
           deliveryStatus={deliveryStatus} 
+          orderId={orderId}
         />
       </div>
     </div>

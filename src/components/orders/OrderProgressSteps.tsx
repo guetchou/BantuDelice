@@ -1,61 +1,118 @@
 
-import { Clock, ChefHat, Truck, Package } from 'lucide-react';
-import OrderProgressStep from './OrderProgressStep';
+import { OrderStatus } from '@/types/order';
+import { DeliveryStatus } from '@/types/delivery';
+import { CheckCircle, ShoppingCart, ChefHat, Truck, Home } from 'lucide-react';
 
 interface OrderProgressStepsProps {
-  status: string;
-  deliveryStatus: string | null;
+  status: OrderStatus;
+  deliveryStatus: DeliveryStatus | null;
+  orderId: string;
 }
 
-const OrderProgressSteps = ({ status, deliveryStatus }: OrderProgressStepsProps) => {
+const OrderProgressSteps = ({ status, deliveryStatus, orderId }: OrderProgressStepsProps) => {
+  // Define the steps for the order progress
   const steps = [
     {
       key: 'pending',
-      label: 'Commande reçue',
-      icon: Clock,
-      completedStatuses: ['accepted', 'preparing', 'prepared', 'delivering', 'delivered', 'completed'],
+      label: 'Commande',
+      icon: ShoppingCart,
+      completedStatuses: ['accepted', 'preparing', 'prepared', 'delivering', 'delivered'],
       currentStatus: 'pending',
     },
     {
+      key: 'accepted',
+      label: 'Acceptée',
+      icon: CheckCircle,
+      completedStatuses: ['preparing', 'prepared', 'delivering', 'delivered'],
+      currentStatus: 'accepted',
+    },
+    {
       key: 'preparing',
-      label: 'En préparation',
+      label: 'Préparation',
       icon: ChefHat,
-      completedStatuses: ['prepared', 'delivering', 'delivered', 'completed'],
+      completedStatuses: ['prepared', 'delivering', 'delivered'],
       currentStatus: 'preparing',
-      previousStatuses: ['accepted']
     },
     {
       key: 'delivering',
-      label: 'En livraison',
+      label: 'Livraison',
       icon: Truck,
-      completedStatuses: ['delivered', 'completed'],
+      completedStatuses: ['delivered'],
       currentStatus: 'delivering',
-      previousStatuses: ['prepared']
     },
     {
       key: 'delivered',
-      label: 'Livré',
-      icon: Package,
-      completedStatuses: ['completed'],
+      label: 'Livrée',
+      icon: Home,
+      completedStatuses: [],
       currentStatus: 'delivered',
-      previousStatuses: []
-    }
+    },
   ];
 
+  // Determine which step is active based on current status
+  const getStepStatus = (step: typeof steps[0]) => {
+    if (status === 'cancelled') {
+      return 'inactive';
+    }
+    
+    if (step.completedStatuses.includes(status)) {
+      return 'completed';
+    }
+    
+    if (status === step.currentStatus) {
+      return 'current';
+    }
+    
+    if (step.key === 'delivering' && deliveryStatus === 'delivering') {
+      return 'current';
+    }
+    
+    if (step.key === 'delivered' && deliveryStatus === 'delivered') {
+      return 'completed';
+    }
+    
+    return 'waiting';
+  };
+
   return (
-    <div className="flex justify-between items-center relative mb-2">
-      {/* Connecting line */}
-      <div className="absolute h-1 bg-gray-200 left-0 right-0 top-4 -z-10"></div>
-      
+    <div className="flex justify-between w-full">
       {steps.map((step, index) => (
-        <OrderProgressStep
-          key={step.key}
-          step={step}
-          status={status}
-          deliveryStatus={deliveryStatus}
-          isFirst={index === 0}
-          isLast={index === steps.length - 1}
-        />
+        <div key={step.key} className="flex flex-col items-center space-y-2 relative">
+          {/* Circle */}
+          <div className="relative">
+            {getStepStatus(step) === 'completed' ? (
+              <CheckCircle className="h-8 w-8 text-primary" />
+            ) : getStepStatus(step) === 'current' ? (
+              <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
+                <step.icon className="h-5 w-5" />
+              </div>
+            ) : (
+              <div className={`h-8 w-8 rounded-full flex items-center justify-center ${status === 'cancelled' ? 'bg-gray-300' : 'border-2 border-gray-400'}`}>
+                <step.icon className="h-5 w-5 text-gray-500" />
+              </div>
+            )}
+            
+            {/* Active line before this step */}
+            {index > 0 && (getStepStatus(step) === 'completed' || getStepStatus(step) === 'current') && (
+              <div className="absolute h-1 bg-primary right-4 w-full top-4 -z-10" style={{ left: '-100%' }}></div>
+            )}
+            
+            {/* Inactive line before this step */}
+            {index > 0 && getStepStatus(step) !== 'completed' && getStepStatus(step) !== 'current' && (
+              <div className="absolute h-1 bg-gray-300 right-4 w-full top-4 -z-10" style={{ left: '-100%' }}></div>
+            )}
+          </div>
+          
+          {/* Label */}
+          <span className={`text-xs text-center ${
+            status === 'cancelled' ? 'text-gray-400' :
+            getStepStatus(step) === 'completed' ? 'text-primary font-medium' :
+            getStepStatus(step) === 'current' ? 'text-primary font-medium' :
+            'text-gray-500'
+          }`}>
+            {step.label}
+          </span>
+        </div>
       ))}
     </div>
   );

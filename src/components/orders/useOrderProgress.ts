@@ -1,119 +1,93 @@
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 import { OrderStatus } from '@/types/order';
-import { formatTimeString } from '@/utils/dateFormatters';
+import { DeliveryStatus } from '@/types/delivery';
+import { supabase } from '@/integrations/supabase/client';
 
-export function useOrderProgress(initialStatus: OrderStatus, orderId: string) {
+export const useOrderProgress = (initialStatus: OrderStatus, orderId: string) => {
   const [status, setStatus] = useState<OrderStatus>(initialStatus);
-  const [deliveryStatus, setDeliveryStatus] = useState<string | null>(null);
+  const [deliveryStatus, setDeliveryStatus] = useState<DeliveryStatus | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<string | null>(null);
   const [isRestaurantOpen, setIsRestaurantOpen] = useState<boolean>(true);
 
   useEffect(() => {
-    // Set initial status
+    // Update status from initial prop
     setStatus(initialStatus);
     
-    // Subscribe to changes in order status
-    const orderSubscription = supabase
-      .channel(`order-${orderId}`)
-      .on('postgres_changes', 
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'orders', 
-          filter: `id=eq.${orderId}` 
-        }, 
-        (payload) => {
-          if (payload.new && payload.new.status) {
-            setStatus(payload.new.status as OrderStatus);
-          }
+    // Fetch restaurant status and delivery details
+    const fetchOrderDetails = async () => {
+      try {
+        // Get order details to check restaurant
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('restaurant_id, estimated_delivery_time')
+          .eq('id', orderId)
+          .single();
           
-          if (payload.new && payload.new.estimated_delivery_time) {
-            const formattedTime = formatTimeString(payload.new.estimated_delivery_time);
-            setEstimatedTime(formattedTime);
-          }
-
-          // Check if restaurant is open for this order
-          if (payload.new && payload.new.restaurant_id) {
-            checkRestaurantOpenStatus(payload.new.restaurant_id);
+        if (orderData?.estimated_delivery_time) {
+          const estimatedDate = new Date(orderData.estimated_delivery_time);
+          setEstimatedTime(estimatedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        }
+        
+        // Check if restaurant is open
+        if (orderData?.restaurant_id) {
+          const { data: restaurantData } = await supabase
+            .from('restaurants')
+            .select('is_open')
+            .eq('id', orderData.restaurant_id)
+            .single();
+            
+          if (restaurantData) {
+            setIsRestaurantOpen(!!restaurantData.is_open);
           }
         }
-      )
-      .subscribe();
+        
+        // Get delivery status
+        const { data: deliveryData } = await supabase
+          .from('delivery_requests')
+          .select('status')
+          .eq('order_id', orderId)
+          .single();
+          
+        if (deliveryData) {
+          setDeliveryStatus(deliveryData.status as DeliveryStatus);
+        }
+      } catch (error) {
+        console.error('Error fetching order progress details:', error);
+      }
+    };
     
-    // Subscribe to changes in delivery status
-    const deliverySubscription = supabase
-      .channel(`delivery-${orderId}`)
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'delivery_tracking', 
-          filter: `order_id=eq.${orderId}` 
-        }, 
-        (payload) => {
-          if (payload.new && payload.new.status) {
-            setDeliveryStatus(payload.new.status);
-          }
+    fetchOrderDetails();
+    
+    // Set up subscription for real-time updates
+    const subscription = supabase
+      .channel(`order-${orderId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders',
+        filter: `id=eq.${orderId}`
+      }, (payload) => {
+        if (payload.new && payload.new.status) {
+          setStatus(payload.new.status as OrderStatus);
         }
-      )
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'delivery_requests',
+        filter: `order_id=eq.${orderId}`
+      }, (payload) => {
+        if (payload.new && payload.new.status) {
+          setDeliveryStatus(payload.new.status as DeliveryStatus);
+        }
+      })
       .subscribe();
-
-    // Fetch initial delivery status
-    const fetchInitialDeliveryStatus = async () => {
-      const { data } = await supabase
-        .from('delivery_tracking')
-        .select('status')
-        .eq('order_id', orderId)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .single();
       
-      if (data) {
-        setDeliveryStatus(data.status);
-      }
-    };
-
-    // Fetch initial estimated time
-    const fetchEstimatedTime = async () => {
-      const { data } = await supabase
-        .from('orders')
-        .select('estimated_delivery_time, restaurant_id')
-        .eq('id', orderId)
-        .single();
-      
-      if (data) {
-        if (data.estimated_delivery_time) {
-          const formattedTime = formatTimeString(data.estimated_delivery_time);
-          setEstimatedTime(formattedTime);
-        }
-        if (data.restaurant_id) {
-          checkRestaurantOpenStatus(data.restaurant_id);
-        }
-      }
-    };
-
-    const checkRestaurantOpenStatus = async (restaurantId: string) => {
-      const { data } = await supabase
-        .from('restaurants')
-        .select('is_open')
-        .eq('id', restaurantId)
-        .single();
-      
-      if (data) {
-        setIsRestaurantOpen(!!data.is_open);
-      }
-    };
-
-    fetchInitialDeliveryStatus();
-    fetchEstimatedTime();
-
     return () => {
-      supabase.removeChannel(orderSubscription);
-      supabase.removeChannel(deliverySubscription);
+      supabase.removeChannel(subscription);
     };
-  }, [orderId, initialStatus]);
+  }, [initialStatus, orderId]);
 
   return {
     status,
@@ -121,4 +95,4 @@ export function useOrderProgress(initialStatus: OrderStatus, orderId: string) {
     estimatedTime,
     isRestaurantOpen
   };
-}
+};

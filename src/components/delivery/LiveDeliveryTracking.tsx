@@ -1,13 +1,12 @@
+
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
+import L from 'leaflet';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Bike, MapPin, Store, Package, Check, Phone, MessageSquare } from 'lucide-react';
-import { toast } from 'sonner';
-import L from 'leaflet';
+import { Card } from '@/components/ui/card';
 import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet default icon
@@ -37,17 +36,6 @@ const deliveryIcon = L.icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
 });
-
-L.Marker.prototype.options.icon = defaultIcon;
-
-// Component to update map view
-function MapViewUpdater({ center }: { center: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center, map.getZoom());
-  }, [center, map]);
-  return null;
-}
 
 interface DeliveryLocation {
   latitude: number;
@@ -97,6 +85,8 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
   const [previousLocations, setPreviousLocations] = useState<DeliveryLocation[]>([]);
   const [estimatedArrival, setEstimatedArrival] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -140,12 +130,12 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
           throw deliveryRequestError;
         }
 
-        if (deliveryRequestData && deliveryRequestData.assigned_driver_id) {
+        if (deliveryRequestData && deliveryRequestData.driver_id) {
           // Fetch driver details
           const { data: driverData, error: driverError } = await supabase
             .from('delivery_drivers')
             .select('*')
-            .eq('id', deliveryRequestData.assigned_driver_id)
+            .eq('id', deliveryRequestData.driver_id)
             .single();
 
           if (driverError) throw driverError;
@@ -201,7 +191,11 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
         }
       } catch (error) {
         console.error('Error fetching delivery details:', error);
-        toast.error('Impossible de charger les détails de livraison');
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les détails de livraison",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
@@ -209,44 +203,76 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
 
     fetchDeliveryDetails();
 
-    // Subscribe to real-time updates
-    const deliveryTrackingChannel = supabase
-      .channel(`delivery_tracking:${orderId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'delivery_tracking',
-        filter: `order_id=eq.${orderId}`
-      }, (payload) => {
-        const newLocation = {
-          latitude: payload.new.latitude,
-          longitude: payload.new.longitude,
-          timestamp: payload.new.timestamp
-        };
+    // Set up real-time updates here if needed
 
-        setDriverLocation(newLocation);
-        setPreviousLocations(prev => [newLocation, ...prev]);
-        
-        setDeliveryStatus({
-          status: payload.new.status as any,
-          timestamp: payload.new.timestamp,
-          message: getStatusMessage(payload.new.status)
-        });
-
-        // Update estimated arrival
-        if (payload.new.status === 'picked_up' || payload.new.status === 'on_the_way') {
-          const estimatedTime = new Date();
-          estimatedTime.setMinutes(estimatedTime.getMinutes() + 15);
-          setEstimatedArrival(estimatedTime.toLocaleTimeString());
-        }
-      })
-      .subscribe();
-
-    // Cleanup
     return () => {
-      supabase.removeChannel(deliveryTrackingChannel);
+      // Clean up map if needed
+      if (mapInstance) {
+        mapInstance.remove();
+      }
     };
-  }, [orderId]);
+  }, [orderId, toast]);
+
+  useEffect(() => {
+    // Initialize map when we have driver and destination
+    if (driverLocation && destinationAddress && !mapInstance) {
+      const mapCenter = [
+        (driverLocation.latitude + destinationAddress.latitude) / 2,
+        (driverLocation.longitude + destinationAddress.longitude) / 2
+      ];
+      
+      const map = L.map('delivery-tracking-map').setView(mapCenter as [number, number], 13);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      
+      // Add markers
+      if (restaurantLocation) {
+        L.marker([restaurantLocation.latitude, restaurantLocation.longitude], { icon: restaurantIcon })
+          .bindPopup(`<b>${restaurantLocation.name}</b><br>${restaurantLocation.address}`)
+          .addTo(map);
+      }
+      
+      if (driverLocation) {
+        L.marker([driverLocation.latitude, driverLocation.longitude], { icon: defaultIcon })
+          .bindPopup("<b>Livreur</b>")
+          .addTo(map);
+      }
+      
+      if (destinationAddress) {
+        L.marker([destinationAddress.latitude, destinationAddress.longitude], { icon: deliveryIcon })
+          .bindPopup(`<b>Destination</b><br>${destinationAddress.address}`)
+          .addTo(map);
+      }
+      
+      // Draw route line
+      const routePoints = [];
+      
+      if (restaurantLocation) {
+        routePoints.push([restaurantLocation.latitude, restaurantLocation.longitude]);
+      }
+      
+      if (driverLocation) {
+        routePoints.push([driverLocation.latitude, driverLocation.longitude]);
+      }
+      
+      if (destinationAddress) {
+        routePoints.push([destinationAddress.latitude, destinationAddress.longitude]);
+      }
+      
+      if (routePoints.length > 1) {
+        L.polyline(routePoints as [number, number][], {
+          color: '#ff6b6b',
+          weight: 4,
+          opacity: 0.7,
+          dashArray: '10, 10'
+        }).addTo(map);
+      }
+      
+      setMapInstance(map);
+    }
+  }, [driverLocation, destinationAddress, restaurantLocation, mapInstance]);
 
   const getStatusMessage = (status: string): string => {
     switch (status) {
@@ -281,7 +307,10 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
   };
 
   const handleSendMessage = () => {
-    toast.info('Fonctionnalité de messagerie en développement');
+    toast({
+      title: "Information",
+      description: "Fonctionnalité de messagerie en développement",
+    });
   };
 
   if (loading) {
@@ -306,37 +335,6 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
     );
   }
 
-  // Calculate map center
-  const calculateMapCenter = (): [number, number] => {
-    if (!driverLocation || !destinationAddress) {
-      return [-4.2634, 15.2429]; // Default to Brazzaville
-    }
-    
-    return [
-      (driverLocation.latitude + destinationAddress.latitude) / 2,
-      (driverLocation.longitude + destinationAddress.longitude) / 2
-    ];
-  };
-
-  // Prepare route for polyline
-  const getRoute = (): [number, number][] => {
-    const points: [number, number][] = [];
-    
-    if (restaurantLocation) {
-      points.push([restaurantLocation.latitude, restaurantLocation.longitude]);
-    }
-    
-    if (driverLocation) {
-      points.push([driverLocation.latitude, driverLocation.longitude]);
-    }
-    
-    if (destinationAddress) {
-      points.push([destinationAddress.latitude, destinationAddress.longitude]);
-    }
-    
-    return points;
-  };
-
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -345,15 +343,6 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
             <h3 className="text-xl font-semibold">Suivi de Livraison</h3>
             <p className="text-sm text-gray-500">Commande #{orderId.slice(0, 8)}</p>
           </div>
-          <Badge 
-            className={
-              deliveryStatus?.status === 'delivered' 
-                ? 'bg-green-500' 
-                : 'bg-orange-500 animate-pulse'
-            }
-          >
-            {deliveryStatus?.status === 'delivered' ? 'Livré' : 'En cours'}
-          </Badge>
         </div>
 
         <Progress value={getProgressValue()} className="h-2 mb-6" />
@@ -431,56 +420,7 @@ const LiveDeliveryTracking = ({ orderId, onContactDriver }: LiveDeliveryTracking
         </div>
 
         <div className="h-[300px] rounded-lg overflow-hidden relative">
-          <MapContainer
-            center={calculateMapCenter()}
-            zoom={13}
-            className="h-full w-full"
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            {restaurantLocation && (
-              <Marker 
-                position={[restaurantLocation.latitude, restaurantLocation.longitude]}
-              >
-                <Popup>
-                  <div className="p-2">
-                    <h3 className="font-semibold">{restaurantLocation.name}</h3>
-                    <p className="text-sm">{restaurantLocation.address}</p>
-                  </div>
-                </Popup>
-              </Marker>
-            )}
-            
-            {driverLocation && (
-              <Marker 
-                position={[driverLocation.latitude, driverLocation.longitude]}
-              >
-                <Popup>
-                  <div className="p-2">
-                    <h3 className="font-semibold">{deliveryDriver.name}</h3>
-                    <p className="text-sm">Votre livreur</p>
-                  </div>
-                </Popup>
-              </Marker>
-            )}
-            
-            {destinationAddress && (
-              <Marker position={[destinationAddress.latitude, destinationAddress.longitude]}>
-                <Popup>
-                  <div className="p-2">
-                    <h3 className="font-semibold">Votre adresse</h3>
-                    <p className="text-sm">{destinationAddress.address}</p>
-                  </div>
-                </Popup>
-              </Marker>
-            )}
-            
-            <Polyline 
-              positions={getRoute()}
-            />
-          </MapContainer>
+          <div id="delivery-tracking-map" style={{ height: '100%', width: '100%' }}></div>
         </div>
       </Card>
 

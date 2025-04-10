@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -245,13 +244,13 @@ export default function OrderTracking() {
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-xl">Commande #{order.id.substring(0, 8)}</CardTitle>
+                <CardTitle className="text-xl">Commande #{order?.id.substring(0, 8)}</CardTitle>
                 <CardDescription>
-                  {formatDate(order.created_at)}
+                  {order ? formatDate(order.created_at) : 'Loading...'}
                 </CardDescription>
               </div>
-              <Badge className={getStatusColor(order.status)}>
-                {getStatusLabel(order.status)}
+              <Badge className={order ? getStatusColor(order.status) : ''}>
+                {order ? getStatusLabel(order.status) : 'Loading...'}
               </Badge>
             </div>
           </CardHeader>
@@ -307,7 +306,7 @@ export default function OrderTracking() {
 
               {/* Order Progress */}
               <div className="py-2">
-                <OrderProgress status={order.status} />
+                {order && <OrderProgress status={order.status} orderId={order.id} />}
               </div>
 
               {/* Order Details Card */}
@@ -383,7 +382,7 @@ export default function OrderTracking() {
         </Card>
 
         {/* Delivery Tracking */}
-        {(order.delivery_status !== 'pending' || deliveryRequest) && (
+        {order && (order.delivery_status !== 'pending' || deliveryRequest) && (
           <DeliveryTracking orderId={order.id} />
         )}
       </div>
