@@ -1,119 +1,110 @@
 
+import React from 'react';
 import { OrderStatus } from '@/types/order';
-import { DeliveryStatus } from '@/types/delivery';
-import { CheckCircle, ShoppingCart, ChefHat, Truck, Home } from 'lucide-react';
+import { Check, Clock, X, Utensils, ShoppingBag, Truck, Home } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface OrderProgressStepsProps {
   status: OrderStatus;
-  deliveryStatus: DeliveryStatus | null;
+  deliveryStatus?: string;
   orderId: string;
 }
 
 const OrderProgressSteps = ({ status, deliveryStatus, orderId }: OrderProgressStepsProps) => {
-  // Define the steps for the order progress
+  const isComplete = status === 'delivered' || status === 'cancelled';
+  
+  // Define step states based on order status
   const steps = [
     {
-      key: 'pending',
-      label: 'Commande',
-      icon: ShoppingCart,
-      completedStatuses: ['accepted', 'preparing', 'prepared', 'delivering', 'delivered'],
-      currentStatus: 'pending',
+      id: 'pending',
+      name: 'Commandé',
+      icon: ShoppingBag,
+      status: status === 'pending' ? 'current' : 
+              status === 'cancelled' ? 'error' :
+              ['accepted', 'preparing', 'prepared', 'delivering', 'delivered'].includes(status) ? 'complete' : 'upcoming'
     },
     {
-      key: 'accepted',
-      label: 'Acceptée',
-      icon: CheckCircle,
-      completedStatuses: ['preparing', 'prepared', 'delivering', 'delivered'],
-      currentStatus: 'accepted',
+      id: 'accepted',
+      name: 'Confirmé',
+      icon: Check,
+      status: status === 'accepted' ? 'current' : 
+              status === 'cancelled' ? 'error' :
+              ['preparing', 'prepared', 'delivering', 'delivered'].includes(status) ? 'complete' : 'upcoming'
     },
     {
-      key: 'preparing',
-      label: 'Préparation',
-      icon: ChefHat,
-      completedStatuses: ['prepared', 'delivering', 'delivered'],
-      currentStatus: 'preparing',
+      id: 'preparing',
+      name: 'Préparation',
+      icon: Utensils,
+      status: status === 'preparing' ? 'current' : 
+              status === 'cancelled' ? 'error' :
+              ['prepared', 'delivering', 'delivered'].includes(status) ? 'complete' : 'upcoming'
     },
     {
-      key: 'delivering',
-      label: 'Livraison',
+      id: 'delivering',
+      name: 'Livraison',
       icon: Truck,
-      completedStatuses: ['delivered'],
-      currentStatus: 'delivering',
+      status: status === 'delivering' ? 'current' : 
+              status === 'cancelled' ? 'error' :
+              ['delivered'].includes(status) ? 'complete' : 'upcoming'
     },
     {
-      key: 'delivered',
-      label: 'Livrée',
+      id: 'delivered',
+      name: 'Livré',
       icon: Home,
-      completedStatuses: [],
-      currentStatus: 'delivered',
-    },
+      status: status === 'delivered' ? 'complete' : 
+              status === 'cancelled' ? 'error' : 'upcoming'
+    }
   ];
 
-  // Determine which step is active based on current status
-  const getStepStatus = (step: typeof steps[0]) => {
-    if (status === 'cancelled') {
-      return 'inactive';
-    }
-    
-    if (step.completedStatuses.includes(status)) {
-      return 'completed';
-    }
-    
-    if (status === step.currentStatus) {
-      return 'current';
-    }
-    
-    if (step.key === 'delivering' && deliveryStatus === 'delivering') {
-      return 'current';
-    }
-    
-    if (step.key === 'delivered' && deliveryStatus === 'delivered') {
-      return 'completed';
-    }
-    
-    return 'waiting';
-  };
-
   return (
-    <div className="flex justify-between w-full">
-      {steps.map((step, index) => (
-        <div key={step.key} className="flex flex-col items-center space-y-2 relative">
-          {/* Circle */}
-          <div className="relative">
-            {getStepStatus(step) === 'completed' ? (
-              <CheckCircle className="h-8 w-8 text-primary" />
-            ) : getStepStatus(step) === 'current' ? (
-              <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
-                <step.icon className="h-5 w-5" />
+    <div className="w-full">
+      <div className="flex items-center justify-between w-full my-6">
+        {steps.map((step, stepIdx) => (
+          <React.Fragment key={step.id}>
+            {/* Step circle */}
+            <div className="relative flex flex-col items-center">
+              <div
+                className={cn(
+                  "w-8 h-8 flex items-center justify-center rounded-full z-10",
+                  {
+                    'bg-primary text-primary-foreground': step.status === 'complete',
+                    'bg-primary text-primary-foreground ring-2 ring-offset-2 ring-primary': step.status === 'current',
+                    'bg-muted text-muted-foreground': step.status === 'upcoming',
+                    'bg-destructive text-destructive-foreground': step.status === 'error',
+                  }
+                )}
+              >
+                {step.status === 'complete' ? (
+                  <Check className="h-5 w-5" />
+                ) : step.status === 'error' ? (
+                  <X className="h-5 w-5" />
+                ) : step.status === 'current' ? (
+                  <Clock className="h-5 w-5 animate-pulse" />
+                ) : (
+                  <step.icon className="h-5 w-5" />
+                )}
               </div>
-            ) : (
-              <div className={`h-8 w-8 rounded-full flex items-center justify-center ${status === 'cancelled' ? 'bg-gray-300' : 'border-2 border-gray-400'}`}>
-                <step.icon className="h-5 w-5 text-gray-500" />
+              <div className="text-xs font-medium mt-2 text-center max-w-[70px]">
+                {step.name}
               </div>
-            )}
+            </div>
             
-            {/* Active line before this step */}
-            {index > 0 && (getStepStatus(step) === 'completed' || getStepStatus(step) === 'current') && (
-              <div className="absolute h-1 bg-primary right-4 w-full top-4 -z-10" style={{ left: '-100%' }}></div>
+            {/* Connecting line */}
+            {stepIdx < steps.length - 1 && (
+              <div
+                className={cn(
+                  "flex-1 h-0.5 mx-2", 
+                  {
+                    'bg-primary': steps[stepIdx + 1].status === 'complete' || steps[stepIdx + 1].status === 'current',
+                    'bg-muted': steps[stepIdx + 1].status === 'upcoming',
+                    'bg-destructive': steps[stepIdx + 1].status === 'error'
+                  }
+                )}
+              />
             )}
-            
-            {/* Inactive line before this step */}
-            {index > 0 && getStepStatus(step) !== 'completed' && getStepStatus(step) !== 'current' && (
-              <div className="absolute h-1 bg-gray-300 right-4 w-full top-4 -z-10" style={{ left: '-100%' }}></div>
-            )}
-          </div>
-          
-          {/* Label */}
-          <span className={`text-xs text-center ${
-            status === 'cancelled' ? 'text-gray-400' :
-            getStepStatus(step) === 'completed' ? 'text-primary font-medium' :
-            getStepStatus(step) === 'current' ? 'text-primary font-medium' :
-            'text-gray-500'
-          }`}>
-            {step.label}
-          </span>
-        </div>
-      ))}
+          </React.Fragment>
+        ))}
+      </div>
     </div>
   );
 };
