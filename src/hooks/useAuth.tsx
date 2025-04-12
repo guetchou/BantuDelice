@@ -15,7 +15,11 @@ export interface UseAuthReturn {
 
 const AuthContext = createContext<UseAuthReturn | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -112,7 +116,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export default function useAuth() {
+export default AuthProvider;
+
+export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');

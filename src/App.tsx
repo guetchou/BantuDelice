@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { CartProvider } from '@/contexts/CartContext';
-import { AuthProvider } from '@/hooks/useAuth';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import AuthProvider from './hooks/useAuth';
 
 // Root layout with providers
 const RootLayout = () => {
@@ -47,6 +47,3 @@ export default function App() {
     <RouterProvider router={router} />
   );
 }
-
-// Import for the default export reference
-import { RouterProvider } from 'react-router-dom';

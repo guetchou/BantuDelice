@@ -13,6 +13,7 @@ export interface User {
   status?: string;
   password?: string;
   last_login?: string;
+  created?: string;
 }
 
 export type UserRole = 'user' | 'admin' | 'restaurant' | 'driver' | 'superadmin' | 'restaurant_owner';
@@ -36,6 +37,7 @@ export interface UserCreateRequest {
   // Add missing properties reported in errors
   first_name?: string;
   last_name?: string;
+  passwordConfirm?: string;
 }
 
 export interface UserUpdateRequest {

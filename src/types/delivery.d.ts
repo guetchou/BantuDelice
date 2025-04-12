@@ -7,7 +7,7 @@ export interface DeliveryRequest {
   created_at: string;
   updated_at: string;
   
-  // Adding missing properties reported in errors
+  // Adding required properties from errors
   pickup_latitude?: number;
   pickup_longitude?: number;
   delivery_latitude?: number;
@@ -31,6 +31,7 @@ export interface DeliveryRequest {
   completed_at?: string;
   cancelled_at?: string;
   delivery_fee?: number;
+  external_service_id?: string;
   
   // Customer information
   customer_name?: string;
@@ -58,9 +59,10 @@ export interface DeliveryDriver {
   vehicle_type: string;
   status: string;
   
-  // Adding missing properties reported in errors
+  // Adding properties from errors
   photo_url?: string;
   profile_picture?: string;
+  profile_image?: string;
   rating?: number;
   average_rating?: number;
   vehicle_info?: {
@@ -71,12 +73,19 @@ export interface DeliveryDriver {
   languages?: string[];
   years_experience?: number;
   total_rides?: number;
+  current_location?: {
+    latitude: number;
+    longitude: number;
+  };
+  last_active?: string;
+  license_number?: string;
+  verified?: boolean;
   
   // Extended properties
   total_deliveries?: number;
-  profile_image?: string;
   vehicle_model?: string;
   vehicle_make?: string;
+  vehicle_color?: string;
   license_plate?: string;
   max_concurrent_deliveries?: number;
   current_deliveries?: number;
@@ -89,7 +98,7 @@ export interface DeliveryLocation {
   timestamp?: string;
   // Add missing properties
   name?: string;
-  type?: 'pickup' | 'delivery' | 'driver' | 'restaurant' | 'customer';
+  type?: 'pickup' | 'delivery' | 'driver' | 'restaurant' | 'customer' | 'dropoff';
 }
 
 export interface DeliveryRoute {

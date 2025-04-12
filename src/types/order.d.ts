@@ -1,74 +1,68 @@
 
+import { CartItem, CartItemOption } from '@/contexts/CartContext';
+
+export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+
 export interface Order {
   id: string;
   user_id: string;
   restaurant_id: string;
-  total_amount: number;
   status: OrderStatus;
+  payment_status: PaymentStatus;
+  total_amount: number;
+  delivery_address: string;
+  delivery_status?: string;
   created_at: string;
   updated_at: string;
-  delivery_address: string;
-  payment_status: string;
-  payment_method: string;
-  delivery_status: string;
-  
-  // Extended properties
-  order_items?: OrderItem[];
-  special_instructions?: string;
-  estimated_preparation_time?: number;
-  loyalty_points_earned?: number;
-  delivered_at?: string;
-  cancelled_at?: string;
-  delivery_fee?: number;
+  payment_method?: string;
+  payment_reference?: string;
   delivery_instructions?: string;
+  special_instructions?: string;
+  cancellation_reason?: string;
+  rating?: number;
+  rating_comment?: string;
+  restaurant_rating?: number;
+  restaurant_comment?: string;
+  accepted_at?: string;
+  prepared_at?: string;
+  cancelled_at?: string;
+  delivered_at?: string;
+  estimated_preparation_time?: number;
+  delivery_time_preference?: string;
+  loyalty_points_earned?: number;
+  tip_amount?: number;
+  delivery_fee?: number;
+  promo_code_applied?: string;
+  order_items?: OrderItem[];
+  estimated_delivery_time?: string;
+  actual_delivery_time?: string;
+  stock_validated?: boolean;
 }
-
-export type OrderStatus = 
-  | 'pending'
-  | 'accepted'
-  | 'preparing'
-  | 'prepared'
-  | 'ready'
-  | 'delivering'
-  | 'delivered'
-  | 'cancelled';
 
 export interface OrderItem {
   id: string;
   order_id: string;
-  menu_item_id: string;
-  quantity: number;
-  price: number;
   item_name: string;
-  options?: string;
-  special_instructions?: string;
-}
-
-export interface OrderItemOption {
-  id: string;
-  name: string;
-  value: string;
-  price: number;
-}
-
-export interface CartItem {
-  id: string;
-  menu_item_id: string;
-  name: string;
-  price: number;
   quantity: number;
-  restaurant_id: string;
-  total: number;
-  image_url?: string;
+  price: number;
+  menu_item_id?: string;
   options?: CartItemOption[];
-  special_instructions?: string;
-  description?: string;
+  subtotal?: number;
 }
 
-export interface CartItemOption {
+export type DeliveryStatus = 'pending' | 'assigned' | 'accepted' | 'picked_up' | 'delivering' | 'delivered' | 'cancelled';
+
+export interface OrderTracking {
   id: string;
-  name: string;
-  value: string;
-  price: number;
-  quantity: number;
+  order_id: string;
+  status: OrderStatus | DeliveryStatus;
+  timestamp: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  note?: string;
 }
+
+export { CartItem, CartItemOption };
