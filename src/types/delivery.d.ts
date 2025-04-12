@@ -7,7 +7,7 @@ export interface DeliveryRequest {
   created_at: string;
   updated_at: string;
   
-  // Adding required properties from errors
+  // Propriétés requises d'après les erreurs
   pickup_latitude?: number;
   pickup_longitude?: number;
   delivery_latitude?: number;
@@ -15,7 +15,7 @@ export interface DeliveryRequest {
   pickup_address?: string;
   delivery_address?: string;
   
-  // Extended properties
+  // Propriétés étendues
   restaurant_id?: string;
   customer_id?: string;
   delivery_instructions?: string;
@@ -33,10 +33,11 @@ export interface DeliveryRequest {
   delivery_fee?: number;
   external_service_id?: string;
   
-  // Customer information
+  // Informations client
   customer_name?: string;
   customer_phone?: string;
   notes?: string;
+  priority?: string;
 }
 
 export type DeliveryStatus = 
@@ -59,7 +60,7 @@ export interface DeliveryDriver {
   vehicle_type: string;
   status: string;
   
-  // Adding properties from errors
+  // Propriétés additionnelles
   photo_url?: string;
   profile_picture?: string;
   profile_image?: string;
@@ -69,6 +70,7 @@ export interface DeliveryDriver {
     model: string;
     plate: string;
     color: string;
+    make?: string;
   };
   languages?: string[];
   years_experience?: number;
@@ -81,7 +83,7 @@ export interface DeliveryDriver {
   license_number?: string;
   verified?: boolean;
   
-  // Extended properties
+  // Propriétés étendues
   total_deliveries?: number;
   vehicle_model?: string;
   vehicle_make?: string;
@@ -89,6 +91,10 @@ export interface DeliveryDriver {
   license_plate?: string;
   max_concurrent_deliveries?: number;
   current_deliveries?: number;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface DeliveryLocation {
@@ -96,7 +102,7 @@ export interface DeliveryLocation {
   longitude: number;
   address?: string;
   timestamp?: string;
-  // Add missing properties
+  // Propriétés additionnelles
   name?: string;
   type?: 'pickup' | 'delivery' | 'driver' | 'restaurant' | 'customer' | 'dropoff';
 }
@@ -104,7 +110,7 @@ export interface DeliveryLocation {
 export interface DeliveryRoute {
   id: string;
   driver_id: string;
-  // Add missing properties
+  // Propriétés additionnelles
   delivery_requests: string[];
   status: string;
   estimated_duration: number;

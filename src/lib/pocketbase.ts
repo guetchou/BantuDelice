@@ -1,11 +1,7 @@
 
 import PocketBase from 'pocketbase';
 
-// Create a single PocketBase instance for the entire app
-const pb = new PocketBase('https://your-pocketbase-url.com');
+// Initialiser PocketBase avec l'URL du serveur
+const pb = new PocketBase('http://127.0.0.1:8090');
 
-// Add a helper method to check if the user is authenticated
-export const isAuthenticated = () => pb.authStore.isValid;
-
-// Export the PocketBase client
 export default pb;

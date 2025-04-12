@@ -12,6 +12,7 @@ export interface CartItem {
   restaurant_id?: string;
   image_url?: string;
   special_instructions?: string;
+  description?: string; // Ajout du champ description manquant
 }
 
 export interface CartItemOption {

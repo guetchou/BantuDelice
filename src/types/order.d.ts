@@ -1,8 +1,8 @@
 
 import { CartItem, CartItemOption } from '@/contexts/CartContext';
 
-export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled' | 'prepared';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'completed';
 
 export interface Order {
   id: string;
@@ -49,6 +49,7 @@ export interface OrderItem {
   menu_item_id?: string;
   options?: CartItemOption[];
   subtotal?: number;
+  special_instructions?: string;
 }
 
 export type DeliveryStatus = 'pending' | 'assigned' | 'accepted' | 'picked_up' | 'delivering' | 'delivered' | 'cancelled';

@@ -1,110 +1,115 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { CartItem } from '@/types/order';
-import { toast } from 'sonner';
+import { CartItem, CartState } from '@/types/cart';
 
 interface CartContextType {
-  items: CartItem[];
+  cartState: CartState;
   addItem: (item: CartItem) => void;
   removeItem: (itemId: string) => void;
-  updateItemQuantity: (itemId: string, quantity: number) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
-  getItemQuantity: (itemId: string) => number;
-  getTotalPrice: () => number;
-  getTotalItems: () => number;
 }
 
-const CartContext = createContext<CartContextType | null>(null);
+const initialCartState: CartState = {
+  items: [],
+  subtotal: 0,
+  tax: 0,
+  total: 0,
+  delivery_fee: 0
+};
 
-export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+const CartContext = createContext<CartContextType | undefined>(undefined);
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [cartState, setCartState] = useState<CartState>(initialCartState);
+
+  const calculateTotals = (items: CartItem[]) => {
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = Math.round(subtotal * 0.1); // 10% tax
+    const total = subtotal + tax + cartState.delivery_fee;
+    return { subtotal, tax, total };
+  };
 
   const addItem = (item: CartItem) => {
-    setItems(currentItems => {
-      // Check if item already exists
-      const existingItemIndex = currentItems.findIndex(i => i.id === item.id);
+    setCartState(prevState => {
+      const existingItem = prevState.items.find(i => i.id === item.id);
       
-      // If item already exists, update quantity
-      if (existingItemIndex >= 0) {
-        const updatedItems = [...currentItems];
-        const existingItem = updatedItems[existingItemIndex];
-        updatedItems[existingItemIndex] = {
-          ...existingItem,
-          quantity: existingItem.quantity + item.quantity,
-          total: (existingItem.quantity + item.quantity) * item.price
-        };
-        toast.success(`Quantité de ${item.name} mise à jour`);
-        return updatedItems;
+      let newItems;
+      if (existingItem) {
+        newItems = prevState.items.map(i => 
+          i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+        );
+      } else {
+        newItems = [...prevState.items, item];
       }
       
-      // Otherwise add new item
-      toast.success(`${item.name} ajouté au panier`);
-      return [...currentItems, { ...item, total: item.price * item.quantity }];
+      const { subtotal, tax, total } = calculateTotals(newItems);
+      
+      return {
+        ...prevState,
+        items: newItems,
+        subtotal,
+        tax,
+        total,
+        restaurant_id: item.restaurant_id
+      };
     });
   };
 
   const removeItem = (itemId: string) => {
-    setItems(currentItems => {
-      const itemToRemove = currentItems.find(item => item.id === itemId);
-      if (itemToRemove) {
-        toast.info(`${itemToRemove.name} retiré du panier`);
-      }
-      return currentItems.filter(item => item.id !== itemId);
+    setCartState(prevState => {
+      const newItems = prevState.items.filter(item => item.id !== itemId);
+      const { subtotal, tax, total } = calculateTotals(newItems);
+      
+      return {
+        ...prevState,
+        items: newItems,
+        subtotal,
+        tax,
+        total,
+        restaurant_id: newItems.length > 0 ? prevState.restaurant_id : undefined
+      };
     });
   };
 
-  const updateItemQuantity = (itemId: string, quantity: number) => {
+  const updateQuantity = (itemId: string, quantity: number) => {
     if (quantity <= 0) {
       removeItem(itemId);
       return;
     }
     
-    setItems(currentItems => 
-      currentItems.map(item => 
-        item.id === itemId 
-          ? { ...item, quantity, total: quantity * item.price } 
-          : item
-      )
-    );
+    setCartState(prevState => {
+      const newItems = prevState.items.map(item => 
+        item.id === itemId ? { ...item, quantity } : item
+      );
+      
+      const { subtotal, tax, total } = calculateTotals(newItems);
+      
+      return {
+        ...prevState,
+        items: newItems,
+        subtotal,
+        tax,
+        total
+      };
+    });
   };
 
   const clearCart = () => {
-    setItems([]);
-    toast.info('Panier vidé');
-  };
-
-  const getItemQuantity = (itemId: string) => {
-    const item = items.find(item => item.id === itemId);
-    return item ? item.quantity : 0;
-  };
-
-  const getTotalPrice = () => {
-    return items.reduce((total, item) => total + item.total, 0);
-  };
-
-  const getTotalItems = () => {
-    return items.reduce((total, item) => total + item.quantity, 0);
+    setCartState(initialCartState);
   };
 
   return (
-    <CartContext.Provider value={{
-      items,
-      addItem,
-      removeItem,
-      updateItemQuantity,
-      clearCart,
-      getItemQuantity,
-      getTotalPrice,
-      getTotalItems
-    }}>
+    <CartContext.Provider value={{ cartState, addItem, removeItem, updateQuantity, clearCart }}>
       {children}
     </CartContext.Provider>
   );
-};
+}
 
-export const useCart = () => {
+export function useCart() {
   const context = useContext(CartContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-};
+}

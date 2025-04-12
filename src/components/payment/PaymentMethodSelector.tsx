@@ -1,105 +1,48 @@
 
 import React from 'react';
+import { CreditCard, Smartphone, Banknote } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Banknote, Smartphone, CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-// Type des méthodes de paiement
-interface PaymentMethod {
-  id: string;
-  name: string;
-  description?: string;
-  icon: React.FC<{ className?: string }> | any;
-  color?: string;
+export interface PaymentMethodSelectorProps {
+  paymentMethod: "mobile" | "card" | "cashdelivery";
+  setPaymentMethod: React.Dispatch<React.SetStateAction<"mobile" | "card" | "cashdelivery">>;
 }
 
-// Liste des méthodes de paiement disponibles
-const PAYMENT_METHODS: PaymentMethod[] = [
-  {
-    id: 'cash',
-    name: 'Espèces',
-    description: 'Paiement en espèces à la livraison',
-    icon: Banknote,
-    color: 'green'
-  },
-  {
-    id: 'mobile_money',
-    name: 'Mobile Money',
-    description: 'Airtel Money, MTN MoMo, Orange Money',
-    icon: Smartphone,
-    color: 'orange'
-  },
-  {
-    id: 'card',
-    name: 'Carte bancaire',
-    description: 'Visa, Mastercard, etc.',
-    icon: CreditCard,
-    color: 'blue'
-  }
-];
-
-interface PaymentMethodSelectorProps {
-  value: string;
-  onChange: (value: string) => void;
-}
-
-const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
-  value,
-  onChange
-}) => {
+const PaymentMethodSelector = ({ paymentMethod, setPaymentMethod }: PaymentMethodSelectorProps) => {
   return (
-    <RadioGroup
-      value={value}
-      onValueChange={onChange}
-      className="grid gap-3"
-    >
-      {PAYMENT_METHODS.map((method) => (
-        <Card
-          key={method.id}
-          className={cn(
-            "relative flex items-center space-x-3 p-4 cursor-pointer transition-all hover:border-primary/50",
-            value === method.id && "border-primary bg-primary/5"
-          )}
-          onClick={() => onChange(method.id)}
-        >
-          <RadioGroupItem
-            value={method.id}
-            id={`payment-${method.id}`}
-            className="peer sr-only"
-          />
-          
-          <div className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-            `text-${method.color}-500`,
-            value === method.id ? `bg-${method.color}-100` : "bg-muted"
-          )}>
-            <method.icon className="h-5 w-5" />
-          </div>
-          
-          <div className="space-y-1">
-            <Label
-              htmlFor={`payment-${method.id}`}
-              className="font-medium"
-            >
-              {method.name}
-            </Label>
-            {method.description && (
-              <p className="text-xs text-muted-foreground">
-                {method.description}
-              </p>
-            )}
-          </div>
-          
-          {value === method.id && (
-            <div className="absolute right-4">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-            </div>
-          )}
-        </Card>
-      ))}
-    </RadioGroup>
+    <div>
+      <h3 className="text-lg font-medium mb-4">Méthode de paiement</h3>
+      <RadioGroup
+        value={paymentMethod}
+        onValueChange={(value) => setPaymentMethod(value as "mobile" | "card" | "cashdelivery")}
+        className="gap-4"
+      >
+        <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-muted/50 cursor-pointer">
+          <RadioGroupItem value="mobile" id="mobile" />
+          <Label htmlFor="mobile" className="flex items-center gap-2 cursor-pointer">
+            <Smartphone className="h-5 w-5 text-primary" />
+            <span>Mobile Money</span>
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-muted/50 cursor-pointer">
+          <RadioGroupItem value="card" id="card" />
+          <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer">
+            <CreditCard className="h-5 w-5 text-primary" />
+            <span>Carte bancaire</span>
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-muted/50 cursor-pointer">
+          <RadioGroupItem value="cashdelivery" id="cashdelivery" />
+          <Label htmlFor="cashdelivery" className="flex items-center gap-2 cursor-pointer">
+            <Banknote className="h-5 w-5 text-primary" />
+            <span>Paiement à la livraison</span>
+          </Label>
+        </div>
+      </RadioGroup>
+    </div>
   );
 };
 

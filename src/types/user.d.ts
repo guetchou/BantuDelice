@@ -4,16 +4,15 @@ export interface User {
   email: string;
   name: string;
   phone?: string;
-  role: string;
+  role: UserRole;
   created_at: string;
-  // Add missing properties reported in errors
+  // Propriétés supplémentaires demandées
   avatar_url?: string;
   first_name?: string;
   last_name?: string;
-  status?: string;
+  status?: UserStatus;
   password?: string;
   last_login?: string;
-  created?: string;
 }
 
 export type UserRole = 'user' | 'admin' | 'restaurant' | 'driver' | 'superadmin' | 'restaurant_owner';
@@ -30,14 +29,14 @@ export interface UserPreferences {
 export interface UserCreateRequest {
   email: string;
   password: string;
+  passwordConfirm: string;
   name: string;
   phone?: string;
   role?: UserRole;
   avatar_url?: string;
-  // Add missing properties reported in errors
+  // Propriétés supplémentaires
   first_name?: string;
   last_name?: string;
-  passwordConfirm?: string;
 }
 
 export interface UserUpdateRequest {
@@ -48,7 +47,7 @@ export interface UserUpdateRequest {
   status?: UserStatus;
   password?: string;
   avatar_url?: string;
-  // Add missing properties reported in errors
+  // Propriétés supplémentaires
   first_name?: string;
   last_name?: string;
 }

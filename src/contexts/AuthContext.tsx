@@ -2,15 +2,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import pb from '@/lib/pocketbase';
 import { User } from '@/types/user';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
   logout: () => void;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: Error }>;
   register: (userData: { email: string; password: string; passwordConfirm: string; name?: string }) => Promise<{ success: boolean; error?: Error }>;
+  updateProfile?: (data: Partial<User>) => Promise<{ success: boolean; error?: Error }>;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -18,11 +20,12 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {}, 
   isLoading: true,
   isAuthenticated: false,
+  isAdmin: false,
   login: async () => ({ success: false }),
   register: async () => ({ success: false })
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,12 +35,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         if (pb.authStore.isValid) {
           const userData = pb.authStore.model;
-          setUser({
-            id: userData?.id,
-            email: userData?.email,
-            name: userData?.name,
-            // Add more properties as needed
-          });
+          if (userData) {
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              name: userData.name || '',
+              role: userData.role || 'user',
+              created_at: userData.created || '',
+              // Optional fields
+              avatar_url: userData.avatar_url,
+              first_name: userData.first_name,
+              last_name: userData.last_name,
+              status: userData.status || 'active',
+              last_login: userData.last_login,
+            });
+          }
         }
       } catch (error) {
         console.error('Error loading user:', error);
@@ -54,8 +66,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser({
           id: model.id,
           email: model.email,
-          name: model.name,
-          // Add more properties as needed
+          name: model.name || '',
+          role: model.role || 'user',
+          created_at: model.created || '',
+          // Optional fields
+          avatar_url: model.avatar_url,
+          first_name: model.first_name,
+          last_name: model.last_name,
+          status: model.status || 'active',
+          last_login: model.last_login,
         });
       } else {
         setUser(null);
@@ -78,21 +97,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser({
           id: userData.id,
           email: userData.email,
-          name: userData.name,
-          // Add more properties as needed
+          name: userData.name || '',
+          role: userData.role || 'user',
+          created_at: userData.created || '',
+          // Optional fields
+          avatar_url: userData.avatar_url,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          status: userData.status || 'active',
+          last_login: userData.last_login,
         });
       }
-      toast({
-        title: "Connexion réussie",
+      toast.success("Connexion réussie", {
         description: "Bienvenue sur Buntudelice !",
       });
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
-      toast({
-        title: "Échec de connexion",
+      toast.error("Échec de connexion", {
         description: "Veuillez vérifier vos identifiants.",
-        variant: "destructive",
       });
       return { success: false, error: error as Error };
     }
@@ -100,9 +123,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const register = async (userData: { email: string; password: string; passwordConfirm: string; name?: string }) => {
     try {
-      await pb.collection('users').create(userData);
-      toast({
-        title: "Inscription réussie",
+      await pb.collection('users').create({
+        ...userData,
+        role: 'user',
+      });
+      toast.success("Inscription réussie", {
         description: "Votre compte a été créé avec succès.",
       });
       // Auto login after registration
@@ -110,10 +135,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return { success: true };
     } catch (error) {
       console.error('Registration error:', error);
-      toast({
-        title: "Échec d'inscription",
+      toast.error("Échec d'inscription", {
         description: "Un problème est survenu lors de la création de votre compte.",
-        variant: "destructive",
+      });
+      return { success: false, error: error as Error };
+    }
+  };
+
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      await pb.collection('users').update(user.id, data);
+      
+      // Update local user state
+      setUser(prev => prev ? { ...prev, ...data } : null);
+      
+      toast.success("Profil mis à jour", {
+        description: "Vos informations ont été mises à jour avec succès.",
+      });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Profile update error:', error);
+      toast.error("Erreur de mise à jour", {
+        description: "Un problème est survenu lors de la mise à jour de votre profil.",
       });
       return { success: false, error: error as Error };
     }
@@ -122,11 +170,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     pb.authStore.clear();
     setUser(null);
-    toast({
-      title: "Déconnexion réussie",
+    toast.info("Déconnexion réussie", {
       description: "À bientôt sur Buntudelice !",
     });
   };
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   return (
     <AuthContext.Provider value={{ 
@@ -134,13 +183,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logout, 
       isLoading,
       isAuthenticated: !!user,
+      isAdmin,
       login,
-      register
+      register,
+      updateProfile
     }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-// Custom hook for using auth context
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  return useContext(AuthContext);
+}
