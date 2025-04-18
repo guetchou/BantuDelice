@@ -7,18 +7,20 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  isLoading: boolean; // Ajouté pour résoudre l'erreur dans Header.tsx
+  login: (email: string, password: string) => Promise<{success: boolean}>;
   logout: () => void;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (userData: any) => Promise<{success: boolean}>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   isAuthenticated: false,
-  login: async () => {},
+  isLoading: true,
+  login: async () => ({success: false}),
   logout: () => {},
-  register: async () => {},
+  register: async () => ({success: false}),
 });
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -90,6 +92,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
         last_name: authData.record.last_name,
         status: authData.record.status,
       });
+      
+      return { success: true };
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -101,19 +105,21 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (userData: any) => {
     try {
       const data = {
-        email,
-        password,
-        passwordConfirm: password,
-        name,
+        email: userData.email,
+        password: userData.password,
+        passwordConfirm: userData.password,
+        name: userData.name,
+        phone: userData.phone,
       };
       
       await pb.collection('users').create(data);
       
       // Auto login after registration
-      await login(email, password);
+      await login(userData.email, userData.password);
+      return { success: true };
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -126,6 +132,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         loading,
         isAuthenticated: !!user,
+        isLoading: loading,
         login,
         logout,
         register,

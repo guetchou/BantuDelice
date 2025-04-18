@@ -27,8 +27,8 @@ const LoginComponent: React.FC<LoginComponentProps> = ({ redirectTo = '/' }) => 
     
     setLoading(true);
     try {
-      const { success } = await login(email, password);
-      if (success) {
+      const result = await login(email, password);
+      if (result && result.success) {
         navigate(redirectTo);
       }
     } finally {

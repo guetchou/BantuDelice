@@ -21,20 +21,24 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
+    
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match.');
       return;
     }
-
+    
+    setError('');
     setIsLoading(true);
 
     try {
-      await register(email, password, name);
-      navigate('/');
+      const userData = { email, password, name };
+      const result = await register(userData);
+      
+      if (result && result.success) {
+        navigate('/');
+      }
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || 'Failed to register. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -44,9 +48,9 @@ const Register = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+          <CardTitle className="text-2xl font-bold">Register</CardTitle>
           <CardDescription>
-            Enter your information to create an account
+            Create an account to get started
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -100,7 +104,7 @@ const Register = () => {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Register"}
+              {isLoading ? "Registering..." : "Register"}
             </Button>
           </form>
         </CardContent>
@@ -108,7 +112,7 @@ const Register = () => {
           <p className="text-sm text-center text-gray-500">
             Already have an account?{" "}
             <Link to="/auth/login" className="text-primary hover:underline">
-              Log in
+              Login
             </Link>
           </p>
         </CardFooter>

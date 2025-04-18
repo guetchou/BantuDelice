@@ -41,12 +41,16 @@ const RegistrationForm = () => {
     setError(null);
 
     try {
-      await register({ email, password, name, phone });
-      toast({
-        title: "Inscription réussie",
-        description: "Bienvenue parmi nous!",
-      });
-      navigate('/');
+      const userData = { email, password, name, phone };
+      const result = await register(userData);
+      
+      if (result && result.success) {
+        toast({
+          title: "Inscription réussie",
+          description: "Bienvenue parmi nous!",
+        });
+        navigate('/');
+      }
     } catch (err) {
       setError(typeof err === 'string' ? err : "Erreur lors de l'inscription. Veuillez réessayer.");
       console.error('Registration error:', err);
