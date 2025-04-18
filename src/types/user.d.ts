@@ -19,6 +19,12 @@ export interface UserProfile {
   address?: string;
   phone_number?: string;
   avatar_url?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  role?: string;
+  created_at?: string;
+  updated_at?: string;
   preferences?: {
     language?: string;
     dark_mode?: boolean;
@@ -26,6 +32,4 @@ export interface UserProfile {
     email_notifications?: boolean;
     push_notifications?: boolean;
   };
-  created_at?: string;
-  updated_at?: string;
 }

@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { User as UserType } from '@/types/user';
 
 interface UserMenuProps {
@@ -36,7 +35,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, isAdmin, handleLogout }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <NotificationCenter />
+      {/* Suppression du composant NotificationCenter puisqu'il manque les props requises */}
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

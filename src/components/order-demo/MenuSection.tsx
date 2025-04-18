@@ -25,7 +25,10 @@ const MenuSection: React.FC<MenuSectionProps> = ({ items, onAddToCart }) => {
       name: item.name,
       price: item.price,
       quantity: 1,
-      restaurant_id: item.restaurant_id
+      restaurant_id: item.restaurant_id,
+      menu_item_id: item.id,
+      total: item.price * 1,
+      description: item.description
     });
   };
 

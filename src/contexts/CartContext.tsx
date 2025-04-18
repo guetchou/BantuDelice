@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { CartItem, CartState } from '@/types/cart';
 
@@ -116,4 +117,5 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// Export par défaut pour permettre l'import dans App.tsx
 export default CartProvider;

@@ -1,3 +1,4 @@
+
 import { useContext } from 'react';
 import { CartContext } from '@/contexts/CartContext';
 import { CartItem } from '@/types/cart';
@@ -77,6 +78,12 @@ export const useCart = () => {
     return context.cartState.total + deliveryFee;
   };
   
+  // Pour compatibilité avec les composants existants
+  const items = context.cartState.items;
+  const total = context.cartState.total;
+  const totalItems = context.cartState.items.reduce((sum, item) => sum + item.quantity, 0);
+  const updateItemQuantity = context.updateQuantity;
+  
   return {
     // État du panier
     cartState: context.cartState,
@@ -84,6 +91,18 @@ export const useCart = () => {
     removeItem: context.removeItem,
     updateQuantity: context.updateQuantity,
     clearCart: context.clearCart,
+    
+    // Pour compatibilité avec les composants existants
+    items,
+    total,
+    totalItems,
+    updateItemQuantity,
+    state: {
+      items: context.cartState.items,
+      total: context.cartState.total,
+      count: context.cartState.items.length,
+      totalItems
+    },
     
     // Fonctionnalités étendues
     addToCart,
