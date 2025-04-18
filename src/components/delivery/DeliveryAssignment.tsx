@@ -6,22 +6,42 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DeliveryDriver, DeliveryLocation, DeliveryRequest } from '@/types/delivery';
-import { calculateDistance } from '@/utils/distance';
-import { useToast } from '@/hooks/use-toast';
 import { Clock, MapPin, Phone, Truck, User } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MapContainer, TileLayer, Marker, Popup } from '@/components/ui/leaflet-map';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Define custom icons
-const createCustomIcon = (iconUrl: string) => {
-  return L.icon({
-    iconUrl,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
-  });
-};
+// Fix the Leaflet icon issue with webpack
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
+
+// Create custom icons
+const driverIcon = L.icon({
+  iconUrl: '/assets/driver-marker.png', 
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32]
+});
+
+const restaurantIcon = L.icon({
+  iconUrl: '/assets/restaurant-marker.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32]
+});
+
+const customerIcon = L.icon({
+  iconUrl: '/assets/customer-marker.png',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32]
+});
 
 interface DeliveryAssignmentProps {
   orderLocation?: {
@@ -44,7 +64,6 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
   const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [requests, setRequests] = useState<DeliveryRequest[]>([]);
-  const { toast } = useToast();
   
   // Mock data for development
   useEffect(() => {
@@ -52,54 +71,57 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
     const mockDrivers: DeliveryDriver[] = [
       {
         id: 'd1',
+        user_id: 'user1',
         name: 'Jean Dupont',
         phone: '+33123456789',
+        current_latitude: 48.8566,
+        current_longitude: 2.3522,
+        is_available: true,
         vehicle_type: 'scooter',
         vehicle_model: 'Vespa 125',
         license_plate: 'AB123CD',
         photo_url: 'https://randomuser.me/api/portraits/men/1.jpg',
         rating: 4.8,
-        is_available: true,
-        current_latitude: 48.8566,
-        current_longitude: 2.3522,
-        last_active: new Date().toISOString(),
-        total_deliveries: 142,
         status: 'available',
-        verified: true
+        verified: true,
+        total_deliveries: 142,
+        last_active: new Date().toISOString()
       },
       {
         id: 'd2',
+        user_id: 'user2',
         name: 'Marie Martin',
         phone: '+33623456789',
+        current_latitude: 48.8606,
+        current_longitude: 2.3376,
+        is_available: true,
         vehicle_type: 'bike',
         vehicle_model: 'VTT Decathlon',
         license_plate: 'N/A',
         photo_url: 'https://randomuser.me/api/portraits/women/2.jpg',
         rating: 4.6,
-        is_available: true,
-        current_latitude: 48.8606,
-        current_longitude: 2.3376,
-        last_active: new Date().toISOString(),
-        total_deliveries: 89,
         status: 'available',
-        verified: true
+        verified: true,
+        total_deliveries: 89,
+        last_active: new Date().toISOString()
       },
       {
         id: 'd3',
+        user_id: 'user3',
         name: 'Pierre Dubois',
         phone: '+33723456789',
+        current_latitude: 48.8474,
+        current_longitude: 2.3591,
+        is_available: true,
         vehicle_type: 'car',
         vehicle_model: 'Renault Clio',
         license_plate: 'XY789ZW',
         photo_url: 'https://randomuser.me/api/portraits/men/3.jpg',
         rating: 4.9,
-        is_available: true,
-        current_latitude: 48.8474,
-        current_longitude: 2.3591,
-        last_active: new Date().toISOString(),
-        total_deliveries: 207,
         status: 'available',
-        verified: true
+        verified: true,
+        total_deliveries: 207,
+        last_active: new Date().toISOString()
       }
     ];
     
@@ -111,6 +133,7 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
         delivery_address: '45 Avenue Victor Hugo, Paris',
         status: 'pending',
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         customer_name: 'Sophie Bernard',
         customer_phone: '+33612345678',
         notes: 'Sonner à l\'interphone 42B'
@@ -125,12 +148,24 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
   const calculateDriverDistance = (driver: DeliveryDriver) => {
     if (!orderLocation) return 999; // Return large value if no location
     
-    return calculateDistance(
-      [driver.current_latitude, driver.current_longitude],
-      [orderLocation.latitude, orderLocation.longitude],
-      'km',
-      true
-    );
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(orderLocation.latitude - driver.current_latitude);
+    const dLon = deg2rad(orderLocation.longitude - driver.current_longitude);
+    
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(driver.current_latitude)) * Math.cos(deg2rad(orderLocation.latitude)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const distance = R * c; // Distance in km
+    
+    return parseFloat(distance.toFixed(2));
+  };
+
+  // Helper function to convert degrees to radians
+  const deg2rad = (deg: number) => {
+    return deg * (Math.PI/180);
   };
 
   // Sort drivers by distance
@@ -141,11 +176,7 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
   // Handle driver assignment
   const handleAssignDriver = async () => {
     if (!selectedDriver) {
-      toast({
-        title: "Sélection requise",
-        description: "Veuillez sélectionner un livreur",
-        variant: "destructive"
-      });
+      alert("Please select a driver");
       return;
     }
     
@@ -158,21 +189,14 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast({
-        title: "Livreur assigné",
-        description: `${selectedDriverData?.name} a été assigné à cette livraison.`,
-      });
+      alert(`${selectedDriverData?.name} has been assigned to this delivery.`);
       
       if (onAssign) {
         onAssign(selectedDriver);
       }
     } catch (error) {
       console.error('Error assigning driver:', error);
-      toast({
-        title: "Erreur d'assignation",
-        description: "Impossible d'assigner le livreur sélectionné",
-        variant: "destructive"
-      });
+      alert("Failed to assign driver");
     } finally {
       setIsLoading(false);
     }
@@ -218,30 +242,6 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
     
     return [centerLat, centerLng];
   };
-
-  // Custom driver icon
-  const driverIcon = L.icon({
-    iconUrl: '/assets/driver-marker.png', 
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
-  });
-  
-  // Custom restaurant icon
-  const restaurantIcon = L.icon({
-    iconUrl: '/assets/restaurant-marker.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
-  });
-  
-  // Custom customer icon
-  const customerIcon = L.icon({
-    iconUrl: '/assets/customer-marker.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
-  });
 
   return (
     <Card className="w-full">

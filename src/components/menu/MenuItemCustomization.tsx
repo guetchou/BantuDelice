@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { type MenuItem } from '@/types/restaurant';
-import { type CartItem } from '@/types/cart';
+import { type CartItem, CartItemOption } from '@/types/cart';
 import { Plus, Info } from 'lucide-react';
 
 interface MenuItemCustomizationProps {
@@ -20,14 +20,24 @@ interface MenuItemCustomizationProps {
   suggestedCombos?: MenuItem[];
 }
 
+interface CustomizationOption {
+  required?: boolean;
+  multiple?: boolean;
+  values: {
+    value: string;
+    price: number;
+    default?: boolean;
+  }[];
+}
+
 const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [] }: MenuItemCustomizationProps) => {
   const [selectedOptions, setSelectedOptions] = useState<Array<{ name: string; value: string; price: number }>>([]);
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [quantity, setQuantity] = useState(1);
 
-  // Traiter les options de personnalisation
-  const customizationOptions = item.customization_options || {};
-  const hasCustomizationOptions = Object.keys(customizationOptions).length > 0;
+  // Traiter les options de personnalisation en s'assurant que c'est un objet
+  const customizationOptions = item.customization_options as Record<string, CustomizationOption> || {};
+  const hasCustomizationOptions = Object.keys(customizationOptions || {}).length > 0;
 
   const handleOptionChange = (
     optionName: string, 
@@ -66,13 +76,24 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
   };
 
   const handleAddToCart = () => {
+    // Create CartItemOption objects from selectedOptions
+    const cartItemOptions: CartItemOption[] = selectedOptions.map(option => ({
+      id: `${option.name}-${option.value}`,
+      name: option.name,
+      value: option.value,
+      price: option.price,
+      quantity: 1
+    }));
+
     onAddToCart({
       id: item.id,
+      menu_item_id: item.id,
       name: item.name,
       price: item.price + getSelectedOptionsPrice(),
+      total: getTotalPrice(),
       image_url: item.image_url,
       quantity,
-      options: selectedOptions,
+      options: cartItemOptions,
       special_instructions: specialInstructions,
       restaurant_id: item.restaurant_id
     });
@@ -82,8 +103,10 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
   const handleAddComboToCart = (comboItem: MenuItem) => {
     onAddToCart({
       id: comboItem.id,
+      menu_item_id: comboItem.id,
       name: comboItem.name,
       price: comboItem.price,
+      total: comboItem.price,
       image_url: comboItem.image_url,
       quantity: 1,
       restaurant_id: comboItem.restaurant_id
@@ -113,7 +136,7 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
               <div className="space-y-4">
                 <h3 className="font-medium text-lg">Personnalisation</h3>
                 
-                {Object.entries(customizationOptions).map(([optionName, optionDetails]) => (
+                {Object.entries(customizationOptions || {}).map(([optionName, optionDetails]) => (
                   <div key={optionName} className="border rounded-md p-4">
                     <div className="flex justify-between items-center mb-3">
                       <h4 className="font-medium">{optionName}</h4>
@@ -144,7 +167,7 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
                       </div>
                     ) : (
                       <RadioGroup 
-                        defaultValue={optionDetails.default}
+                        defaultValue={optionDetails.values.find(opt => opt.default)?.value}
                         className="space-y-2"
                         onValueChange={(value) => {
                           const option = optionDetails.values.find(opt => opt.value === value);

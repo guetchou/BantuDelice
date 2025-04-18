@@ -20,7 +20,7 @@ const initialCartState: CartState = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartState, setCartState] = useState<CartState>(initialCartState);
 
   const calculateTotals = (items: CartItem[]) => {
@@ -31,16 +31,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const addItem = (item: CartItem) => {
+    // Ensure the item has menu_item_id and total properties
+    const itemWithRequiredProps: CartItem = {
+      ...item,
+      menu_item_id: item.menu_item_id || item.id,
+      total: item.price * item.quantity
+    };
+
     setCartState(prevState => {
-      const existingItem = prevState.items.find(i => i.id === item.id);
+      const existingItem = prevState.items.find(i => i.id === itemWithRequiredProps.id);
       
       let newItems;
       if (existingItem) {
         newItems = prevState.items.map(i => 
-          i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+          i.id === itemWithRequiredProps.id 
+            ? { ...i, quantity: i.quantity + itemWithRequiredProps.quantity, total: i.price * (i.quantity + itemWithRequiredProps.quantity) } 
+            : i
         );
       } else {
-        newItems = [...prevState.items, item];
+        newItems = [...prevState.items, itemWithRequiredProps];
       }
       
       const { subtotal, tax, total } = calculateTotals(newItems);
@@ -51,7 +60,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         subtotal,
         tax,
         total,
-        restaurant_id: item.restaurant_id
+        restaurant_id: itemWithRequiredProps.restaurant_id
       };
     });
   };
@@ -80,7 +89,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     
     setCartState(prevState => {
       const newItems = prevState.items.map(item => 
-        item.id === itemId ? { ...item, quantity } : item
+        item.id === itemId 
+          ? { ...item, quantity, total: item.price * quantity } 
+          : item
       );
       
       const { subtotal, tax, total } = calculateTotals(newItems);
@@ -104,12 +115,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {children}
     </CartContext.Provider>
   );
-}
+};
 
-export function useCart() {
+export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-}
+};

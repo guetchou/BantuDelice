@@ -1,159 +1,133 @@
 
-import { useRef, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useDeliveryMapData } from '@/hooks/delivery/useDeliveryMapData';
 import 'leaflet/dist/leaflet.css';
-import './map/MapStyles.css';
+import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
 
-// Fix for Leaflet icons
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+// Fix the Leaflet icon issue with webpack
+delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-// Fix the icon issue for leaflet
-delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-interface DeliveryDriverMapProps {
-  restaurantId: string;
-  deliveryId?: string;
-  height?: string;
+// Create custom icons
+const createIcon = (iconUrl: string) => {
+  return new L.Icon({
+    iconUrl,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+};
+
+const driverIcon = createIcon('/assets/driver-marker.png');
+const restaurantIcon = createIcon('/assets/restaurant-marker.png');
+const customerIcon = createIcon('/assets/customer-marker.png');
+
+interface MapCenterUpdaterProps {
+  center: [number, number];
 }
 
-export default function DeliveryDriverMap({ 
-  restaurantId, 
-  deliveryId,
-  height = '100%'
-}: DeliveryDriverMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const leafletMapRef = useRef<L.Map | null>(null);
-  const { drivers, deliveries, restaurantCoords, loading } = useDeliveryMapData(restaurantId, deliveryId);
-
-  // Initialize map
+// Component to update map center
+const MapCenterUpdater: React.FC<MapCenterUpdaterProps> = ({ center }) => {
+  const map = useMap();
+  
   useEffect(() => {
-    if (!mapRef.current || leafletMapRef.current) return;
+    map.setView(center);
+  }, [center, map]);
+  
+  return null;
+};
 
-    // Create map instance
-    leafletMapRef.current = L.map(mapRef.current).setView(restaurantCoords, 13);
+interface DeliveryDriverMapProps {
+  driver?: DeliveryDriver;
+  request?: DeliveryRequest;
+  center?: [number, number];
+  zoom?: number;
+}
 
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(leafletMapRef.current);
+const DeliveryDriverMap: React.FC<DeliveryDriverMapProps> = ({ 
+  driver, 
+  request, 
+  center = [0, 0],
+  zoom = 13 
+}) => {
+  const [mapCenter, setMapCenter] = useState<[number, number]>(center);
 
-    // Add restaurant marker
-    createRestaurantMarker(leafletMapRef.current, restaurantCoords);
-
-    return () => {
-      if (leafletMapRef.current) {
-        leafletMapRef.current.remove();
-        leafletMapRef.current = null;
-      }
-    };
-  }, [restaurantCoords]);
-
-  // Update markers when data changes
   useEffect(() => {
-    if (!leafletMapRef.current) return;
-    const map = leafletMapRef.current;
-
-    // Clear existing markers
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
-      }
-    });
-
-    // Add restaurant marker
-    createRestaurantMarker(map, restaurantCoords);
-
-    // Add driver markers
-    drivers.forEach(driver => {
-      if (!driver.current_latitude || !driver.current_longitude) return;
-      
-      addDriverMarker(map, driver);
-    });
-
-    // Add delivery markers
-    deliveries.forEach(delivery => {
-      addDeliveryMarker(map, delivery);
-    });
-  }, [drivers, deliveries, restaurantCoords]);
-
-  // Create restaurant marker
-  const createRestaurantMarker = (map: L.Map, position: [number, number]) => {
-    const restaurantIcon = L.divIcon({
-      html: '<div class="restaurant-marker"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 15v5"/><path d="M12 15v5"/><path d="M8 15v5"/><path d="M3 11h18"/><path d="M12 4v7"/><path d="M19 4v15"/><path d="M5 4v15"/></svg></div>',
-      className: 'restaurant-icon',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-    });
-    
-    L.marker(position, { icon: restaurantIcon }).addTo(map);
-  };
-
-  // Add driver marker
-  const addDriverMarker = (map: L.Map, driver: any) => {
-    const vehicleType = driver.vehicle_type || 'bike';
-    const driverIcon = L.divIcon({
-      html: `<div class="driver-marker ${vehicleType}"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"/><path d="M19 20a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"/><path d="M5 14h14"/></svg></div>`,
-      className: 'driver-icon',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-    });
-    
-    const marker = L.marker([driver.current_latitude, driver.current_longitude], { icon: driverIcon }).addTo(map);
-    
-    marker.bindPopup(`
-      <div class="text-sm font-medium">${driver.name}</div>
-      <div class="text-xs text-gray-500">
-        ${driver.status === 'available' ? 'Disponible' : 'En livraison'}
-      </div>
-    `);
-  };
-
-  // Add delivery marker
-  const addDeliveryMarker = (map: L.Map, delivery: any) => {
-    const lat = delivery.delivery_latitude || delivery.dropoff_latitude;
-    const lng = delivery.delivery_longitude || delivery.dropoff_longitude;
-    
-    if (!lat || !lng) return;
-    
-    const customerIcon = L.divIcon({
-      html: '<div class="customer-marker"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>',
-      className: 'customer-icon',
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-    });
-    
-    const marker = L.marker([lat, lng], { icon: customerIcon }).addTo(map);
-    
-    const deliveryAddress = delivery.delivery_address || delivery.dropoff_address || '';
-    
-    marker.bindPopup(`
-      <div class="text-sm font-medium">Livraison #${delivery.id.substring(0, 8)}</div>
-      <div class="text-xs text-gray-500">${deliveryAddress}</div>
-      <div class="text-xs mt-1">
-        <span class="font-medium">Statut:</span> ${delivery.status}
-      </div>
-    `);
-  };
-
-  if (loading) {
-    return (
-      <div style={{ height, width: '100%' }} className="bg-muted flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+    if (driver) {
+      setMapCenter([driver.current_latitude, driver.current_longitude]);
+    } else if (request && request.pickup_latitude && request.pickup_longitude) {
+      setMapCenter([request.pickup_latitude, request.pickup_longitude]);
+    } else {
+      setMapCenter(center);
+    }
+  }, [driver, request, center]);
 
   return (
-    <div style={{ height, width: '100%', position: 'relative' }}>
-      <div ref={mapRef} style={{ height: '100%', width: '100%' }}></div>
+    <div className="h-64 w-full rounded-md overflow-hidden shadow-md">
+      <MapContainer 
+        center={mapCenter} 
+        zoom={zoom} 
+        style={{ height: '100%', width: '100%' }}
+        scrollWheelZoom={false}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        
+        <MapCenterUpdater center={mapCenter} />
+        
+        {driver && (
+          <Marker 
+            position={[driver.current_latitude, driver.current_longitude]}
+            icon={driverIcon}
+          >
+            <Popup>
+              <div>
+                <strong>{driver.name}</strong>
+                <p>{driver.vehicle_type}</p>
+                <p>Rating: {driver.rating} ★</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+        
+        {request && request.pickup_latitude && request.pickup_longitude && (
+          <Marker 
+            position={[request.pickup_latitude, request.pickup_longitude]}
+            icon={restaurantIcon}
+          >
+            <Popup>
+              <div>
+                <strong>Pickup Location</strong>
+                <p>{request.pickup_address}</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+        
+        {request && request.delivery_latitude && request.delivery_longitude && (
+          <Marker 
+            position={[request.delivery_latitude, request.delivery_longitude]}
+            icon={customerIcon}
+          >
+            <Popup>
+              <div>
+                <strong>Delivery Location</strong>
+                <p>{request.delivery_address}</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+      </MapContainer>
     </div>
   );
-}
+};
+
+export default DeliveryDriverMap;

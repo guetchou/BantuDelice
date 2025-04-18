@@ -1,65 +1,53 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import pb from '@/lib/pocketbase';
 import { User } from '@/types/user';
-import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
-  logout: () => void;
-  isLoading: boolean;
+  loading: boolean;
   isAuthenticated: boolean;
-  isAdmin: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: Error }>;
-  register: (userData: { email: string; password: string; passwordConfirm: string; name?: string }) => Promise<{ success: boolean; error?: Error }>;
-  updateProfile?: (data: Partial<User>) => Promise<{ success: boolean; error?: Error }>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  register: (email: string, password: string, name: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ 
-  user: null, 
-  logout: () => {}, 
-  isLoading: true,
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
   isAuthenticated: false,
-  isAdmin: false,
-  login: async () => ({ success: false }),
-  register: async () => ({ success: false })
+  login: async () => {},
+  logout: () => {},
+  register: async () => {},
 });
 
-export default function AuthProvider({ children }: { children: React.ReactNode }) {
+const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check initial auth state
-    const loadUser = async () => {
-      try {
-        if (pb.authStore.isValid) {
-          const userData = pb.authStore.model;
-          if (userData) {
-            setUser({
-              id: userData.id,
-              email: userData.email,
-              name: userData.name || '',
-              role: userData.role || 'user',
-              created_at: userData.created || '',
-              // Optional fields
-              avatar_url: userData.avatar_url,
-              first_name: userData.first_name,
-              last_name: userData.last_name,
-              status: userData.status || 'active',
-              last_login: userData.last_login,
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error loading user:', error);
-      } finally {
-        setIsLoading(false);
+    // Check if already authenticated
+    if (pb.authStore.isValid) {
+      const authData = pb.authStore.model;
+      
+      if (authData) {
+        setUser({
+          id: authData.id,
+          email: authData.email,
+          name: authData.name || '',
+          phone: authData.phone,
+          role: authData.role || 'user',
+          created_at: authData.created,
+          avatar_url: authData.avatar_url,
+          first_name: authData.first_name,
+          last_name: authData.last_name,
+          status: authData.status,
+        });
       }
-    };
-
-    loadUser();
-
+    }
+    
+    setLoading(false);
+    
     // Subscribe to auth state changes
     const unsubscribe = pb.authStore.onChange((token, model) => {
       if (model) {
@@ -67,132 +55,85 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           id: model.id,
           email: model.email,
           name: model.name || '',
+          phone: model.phone,
           role: model.role || 'user',
-          created_at: model.created || '',
-          // Optional fields
+          created_at: model.created,
           avatar_url: model.avatar_url,
           first_name: model.first_name,
           last_name: model.last_name,
-          status: model.status || 'active',
-          last_login: model.last_login,
+          status: model.status,
         });
       } else {
         setUser(null);
       }
     });
-
+    
     return () => {
-      // Cleanup subscription
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
+      // Clean up the subscription
+      unsubscribe();
     };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      await pb.collection('users').authWithPassword(email, password);
-      const userData = pb.authStore.model;
-      if (userData) {
-        setUser({
-          id: userData.id,
-          email: userData.email,
-          name: userData.name || '',
-          role: userData.role || 'user',
-          created_at: userData.created || '',
-          // Optional fields
-          avatar_url: userData.avatar_url,
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          status: userData.status || 'active',
-          last_login: userData.last_login,
-        });
-      }
-      toast.success("Connexion réussie", {
-        description: "Bienvenue sur Buntudelice !",
+      const authData = await pb.collection('users').authWithPassword(email, password);
+      
+      setUser({
+        id: authData.record.id,
+        email: authData.record.email,
+        name: authData.record.name || '',
+        phone: authData.record.phone,
+        role: authData.record.role || 'user',
+        created_at: authData.record.created,
+        avatar_url: authData.record.avatar_url,
+        first_name: authData.record.first_name,
+        last_name: authData.record.last_name,
+        status: authData.record.status,
       });
-      return { success: true };
     } catch (error) {
       console.error('Login error:', error);
-      toast.error("Échec de connexion", {
-        description: "Veuillez vérifier vos identifiants.",
-      });
-      return { success: false, error: error as Error };
-    }
-  };
-
-  const register = async (userData: { email: string; password: string; passwordConfirm: string; name?: string }) => {
-    try {
-      await pb.collection('users').create({
-        ...userData,
-        role: 'user',
-      });
-      toast.success("Inscription réussie", {
-        description: "Votre compte a été créé avec succès.",
-      });
-      // Auto login after registration
-      await login(userData.email, userData.password);
-      return { success: true };
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast.error("Échec d'inscription", {
-        description: "Un problème est survenu lors de la création de votre compte.",
-      });
-      return { success: false, error: error as Error };
-    }
-  };
-
-  const updateProfile = async (data: Partial<User>) => {
-    try {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      await pb.collection('users').update(user.id, data);
-      
-      // Update local user state
-      setUser(prev => prev ? { ...prev, ...data } : null);
-      
-      toast.success("Profil mis à jour", {
-        description: "Vos informations ont été mises à jour avec succès.",
-      });
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Profile update error:', error);
-      toast.error("Erreur de mise à jour", {
-        description: "Un problème est survenu lors de la mise à jour de votre profil.",
-      });
-      return { success: false, error: error as Error };
+      throw error;
     }
   };
 
   const logout = () => {
     pb.authStore.clear();
     setUser(null);
-    toast.info("Déconnexion réussie", {
-      description: "À bientôt sur Buntudelice !",
-    });
   };
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const register = async (email: string, password: string, name: string) => {
+    try {
+      const data = {
+        email,
+        password,
+        passwordConfirm: password,
+        name,
+      };
+      
+      await pb.collection('users').create(data);
+      
+      // Auto login after registration
+      await login(email, password);
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      logout, 
-      isLoading,
-      isAuthenticated: !!user,
-      isAdmin,
-      login,
-      register,
-      updateProfile
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isAuthenticated: !!user,
+        login,
+        logout,
+        register,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export default AuthProvider;

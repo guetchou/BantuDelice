@@ -35,11 +35,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Check for specific permissions
-  if (superAdminOnly && user?.role !== 'super_admin') {
+  if (superAdminOnly && user?.role !== 'superadmin' && user?.role !== 'super_admin') {
     return <Navigate to="/" replace />;
   }
 
-  if (adminOnly && !['admin', 'super_admin'].includes(user?.role || '')) {
+  if (adminOnly && !['admin', 'superadmin', 'super_admin'].includes(user?.role || '')) {
     return <Navigate to="/" replace />;
   }
 

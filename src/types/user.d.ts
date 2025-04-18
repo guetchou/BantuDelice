@@ -15,7 +15,7 @@ export interface User {
   last_login?: string;
 }
 
-export type UserRole = 'user' | 'admin' | 'restaurant' | 'driver' | 'superadmin' | 'restaurant_owner';
+export type UserRole = 'user' | 'admin' | 'restaurant' | 'driver' | 'superadmin' | 'restaurant_owner' | 'super_admin';
 export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
 
 export interface UserPreferences {

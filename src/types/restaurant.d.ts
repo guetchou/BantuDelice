@@ -12,7 +12,7 @@ export interface Restaurant {
   logo_url?: string;
   banner_image_url?: string;
   cuisine_type?: string;
-  min_order?: number;  // Remplace minimum_order
+  min_order?: number;
   delivery_fee?: number;
   business_hours?: BusinessHours;
   rating?: number;
