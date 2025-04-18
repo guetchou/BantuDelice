@@ -21,7 +21,9 @@ const MenuItem: React.FC<MenuItemComponentProps> = ({ item }) => {
       image_url: item.image_url,
       description: item.description,
       restaurant_id: item.restaurant_id,
-      quantity: 1
+      quantity: 1,
+      menu_item_id: item.id,
+      total: item.price
     });
     
     toast.success(`${item.name} ajouté au panier`);

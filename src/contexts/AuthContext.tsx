@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 import pb from '@/lib/pocketbase';
 import { User } from '@/types/user';
 
@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  isLoading: boolean; // Ajouté pour résoudre l'erreur dans Header.tsx
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<{success: boolean}>;
   logout: () => void;
   register: (userData: any) => Promise<{success: boolean}>;
@@ -22,6 +22,15 @@ export const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   register: async () => ({success: false}),
 });
+
+// Hook pour utiliser le contexte d'authentification
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);

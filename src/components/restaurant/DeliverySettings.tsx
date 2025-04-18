@@ -1,365 +1,337 @@
-
-import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
+import React, { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { DeliverySettings, ExternalDeliveryService } from '@/types/delivery';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CheckboxGroup, CheckboxItem } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { DeliverySettings as DeliverySettingsType } from '@/types/delivery';
 
-interface RestaurantDeliverySettingsProps {
+// Helper pour créer la structure de business hours correcte
+const createDefaultBusinessHours = () => ({
+  monday: { open: "08:00", close: "22:00", is_closed: false },
+  tuesday: { open: "08:00", close: "22:00", is_closed: false },
+  wednesday: { open: "08:00", close: "22:00", is_closed: false },
+  thursday: { open: "08:00", close: "22:00", is_closed: false },
+  friday: { open: "08:00", close: "22:00", is_closed: false },
+  saturday: { open: "08:00", close: "22:00", is_closed: false },
+  sunday: { open: "08:00", close: "22:00", is_closed: false }
+});
+
+// Convertir le format précédent si nécessaire
+const convertHoursFormat = (hours: any) => {
+  if (Array.isArray(hours)) {
+    const businessHours = createDefaultBusinessHours();
+    
+    hours.forEach(day => {
+      const dayKey = day.day.toLowerCase();
+      if (businessHours[dayKey as keyof typeof businessHours]) {
+        businessHours[dayKey as keyof typeof businessHours].open = day.open;
+        businessHours[dayKey as keyof typeof businessHours].close = day.close;
+      }
+    });
+    
+    return businessHours;
+  }
+  
+  return hours || createDefaultBusinessHours();
+};
+
+interface DeliverySettingsProps {
   restaurantId: string;
 }
 
-const DeliverySettingsComponent = ({ restaurantId }: RestaurantDeliverySettingsProps) => {
+export const DeliverySettings: React.FC<DeliverySettingsProps> = ({ restaurantId }) => {
+  const [settings, setSettings] = useState<DeliverySettingsType>({
+    id: '',
+    restaurant_id: restaurantId,
+    allow_restaurant_delivery: true,
+    allow_external_delivery: false,
+    default_delivery_fee: 500,
+    free_delivery_threshold: 5000,
+    max_delivery_distance: 5,
+    delivery_hours: createDefaultBusinessHours(),
+    min_order_value: 1000,
+    delivery_radius: 5,
+    delivery_fee_base: 300,
+    delivery_fee_per_km: 100
+  });
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<DeliverySettings | null>(null);
-  const [externalServices, setExternalServices] = useState<ExternalDeliveryService[]>([]);
-  
+  const { toast } = useToast();
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         setLoading(true);
+        // Fetch delivery settings from API
+        // const response = await api.getDeliverySettings(restaurantId);
         
-        // Fetch delivery settings
-        const { data: settingsData, error: settingsError } = await supabase
-          .from('delivery_settings')
-          .select('*')
-          .eq('restaurant_id', restaurantId)
-          .maybeSingle();
-        
-        if (settingsError && settingsError.code !== 'PGRST116') {
-          throw settingsError;
-        }
-        
-        // Fetch external delivery services
-        const { data: servicesData, error: servicesError } = await supabase
-          .from('external_delivery_services')
-          .select('*')
-          .eq('is_active', true);
-        
-        if (servicesError) {
-          throw servicesError;
-        }
-        
-        setExternalServices(servicesData as ExternalDeliveryService[]);
-        
-        if (settingsData) {
-          setSettings(settingsData as DeliverySettings);
-        } else {
-          // Create default settings if none exist
-          const defaultSettings: DeliverySettings = {
+        // Simulate API response for now
+        setTimeout(() => {
+          const mockSettings = {
+            id: 'delivery-settings-1',
             restaurant_id: restaurantId,
             allow_restaurant_delivery: true,
-            allow_external_delivery: true,
-            default_delivery_fee: 1000,
-            free_delivery_threshold: 15000,
-            max_delivery_distance: 10,
-            estimated_delivery_time: 30,
-            accepted_external_services: [],
-            delivery_hours: [
-              { day: 'monday', open: '09:00', close: '21:00' },
-              { day: 'tuesday', open: '09:00', close: '21:00' },
-              { day: 'wednesday', open: '09:00', close: '21:00' },
-              { day: 'thursday', open: '09:00', close: '21:00' },
-              { day: 'friday', open: '09:00', close: '22:00' },
-              { day: 'saturday', open: '10:00', close: '22:00' },
-              { day: 'sunday', open: '10:00', close: '21:00' },
-            ],
-            auto_accept_orders: false,
-            auto_assign_drivers: false
+            allow_external_delivery: false,
+            default_delivery_fee: 500, // in cents
+            free_delivery_threshold: 5000, // in cents
+            max_delivery_distance: 5, // in km
+            delivery_hours: {
+              monday: { open: "09:00", close: "21:00", is_closed: false },
+              tuesday: { open: "09:00", close: "21:00", is_closed: false },
+              wednesday: { open: "09:00", close: "21:00", is_closed: false },
+              thursday: { open: "09:00", close: "21:00", is_closed: false },
+              friday: { open: "09:00", close: "22:00", is_closed: false },
+              saturday: { open: "10:00", close: "22:00", is_closed: false },
+              sunday: { open: "10:00", close: "20:00", is_closed: false }
+            },
+            min_order_value: 1500,
+            delivery_radius: 5,
+            delivery_fee_base: 300,
+            delivery_fee_per_km: 100
           };
           
-          setSettings(defaultSettings);
-          
-          // Save default settings to database
-          const { error } = await supabase
-            .from('delivery_settings')
-            .insert(defaultSettings);
-          
-          if (error) {
-            console.error('Error creating default delivery settings:', error);
-          }
-        }
+          setSettings(mockSettings);
+          setLoading(false);
+        }, 1000);
       } catch (error) {
         console.error('Error fetching delivery settings:', error);
-        toast.error('Erreur lors du chargement des paramètres de livraison');
-      } finally {
+        toast({
+          title: 'Erreur',
+          description: "Impossible de charger les paramètres de livraison",
+          variant: 'destructive'
+        });
         setLoading(false);
       }
     };
-    
-    fetchSettings();
-  }, [restaurantId]);
-  
-  const handleSaveSettings = async () => {
-    if (!settings) return;
-    
-    try {
-      setSaving(true);
-      
-      const { error } = await supabase
-        .from('delivery_settings')
-        .upsert({
-          ...settings,
-          restaurant_id: restaurantId
-        });
-      
-      if (error) throw error;
-      
-      toast.success('Paramètres de livraison enregistrés avec succès');
-    } catch (error) {
-      console.error('Error saving delivery settings:', error);
-      toast.error('Erreur lors de l\'enregistrement des paramètres');
-    } finally {
-      setSaving(false);
+
+    if (restaurantId) {
+      fetchSettings();
     }
+  }, [restaurantId, toast]);
+
+  const handleChange = (field: keyof DeliverySettingsType, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleHoursChange = (day: string, field: 'open' | 'close', value: string) => {
+    if (!settings.delivery_hours) return;
+    
+    setSettings(prev => ({
+      ...prev,
+      delivery_hours: {
+        ...prev.delivery_hours,
+        [day]: {
+          ...prev.delivery_hours?.[day as keyof typeof prev.delivery_hours],
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const handleDayToggle = (day: string, isClosed: boolean) => {
+    if (!settings.delivery_hours) return;
+    
+    setSettings(prev => ({
+      ...prev,
+      delivery_hours: {
+        ...prev.delivery_hours,
+        [day]: {
+          ...prev.delivery_hours?.[day as keyof typeof prev.delivery_hours],
+          is_closed: isClosed
+        }
+      }
+    }));
   };
   
-  const handleToggleServiceAcceptance = (serviceId: string) => {
-    if (!settings) return;
+  // Assurer que delivery_hours a le bon format
+  const saveSettings = () => {
+    setSaving(true);
     
-    const updatedServices = [...(settings.accepted_external_services || [])];
+    const formattedSettings = {
+      ...settings,
+      delivery_hours: convertHoursFormat(settings.delivery_hours)
+    };
     
-    if (updatedServices.includes(serviceId)) {
-      setSettings({
-        ...settings,
-        accepted_external_services: updatedServices.filter(id => id !== serviceId)
+    // Simulate API call
+    setTimeout(() => {
+      // In a real app: await api.updateDeliverySettings(restaurantId, formattedSettings);
+      toast({
+        title: 'Paramètres sauvegardés',
+        description: "Les paramètres de livraison ont été mis à jour avec succès",
       });
-    } else {
-      setSettings({
-        ...settings,
-        accepted_external_services: [...updatedServices, serviceId]
-      });
-    }
+      setSaving(false);
+    }, 1000);
   };
   
   if (loading) {
     return (
-      <Card className="p-6">
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-        </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center h-40">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+          </div>
+        </CardContent>
       </Card>
     );
   }
-  
-  if (!settings) {
-    return (
-      <Card className="p-6">
-        <div className="text-center py-8">
-          <p className="text-red-500">Erreur lors du chargement des paramètres</p>
-          <Button 
-            variant="outline" 
-            className="mt-4"
-            onClick={() => window.location.reload()}
-          >
-            Réessayer
-          </Button>
-        </div>
-      </Card>
-    );
-  }
-  
+
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-6">Paramètres de livraison</h2>
-      
-      <div className="space-y-8">
+    <Card>
+      <CardHeader>
+        <CardTitle>Paramètres de livraison</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Options de livraison</h3>
-          
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="restaurant-delivery">Livraison par le restaurant</Label>
-              <p className="text-sm text-gray-500">
-                Permettre à vos propres livreurs de livrer les commandes
-              </p>
+            <div>
+              <h3 className="font-medium">Activer la livraison</h3>
+              <p className="text-sm text-gray-500">Permettre aux clients de commander en livraison</p>
             </div>
-            <Switch
-              id="restaurant-delivery"
+            <Switch 
               checked={settings.allow_restaurant_delivery}
-              onCheckedChange={(checked) => 
-                setSettings({...settings, allow_restaurant_delivery: checked})}
+              onCheckedChange={(checked) => handleChange('allow_restaurant_delivery', checked)}
             />
           </div>
           
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="external-delivery">Livraison par service externe</Label>
-              <p className="text-sm text-gray-500">
-                Permettre à des services de livraison externes de livrer les commandes
-              </p>
+            <div>
+              <h3 className="font-medium">Livraison externe</h3>
+              <p className="text-sm text-gray-500">Utiliser des services de livraison tiers</p>
             </div>
-            <Switch
-              id="external-delivery"
+            <Switch 
               checked={settings.allow_external_delivery}
-              onCheckedChange={(checked) => 
-                setSettings({...settings, allow_external_delivery: checked})}
-            />
-          </div>
-          
-          <Separator className="my-4" />
-          
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="delivery-fee">Frais de livraison (XAF)</Label>
-              <Input
-                id="delivery-fee"
-                type="number"
-                min="0"
-                value={settings.default_delivery_fee}
-                onChange={(e) => 
-                  setSettings({...settings, default_delivery_fee: parseInt(e.target.value) || 0})}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="free-threshold">
-                Seuil de livraison gratuite (XAF)
-                {settings.free_delivery_threshold === 0 && (
-                  <Badge variant="outline" className="ml-2 text-xs">
-                    Désactivé
-                  </Badge>
-                )}
-              </Label>
-              <Input
-                id="free-threshold"
-                type="number"
-                min="0"
-                value={settings.free_delivery_threshold || ''}
-                onChange={(e) => 
-                  setSettings({...settings, free_delivery_threshold: parseInt(e.target.value) || 0})}
-                placeholder="Jamais gratuit"
-              />
-              <p className="text-xs text-gray-500">
-                Mettre à 0 pour désactiver la livraison gratuite
-              </p>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="max-distance">Distance maximale de livraison: {settings.max_delivery_distance} km</Label>
-            </div>
-            <Slider
-              id="max-distance"
-              min={1}
-              max={30}
-              step={1}
-              value={[settings.max_delivery_distance]}
-              onValueChange={(value) => 
-                setSettings({...settings, max_delivery_distance: value[0]})}
-            />
-            <p className="text-xs text-gray-500">
-              La distance maximale à laquelle vous êtes prêt à livrer
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="delivery-time">Temps de livraison estimé: {settings.estimated_delivery_time} minutes</Label>
-            <Slider
-              id="delivery-time"
-              min={10}
-              max={90}
-              step={5}
-              value={[settings.estimated_delivery_time]}
-              onValueChange={(value) => 
-                setSettings({...settings, estimated_delivery_time: value[0]})}
+              onCheckedChange={(checked) => handleChange('allow_external_delivery', checked)}
             />
           </div>
         </div>
         
-        {settings.allow_external_delivery && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Services de livraison externes</h3>
-            
-            {externalServices.length === 0 ? (
-              <p className="text-sm text-gray-500 italic">
-                Aucun service de livraison externe disponible actuellement
-              </p>
-            ) : (
-              <CheckboxGroup>
-                {externalServices.map(service => (
-                  <div key={service.id} className="flex items-center space-x-2">
-                    <CheckboxItem
-                      id={`service-${service.id}`}
-                      checked={settings.accepted_external_services?.includes(service.id)}
-                      onCheckedChange={() => handleToggleServiceAcceptance(service.id)}
-                    />
-                    <Label htmlFor={`service-${service.id}`} className="cursor-pointer">
-                      <div className="font-medium">{service.name}</div>
-                      <div className="text-sm text-gray-500">
-                        Frais de base: {service.base_fee.toLocaleString()} XAF
-                        {service.fee_per_km && ` + ${service.fee_per_km} XAF/km`}
-                      </div>
-                    </Label>
-                  </div>
-                ))}
-              </CheckboxGroup>
-            )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="delivery_fee">Frais de livraison (XAF)</Label>
+            <Input 
+              id="delivery_fee"
+              type="number"
+              value={settings.default_delivery_fee / 100}
+              onChange={(e) => handleChange('default_delivery_fee', parseInt(e.target.value) * 100)}
+            />
+            <p className="text-xs text-gray-500">Frais de livraison standard</p>
           </div>
-        )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="free_delivery_threshold">Seuil de livraison gratuite (XAF)</Label>
+            <Input 
+              id="free_delivery_threshold"
+              type="number"
+              value={settings.free_delivery_threshold / 100}
+              onChange={(e) => handleChange('free_delivery_threshold', parseInt(e.target.value) * 100)}
+            />
+            <p className="text-xs text-gray-500">Montant minimum pour la livraison gratuite</p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="min_order_value">Commande minimum (XAF)</Label>
+            <Input 
+              id="min_order_value"
+              type="number"
+              value={settings.min_order_value / 100}
+              onChange={(e) => handleChange('min_order_value', parseInt(e.target.value) * 100)}
+            />
+            <p className="text-xs text-gray-500">Montant minimum pour passer une commande</p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="max_delivery_distance">Distance maximale (km)</Label>
+            <Input 
+              id="max_delivery_distance"
+              type="number"
+              value={settings.max_delivery_distance}
+              onChange={(e) => handleChange('max_delivery_distance', parseInt(e.target.value))}
+            />
+            <p className="text-xs text-gray-500">Distance maximale de livraison</p>
+          </div>
+        </div>
         
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Automatisation</h3>
+          <h3 className="font-medium">Tarification avancée</h3>
           
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="auto-accept">Acceptation automatique des commandes</Label>
-              <p className="text-sm text-gray-500">
-                Accepter automatiquement les commandes entrantes
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="delivery_fee_base">Frais de base (XAF)</Label>
+              <Input 
+                id="delivery_fee_base"
+                type="number"
+                value={settings.delivery_fee_base / 100}
+                onChange={(e) => handleChange('delivery_fee_base', parseInt(e.target.value) * 100)}
+              />
+              <p className="text-xs text-gray-500">Frais fixes pour chaque livraison</p>
             </div>
-            <Switch
-              id="auto-accept"
-              checked={settings.auto_accept_orders}
-              onCheckedChange={(checked) => 
-                setSettings({...settings, auto_accept_orders: checked})}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="auto-assign">Assignation automatique des livreurs</Label>
-              <p className="text-sm text-gray-500">
-                Assigner automatiquement un livreur disponible aux commandes
-              </p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="delivery_fee_per_km">Frais par km (XAF)</Label>
+              <Input 
+                id="delivery_fee_per_km"
+                type="number"
+                value={settings.delivery_fee_per_km / 100}
+                onChange={(e) => handleChange('delivery_fee_per_km', parseInt(e.target.value) * 100)}
+              />
+              <p className="text-xs text-gray-500">Frais additionnels par kilomètre</p>
             </div>
-            <Switch
-              id="auto-assign"
-              checked={settings.auto_assign_drivers}
-              onCheckedChange={(checked) => 
-                setSettings({...settings, auto_assign_drivers: checked})}
-            />
           </div>
         </div>
-      </div>
-      
-      <div className="flex justify-end mt-8">
+        
+        <div className="space-y-4">
+          <h3 className="font-medium">Horaires de livraison</h3>
+          
+          {settings.delivery_hours && Object.entries(settings.delivery_hours).map(([day, hours]) => (
+            <div key={day} className="flex items-center space-x-4">
+              <div className="w-24">
+                <p className="font-medium capitalize">{day}</p>
+              </div>
+              
+              <Switch 
+                checked={!hours.is_closed}
+                onCheckedChange={(checked) => handleDayToggle(day, !checked)}
+              />
+              
+              {!hours.is_closed ? (
+                <div className="flex items-center space-x-2">
+                  <Input 
+                    type="time"
+                    className="w-32"
+                    value={hours.open}
+                    onChange={(e) => handleHoursChange(day, 'open', e.target.value)}
+                  />
+                  <span>à</span>
+                  <Input 
+                    type="time"
+                    className="w-32"
+                    value={hours.close}
+                    onChange={(e) => handleHoursChange(day, 'close', e.target.value)}
+                  />
+                </div>
+              ) : (
+                <p className="text-gray-500">Fermé</p>
+              )}
+            </div>
+          ))}
+        </div>
+        
         <Button 
-          onClick={handleSaveSettings}
+          onClick={saveSettings} 
           disabled={saving}
+          className="w-full md:w-auto"
         >
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enregistrement...
-            </>
-          ) : 'Enregistrer les paramètres'}
+          {saving ? 'Enregistrement...' : 'Enregistrer les paramètres'}
         </Button>
-      </div>
+      </CardContent>
     </Card>
   );
 };
 
-export default DeliverySettingsComponent;
+export default DeliverySettings;

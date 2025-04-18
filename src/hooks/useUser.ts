@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import pb from '@/lib/pocketbase';
 import { User, UserProfile } from '@/types/user';
 
+// Exporter explicitement le type UserProfile
+export { UserProfile };
+
 export const useUser = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

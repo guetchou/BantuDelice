@@ -1,6 +1,5 @@
-
 import { useContext } from 'react';
-import { CartContext, CartContextType } from '@/contexts/CartContext';
+import { CartContext } from '@/contexts/CartContext';
 import { CartItem } from '@/types/cart';
 import { toast } from 'sonner';
 
@@ -17,6 +16,14 @@ export const useCart = () => {
   
   // Fonction étendue pour ajouter un article avec notification
   const addToCart = (item: CartItem) => {
+    if (!item.menu_item_id) {
+      item.menu_item_id = item.id;
+    }
+    
+    if (!item.total) {
+      item.total = item.price * item.quantity;
+    }
+    
     if (!item.quantity) {
       item.quantity = 1;
     }
@@ -41,7 +48,7 @@ export const useCart = () => {
   
   // Fonction pour vider le panier avec confirmation
   const clearCartWithConfirmation = () => {
-    if (context.state.items.length > 0) {
+    if (context.cartState.items.length > 0) {
       context.clearCart();
       toast.info("Panier vidé", {
         description: "Tous les articles ont été retirés du panier",
@@ -51,36 +58,30 @@ export const useCart = () => {
   
   // Vérifie si un article est déjà dans le panier
   const isInCart = (itemId: string): boolean => {
-    return context.state.items.some(item => item.id === itemId);
+    return context.cartState.items.some(item => item.id === itemId);
   };
   
   // Obtient la quantité d'un article dans le panier
   const getItemQuantity = (itemId: string): number => {
-    const item = context.state.items.find(item => item.id === itemId);
+    const item = context.cartState.items.find(item => item.id === itemId);
     return item ? item.quantity : 0;
   };
   
   // Vérifie si le panier est vide
   const isEmpty = (): boolean => {
-    return context.state.items.length === 0;
+    return context.cartState.items.length === 0;
   };
   
   // Calcule le total avec frais de livraison
   const calculateTotalWithDelivery = (deliveryFee: number = 299): number => {
-    return context.state.total + deliveryFee;
+    return context.cartState.total + deliveryFee;
   };
   
   return {
     // État du panier
-    items: context.state.items,
-    total: context.state.total,
-    count: context.state.count,
-    totalItems: context.state.totalItems,
-    
-    // Actions du panier
+    cartState: context.cartState,
     addItem: context.addItem,
     removeItem: context.removeItem,
-    updateItemQuantity: context.updateItemQuantity,
     updateQuantity: context.updateQuantity,
     clearCart: context.clearCart,
     
@@ -92,8 +93,5 @@ export const useCart = () => {
     getItemQuantity,
     isEmpty,
     calculateTotalWithDelivery,
-    
-    // Pour le passage au composant CartSection
-    state: context.state
   };
 };

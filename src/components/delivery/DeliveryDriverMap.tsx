@@ -1,131 +1,77 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
-
-// Fix the Leaflet icon issue with webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
-
-// Create custom icons
-const createIcon = (iconUrl: string) => {
-  return new L.Icon({
-    iconUrl,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
-  });
-};
-
-const driverIcon = createIcon('/assets/driver-marker.png');
-const restaurantIcon = createIcon('/assets/restaurant-marker.png');
-const customerIcon = createIcon('/assets/customer-marker.png');
-
-interface MapCenterUpdaterProps {
-  center: [number, number];
-}
-
-// Component to update map center
-const MapCenterUpdater: React.FC<MapCenterUpdaterProps> = ({ center }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    map.setView(center);
-  }, [center, map]);
-  
-  return null;
-};
+import { DeliveryDriver, DeliveryLocation } from '@/types/delivery';
 
 interface DeliveryDriverMapProps {
-  driver?: DeliveryDriver;
-  request?: DeliveryRequest;
-  center?: [number, number];
-  zoom?: number;
+  deliveryId: string;
+  restaurantId: string;
+  height?: string;
 }
 
-const DeliveryDriverMap: React.FC<DeliveryDriverMapProps> = ({ 
-  driver, 
-  request, 
-  center = [0, 0],
-  zoom = 13 
-}) => {
-  const [mapCenter, setMapCenter] = useState<[number, number]>(center);
+const DeliveryDriverMap: React.FC<DeliveryDriverMapProps> = ({ deliveryId, restaurantId, height = '400px' }) => {
+  const [driver, setDriver] = useState<DeliveryDriver | null>(null);
+  const [locations, setLocations] = useState<DeliveryLocation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (driver) {
-      setMapCenter([driver.current_latitude, driver.current_longitude]);
-    } else if (request && request.pickup_latitude && request.pickup_longitude) {
-      setMapCenter([request.pickup_latitude, request.pickup_longitude]);
-    } else {
-      setMapCenter(center);
-    }
-  }, [driver, request, center]);
+    // Simulation de chargement des données
+    const loadData = async () => {
+      try {
+        // Dans une vraie implémentation, charger les données depuis l'API
+        // const { data: driverData } = await api.getDeliveryDriver(deliveryId);
+        // const { data: locationData } = await api.getDeliveryLocations(deliveryId);
+        
+        // Simulation pour le moment
+        const mockDriver: DeliveryDriver = {
+          id: 'driver-1',
+          user_id: 'user-1',
+          name: 'John Doe',
+          phone: '+123456789',
+          current_latitude: 48.8584,
+          current_longitude: 2.2945,
+          is_available: true,
+          vehicle_type: 'car',
+          status: 'active',
+          profile_picture: 'https://example.com/avatar.jpg',
+          rating: 4.8
+        };
+        
+        const mockLocations: DeliveryLocation[] = [
+          { latitude: 48.8584, longitude: 2.2945, type: 'driver' },
+          { latitude: 48.8606, longitude: 2.3376, type: 'restaurant' },
+          { latitude: 48.8530, longitude: 2.3499, type: 'customer' }
+        ];
+        
+        setDriver(mockDriver);
+        setLocations(mockLocations);
+      } catch (error) {
+        console.error("Erreur lors du chargement des données de livraison", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [deliveryId, restaurantId]);
 
+  if (loading) {
+    return <div style={{ height, width: '100%' }} className="bg-gray-100 flex items-center justify-center">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>;
+  }
+
+  // Ici, vous intégreriez une carte réelle (Google Maps, Mapbox, Leaflet, etc.)
   return (
-    <div className="h-64 w-full rounded-md overflow-hidden shadow-md">
-      <MapContainer 
-        center={mapCenter} 
-        zoom={zoom} 
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={false}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-        
-        <MapCenterUpdater center={mapCenter} />
-        
+    <div style={{ height, width: '100%' }} className="bg-gray-100 relative">
+      <div className="absolute inset-0 flex items-center justify-center">
+        <p className="text-gray-500">Carte de suivi du livreur</p>
         {driver && (
-          <Marker 
-            position={[driver.current_latitude, driver.current_longitude]}
-            icon={driverIcon}
-          >
-            <Popup>
-              <div>
-                <strong>{driver.name}</strong>
-                <p>{driver.vehicle_type}</p>
-                <p>Rating: {driver.rating} ★</p>
-              </div>
-            </Popup>
-          </Marker>
+          <div className="absolute top-4 right-4 bg-white p-2 rounded shadow">
+            <p className="font-bold">{driver.name}</p>
+            <p className="text-sm">{driver.status} - {driver.vehicle_type}</p>
+          </div>
         )}
-        
-        {request && request.pickup_latitude && request.pickup_longitude && (
-          <Marker 
-            position={[request.pickup_latitude, request.pickup_longitude]}
-            icon={restaurantIcon}
-          >
-            <Popup>
-              <div>
-                <strong>Pickup Location</strong>
-                <p>{request.pickup_address}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )}
-        
-        {request && request.delivery_latitude && request.delivery_longitude && (
-          <Marker 
-            position={[request.delivery_latitude, request.delivery_longitude]}
-            icon={customerIcon}
-          >
-            <Popup>
-              <div>
-                <strong>Delivery Location</strong>
-                <p>{request.delivery_address}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )}
-      </MapContainer>
+      </div>
     </div>
   );
 };

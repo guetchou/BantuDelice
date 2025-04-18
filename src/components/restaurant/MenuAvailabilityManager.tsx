@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import apiClient from '@/integrations/api/client';
 import { useToast } from '@/hooks/use-toast';
@@ -64,7 +63,6 @@ export function MenuAvailabilityManager({ restaurantId, isOwner = true }: MenuAv
       if (data) {
         setMenuItems(data);
         
-        // Extract unique categories
         const uniqueCategories = Array.from(
           new Set(data.map((item: MenuItem) => item.category))
         ).filter(Boolean) as string[];
@@ -86,7 +84,6 @@ export function MenuAvailabilityManager({ restaurantId, isOwner = true }: MenuAv
   const filterItems = () => {
     let filtered = [...menuItems];
     
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(item => 
         item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,7 +91,6 @@ export function MenuAvailabilityManager({ restaurantId, isOwner = true }: MenuAv
       );
     }
     
-    // Filter by category
     if (selectedCategory && selectedCategory !== "all") {
       filtered = filtered.filter(item => item.category === selectedCategory);
     }
@@ -106,10 +102,8 @@ export function MenuAvailabilityManager({ restaurantId, isOwner = true }: MenuAv
     try {
       setSaving(itemId);
       
-      // Call the API to update availability
       await apiClient.restaurants.updateMenuItemAvailability(itemId, !available);
       
-      // Update local state
       setMenuItems(prevItems => 
         prevItems.map(item => 
           item.id === itemId ? { ...item, available: !available } : item
@@ -138,16 +132,13 @@ export function MenuAvailabilityManager({ restaurantId, isOwner = true }: MenuAv
     try {
       setSaving(itemId);
       
-      // Call the API to update stock level
       await apiClient.restaurants.updateMenuItemStock(itemId, newStock);
       
-      // Update local state
       setMenuItems(prevItems => 
         prevItems.map(item => 
           item.id === itemId ? { 
             ...item, 
             stock_level: newStock,
-            // Automatically update availability based on stock
             available: newStock > 0 
           } : item
         )
@@ -167,6 +158,10 @@ export function MenuAvailabilityManager({ restaurantId, isOwner = true }: MenuAv
     } finally {
       setSaving(null);
     }
+  };
+
+  const getBadgeVariant = (available: boolean) => {
+    return available ? "default" : "destructive";
   };
 
   if (loading) {
@@ -251,7 +246,7 @@ export function MenuAvailabilityManager({ restaurantId, isOwner = true }: MenuAv
                             Stock faible: {item.stock_level}
                           </Badge>
                         )}
-                        <Badge variant={item.available ? "success" : "destructive"} className="ml-2">
+                        <Badge variant={getBadgeVariant(item.available)} className="ml-2">
                           {item.available ? 'Disponible' : 'Indisponible'}
                         </Badge>
                       </div>
