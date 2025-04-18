@@ -91,7 +91,9 @@ const MenuRecommendations: React.FC<MenuRecommendationsProps> = ({ items, title 
                       quantity: 1,
                       restaurant_id: item.restaurant_id,
                       image_url: item.image_url,
-                      description: item.description
+                      description: item.description,
+                      menu_item_id: item.id,
+                      total: item.price
                     });
                     
                     toast({
@@ -144,7 +146,9 @@ const MenuRecommendations: React.FC<MenuRecommendationsProps> = ({ items, title 
                       quantity: 1,
                       restaurant_id: item.restaurant_id,
                       image_url: item.image_url,
-                      description: item.description
+                      description: item.description,
+                      menu_item_id: item.id,
+                      total: item.price
                     });
                     
                     toast({

@@ -25,7 +25,7 @@ const SecurityTab = ({ user }: SecurityTabProps) => {
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Connexions récentes</h3>
             <p className="text-sm text-gray-500">
-              Dernière connexion: {user && user.last_login ? formatDate(user.last_login, true) : 'Inconnue'}
+              Dernière connexion: {user && user.last_login ? formatDate(user.last_login) : 'Inconnue'}
             </p>
           </div>
           

@@ -38,18 +38,22 @@ export interface MenuItem {
   };
   is_combo?: boolean;
   nutritional_score?: number;
-  // Ajout des propriétés manquantes causant des erreurs
+  // Adding missing properties
   allergens?: string[];
   ingredients?: string[];
   is_vegetarian?: boolean;
   is_vegan?: boolean;
   is_gluten_free?: boolean;
+  is_spicy?: boolean;
   preparation_time?: number;
   profit_margin?: number;
+  average_rating?: number;
   promotional_data?: {
     is_on_promotion?: boolean;
     discount_percentage?: number;
     promotion_hours?: any;
     original_price?: number;
+    discount_type?: string;
+    discount_value?: number;
   };
 }

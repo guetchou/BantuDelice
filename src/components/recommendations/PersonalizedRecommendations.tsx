@@ -122,7 +122,9 @@ const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsProps> = 
                     quantity: 1,
                     image_url: item.image_url,
                     description: item.description,
-                    restaurant_id: item.restaurant_id
+                    restaurant_id: item.restaurant_id,
+                    menu_item_id: item.id,
+                    total: item.price
                   })}
                 >
                   <ShoppingCart className="h-4 w-4" />

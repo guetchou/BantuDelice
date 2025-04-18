@@ -106,6 +106,7 @@ export const useCart = () => {
     
     // Fonctionnalités étendues
     addToCart,
+    removeItem: context.removeItem,
     removeFromCart,
     clearCartWithConfirmation,
     isInCart,

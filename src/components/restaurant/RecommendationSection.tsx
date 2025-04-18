@@ -59,7 +59,9 @@ const RecommendationSection: React.FC<RecommendationSectionProps> = ({
       image_url: item.image_url,
       description: item.description || '',
       restaurant_id: restaurantId,
-      quantity: 1
+      quantity: 1,
+      menu_item_id: item.id,
+      total: item.price
     });
     
     toast({
