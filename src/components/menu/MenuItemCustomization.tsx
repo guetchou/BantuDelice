@@ -35,9 +35,14 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [quantity, setQuantity] = useState(1);
 
-  // Traiter les options de personnalisation en s'assurant que c'est un objet
-  const customizationOptions = item.customization_options as Record<string, CustomizationOption> || {};
-  const hasCustomizationOptions = Object.keys(customizationOptions || {}).length > 0;
+  // Process customization options safely
+  const customizationOptions = typeof item.customization_options === 'object' && item.customization_options 
+    ? (Array.isArray(item.customization_options) 
+        ? {} // If it's an array, convert to an empty object
+        : item.customization_options as Record<string, CustomizationOption>) 
+    : {};
+    
+  const hasCustomizationOptions = Object.keys(customizationOptions).length > 0;
 
   const handleOptionChange = (
     optionName: string, 
@@ -55,7 +60,7 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
         ));
       }
     } else {
-      // Pour les options radio, on remplace l'option existante
+      // For radio options, replace existing option
       const filteredOptions = selectedOptions.filter(option => option.name !== optionName);
       setSelectedOptions([...filteredOptions, { name: optionName, value: optionValue, price }]);
     }
@@ -94,8 +99,8 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
       image_url: item.image_url,
       quantity,
       options: cartItemOptions,
-      special_instructions: specialInstructions,
-      restaurant_id: item.restaurant_id
+      restaurant_id: item.restaurant_id,
+      special_instructions: specialInstructions
     });
     onClose();
   };

@@ -20,6 +20,13 @@ export interface CartItem {
   options?: CartItemOption[];
   category?: string;
   size?: string;
+  special_instructions?: string;
+  combo_item?: {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+  };
 }
 
 export interface CartState {

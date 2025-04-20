@@ -1,142 +1,106 @@
 
-import { useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, Percent } from "lucide-react";
-import type { MenuItem } from '@/types/restaurant';
+import { Button } from "@/components/ui/button";
+import { Leaf, Plus, Clock } from "lucide-react";
+import { useToast } from '@/hooks/use-toast';
+import { MenuItem } from '@/types/restaurant';
 
 interface MenuItemCardProps {
   item: MenuItem;
-  onAddToCart: () => void;
-  onRemoveFromCart: (itemId: string) => void;
-  quantity: number;
+  onAddToCart?: () => void;
+  onRemoveFromCart?: () => void;
+  quantity?: number;
   showNutritionalInfo?: boolean;
+  onClick?: () => void;
 }
 
-const MenuItemCard = ({ 
+const MenuItemCard: React.FC<MenuItemCardProps> = ({ 
   item, 
   onAddToCart,
   onRemoveFromCart,
-  quantity,
-  showNutritionalInfo = false
-}: MenuItemCardProps) => {
-  const [expanded, setExpanded] = useState(false);
+  quantity = 0,
+  showNutritionalInfo = false,
+  onClick 
+}) => {
+  const { toast } = useToast();
   
-  const hasPromotion = item.promotional_data && item.promotional_data.is_on_promotion;
-  const originalPrice = item.price;
-  const discountedPrice = hasPromotion && item.promotional_data?.discount_type === 'percentage'
-    ? originalPrice * (1 - (item.promotional_data.discount_value / 100))
-    : hasPromotion && item.promotional_data?.discount_type === 'fixed_amount'
-      ? originalPrice - item.promotional_data.discount_value
-      : originalPrice;
+  const handleAddToCart = () => {
+    if (onAddToCart) {
+      onAddToCart();
+      toast({
+        title: "Ajouté au panier",
+        description: `${item.name} a été ajouté à votre panier`
+      });
+    }
+  };
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+  };
+  
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow bg-white/5 backdrop-blur-sm border-gray-800">
-      <div className="relative">
-        {item.image_url && (
-          <div className="h-40 w-full">
-            <img 
-              src={item.image_url} 
-              alt={item.name} 
-              className="h-full w-full object-cover"
-            />
-          </div>
-        )}
-        
-        {hasPromotion && (
-          <Badge className="absolute top-2 right-2 bg-orange-500">
-            <Percent className="h-3 w-3 mr-1" />
-            {item.promotional_data?.discount_type === 'percentage' 
-              ? `-${item.promotional_data.discount_value}%` 
-              : `-${item.promotional_data.discount_value} XAF`}
-          </Badge>
-        )}
-      </div>
-      
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-white text-lg">{item.name}</h3>
-          {hasPromotion ? (
-            <div className="text-right">
-              <span className="text-gray-400 line-through text-sm mr-2">{originalPrice.toLocaleString()} XAF</span>
-              <span className="text-white font-bold">{Math.round(discountedPrice).toLocaleString()} XAF</span>
+    <Card 
+      className="overflow-hidden flex flex-col h-full transition-all hover:shadow-md cursor-pointer" 
+      onClick={handleClick}
+    >
+      {item.image_url && (
+        <div className="relative h-36 overflow-hidden">
+          <img 
+            src={item.image_url} 
+            alt={item.name} 
+            className="w-full h-full object-cover"
+          />
+          {(item.is_vegetarian || item.is_vegan || item.is_gluten_free) && (
+            <div className="absolute top-2 right-2 flex flex-col gap-1">
+              {item.is_vegetarian && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
+                  <Leaf className="h-3 w-3" />
+                  <span className="text-xs">Végétarien</span>
+                </Badge>
+              )}
+              {item.is_vegan && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800">Vegan</Badge>
+              )}
+              {item.is_gluten_free && (
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Sans Gluten</Badge>
+              )}
             </div>
-          ) : (
-            <span className="text-white font-bold">{originalPrice.toLocaleString()} XAF</span>
+          )}
+        </div>
+      )}
+      <CardContent className="p-4 flex-grow flex flex-col">
+        <div className="mb-auto">
+          <div className="flex justify-between items-start mb-1">
+            <h3 className="font-medium">{item.name}</h3>
+            <Badge variant="outline" className="font-semibold">
+              {item.price.toLocaleString('fr-FR')} FCFA
+            </Badge>
+          </div>
+          {item.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{item.description}</p>
           )}
         </div>
         
-        {item.description && (
-          <p className={`text-gray-300 text-sm mb-2 ${!expanded && 'line-clamp-2'}`}>
-            {item.description}
-          </p>
-        )}
-        
-        {item.description && item.description.length > 100 && (
-          <button 
-            className="text-xs text-gray-400 hover:text-white mb-2" 
-            onClick={() => setExpanded(!expanded)}
-          >
-            {expanded ? 'Voir moins' : 'Voir plus'}
-          </button>
-        )}
-        
-        {showNutritionalInfo && item.nutritional_info && (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 mb-3 text-xs text-gray-300">
-            {item.nutritional_info.calories && (
-              <div>Calories: {item.nutritional_info.calories}</div>
-            )}
-            {item.nutritional_info.protein && (
-              <div>Protéines: {item.nutritional_info.protein}g</div>
-            )}
-            {item.nutritional_info.carbs && (
-              <div>Glucides: {item.nutritional_info.carbs}g</div>
-            )}
-            {item.nutritional_info.fat && (
-              <div>Lipides: {item.nutritional_info.fat}g</div>
-            )}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t">
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Clock className="h-3 w-3 mr-1" />
+            <span>{item.preparation_time || 15} min</span>
           </div>
-        )}
-        
-        <div className="flex justify-between items-center mt-4">
-          {quantity > 0 ? (
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8 text-orange-500 border-orange-500"
-                onClick={() => onRemoveFromCart(item.id)}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="text-white font-medium">{quantity}</span>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8 text-orange-500 border-orange-500"
-                onClick={onAddToCart}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <Button 
-              onClick={onAddToCart}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-              size="sm"
-            >
+          {onAddToCart && (
+            <Button size="sm" onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart();
+            }}>
+              <Plus className="h-4 w-4 mr-1" />
               Ajouter
             </Button>
           )}
-          
-          {item.preparation_time && (
-            <div className="text-xs text-gray-400">
-              {item.preparation_time} min
-            </div>
-          )}
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

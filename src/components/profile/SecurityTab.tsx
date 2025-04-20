@@ -3,8 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserProfile } from "@/hooks/useUser";
 import { formatDate } from "@/utils/dateUtils";
 
+// Extended UserProfile interface to include additional fields
+interface ExtendedUserProfile extends UserProfile {
+  last_login?: string;
+  status?: string;
+}
+
 interface SecurityTabProps {
-  user: UserProfile | null;
+  user: ExtendedUserProfile | null;
 }
 
 const SecurityTab = ({ user }: SecurityTabProps) => {

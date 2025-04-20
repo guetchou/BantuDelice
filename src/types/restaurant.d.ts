@@ -157,7 +157,7 @@ export interface MenuItem {
   available: boolean;
   created_at: string;
   dietary_preferences?: string[];
-  customization_options?: MenuCustomizationOption[];
+  customization_options?: MenuCustomizationOption[] | Record<string, any>;
   popularity_score?: number;
   featured?: boolean;
   stock_level?: number;

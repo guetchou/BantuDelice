@@ -7,8 +7,15 @@ import { Mail, Phone, Shield } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
 import ProfilePhotoUpload from "./ProfilePhotoUpload";
 
+// Extended UserProfile interface to include additional fields
+interface ExtendedUserProfile extends UserProfile {
+  phone?: string;
+  status?: string;
+  last_login?: string;
+}
+
 interface ProfileSummaryProps {
-  user: UserProfile | null;
+  user: ExtendedUserProfile | null;
   onAvatarUpdate: (url: string) => void;
 }
 

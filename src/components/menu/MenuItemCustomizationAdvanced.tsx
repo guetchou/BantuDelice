@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   AlertDialog,
@@ -9,22 +10,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { MenuItem } from "@/types/menu";
-import { CartItem } from "@/types/cart";
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { MenuItem } from "@/types/restaurant";
+import { CartItem, CartItemOption } from "@/types/cart";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Info, AlertCircle, CheckCircle2 } from "lucide-react"
+} from "@/components/ui/accordion";
+import { Info, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface MenuItemCustomizationAdvancedProps {
   item: MenuItem;
@@ -138,11 +139,14 @@ const MenuItemCustomizationAdvanced = ({
     }));
 
     const cartItem: CartItem = {
-      ...item,
+      id: item.id,
       menu_item_id: item.id,
-      options: cartItemOptions,
+      name: item.name,
+      price: item.price,
       quantity: quantity,
       total: totalPrice,
+      restaurant_id: item.restaurant_id,
+      options: cartItemOptions,
     };
     
     if (specialInstructions && specialInstructions.trim() !== '') {

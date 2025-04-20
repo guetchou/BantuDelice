@@ -8,6 +8,14 @@ interface CartContextType {
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  // Adding the properties from CartContext.ts
+  state: {
+    items: CartItem[];
+    total: number;
+    count: number;
+    totalItems: number;
+  };
+  updateItemQuantity: (itemId: string, quantity: number) => void;
 }
 
 const initialCartState: CartState = {
@@ -19,6 +27,14 @@ const initialCartState: CartState = {
 };
 
 export const CartContext = createContext<CartContextType | undefined>(undefined);
+
+export const useCart = (): CartContextType => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
+};
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartState, setCartState] = useState<CartState>(initialCartState);
@@ -110,8 +126,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCartState(initialCartState);
   };
 
+  // For compatibility with CartContext.ts
+  const updateItemQuantity = updateQuantity;
+  
+  const state = {
+    items: cartState.items,
+    total: cartState.total,
+    count: cartState.items.length,
+    totalItems: cartState.items.reduce((sum, item) => sum + item.quantity, 0)
+  };
+
   return (
-    <CartContext.Provider value={{ cartState, addItem, removeItem, updateQuantity, clearCart }}>
+    <CartContext.Provider value={{ 
+      cartState, 
+      addItem, 
+      removeItem, 
+      updateQuantity, 
+      clearCart,
+      state,
+      updateItemQuantity
+    }}>
       {children}
     </CartContext.Provider>
   );

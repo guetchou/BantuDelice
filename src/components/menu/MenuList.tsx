@@ -20,7 +20,7 @@ const itemAnimation = {
   show: { opacity: 1, y: 0 }
 };
 
-const MenuList = ({ items, onAddToCart, isLoading, showNutritionalInfo }: MenuListProps) => {
+const MenuList = ({ items, onAddToCart, onRemoveFromCart, getQuantity, isLoading, showNutritionalInfo }: MenuListProps) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,8 +76,8 @@ const MenuList = ({ items, onAddToCart, isLoading, showNutritionalInfo }: MenuLi
           <MenuItemCard
             item={item}
             onAddToCart={() => handleAddToCart(item)}
-            onRemoveFromCart={() => {}}
-            quantity={0}
+            onRemoveFromCart={onRemoveFromCart ? () => onRemoveFromCart(item.id) : undefined}
+            quantity={getQuantity ? getQuantity(item.id) : 0}
             showNutritionalInfo={showNutritionalInfo}
           />
         </motion.div>

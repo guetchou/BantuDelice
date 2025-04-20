@@ -49,6 +49,12 @@ export const restaurantService = {
     }
   },
 
+  // Alias for getAll to maintain compatibility
+  async getAllRestaurants(filters?: RestaurantFilters): Promise<Restaurant[]> {
+    const response = await this.getAll(filters);
+    return response.data || [];
+  },
+
   // Get a restaurant by ID
   async getById(id: string): Promise<ApiResponse<Restaurant>> {
     try {
@@ -65,6 +71,12 @@ export const restaurantService = {
       console.error('Error fetching restaurant:', error);
       return { data: null, error: error.message };
     }
+  },
+
+  // Alias for getById to maintain compatibility
+  async getRestaurantById(id: string): Promise<Restaurant | null> {
+    const response = await this.getById(id);
+    return response.data;
   },
 
   // Get menu items for a restaurant
@@ -126,6 +138,25 @@ export const restaurantService = {
       return { data, error: null };
     } catch (error) {
       console.error('Error updating menu item availability:', error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Update menu item stock
+  async updateMenuItemStock(itemId: string, stockLevel: number): Promise<ApiResponse<MenuItem>> {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .update({ stock_level: stockLevel })
+        .eq('id', itemId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error updating menu item stock:', error);
       return { data: null, error: error.message };
     }
   },
