@@ -93,8 +93,8 @@ export interface MenuPromotion {
   description: string;
   discount_type: 'percentage' | 'fixed_amount' | 'free_item';
   discount_value: number;
-  valid_from: string;
-  valid_to: string;
+  valid_from?: string;
+  valid_to?: string;
   promotion_hours?: {
     days: string[];
     start: string;
@@ -157,7 +157,7 @@ export interface MenuItem {
   available: boolean;
   created_at: string;
   dietary_preferences?: string[];
-  customization_options?: Record<string, any> | MenuCustomizationOption[];
+  customization_options?: MenuCustomizationOption[];
   popularity_score?: number;
   featured?: boolean;
   stock_level?: number;
@@ -180,6 +180,7 @@ export interface MenuItem {
   ingredients?: string[];
   nutritional_score?: number;
   average_rating?: number;
+  profit_margin?: number;
   promotional_data?: {
     is_on_promotion?: boolean;
     discount_percentage?: number;
@@ -197,4 +198,10 @@ export interface RestaurantFilters {
   deliveryTime?: number;
   openNow?: boolean;
   search?: string;
+  distance?: number;
+  isOpen?: boolean;
+  hasDelivery?: boolean;
+  hasPickup?: boolean;
+  price_range?: [number, number];
+  cuisine_type?: string[];
 }

@@ -1,33 +1,32 @@
 
-export interface CartItem {
-  id: string;
-  menu_item_id: string;
-  quantity: number;
-  name: string;
-  price: number;
-  total: number;
-  options?: CartItemOption[];
-  notes?: string;
-  combo_item?: any;
-  restaurant_id?: string;
-  image_url?: string;
-  special_instructions?: string;
-  description?: string;
-}
-
 export interface CartItemOption {
   id: string;
   name: string;
   value: string;
+  price?: number;
+  quantity: number;
+}
+
+export interface CartItem {
+  id: string;
+  menu_item_id: string;
+  name: string;
   price: number;
   quantity: number;
+  total: number;
+  image_url?: string;
+  restaurant_id?: string;
+  description?: string;
+  options?: CartItemOption[];
+  category?: string;
+  size?: string;
 }
 
 export interface CartState {
   items: CartItem[];
-  restaurant_id?: string;
   subtotal: number;
   tax: number;
   total: number;
   delivery_fee: number;
+  restaurant_id?: string;
 }

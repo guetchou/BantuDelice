@@ -2,7 +2,7 @@
 import type { CartItem } from "@/types/cart";
 import type { MenuItem } from "@/types/restaurant";
 
-export { MenuItem };  // Export MenuItem type explicitly
+export type { MenuItem };  // Export MenuItem type explicitly
 
 export interface MenuItemCardProps {
   item: MenuItem;

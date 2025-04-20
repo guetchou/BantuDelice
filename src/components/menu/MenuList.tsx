@@ -1,7 +1,9 @@
+
 import { MenuItem, MenuListProps } from "./types";
 import MenuItemCard from "@/components/restaurant/MenuItemCard";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CartItem } from "@/types/cart";
 
 const container = {
   hidden: { opacity: 0 },
@@ -41,6 +43,23 @@ const MenuList = ({ items, onAddToCart, isLoading, showNutritionalInfo }: MenuLi
     );
   }
 
+  const handleAddToCart = (item: MenuItem) => {
+    const cartItem: CartItem = {
+      id: item.id,
+      menu_item_id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      total: item.price,
+      description: item.description,
+      image_url: item.image_url,
+      restaurant_id: item.restaurant_id,
+      category: item.category
+    };
+    
+    onAddToCart(cartItem);
+  };
+
   return (
     <motion.div
       variants={container}
@@ -56,7 +75,7 @@ const MenuList = ({ items, onAddToCart, isLoading, showNutritionalInfo }: MenuLi
         >
           <MenuItemCard
             item={item}
-            onAddToCart={() => onAddToCart(item)}
+            onAddToCart={() => handleAddToCart(item)}
             onRemoveFromCart={() => {}}
             quantity={0}
             showNutritionalInfo={showNutritionalInfo}

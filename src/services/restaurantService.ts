@@ -1,51 +1,56 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { Restaurant, BusinessHours, MenuItem, RestaurantFilters } from '@/types/restaurant';
+import { Restaurant, MenuItem, RestaurantFilters, MenuPromotion } from '@/types/restaurant';
+
+// Define ApiResponse type
+export interface ApiResponse<T> {
+  data: T | null;
+  error: string | null;
+}
 
 export const restaurantService = {
   // Get all restaurants with optional filters
-  getAllRestaurants: async (filters?: RestaurantFilters): Promise<Restaurant[]> => {
+  async getAll(filters?: RestaurantFilters): Promise<ApiResponse<Restaurant[]>> {
     try {
-      console.log('Fetching restaurants with filters:', filters);
-      
-      let query = supabase
-        .from('restaurants')
-        .select('*');
+      let query = supabase.from('restaurants').select('*');
 
+      // Apply filters if provided
       if (filters) {
-        // Apply cuisine type filter if provided
-        if (filters.cuisine && filters.cuisine.length > 0) {
+        if (filters.cuisine) {
           query = query.in('cuisine_type', filters.cuisine);
         }
         
-        // Apply rating filter if provided
         if (filters.rating) {
           query = query.gte('average_rating', filters.rating);
         }
         
-        // Apply open now filter if provided
+        if (filters.priceRange) {
+          query = query.gte('price_range', filters.priceRange[0])
+                       .lte('price_range', filters.priceRange[1]);
+        }
+        
         if (filters.openNow) {
           query = query.eq('is_open', true);
+        }
+        
+        if (filters.search) {
+          query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%,cuisine_type.ilike.%${filters.search}%`);
         }
       }
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error('Error fetching restaurants:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      return data as Restaurant[];
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de charger les restaurants');
-      return [];
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error fetching restaurants:', error);
+      return { data: null, error: error.message };
     }
   },
 
-  // Get a single restaurant by ID
-  getRestaurantById: async (id: string): Promise<Restaurant | null> => {
+  // Get a restaurant by ID
+  async getById(id: string): Promise<ApiResponse<Restaurant>> {
     try {
       const { data, error } = await supabase
         .from('restaurants')
@@ -53,253 +58,223 @@ export const restaurantService = {
         .eq('id', id)
         .single();
 
-      if (error) {
-        console.error('Error fetching restaurant:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (!data) {
-        return null;
-      }
-
-      // Parse business hours from JSON if needed
-      let businessHours: BusinessHours;
-      try {
-        if (data.business_hours) {
-          businessHours = typeof data.business_hours === 'string' 
-            ? JSON.parse(data.business_hours)
-            : data.business_hours as unknown as BusinessHours;
-          
-          data.business_hours = businessHours;
-        }
-      } catch (e) {
-        console.error("Error parsing business hours:", e);
-      }
-
-      return data as Restaurant;
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de charger les détails du restaurant');
-      return null;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error fetching restaurant:', error);
+      return { data: null, error: error.message };
     }
   },
 
   // Get menu items for a restaurant
-  getMenuItems: async (restaurantId: string): Promise<MenuItem[]> => {
+  async getMenuItems(restaurantId: string): Promise<ApiResponse<MenuItem[]>> {
     try {
       const { data, error } = await supabase
         .from('menu_items')
         .select('*')
         .eq('restaurant_id', restaurantId);
 
-      if (error) {
-        console.error('Error fetching menu items:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      return data as MenuItem[];
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de charger le menu');
-      return [];
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+      return { data: null, error: error.message };
     }
   },
 
-  // Update restaurant details
-  updateRestaurant: async (id: string, restaurantData: Partial<Restaurant>): Promise<Restaurant | null> => {
+  // Get menu items grouped by category
+  async getMenu(restaurantId: string): Promise<ApiResponse<Record<string, MenuItem[]>>> {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('restaurant_id', restaurantId);
+
+      if (error) throw error;
+
+      // Group items by category
+      const menu: Record<string, MenuItem[]> = {};
+      data.forEach(item => {
+        const category = item.category || 'Uncategorized';
+        if (!menu[category]) {
+          menu[category] = [];
+        }
+        menu[category].push(item);
+      });
+
+      return { data: menu, error: null };
+    } catch (error) {
+      console.error('Error fetching menu:', error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Update menu item availability
+  async updateMenuItemAvailability(itemId: string, available: boolean): Promise<ApiResponse<MenuItem>> {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .update({ available })
+        .eq('id', itemId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error updating menu item availability:', error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Update restaurant status (open/closed)
+  async updateStatus(restaurantId: string, isOpen: boolean): Promise<ApiResponse<Restaurant>> {
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .update(restaurantData)
+        .update({ is_open: isOpen })
+        .eq('id', restaurantId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error updating restaurant status:', error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Get special hours for a restaurant
+  async getSpecialHours(restaurantId: string): Promise<ApiResponse<any[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('restaurant_special_hours')
+        .select('*')
+        .eq('restaurant_id', restaurantId);
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error fetching special hours:', error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Set special hours for a restaurant
+  async setSpecialHours(restaurantId: string, specialHours: any): Promise<ApiResponse<any>> {
+    try {
+      const { data, error } = await supabase
+        .from('restaurant_special_hours')
+        .upsert({ 
+          restaurant_id: restaurantId,
+          ...specialHours
+        })
+        .select();
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error setting special hours:', error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Delete special hours for a restaurant
+  async deleteSpecialHours(specialHoursId: string): Promise<ApiResponse<any>> {
+    try {
+      const { data, error } = await supabase
+        .from('restaurant_special_hours')
+        .delete()
+        .eq('id', specialHoursId);
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error deleting special hours:', error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Update a restaurant
+  async updateRestaurant(id: string, data: Partial<Restaurant>): Promise<ApiResponse<Restaurant>> {
+    try {
+      const { data: updatedData, error } = await supabase
+        .from('restaurants')
+        .update(data)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) {
-        console.error('Error updating restaurant:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      toast.success('Restaurant mis à jour avec succès');
-      return data as Restaurant;
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de mettre à jour le restaurant');
-      return null;
+      return { data: updatedData, error: null };
+    } catch (error) {
+      console.error('Error updating restaurant:', error);
+      return { data: null, error: error.message };
     }
   },
 
-  // Create a menu item
-  createMenuItem: async (menuItem: Omit<MenuItem, 'id' | 'created_at'>): Promise<MenuItem | null> => {
+  // Create a new menu item
+  async createMenuItem(menuItem: Omit<MenuItem, 'id' | 'created_at'>): Promise<ApiResponse<MenuItem>> {
     try {
       const { data, error } = await supabase
         .from('menu_items')
-        .insert([{
-          ...menuItem,
-          created_at: new Date().toISOString()
-        }])
+        .insert(menuItem)
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating menu item:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      toast.success('Plat ajouté avec succès');
-      return data as MenuItem;
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible d\'ajouter le plat');
-      return null;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error creating menu item:', error);
+      return { data: null, error: error.message };
     }
   },
 
   // Update a menu item
-  updateMenuItem: async (id: string, menuItemData: Partial<MenuItem>): Promise<MenuItem | null> => {
+  async updateMenuItem(id: string, data: Partial<MenuItem>): Promise<ApiResponse<MenuItem>> {
     try {
-      const { data, error } = await supabase
+      const { data: updatedData, error } = await supabase
         .from('menu_items')
-        .update(menuItemData)
+        .update(data)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) {
-        console.error('Error updating menu item:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      toast.success('Plat mis à jour avec succès');
-      return data as MenuItem;
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de mettre à jour le plat');
-      return null;
+      return { data: updatedData, error: null };
+    } catch (error) {
+      console.error('Error updating menu item:', error);
+      return { data: null, error: error.message };
     }
   },
 
   // Delete a menu item
-  deleteMenuItem: async (id: string): Promise<boolean> => {
+  async deleteMenuItem(id: string): Promise<ApiResponse<null>> {
     try {
       const { error } = await supabase
         .from('menu_items')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('Error deleting menu item:', error);
-        throw error;
-      }
-
-      toast.success('Plat supprimé avec succès');
-      return true;
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de supprimer le plat');
-      return false;
-    }
-  },
-
-  // Update restaurant status
-  updateStatus: async (id: string, isOpen: boolean): Promise<any> => {
-    try {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .update({ is_open: isOpen })
-        .eq('id', id)
-        .select();
-
-      if (error) {
-        console.error('Error updating restaurant status:', error);
-        throw error;
-      }
-
-      toast.success('Statut du restaurant mis à jour');
-      return data;
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de mettre à jour le statut du restaurant');
-      return null;
-    }
-  },
-
-  // Get special hours for a restaurant
-  getSpecialHours: async (restaurantId: string): Promise<any> => {
-    try {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('special_hours')
-        .eq('id', restaurantId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching special hours:', error);
-        throw error;
-      }
-
-      return data.special_hours || {};
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de charger les heures spéciales');
-      return {};
-    }
-  },
-
-  // Set special hours for a restaurant
-  setSpecialHours: async (restaurantId: string, specialHours: any): Promise<any> => {
-    try {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .update({ special_hours: specialHours })
-        .eq('id', restaurantId)
-        .select();
-
-      if (error) {
-        console.error('Error updating special hours:', error);
-        throw error;
-      }
-
-      toast.success('Heures spéciales mises à jour');
-      return data;
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de mettre à jour les heures spéciales');
-      return null;
-    }
-  },
-  
-  // Delete special hours for a restaurant
-  deleteSpecialHours: async (restaurantId: string, dateKey: string): Promise<any> => {
-    try {
-      // First get the current special hours
-      const { data: currentData, error: fetchError } = await supabase
-        .from('restaurants')
-        .select('special_hours')
-        .eq('id', restaurantId)
-        .single();
-      
-      if (fetchError) throw fetchError;
-      
-      // Remove the specific date from special hours
-      const specialHours = currentData.special_hours || {};
-      delete specialHours[dateKey];
-      
-      // Update with the modified special_hours
-      const { data, error } = await supabase
-        .from('restaurants')
-        .update({ special_hours: specialHours })
-        .eq('id', restaurantId)
-        .select();
-
       if (error) throw error;
 
-      toast.success('Heures spéciales supprimées');
-      return data;
-    } catch (err) {
-      console.error('Restaurant service error:', err);
-      toast.error('Impossible de supprimer les heures spéciales');
-      return null;
+      return { data: null, error: null };
+    } catch (error) {
+      console.error('Error deleting menu item:', error);
+      return { data: null, error: error.message };
     }
   }
 };
+
+export default restaurantService;
