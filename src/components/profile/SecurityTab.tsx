@@ -8,6 +8,12 @@ interface SecurityTabProps {
 }
 
 const SecurityTab = ({ user }: SecurityTabProps) => {
+  // Helper function to safely format dates or return a default value
+  const safeFormatDate = (dateString?: string) => {
+    if (!dateString) return 'Inconnue';
+    return formatDate(dateString);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -25,7 +31,7 @@ const SecurityTab = ({ user }: SecurityTabProps) => {
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Connexions récentes</h3>
             <p className="text-sm text-gray-500">
-              Dernière connexion: {user && user.last_login ? formatDate(user.last_login) : 'Inconnue'}
+              Dernière connexion: {user?.last_login ? safeFormatDate(user.last_login) : 'Inconnue'}
             </p>
           </div>
           

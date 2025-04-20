@@ -84,6 +84,14 @@ export const useCart = () => {
   const totalItems = context.cartState.items.reduce((sum, item) => sum + item.quantity, 0);
   const updateItemQuantity = context.updateQuantity;
   
+  // Add state property for compatibility
+  const state = {
+    items: context.cartState.items,
+    total: context.cartState.total,
+    count: context.cartState.items.length,
+    totalItems: totalItems
+  };
+  
   return {
     // État du panier
     cartState: context.cartState,
@@ -97,16 +105,10 @@ export const useCart = () => {
     total,
     totalItems,
     updateItemQuantity,
-    state: {
-      items: context.cartState.items,
-      total: context.cartState.total,
-      count: context.cartState.items.length,
-      totalItems
-    },
+    state,
     
     // Fonctionnalités étendues
     addToCart,
-    removeItem: context.removeItem,
     removeFromCart,
     clearCartWithConfirmation,
     isInCart,

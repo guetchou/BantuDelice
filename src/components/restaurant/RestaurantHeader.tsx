@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Star, Clock, MapPin, Phone, Globe, ShareIcon, Heart, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -46,7 +45,6 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
     }
   };
 
-  // Format business hours for display
   const formatBusinessHours = () => {
     if (!restaurant.business_hours || !restaurant.business_hours.regular) {
       return "Horaires non disponibles";
@@ -63,7 +61,6 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
     return `${hours.open} - ${hours.close}`;
   };
 
-  // Récupérer les jours et horaires de la semaine
   const getWeekSchedule = () => {
     if (!restaurant.business_hours || !restaurant.business_hours.regular) {
       return [];
@@ -95,7 +92,6 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
   return (
     <div className="w-full">
       <div className="relative h-60 md:h-80 rounded-lg overflow-hidden">
-        {/* Banner Image */}
         <img
           src={restaurant.banner_image_url || '/placeholder-restaurant-banner.jpg'}
           alt={restaurant.name}
@@ -103,7 +99,6 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
         
-        {/* Restaurant Logo */}
         <div className="absolute left-6 bottom-6 flex items-end gap-4">
           <div className="w-20 h-20 md:w-24 md:h-24 bg-white rounded-lg overflow-hidden border-4 border-white shadow-lg">
             <img
@@ -137,7 +132,6 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
           </div>
         </div>
         
-        {/* Action Buttons */}
         <div className="absolute top-4 right-4 flex gap-2">
           <Button 
             variant="ghost" 
@@ -159,7 +153,6 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
         </div>
       </div>
       
-      {/* Restaurant details below banner */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <p className="text-gray-300 mb-4">{restaurant.description}</p>
@@ -167,7 +160,7 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2 text-gray-300">
               <MapPin className="w-5 h-5" />
-              <span>{restaurant.address}</span>
+              <span>Emplacement</span>
             </div>
             
             {restaurant.phone && (
@@ -193,7 +186,6 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
               </div>
             )}
             
-            {/* Horaires avec dropdown */}
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-gray-300">
                 <Clock className="w-5 h-5" />
@@ -250,45 +242,48 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
                 </Badge>
               )}
               
-              {restaurant.minimum_order !== undefined && restaurant.minimum_order > 0 && (
-                <Badge variant="outline">
-                  Commande min. {restaurant.minimum_order.toLocaleString()} XAF
-                </Badge>
+              {restaurant.min_order && (
+                <div className="flex items-center gap-2">
+                  <Banknote className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm">
+                    Commande min.: {restaurant.min_order.toLocaleString()} XAF
+                  </span>
+                </div>
+              )}
+              
+              {restaurant.special_features && restaurant.special_features.length > 0 && (
+                <div>
+                  <h4 className="text-white text-sm font-medium mb-2">Services</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {restaurant.special_features.map((feature, index) => (
+                      <Badge key={index} variant="secondary" className="bg-gray-700">
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {restaurant.payment_methods && restaurant.payment_methods.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Moyens de paiement</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {restaurant.payment_methods.map((method) => (
+                      <Badge key={method} variant="outline">
+                        {method}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {restaurant.estimated_delivery_time && (
+                <div className="flex items-center gap-2 text-sm text-gray-300">
+                  <Clock className="h-4 w-4" />
+                  <span>Livraison estimée: {restaurant.estimated_delivery_time} min</span>
+                </div>
               )}
             </div>
-            
-            {restaurant.special_features && restaurant.special_features.length > 0 && (
-              <div>
-                <h4 className="text-white text-sm font-medium mb-2">Services</h4>
-                <div className="flex flex-wrap gap-2">
-                  {restaurant.special_features.map((feature, index) => (
-                    <Badge key={index} variant="secondary" className="bg-gray-700">
-                      {feature}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {restaurant.payment_methods && restaurant.payment_methods.length > 0 && (
-              <div>
-                <h4 className="text-white text-sm font-medium mb-2">Moyens de paiement acceptés</h4>
-                <div className="flex flex-wrap gap-2">
-                  {restaurant.payment_methods.map((method, index) => (
-                    <Badge key={index} variant="outline">
-                      {method}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {restaurant.estimated_delivery_time && (
-              <div className="flex items-center gap-2 text-sm text-gray-300">
-                <Clock className="h-4 w-4" />
-                <span>Livraison estimée: {restaurant.estimated_delivery_time} min</span>
-              </div>
-            )}
           </div>
         </div>
       </div>

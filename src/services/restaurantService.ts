@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Restaurant, BusinessHours, MenuItem, RestaurantFilters } from '@/types/restaurant';
@@ -199,6 +198,74 @@ export const restaurantService = {
       console.error('Restaurant service error:', err);
       toast.error('Impossible de supprimer le plat');
       return false;
+    }
+  },
+
+  // Update restaurant status
+  updateStatus: async (id: string, isOpen: boolean): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .update({ is_open: isOpen })
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error('Error updating restaurant status:', error);
+        throw error;
+      }
+
+      toast.success('Statut du restaurant mis à jour');
+      return data;
+    } catch (err) {
+      console.error('Restaurant service error:', err);
+      toast.error('Impossible de mettre à jour le statut du restaurant');
+      return null;
+    }
+  },
+
+  // Get special hours for a restaurant
+  getSpecialHours: async (restaurantId: string): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('special_hours')
+        .eq('id', restaurantId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching special hours:', error);
+        throw error;
+      }
+
+      return data.special_hours || {};
+    } catch (err) {
+      console.error('Restaurant service error:', err);
+      toast.error('Impossible de charger les heures spéciales');
+      return {};
+    }
+  },
+
+  // Set special hours for a restaurant
+  setSpecialHours: async (restaurantId: string, specialHours: any): Promise<any> => {
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .update({ special_hours: specialHours })
+        .eq('id', restaurantId)
+        .select();
+
+      if (error) {
+        console.error('Error updating special hours:', error);
+        throw error;
+      }
+
+      toast.success('Heures spéciales mises à jour');
+      return data;
+    } catch (err) {
+      console.error('Restaurant service error:', err);
+      toast.error('Impossible de mettre à jour les heures spéciales');
+      return null;
     }
   }
 };

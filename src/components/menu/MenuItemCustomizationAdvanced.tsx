@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   AlertDialog,
@@ -53,7 +52,6 @@ const MenuItemCustomizationAdvanced = ({
   const [selectedCombo, setSelectedCombo] = useState<MenuItem | null>(null);
   const [showNutritionalInfo, setShowNutritionalInfo] = useState(false);
   
-  // Extract the nutritional information if it exists
   const nutritionalInfo: NutritionalInfo[] = item.nutritional_info ? [
     { label: 'Calories', value: item.nutritional_info.calories, unit: 'kcal' },
     { label: 'Protéines', value: item.nutritional_info.protein, unit: 'g' },
@@ -63,7 +61,6 @@ const MenuItemCustomizationAdvanced = ({
   ] : [];
 
   useEffect(() => {
-    // Initialize selectedCustomizations based on item.customization_options
     if (item.customization_options) {
       const initialCustomizations: { [category: string]: { [option: string]: boolean } } = {};
       Object.keys(item.customization_options).forEach(category => {
@@ -77,10 +74,8 @@ const MenuItemCustomizationAdvanced = ({
   }, [item]);
 
   useEffect(() => {
-    // Calculate total price based on base price, customizations, and combos
     let calculatedPrice = item.price;
     
-    // Add customization costs
     Object.entries(selectedCustomizations).forEach(([category, options]) => {
       Object.entries(options).forEach(([option, isSelected]) => {
         if (isSelected) {
@@ -92,13 +87,10 @@ const MenuItemCustomizationAdvanced = ({
       });
     });
     
-    // Add combo item price (with potential discount)
     if (selectedCombo) {
-      // Apply a 15% discount on the combo item
       calculatedPrice += selectedCombo.price * 0.85;
     }
     
-    // Multiply by quantity
     calculatedPrice *= quantity;
     
     setTotalPrice(calculatedPrice);
@@ -137,30 +129,31 @@ const MenuItemCustomizationAdvanced = ({
           })
       );
 
-    // Create cart item
+    const cartItemOptions: CartItemOption[] = selectedOptions.map(option => ({
+      id: `${option.name}-${option.value}`,
+      name: option.name,
+      value: option.value,
+      price: option.price,
+      quantity: 1
+    }));
+
     const cartItem: CartItem = {
       ...item,
-      options: selectedOptions,
+      options: cartItemOptions,
       quantity: quantity,
     };
     
-    // Add special instructions if provided
     if (specialInstructions && specialInstructions.trim() !== '') {
       cartItem.special_instructions = specialInstructions;
     }
 
-    // If combo is selected, add both items or adjust the main item
     if (selectedCombo) {
-      // Option 1: Add the combo as a separate property of the cart item
       cartItem.combo_item = {
         id: selectedCombo.id,
         name: selectedCombo.name,
-        price: Math.round(selectedCombo.price * 0.85), // 15% discount
+        price: Math.round(selectedCombo.price * 0.85),
         quantity: quantity
       };
-      
-      // Option 2 (alternative): Add the combo as a separate cart item
-      // This would be implemented here if preferred
     }
     
     onAddToCart(cartItem);
@@ -174,12 +167,9 @@ const MenuItemCustomizationAdvanced = ({
     setSelectedCombo(selectedCombo?.id === comboItem.id ? null : comboItem);
   };
 
-  // Filter combo recommendations (drinks for food, sides for main dishes, etc.)
   const getRecommendedCombos = () => {
     if (!recommendedItems.length) return [];
     
-    // Get items that would make a good combo with the current item
-    // For example, if current item is a main dish, recommend drinks and sides
     const currentCategory = item.category?.toLowerCase() || '';
     
     let recommendedCategories: string[] = [];
@@ -197,7 +187,7 @@ const MenuItemCustomizationAdvanced = ({
         recItem.id !== item.id &&
         recommendedCategories.some(cat => recCategory.includes(cat))
       );
-    }).slice(0, 3); // Limit to 3 recommendations
+    }).slice(0, 3);
   };
 
   return (

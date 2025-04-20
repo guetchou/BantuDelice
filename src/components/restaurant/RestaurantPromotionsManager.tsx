@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -43,13 +42,13 @@ import { format, isPast, isAfter, isBefore, addDays } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { cn } from "@/lib/utils";
 
 interface RestaurantPromotionsManagerProps {
   restaurantId: string;
   isOwner?: boolean;
 }
 
-// Define schema for the promotion form
 const promotionFormSchema = z.object({
   title: z.string().min(3, {
     message: "Le titre doit comporter au moins 3 caractères",
@@ -74,7 +73,6 @@ const promotionFormSchema = z.object({
   conditions: z.array(z.string()).optional(),
 });
 
-// Infer the type from the schema
 type PromotionFormValues = z.infer<typeof promotionFormSchema>;
 
 export function RestaurantPromotionsManager({ 
@@ -138,7 +136,6 @@ export function RestaurantPromotionsManager({
     try {
       setLoading(true);
       
-      // Validate discount value based on discount type
       if (values.discount_type !== 'free_delivery' && !values.discount_value) {
         toast({
           title: 'Erreur',
@@ -148,7 +145,6 @@ export function RestaurantPromotionsManager({
         return;
       }
       
-      // If discount type is percentage, ensure it's <= 100
       if (values.discount_type === 'percentage' && values.discount_value && values.discount_value > 100) {
         toast({
           title: 'Erreur',
@@ -158,7 +154,6 @@ export function RestaurantPromotionsManager({
         return;
       }
       
-      // Validate dates
       if (values.start_date && values.end_date && isAfter(values.start_date, values.end_date)) {
         toast({
           title: 'Erreur',
@@ -168,8 +163,7 @@ export function RestaurantPromotionsManager({
         return;
       }
       
-      // Prepare the data
-      const promotionData: RestaurantPromotionInsert = {
+      const promotionData: RestaurantPromotion = {
         restaurant_id: restaurantId,
         title: values.title,
         description: values.description || null,
@@ -183,7 +177,6 @@ export function RestaurantPromotionsManager({
       };
       
       if (editingId) {
-        // Update existing promotion
         const { error } = await supabase
           .from('restaurant_promotions')
           .update(promotionData)
@@ -196,7 +189,6 @@ export function RestaurantPromotionsManager({
           description: "La promotion a été mise à jour avec succès"
         });
       } else {
-        // Create new promotion
         const { error } = await supabase
           .from('restaurant_promotions')
           .insert(promotionData);
@@ -209,7 +201,6 @@ export function RestaurantPromotionsManager({
         });
       }
       
-      // Reset form and refresh data
       form.reset();
       setShowForm(false);
       setEditingId(null);
@@ -289,7 +280,6 @@ export function RestaurantPromotionsManager({
           : "La promotion a été activée"
       });
       
-      // Update local state
       setPromotions(prevPromotions =>
         prevPromotions.map(promo =>
           promo.id === id ? { ...promo, active: !currentStatus } : promo
@@ -341,7 +331,6 @@ export function RestaurantPromotionsManager({
     return isAfter(new Date(promotion.start_date), new Date());
   };
 
-  // Determine badge variant based on promotion status
   const getPromotionBadgeVariant = (promotion: RestaurantPromotion) => {
     if (!promotion.active) return "outline";
     if (isPromotionExpired(promotion)) return "destructive";
@@ -630,7 +619,8 @@ export function RestaurantPromotionsManager({
                     <div className="flex justify-end space-x-2">
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="default"
+                        className="bg-green-500 hover:bg-green-600 text-white"
                         onClick={() => setShowForm(false)}
                       >
                         Annuler
