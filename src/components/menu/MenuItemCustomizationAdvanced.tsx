@@ -133,14 +133,16 @@ const MenuItemCustomizationAdvanced = ({
       id: `${option.name}-${option.value}`,
       name: option.name,
       value: option.value,
-      price: option.price,
+      price: option.price || 0,
       quantity: 1
     }));
 
     const cartItem: CartItem = {
       ...item,
+      menu_item_id: item.id,
       options: cartItemOptions,
       quantity: quantity,
+      total: totalPrice,
     };
     
     if (specialInstructions && specialInstructions.trim() !== '') {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -393,7 +392,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ restaurantId }) =
             <div>
               <span className="text-sm font-medium">Impact potentiel:</span>
               <span className="text-sm ml-2 text-green-600">
-                +{pricingOptimization.summary.potentialRevenue.toLocaleString('fr-FR')} FCFA
+                +{formatPrice(priceChangeStats.potentialRevenueIncrease || 0)}
               </span>
             </div>
             <Button>

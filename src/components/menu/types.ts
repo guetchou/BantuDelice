@@ -1,8 +1,8 @@
 
+import type { CartItem } from "@/types/cart";
 import type { MenuItem } from "@/types/restaurant";
-import type { CartItem } from "@/types/order";
 
-export type { MenuItem };  // Export MenuItem type explicitly
+export { MenuItem };  // Export MenuItem type explicitly
 
 export interface MenuItemCardProps {
   item: MenuItem;
@@ -10,6 +10,7 @@ export interface MenuItemCardProps {
   onRemoveFromCart?: (itemId: string) => void;
   quantity?: number;
   showNutritionalInfo?: boolean;
+  onClick?: () => void;
 }
 
 export interface MenuCategory {

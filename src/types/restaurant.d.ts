@@ -64,6 +64,15 @@ export interface BusinessHours {
     open: string;
     close: string;
   };
+  regular?: {
+    monday?: { open: string; close: string; is_closed?: boolean };
+    tuesday?: { open: string; close: string; is_closed?: boolean };
+    wednesday?: { open: string; close: string; is_closed?: boolean };
+    thursday?: { open: string; close: string; is_closed?: boolean };
+    friday?: { open: string; close: string; is_closed?: boolean };
+    saturday?: { open: string; close: string; is_closed?: boolean };
+    sunday?: { open: string; close: string; is_closed?: boolean };
+  };
 }
 
 export interface MenuCustomizationOption {
@@ -129,4 +138,63 @@ export interface Table {
   capacity: number;
   status: string;
   location: string;
+  is_available?: boolean;
+  minimum_guests?: number;
+  maximum_guests?: number;
+  table_number?: string;
+  is_accessible?: boolean;
+  notes?: string;
+}
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category?: string;
+  image_url?: string;
+  restaurant_id: string;
+  available: boolean;
+  created_at: string;
+  dietary_preferences?: string[];
+  customization_options?: Record<string, any> | MenuCustomizationOption[];
+  popularity_score?: number;
+  featured?: boolean;
+  stock_level?: number;
+  nutritional_info?: {
+    calories?: number;
+    proteins?: number;
+    carbs?: number;
+    fats?: number;
+    protein?: number;
+    fat?: number;
+    fiber?: number;
+  };
+  is_combo?: boolean;
+  is_vegetarian?: boolean;
+  is_vegan?: boolean;
+  is_gluten_free?: boolean;
+  is_spicy?: boolean;
+  preparation_time?: number;
+  allergens?: string[];
+  ingredients?: string[];
+  nutritional_score?: number;
+  average_rating?: number;
+  promotional_data?: {
+    is_on_promotion?: boolean;
+    discount_percentage?: number;
+    promotion_hours?: any;
+    original_price?: number;
+    discount_type?: string;
+    discount_value?: number;
+  };
+}
+
+export interface RestaurantFilters {
+  cuisine?: string[];
+  rating?: number;
+  priceRange?: [number, number];
+  deliveryTime?: number;
+  openNow?: boolean;
+  search?: string;
 }

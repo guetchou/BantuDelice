@@ -1,7 +1,7 @@
 
 import { useContext } from 'react';
 import { CartContext } from '@/contexts/CartContext';
-import { CartItem } from '@/types/cart';
+import { CartItem, CartItemOption } from '@/types/cart';
 import { toast } from 'sonner';
 
 /**
@@ -84,7 +84,7 @@ export const useCart = () => {
   const totalItems = context.cartState.items.reduce((sum, item) => sum + item.quantity, 0);
   const updateItemQuantity = context.updateQuantity;
   
-  // Add state property for compatibility
+  // Add state property for compatibility with existing components
   const state = {
     items: context.cartState.items,
     total: context.cartState.total,

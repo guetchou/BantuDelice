@@ -12,20 +12,38 @@ interface RestaurantCardProps {
 
 export default function RestaurantCard({ restaurant, onClick }: RestaurantCardProps) {
   const isOpen = () => {
-    if (!restaurant.business_hours?.regular) return false;
+    if (!restaurant.business_hours) return false;
     const now = new Date();
-    const day = now.toLocaleDateString('en-US', { weekday: 'monday' }).toLowerCase();
-    const hours = restaurant.business_hours.regular[day];
-    if (!hours) return false;
+    const day = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    // Support both formats of business_hours
+    if (restaurant.business_hours.regular && restaurant.business_hours.regular[day]) {
+      const hours = restaurant.business_hours.regular[day];
+      if (!hours) return false;
 
-    const currentTime = now.getHours() * 100 + now.getMinutes();
-    const [openHour, openMin] = hours.open.split(':').map(Number);
-    const [closeHour, closeMin] = hours.close.split(':').map(Number);
+      const currentTime = now.getHours() * 100 + now.getMinutes();
+      const [openHour, openMin] = hours.open.split(':').map(Number);
+      const [closeHour, closeMin] = hours.close.split(':').map(Number);
+      
+      const openTime = openHour * 100 + openMin;
+      const closeTime = closeHour * 100 + closeMin;
+      
+      return currentTime >= openTime && currentTime <= closeTime;
+    } else if (restaurant.business_hours[day]) {
+      const hours = restaurant.business_hours[day];
+      if (!hours) return false;
+
+      const currentTime = now.getHours() * 100 + now.getMinutes();
+      const [openHour, openMin] = hours.open.split(':').map(Number);
+      const [closeHour, closeMin] = hours.close.split(':').map(Number);
+      
+      const openTime = openHour * 100 + openMin;
+      const closeTime = closeHour * 100 + closeMin;
+      
+      return currentTime >= openTime && currentTime <= closeTime;
+    }
     
-    const openTime = openHour * 100 + openMin;
-    const closeTime = closeHour * 100 + closeMin;
-    
-    return currentTime >= openTime && currentTime <= closeTime;
+    return false;
   };
 
   return (
@@ -52,7 +70,11 @@ export default function RestaurantCard({ restaurant, onClick }: RestaurantCardPr
                 {restaurant.cuisine_type}
               </Badge>
             )}
-            {isOpen() ? (
+            {restaurant.is_open !== undefined ? (
+              <Badge variant="secondary" className={restaurant.is_open ? "bg-green-500" : "bg-red-500"}>
+                {restaurant.is_open ? "Ouvert" : "Fermé"}
+              </Badge>
+            ) : isOpen() ? (
               <Badge variant="secondary" className="bg-green-500">
                 Ouvert
               </Badge>
@@ -81,16 +103,16 @@ export default function RestaurantCard({ restaurant, onClick }: RestaurantCardPr
           </p>
 
           <div className="flex items-center gap-4 text-sm text-gray-300 mb-4">
-            {restaurant.rating && (
+            {restaurant.rating !== undefined && (
               <div className="flex items-center">
                 <Star className="w-5 h-5 text-yellow-400" />
                 <span className="ml-1 font-medium">{restaurant.rating.toFixed(1)}</span>
-                <span className="ml-1 text-gray-400">({restaurant.total_ratings})</span>
+                <span className="ml-1 text-gray-400">({restaurant.total_ratings || 0})</span>
               </div>
             )}
             <div className="flex items-center">
               <Clock className="w-4 h-4" />
-              <span className="ml-1">{restaurant.average_prep_time} min</span>
+              <span className="ml-1">{restaurant.average_prep_time || 30} min</span>
             </div>
           </div>
           
@@ -105,14 +127,14 @@ export default function RestaurantCard({ restaurant, onClick }: RestaurantCardPr
                 <div className="flex items-center">
                   <Bike className="w-4 h-4 mr-1" />
                   <span>
-                    {restaurant.delivery_fee === 0 ? 'Livraison gratuite' : `${restaurant.delivery_fee.toLocaleString()} XAF`}
+                    {restaurant.delivery_fee === 0 ? 'Livraison gratuite' : `${restaurant.delivery_fee?.toLocaleString()} XAF`}
                   </span>
                 </div>
               )}
-              {restaurant.minimum_order > 0 && (
+              {(restaurant.minimum_order || restaurant.min_order) > 0 && (
                 <div className="flex items-center">
                   <ShoppingBag className="w-4 h-4 mr-1" />
-                  <span>Min. {restaurant.minimum_order.toLocaleString()} XAF</span>
+                  <span>Min. {(restaurant.minimum_order || restaurant.min_order)?.toLocaleString()} XAF</span>
                 </div>
               )}
             </div>

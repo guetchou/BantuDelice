@@ -117,5 +117,5 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Export default to allow import in App.tsx
+// Export default for importing in App.tsx
 export default CartProvider;

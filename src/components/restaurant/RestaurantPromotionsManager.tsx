@@ -1,732 +1,596 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { RestaurantPromotion, DiscountType } from '@/types/restaurantPromotion';
-import { 
+import React, { useState, useEffect } from 'react';
+import {
   Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
-  CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from '@/components/ui/textarea';
-import { CalendarIcon, Percent, Trash2, Tag, Clock, DollarSign } from "lucide-react";
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { CalendarIcon } from "lucide-react"
+import { format } from 'date-fns';
+import { DateRange } from "react-day-picker";
+import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format, isPast, isAfter, isBefore, addDays } from 'date-fns';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { cn } from "@/lib/utils";
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { supabase } from '@/integrations/supabase/client';
+import { ReloadIcon, Copy, CheckCircle, AlertTriangle } from "lucide-react";
 
 interface RestaurantPromotionsManagerProps {
   restaurantId: string;
-  isOwner?: boolean;
 }
 
-const promotionFormSchema = z.object({
+const promotionSchema = z.object({
   title: z.string().min(3, {
-    message: "Le titre doit comporter au moins 3 caractères",
+    message: "Title must be at least 3 characters.",
   }),
-  description: z.string().optional(),
-  discount_type: z.enum(['percentage', 'fixed_amount', 'free_delivery'] as const),
-  discount_value: z.union([
-    z.number().min(1, {
-      message: "La valeur de la réduction doit être supérieure à 0",
-    }),
-    z.number().optional()
-  ]).optional(),
-  min_order_amount: z.union([
-    z.number().min(0, {
-      message: "Le montant minimum doit être supérieur ou égal à 0",
-    }),
-    z.number().optional()
-  ]).optional(),
-  start_date: z.date().optional(),
-  end_date: z.date().optional(),
-  active: z.boolean().default(true),
+  description: z.string().min(10, {
+    message: "Description must be at least 10 characters.",
+  }),
+  discount_type: z.enum(['percentage', 'fixed_amount']),
+  discount_value: z.number().min(1).max(99),
+  valid_from: z.date(),
+  valid_to: z.date(),
+  promotion_hours: z.array(z.object({
+    days: z.array(z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])),
+    start: z.string(),
+    end: z.string(),
+  })).optional(),
   conditions: z.array(z.string()).optional(),
+  min_order_value: z.number().optional(),
 });
 
-type PromotionFormValues = z.infer<typeof promotionFormSchema>;
-
-export function RestaurantPromotionsManager({ 
-  restaurantId,
-  isOwner = true 
-}: RestaurantPromotionsManagerProps) {
-  const { toast } = useToast();
+const RestaurantPromotionsManager: React.FC<RestaurantPromotionsManagerProps> = ({ restaurantId }) => {
+  const [promotions, setPromotions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [promotions, setPromotions] = useState<RestaurantPromotion[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  
-  const form = useForm<PromotionFormValues>({
-    resolver: zodResolver(promotionFormSchema),
+  const [open, setOpen] = useState(false);
+  const [range, setRange] = React.useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  })
+  const { toast } = useToast();
+  const [isCreating, setIsCreating] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const [copiedPromotionId, setCopiedPromotionId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [promotionToDeleteId, setPromotionToDeleteId] = useState<string | null>(null);
+
+  const form = useForm<z.infer<typeof promotionSchema>>({
+    resolver: zodResolver(promotionSchema),
     defaultValues: {
-      title: '',
-      description: '',
+      title: "",
+      description: "",
       discount_type: 'percentage',
-      discount_value: undefined,
-      min_order_amount: undefined,
-      start_date: new Date(),
-      end_date: addDays(new Date(), 7),
-      active: true,
-      conditions: [],
+      discount_value: 10,
+      valid_from: range?.from || new Date(),
+      valid_to: range?.to || new Date(),
     },
-  });
-  
+  })
+
+  function handleDateChange(date: DateRange | undefined) {
+    setRange(date);
+    form.setValue("valid_from", date?.from || new Date());
+    form.setValue("valid_to", date?.to || new Date());
+  }
+
   useEffect(() => {
-    if (restaurantId) {
-      fetchPromotions();
-    }
-  }, [restaurantId]);
-  
-  const fetchPromotions = async () => {
-    try {
+    const fetchPromotions = async () => {
       setLoading(true);
-      
+      try {
+        const { data, error } = await supabase
+          .from('restaurant_promotions')
+          .select('*')
+          .eq('restaurant_id', restaurantId);
+
+        if (error) {
+          console.error('Error fetching promotions:', error);
+          toast({
+            title: "Error",
+            description: "Failed to fetch promotions",
+            variant: "destructive",
+          });
+        } else {
+          setPromotions(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching promotions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch promotions",
+          variant: "destructive",
+          duration: 5000,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPromotions();
+  }, [restaurantId]);
+
+  const onSubmit = async (values: z.infer<typeof promotionSchema>) => {
+    setIsCreating(true);
+    try {
       const { data, error } = await supabase
         .from('restaurant_promotions')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      setPromotions(data || []);
-    } catch (error) {
-      console.error('Error fetching promotions:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible de charger les promotions",
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const onSubmit = async (values: PromotionFormValues) => {
-    try {
-      setLoading(true);
-      
-      if (values.discount_type !== 'free_delivery' && !values.discount_value) {
+        .insert([{
+          ...values,
+          restaurant_id: restaurantId,
+          valid_from: values.valid_from.toISOString(),
+          valid_to: values.valid_to.toISOString(),
+        }])
+        .select();
+
+      if (error) {
+        console.error('Error creating promotion:', error);
         toast({
-          title: 'Erreur',
-          description: "La valeur de la réduction est requise",
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      if (values.discount_type === 'percentage' && values.discount_value && values.discount_value > 100) {
-        toast({
-          title: 'Erreur',
-          description: "Le pourcentage ne peut pas dépasser 100%",
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      if (values.start_date && values.end_date && isAfter(values.start_date, values.end_date)) {
-        toast({
-          title: 'Erreur',
-          description: "La date de début doit être antérieure à la date de fin",
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      const promotionData: RestaurantPromotion = {
-        restaurant_id: restaurantId,
-        title: values.title,
-        description: values.description || null,
-        discount_type: values.discount_type,
-        discount_value: values.discount_type === 'free_delivery' ? null : values.discount_value,
-        min_order_amount: values.min_order_amount || null,
-        start_date: values.start_date ? values.start_date.toISOString() : null,
-        end_date: values.end_date ? values.end_date.toISOString() : null,
-        active: values.active,
-        conditions: values.conditions || null
-      };
-      
-      if (editingId) {
-        const { error } = await supabase
-          .from('restaurant_promotions')
-          .update(promotionData)
-          .eq('id', editingId);
-          
-        if (error) throw error;
-        
-        toast({
-          title: 'Promotion mise à jour',
-          description: "La promotion a été mise à jour avec succès"
+          title: "Error",
+          description: "Failed to create promotion",
+          variant: "destructive",
         });
       } else {
-        const { error } = await supabase
-          .from('restaurant_promotions')
-          .insert(promotionData);
-          
-        if (error) throw error;
-        
+        setPromotions([...promotions, data[0]]);
         toast({
-          title: 'Promotion créée',
-          description: "La promotion a été créée avec succès"
+          title: "Success",
+          description: "Promotion created successfully",
         });
+        form.reset();
+        setOpen(false);
       }
-      
-      form.reset();
-      setShowForm(false);
-      setEditingId(null);
-      fetchPromotions();
     } catch (error) {
-      console.error('Error saving promotion:', error);
+      console.error('Error creating promotion:', error);
       toast({
-        title: 'Erreur',
-        description: "Impossible d'enregistrer la promotion",
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to create promotion",
+        variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsCreating(false);
     }
   };
-  
-  const editPromotion = (promotion: RestaurantPromotion) => {
-    setEditingId(promotion.id);
-    
-    form.reset({
-      title: promotion.title,
-      description: promotion.description || '',
-      discount_type: promotion.discount_type,
-      discount_value: promotion.discount_value || undefined,
-      min_order_amount: promotion.min_order_amount || undefined,
-      start_date: promotion.start_date ? new Date(promotion.start_date) : undefined,
-      end_date: promotion.end_date ? new Date(promotion.end_date) : undefined,
-      active: promotion.active,
-      conditions: promotion.conditions || [],
-    });
-    
-    setShowForm(true);
-  };
-  
-  const deletePromotion = async (id: string) => {
+
+  const copyPromotion = async (promotion: any) => {
+    setIsCopying(true);
+    setCopiedPromotionId(promotion.id);
     try {
-      setDeletingId(id);
-      
+      const { data, error } = await supabase
+        .from('restaurant_promotions')
+        .insert([{
+          ...promotion,
+          restaurant_id: restaurantId,
+          title: `${promotion.title} (Copy)`,
+          id: undefined,
+          valid_from: new Date().toISOString(),
+          valid_to: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString(),
+        }])
+        .select();
+
+      if (error) {
+        console.error('Error copying promotion:', error);
+        toast({
+          title: "Error",
+          description: "Failed to copy promotion",
+          variant: "destructive",
+        });
+      } else {
+        setPromotions([...promotions, data[0]]);
+        toast({
+          title: "Success",
+          description: "Promotion copied successfully",
+        });
+      }
+    } catch (error) {
+      console.error('Error copying promotion:', error);
+      toast({
+        title: "Error",
+        description: "Failed to copy promotion",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCopying(false);
+      setCopiedPromotionId(null);
+    }
+  };
+
+  const deletePromotion = async () => {
+    setIsDeleting(true);
+    try {
       const { error } = await supabase
         .from('restaurant_promotions')
         .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      toast({
-        title: 'Promotion supprimée',
-        description: "La promotion a été supprimée avec succès"
-      });
-      
-      fetchPromotions();
+        .eq('id', promotionToDeleteId);
+
+      if (error) {
+        console.error('Error deleting promotion:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete promotion",
+          variant: "destructive",
+        });
+      } else {
+        setPromotions(promotions.filter(promotion => promotion.id !== promotionToDeleteId));
+        toast({
+          title: "Success",
+          description: "Promotion deleted successfully",
+        });
+      }
     } catch (error) {
       console.error('Error deleting promotion:', error);
       toast({
-        title: 'Erreur',
-        description: "Impossible de supprimer la promotion",
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to delete promotion",
+        variant: "destructive",
       });
     } finally {
-      setDeletingId(null);
+      setIsDeleting(false);
+      setPromotionToDeleteId(null);
+      setOpen(false);
     }
   };
-  
-  const togglePromotionStatus = async (id: string, currentStatus: boolean) => {
+
+  const togglePromotionStatus = async (promotion: any) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('restaurant_promotions')
-        .update({ active: !currentStatus })
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      toast({
-        title: currentStatus ? 'Promotion désactivée' : 'Promotion activée',
-        description: currentStatus 
-          ? "La promotion a été désactivée" 
-          : "La promotion a été activée"
-      });
-      
-      setPromotions(prevPromotions =>
-        prevPromotions.map(promo =>
-          promo.id === id ? { ...promo, active: !currentStatus } : promo
-        )
-      );
+        .update({ status: promotion.status === 'active' ? 'inactive' : 'active' })
+        .eq('id', promotion.id)
+        .select();
+
+      if (error) {
+        console.error('Error updating promotion status:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update promotion status",
+          variant: "destructive",
+        });
+      } else {
+        setPromotions(promotions.map(p => p.id === promotion.id ? data[0] : p));
+        toast({
+          title: "Success",
+          description: "Promotion status updated successfully",
+        });
+      }
     } catch (error) {
-      console.error('Error toggling promotion status:', error);
+      console.error('Error updating promotion status:', error);
       toast({
-        title: 'Erreur',
-        description: "Impossible de modifier le statut de la promotion",
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to update promotion status",
+        variant: "destructive",
       });
     }
   };
-  
-  const formatDiscountValue = (promotion: RestaurantPromotion) => {
-    switch (promotion.discount_type) {
-      case 'percentage':
-        return `${promotion.discount_value}%`;
-      case 'fixed_amount':
-        return `${promotion.discount_value?.toLocaleString('fr-FR')} XAF`;
-      case 'free_delivery':
-        return 'Livraison gratuite';
-      default:
-        return '';
-    }
-  };
-  
-  const getPromotionIcon = (type: DiscountType) => {
-    switch (type) {
-      case 'percentage':
-        return <Percent className="w-4 h-4" />;
-      case 'fixed_amount':
-        return <DollarSign className="w-4 h-4" />;
-      case 'free_delivery':
-        return <Clock className="w-4 h-4" />;
-      default:
-        return <Tag className="w-4 h-4" />;
-    }
-  };
-  
-  const isPromotionExpired = (promotion: RestaurantPromotion) => {
-    if (!promotion.end_date) return false;
-    return isPast(new Date(promotion.end_date));
-  };
-  
-  const isPromotionFuture = (promotion: RestaurantPromotion) => {
-    if (!promotion.start_date) return false;
-    return isAfter(new Date(promotion.start_date), new Date());
-  };
-
-  const getPromotionBadgeVariant = (promotion: RestaurantPromotion) => {
-    if (!promotion.active) return "outline";
-    if (isPromotionExpired(promotion)) return "destructive";
-    if (isPromotionFuture(promotion)) return "secondary";
-    return "success";
-  };
-
-  if (loading && promotions.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-center h-40">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Tag className="mr-2 h-6 w-6" />
-            Gestion des promotions
-          </CardTitle>
-          <CardDescription>
-            Créez et gérez des offres spéciales pour votre restaurant
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isOwner && !showForm && (
-            <Button 
-              onClick={() => {
-                form.reset({
-                  title: '',
-                  description: '',
-                  discount_type: 'percentage',
-                  discount_value: undefined,
-                  min_order_amount: undefined,
-                  start_date: new Date(),
-                  end_date: addDays(new Date(), 7),
-                  active: true,
-                  conditions: [],
-                });
-                setEditingId(null);
-                setShowForm(true);
-              }}
-              className="mb-6"
-            >
-              Ajouter une promotion
-            </Button>
-          )}
-          
-          {showForm && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>{editingId ? 'Modifier la promotion' : 'Nouvelle promotion'}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Titre de la promotion</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Ex: Happy Hour" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="discount_type"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Type de promotion</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Manage Promotions</h2>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline">Create Promotion</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Create Promotion</DialogTitle>
+              <DialogDescription>
+                Create a new promotion for your restaurant.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Description" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="discount_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Discount Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a discount type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentage</SelectItem>
+                            <SelectItem value="fixed_amount">Fixed Amount</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="discount_value"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Discount Value</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Discount Value" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="valid_from"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Valid From</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
                             >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Sélectionner un type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="percentage">Pourcentage (%)</SelectItem>
-                                <SelectItem value="fixed_amount">Montant fixe (XAF)</SelectItem>
-                                <SelectItem value="free_delivery">Livraison gratuite</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {form.watch('discount_type') !== 'free_delivery' && (
-                        <FormField
-                          control={form.control}
-                          name="discount_value"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                {form.watch('discount_type') === 'percentage' ? 'Pourcentage' : 'Montant'}
-                              </FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  placeholder={form.watch('discount_type') === 'percentage' ? "Ex: 15" : "Ex: 1000"} 
-                                  {...field}
-                                  value={field.value?.toString() || ''}
-                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                {form.watch('discount_type') === 'percentage' 
-                                  ? 'Indiquez un pourcentage entre 1 et 100'
-                                  : 'Indiquez le montant de la réduction en XAF'
-                                }
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                      
-                      <FormField
-                        control={form.control}
-                        name="min_order_amount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Montant minimum de commande</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="Ex: 5000" 
-                                {...field}
-                                value={field.value?.toString() || ''}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Laissez vide s'il n'y a pas de minimum
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="start_date"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel>Date de début</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "w-full pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "PPP")
-                                    ) : (
-                                      <span>Choisir une date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="end_date"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel>Date de fin</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "w-full pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "PPP")
-                                    ) : (
-                                      <span>Choisir une date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  initialFocus
-                                  disabled={(date) => 
-                                    form.watch('start_date') ? 
-                                    isBefore(date, form.watch('start_date')) : 
-                                    false
-                                  }
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Détails supplémentaires sur la promotion..." 
-                              {...field} 
-                            />
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="active"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Promotion active
-                            </FormLabel>
-                            <FormDescription>
-                              Activez ou désactivez cette promotion
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        type="button"
-                        variant="default"
-                        className="bg-green-500 hover:bg-green-600 text-white"
-                        onClick={() => setShowForm(false)}
-                      >
-                        Annuler
-                      </Button>
-                      <Button type="submit" disabled={loading}>
-                        {editingId ? 'Mettre à jour' : 'Créer la promotion'}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          )}
-          
-          {promotions.length === 0 ? (
-            <div className="text-center p-8 border border-dashed rounded-md">
-              <Tag className="h-10 w-10 mx-auto text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune promotion</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Commencez par créer votre première promotion.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {promotions.map((promotion) => (
-                <Card key={promotion.id} className={cn(
-                  "transition-opacity",
-                  (!promotion.active || isPromotionExpired(promotion)) && "opacity-70"
-                )}>
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{promotion.title}</h3>
-                          <Badge variant={getPromotionBadgeVariant(promotion)}>
-                            {!promotion.active 
-                              ? 'Inactive' 
-                              : isPromotionExpired(promotion)
-                                ? 'Expirée'
-                                : isPromotionFuture(promotion)
-                                  ? 'À venir'
-                                  : 'Active'
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date()
                             }
-                          </Badge>
-                        </div>
-                        
-                        {promotion.description && (
-                          <p className="text-sm text-gray-500">{promotion.description}</p>
-                        )}
-                        
-                        <div className="flex items-center gap-1 text-sm font-medium mt-1">
-                          {getPromotionIcon(promotion.discount_type)}
-                          <span>{formatDiscountValue(promotion)}</span>
-                          {promotion.min_order_amount && (
-                            <span className="text-gray-500 ml-1">
-                              (Min: {promotion.min_order_amount.toLocaleString('fr-FR')} XAF)
-                            </span>
-                          )}
-                        </div>
-                        
-                        {(promotion.start_date || promotion.end_date) && (
-                          <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                            <CalendarIcon className="h-3 w-3" />
-                            {promotion.start_date && format(new Date(promotion.start_date), "dd/MM/yyyy")}
-                            {promotion.start_date && promotion.end_date && ' - '}
-                            {promotion.end_date && format(new Date(promotion.end_date), "dd/MM/yyyy")}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {isOwner && (
-                        <div className="flex items-center gap-2 self-start">
-                          <Switch
-                            id={`active-${promotion.id}`}
-                            checked={promotion.active}
-                            onCheckedChange={() => togglePromotionStatus(promotion.id, promotion.active)}
-                            disabled={deletingId === promotion.id}
+                            initialFocus
                           />
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => editPromotion(promotion)}
-                          >
-                            Modifier
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => deletePromotion(promotion.id)}
-                            disabled={deletingId === promotion.id}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="valid_to"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Valid To</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date()
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="submit" disabled={isCreating}>
+                    {isCreating && (
+                      <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Create
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center">
+          <ReloadIcon className="mr-2 h-8 w-8 animate-spin" />
+        </div>
+      ) : promotions.length === 0 ? (
+        <div className="flex items-center justify-center">
+          <AlertTriangle className="mr-2 h-4 w-4" />
+          <span>No promotions found</span>
+        </div>
+      ) : (
+        <Table>
+          <TableCaption>A list of your restaurant promotions.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">Title</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Discount</TableHead>
+              <TableHead>Valid From</TableHead>
+              <TableHead>Valid To</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {promotions.map((promotion) => (
+              <TableRow key={promotion.id}>
+                <TableCell className="font-medium">{promotion.title}</TableCell>
+                <TableCell>{promotion.description}</TableCell>
+                <TableCell>
+                  {promotion.discount_type === 'percentage' ? `${promotion.discount_value}%` : `${promotion.discount_value} XAF`}
+                </TableCell>
+                <TableCell>{new Date(promotion.valid_from).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(promotion.valid_to).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyPromotion(promotion)}
+                      disabled={isCopying && copiedPromotionId === promotion.id}
+                    >
+                      {isCopying && copiedPromotionId === promotion.id ? (
+                        <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Copy className="mr-2 h-4 w-4" />
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      Copy
+                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="sm">Delete</Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Are you sure absolutely sure?</DialogTitle>
+                          <DialogDescription>
+                            This action cannot be undone. This will permanently delete your promotion.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button type="button" variant="secondary">Cancel</Button>
+                          </DialogClose>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => {
+                              setPromotionToDeleteId(promotion.id);
+                              deletePromotion();
+                            }}
+                            disabled={isDeleting}
+                          >
+                            {isDeleting && (
+                              <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            Delete
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                    <Button 
+                      className={cn("w-full", 
+                        promotion.status === 'active' ? "bg-green-500 hover:bg-green-600" : 
+                        promotion.status === 'scheduled' ? "bg-blue-500 hover:bg-blue-600" :
+                        promotion.status === 'expired' ? "bg-gray-500 hover:bg-gray-600" : ""
+                      )}
+                      onClick={() => togglePromotionStatus(promotion)}
+                    >
+                      {promotion.status === 'active' ? 'Deactivate' : 'Activate'} Promotion
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
-}
+};
+
+export default RestaurantPromotionsManager;

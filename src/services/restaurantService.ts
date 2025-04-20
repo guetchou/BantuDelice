@@ -267,5 +267,39 @@ export const restaurantService = {
       toast.error('Impossible de mettre à jour les heures spéciales');
       return null;
     }
+  },
+  
+  // Delete special hours for a restaurant
+  deleteSpecialHours: async (restaurantId: string, dateKey: string): Promise<any> => {
+    try {
+      // First get the current special hours
+      const { data: currentData, error: fetchError } = await supabase
+        .from('restaurants')
+        .select('special_hours')
+        .eq('id', restaurantId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Remove the specific date from special hours
+      const specialHours = currentData.special_hours || {};
+      delete specialHours[dateKey];
+      
+      // Update with the modified special_hours
+      const { data, error } = await supabase
+        .from('restaurants')
+        .update({ special_hours: specialHours })
+        .eq('id', restaurantId)
+        .select();
+
+      if (error) throw error;
+
+      toast.success('Heures spéciales supprimées');
+      return data;
+    } catch (err) {
+      console.error('Restaurant service error:', err);
+      toast.error('Impossible de supprimer les heures spéciales');
+      return null;
+    }
   }
 };
