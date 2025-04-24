@@ -1,7 +1,7 @@
 
-import React from "react";
+import { SVGProps } from 'react';
 
-export const Banknote = ({ className }: { className?: string }) => (
+export const Banknote = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="24"
@@ -12,7 +12,7 @@ export const Banknote = ({ className }: { className?: string }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={className}
+    {...props}
   >
     <rect width="20" height="12" x="2" y="6" rx="2" />
     <circle cx="12" cy="12" r="2" />

@@ -1,4 +1,3 @@
-
 import { ApiResponse } from '@/types/restaurant';
 
 // Voici une API fictive pour les restaurants

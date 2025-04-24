@@ -1,4 +1,3 @@
-
 export interface MenuItem {
   id: string;
   name: string;
@@ -52,33 +51,49 @@ export interface MenuCustomizationOption {
 export interface Restaurant {
   id: string;
   name: string;
-  address: string;
-  image_url?: string;
-  banner_image_url?: string;
-  logo_url?: string;
   description: string;
+  address: string;
   phone: string;
   email?: string;
   cuisine_type?: string;
   rating?: number;
-  average_rating?: number;
-  is_open?: boolean;
-  delivery_fee?: number;
-  min_order_amount?: number;
-  estimated_preparation_time: number;
-  distance?: number;
-  menu_items?: MenuItem[];
+  image_url?: string;
+  banner_image_url?: string;
+  logo_url?: string;
   latitude?: number;
   longitude?: number;
+  status: 'open' | 'closed' | 'busy';
+  delivery_fee?: number;
+  min_order?: number;
+  minimum_order?: number;
+  estimated_preparation_time: number;
+  distance?: number;
   business_hours?: BusinessHours;
   features?: string[];
   services?: string[];
   payment_methods?: string[];
+  trending?: boolean;
+  average_prep_time?: number;
+  average_rating?: number;
+  is_open?: boolean;
+  total_ratings?: number;
+  website?: string;
+  special_features?: string[];
+  estimated_delivery_time?: number;
+  price_range?: number;
 }
 
 export interface BusinessHours {
-  regular: Record<string, { open: string; close: string }>;
-  special?: Record<string, { open: string; close: string }>;
+  regular: Record<string, { 
+    open: string; 
+    close: string;
+    is_closed?: boolean;
+  }>;
+  special?: Record<string, {
+    open: string;
+    close: string;
+    is_closed?: boolean;
+  }>;
   holidays?: string[];
 }
 
