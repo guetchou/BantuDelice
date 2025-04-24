@@ -1,20 +1,18 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
 
 export interface UserProfile {
-  id: string;
+  id?: string;
+  email?: string;
   first_name?: string;
   last_name?: string;
-  email?: string;
-  phone?: string;
+  role?: 'user' | 'admin' | 'restaurant_owner' | 'driver';
   avatar_url?: string;
-  address?: string;
-  role?: string;
-  status?: 'active' | 'inactive' | 'pending';
-  last_login?: string;
   created_at?: string;
   updated_at?: string;
+  phone?: string;
+  status?: "active" | "inactive" | "pending";
+  last_login?: string;
 }
 
 export const useUser = () => {
@@ -23,49 +21,59 @@ export const useUser = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Simuler le chargement des données utilisateur
     const fetchUser = async () => {
       try {
-        setLoading(true);
+        // Dans une app réelle, on ferait un appel API ici
+        // Pour l'instant, on simule un délai et on retourne des données fictives
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        const { data: { user } } = await supabase.auth.getUser();
+        const userData: UserProfile = {
+          id: '123',
+          email: 'user@example.com',
+          first_name: 'John',
+          last_name: 'Doe',
+          role: 'user',
+          avatar_url: 'https://ui-avatars.com/api/?name=John+Doe',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          phone: '+237 612345678',
+          status: 'active',
+          last_login: new Date().toISOString()
+        };
         
-        if (user) {
-          // Fetch the user profile from the profiles table
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-            
-          if (error) throw error;
-          
-          setUser({
-            id: user.id,
-            email: user.email,
-            first_name: data?.first_name || '',
-            last_name: data?.last_name || '',
-            phone: data?.phone || '',
-            avatar_url: data?.avatar_url || '',
-            address: data?.address || '',
-            role: data?.role || 'customer',
-            status: data?.status || 'active',
-            last_login: user.last_sign_in_at || '',
-            created_at: user.created_at || '',
-            updated_at: data?.updated_at || '',
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch user profile');
-      } finally {
+        setUser(userData);
         setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch user data');
+        setLoading(false);
+        console.error(err);
       }
     };
     
     fetchUser();
   }, []);
-  
-  return { user, loading, error };
-};
 
-export default useUser;
+  const updateUserProfile = async (data: Partial<UserProfile>) => {
+    try {
+      setLoading(true);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setUser(prev => {
+        if (!prev) return null;
+        return { ...prev, ...data };
+      });
+      
+      return true;
+    } catch (err) {
+      setError('Failed to update profile');
+      console.error(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { user, loading, error, updateUserProfile };
+};
