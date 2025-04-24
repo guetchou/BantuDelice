@@ -1,13 +1,9 @@
 
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserProfile } from "@/hooks/useUser";
+import { ExtendedUserProfile } from "@/types/extendedRestaurant";
 import { formatDate } from "@/utils/dateUtils";
-
-// Extended UserProfile interface to include additional fields
-interface ExtendedUserProfile extends UserProfile {
-  last_login?: string;
-  status?: string;
-}
 
 interface SecurityTabProps {
   user: ExtendedUserProfile | null;

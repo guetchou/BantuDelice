@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,22 +7,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
   MenuCustomizationOption,
-  MenuPromotion,
-  MenuStatistics,
-  MenuRecommendation,
-  MenuAnalysisResult,
-  MenuItem
+  MenuItem,
+  MenuAnalysisResult
 } from '@/types/restaurant';
-import { formatPrice } from '@/lib/utils';
+import { 
+  MenuPromotion, 
+  MenuStatistics, 
+  MenuRecommendation,
+  ExtendedMenuAnalysisResult 
+} from '@/types/menuAnalysis';
+import { formatPrice } from '@/utils/formatPrice';
+import { ExtendedMenuItem } from '@/types/extendedRestaurant';
 
 interface EnhancedMenuViewProps {
   restaurantId: string;
 }
 
 const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [menuItems, setMenuItems] = useState<ExtendedMenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [analysisResult, setAnalysisResult] = useState<MenuAnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<ExtendedMenuAnalysisResult | null>(null);
   const [recommendations, setRecommendations] = useState<MenuRecommendation[]>([]);
   const [statistics, setStatistics] = useState<MenuStatistics | null>(null);
   const [promotions, setPromotions] = useState<MenuPromotion[]>([]);
@@ -51,25 +56,52 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
     };
 
     fetchMenuItems();
-  }, [restaurantId]);
+  }, [restaurantId, toast]);
 
   useEffect(() => {
     const analyzeMenu = async () => {
       try {
         // Simulate menu analysis
-        const lowProfitItems = menuItems.filter(item => item.profit_margin && item.profit_margin < 0.15);
-        const highProfitItems = menuItems.filter(item => item.profit_margin && item.profit_margin > 0.3);
-        const slowMovers = menuItems.sort(() => Math.random() - 0.5).slice(0, 3);
-        const fastMovers = menuItems.sort(() => Math.random() - 0.5).slice(0, 3);
-        const priceChangeRecommendations = menuItems.map(item => ({
+        const extendedMenuItems = menuItems as ExtendedMenuItem[];
+        
+        const lowProfitItems = extendedMenuItems.filter(item => item.profit_margin && item.profit_margin < 0.15);
+        const highProfitItems = extendedMenuItems.filter(item => item.profit_margin && item.profit_margin > 0.3);
+        const slowMovers = extendedMenuItems.sort(() => Math.random() - 0.5).slice(0, 3);
+        const fastMovers = extendedMenuItems.sort(() => Math.random() - 0.5).slice(0, 3);
+        const priceChangeRecommendations = extendedMenuItems.map(item => ({
           itemId: item.id,
           suggestedPrice: item.price * (1 + (Math.random() - 0.5) * 0.2),
         }));
-        const bundleOpportunities = menuItems.sort(() => Math.random() - 0.5).slice(0, 2);
+        const bundleOpportunities = extendedMenuItems.sort(() => Math.random() - 0.5).slice(0, 2);
         const seasonalRecommendations: any[] = [];
-        const mostPopularCategory = menuItems[0]?.category;
+        const mostPopularCategory = extendedMenuItems[0]?.category;
 
-        setAnalysisResult({
+        // Create basic MenuAnalysisResult
+        const baseAnalysis: MenuAnalysisResult = {
+          totalItems: menuItems.length,
+          priceStats: {
+            average: menuItems.reduce((sum, item) => sum + item.price, 0) / menuItems.length,
+            highest: Math.max(...menuItems.map(item => item.price)),
+            lowest: Math.min(...menuItems.map(item => item.price)),
+            median: menuItems.sort((a, b) => a.price - b.price)[Math.floor(menuItems.length / 2)].price
+          },
+          dietaryOptions: {
+            vegetarianCount: menuItems.filter(item => item.is_vegetarian).length,
+            veganCount: menuItems.filter(item => item.is_vegan).length,
+            glutenFreeCount: menuItems.filter(item => item.is_gluten_free).length,
+            vegetarianPercentage: (menuItems.filter(item => item.is_vegetarian).length / menuItems.length) * 100,
+            veganPercentage: (menuItems.filter(item => item.is_vegan).length / menuItems.length) * 100,
+            glutenFreePercentage: (menuItems.filter(item => item.is_gluten_free).length / menuItems.length) * 100
+          },
+          menuSuggestions: [
+            {message: "Ajouter des options végétariennes", priority: "high" as const},
+            {message: "Réduire les prix pendant les heures creuses", priority: "medium" as const}
+          ]
+        };
+        
+        // Extend with additional analysis properties
+        const extendedAnalysis: ExtendedMenuAnalysisResult = {
+          ...baseAnalysis,
           lowProfitItems,
           highProfitItems,
           slowMovers,
@@ -78,7 +110,9 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
           bundleOpportunities,
           seasonalRecommendations,
           mostPopularCategory
-        });
+        };
+
+        setAnalysisResult(extendedAnalysis);
 
         // Simulate recommendations
         const newRecommendations: MenuRecommendation[] = [];
@@ -87,7 +121,7 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
         // Simulate statistics
         const newStatistics: MenuStatistics = {
           popularItems: menuItems.sort(() => Math.random() - 0.5).slice(0, 5),
-          profitMargins: menuItems.map(item => ({ itemId: item.id, margin: item.profit_margin })),
+          profitMargins: extendedMenuItems.map(item => ({ itemId: item.id, margin: item.profit_margin })),
           salesTrends: [],
           categoryPerformance: [],
           timeBasedAnalysis: [],
@@ -108,7 +142,9 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
       }
     };
 
-    analyzeMenu();
+    if (menuItems.length > 0) {
+      analyzeMenu();
+    }
   }, [menuItems, restaurantId, toast]);
 
   if (loading) {
@@ -168,10 +204,10 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
                 <h3 className="text-lg font-semibold mb-2">Profitability</h3>
                 <div className="space-y-1">
                   <p className="text-sm">
-                    <span className="font-medium">Low Profit Items:</span> {analysisResult.lowProfitItems.length}
+                    <span className="font-medium">Low Profit Items:</span> {analysisResult.lowProfitItems?.length || 0}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">High Profit Items:</span> {analysisResult.highProfitItems.length}
+                    <span className="font-medium">High Profit Items:</span> {analysisResult.highProfitItems?.length || 0}
                   </p>
                 </div>
               </div>
@@ -179,19 +215,19 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
                 <h3 className="text-lg font-semibold mb-2">Item Performance</h3>
                 <div className="space-y-1">
                   <p className="text-sm">
-                    <span className="font-medium">Slow Movers:</span> {analysisResult.slowMovers.map(item => item.name).join(', ')}
+                    <span className="font-medium">Slow Movers:</span> {analysisResult.slowMovers?.map(item => item.name).join(', ') || 'None'}
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium">Fast Movers:</span> {analysisResult.fastMovers.map(item => item.name).join(', ')}
+                    <span className="font-medium">Fast Movers:</span> {analysisResult.fastMovers?.map(item => item.name).join(', ') || 'None'}
                   </p>
                 </div>
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pricing</h3>
                 <div className="space-y-1">
-                  {analysisResult.priceChangeRecommendations.map(item => (
+                  {analysisResult.priceChangeRecommendations?.slice(0, 3).map(item => (
                     <p className="text-sm" key={item.itemId}>
-                      <span className="font-medium">Item {item.itemId}:</span> Suggested Price {item.suggestedPrice}
+                      <span className="font-medium">Item {item.itemId}:</span> Suggested Price {formatPrice(item.suggestedPrice)}
                     </p>
                   ))}
                 </div>
@@ -225,8 +261,8 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
         <CardContent>
           {recommendations.length > 0 ? (
             <div className="space-y-2">
-              {recommendations.map(rec => (
-                <div key={rec.id} className="border rounded-md p-3">
+              {recommendations.map((rec, i) => (
+                <div key={rec.id || i} className="border rounded-md p-3">
                   <p className="text-sm font-medium">{rec.recommendationType}</p>
                   <p className="text-xs text-gray-500">{rec.strength}</p>
                 </div>
@@ -247,18 +283,18 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
             <div className="space-y-2">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Popular Items</h3>
-                <div className="flex gap-2">
-                  {statistics.popularItems.map(item => (
-                    <Badge key={item.id}>{item.name}</Badge>
+                <div className="flex gap-2 flex-wrap">
+                  {statistics.popularItems.map((item, i) => (
+                    <Badge key={item.id || i}>{item.name}</Badge>
                   ))}
                 </div>
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Profit Margins</h3>
                 <div className="space-y-1">
-                  {statistics.profitMargins.map(item => (
-                    <p className="text-sm" key={item.itemId}>
-                      <span className="font-medium">Item {item.itemId}:</span> Margin {item.margin}
+                  {statistics.profitMargins.slice(0, 3).map((item, i) => (
+                    <p className="text-sm" key={item.itemId || i}>
+                      <span className="font-medium">Item {i+1}:</span> Margin {item.margin || 'N/A'}
                     </p>
                   ))}
                 </div>
@@ -277,8 +313,8 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
         <CardContent>
           {promotions.length > 0 ? (
             <div className="space-y-2">
-              {promotions.map(promo => (
-                <div key={promo.id} className="border rounded-md p-3">
+              {promotions.map((promo, i) => (
+                <div key={promo.id || i} className="border rounded-md p-3">
                   <p className="text-sm font-medium">{promo.title}</p>
                   <p className="text-xs text-gray-500">{promo.description}</p>
                 </div>

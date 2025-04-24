@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Restaurant } from "@/types/restaurant";
+import type { ExtendedRestaurant } from "@/types/extendedRestaurant";
 
 export const useRestaurant = (restaurantId: string | undefined) => {
   return useQuery({
@@ -28,7 +29,7 @@ export const useRestaurant = (restaurantId: string | undefined) => {
       }
 
       // Transform the data to match our Restaurant type
-      const restaurant: Restaurant = {
+      const restaurant: ExtendedRestaurant = {
         id: data.id || '',
         name: data.name || '',
         description: data.description || '',
@@ -48,6 +49,11 @@ export const useRestaurant = (restaurantId: string | undefined) => {
         total_ratings: data.total_ratings || 0,
         minimum_order: data.minimum_order || 0,
         delivery_fee: data.delivery_fee || 0,
+        estimated_preparation_time: data.estimated_preparation_time || 30,
+        distance: data.distance,
+        average_prep_time: data.average_prep_time || 30,
+        trending: data.trending || false,
+        is_open: data.is_open || false,
         business_hours: data.business_hours || {
           regular: {
             monday: { open: '09:00', close: '21:00', is_closed: false },
@@ -59,10 +65,7 @@ export const useRestaurant = (restaurantId: string | undefined) => {
             sunday: { open: '09:00', close: '21:00', is_closed: false }
           }
         },
-        special_days: data.special_days || [],
-        average_prep_time: data.average_prep_time || 30,
-        trending: data.trending || false,
-        is_open: data.is_open || false
+        min_order: data.min_order || data.minimum_order || 0,
       };
 
       console.log('Restaurant data transformed:', restaurant);
