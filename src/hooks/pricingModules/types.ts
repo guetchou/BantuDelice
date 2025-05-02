@@ -64,6 +64,14 @@ export interface SubscriptionDiscount {
   applicableVehicleTypes: TaxiVehicleType[];
 }
 
+export interface BusinessRateFormData {
+  companyName: string;
+  contactEmail: string;
+  monthlyRides: number;
+  averageDistance: number;
+  vehicleType: string;
+}
+
 export interface BusinessRateCalculatorProps {
   formData: BusinessRateFormData;
   showResult: boolean;

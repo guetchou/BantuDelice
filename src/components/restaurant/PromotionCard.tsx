@@ -3,8 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Percent, Calendar, StarIcon } from "lucide-react";
-import { MenuPromotion } from "@/types/menu";
+import { Clock, Percent, Calendar } from "lucide-react";
+import { MenuPromotion } from "@/types/globalTypes";
 import { useNavigate } from "react-router-dom";
 
 interface PromotionCardProps {
@@ -28,7 +28,9 @@ export const PromotionCard = ({ promotion, restaurantId, restaurantName }: Promo
     return `${start} - ${end}`;
   };
   
-  const formatDays = (days: string[]) => {
+  const formatDays = (days: string[] | undefined) => {
+    if (!days || days.length === 0) return '';
+    
     const dayMap: Record<string, string> = {
       'monday': 'Lun',
       'tuesday': 'Mar',
@@ -78,18 +80,18 @@ export const PromotionCard = ({ promotion, restaurantId, restaurantName }: Promo
           <span>Valable du {formatDate(promotion.valid_from)} au {formatDate(promotion.valid_to)}</span>
         </div>
         
-        {promotion.promotion_hours && (
+        {promotion.promotion_hours && promotion.promotion_hours.length > 0 && (
           <div className="flex items-center text-sm text-gray-500">
             <Clock className="h-4 w-4 mr-1" />
             <span>
-              {formatTimeRange(promotion.promotion_hours.start, promotion.promotion_hours.end)}
+              {formatTimeRange(promotion.promotion_hours[0].start, promotion.promotion_hours[0].end)}
               {' '}
-              ({formatDays(promotion.promotion_hours.days)})
+              ({formatDays(promotion.promotion_hours[0].days)})
             </span>
           </div>
         )}
         
-        {promotion.conditions && promotion.conditions.length > 0 && (
+        {promotion.conditions && Array.isArray(promotion.conditions) && promotion.conditions.length > 0 && (
           <div className="text-sm text-gray-500">
             <p className="font-medium mb-1">Conditions:</p>
             <ul className="list-disc list-inside pl-2 space-y-1">

@@ -28,7 +28,7 @@ export interface ExtendedUserProfile {
   created_at?: string;
   updated_at?: string;
   phone?: string;
-  status?: "active" | "inactive" | "pending"; // Fixed to match UserProfile's status
+  status?: "active" | "inactive" | "pending"; 
   last_login?: string;
 }
 

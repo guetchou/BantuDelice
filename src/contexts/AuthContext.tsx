@@ -1,155 +1,75 @@
 
-import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-import pb from '@/lib/pocketbase';
-import { User } from '@/types/user';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, userData?: object) => Promise<any>;
+  signOut: () => Promise<any>;
   loading: boolean;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<{success: boolean}>;
-  logout: () => void;
-  register: (userData: any) => Promise<{success: boolean}>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
+  session: null,
+  signIn: async () => ({}),
+  signUp: async () => ({}),
+  signOut: async () => ({}),
   loading: true,
-  isAuthenticated: false,
-  isLoading: true,
-  login: async () => ({success: false}),
-  logout: () => {},
-  register: async () => ({success: false}),
 });
 
-// Hook pour utiliser le contexte d'authentification
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
 
-const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if already authenticated
-    if (pb.authStore.isValid) {
-      const authData = pb.authStore.model;
-      
-      if (authData) {
-        setUser({
-          id: authData.id,
-          email: authData.email,
-          name: authData.name || '',
-          phone: authData.phone,
-          role: authData.role || 'user',
-          created_at: authData.created,
-          avatar_url: authData.avatar_url,
-          first_name: authData.first_name,
-          last_name: authData.last_name,
-          status: authData.status,
-        });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
-    }
-    
-    setLoading(false);
-    
-    // Subscribe to auth state changes
-    const unsubscribe = pb.authStore.onChange((token, model) => {
-      if (model) {
-        setUser({
-          id: model.id,
-          email: model.email,
-          name: model.name || '',
-          phone: model.phone,
-          role: model.role || 'user',
-          created_at: model.created,
-          avatar_url: model.avatar_url,
-          first_name: model.first_name,
-          last_name: model.last_name,
-          status: model.status,
-        });
-      } else {
-        setUser(null);
-      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
-    
-    return () => {
-      // Clean up the subscription
-      unsubscribe();
-    };
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      const authData = await pb.collection('users').authWithPassword(email, password);
-      
-      setUser({
-        id: authData.record.id,
-        email: authData.record.email,
-        name: authData.record.name || '',
-        phone: authData.record.phone,
-        role: authData.record.role || 'user',
-        created_at: authData.record.created,
-        avatar_url: authData.record.avatar_url,
-        first_name: authData.record.first_name,
-        last_name: authData.record.last_name,
-        status: authData.record.status,
-      });
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+  const signIn = async (email: string, password: string) => {
+    return supabase.auth.signInWithPassword({ email, password });
   };
 
-  const logout = () => {
-    pb.authStore.clear();
-    setUser(null);
+  const signUp = async (email: string, password: string, userData?: object) => {
+    return supabase.auth.signUp({ 
+      email, 
+      password, 
+      options: userData ? { data: userData } : undefined 
+    });
   };
 
-  const register = async (userData: any) => {
-    try {
-      const data = {
-        email: userData.email,
-        password: userData.password,
-        passwordConfirm: userData.password,
-        name: userData.name,
-        phone: userData.phone,
-      };
-      
-      await pb.collection('users').create(data);
-      
-      // Auto login after registration
-      await login(userData.email, userData.password);
-      return { success: true };
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
+  const signOut = async () => {
+    return supabase.auth.signOut();
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isAuthenticated: !!user,
-        isLoading: loading,
-        login,
-        logout,
-        register,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    session,
+    signIn,
+    signUp,
+    signOut,
+    loading,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-export default AuthProvider;

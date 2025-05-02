@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   AlertDialog,
@@ -125,20 +124,23 @@ const MenuItemCustomizationAdvanced = ({
             return {
               name: category,
               value: option,
-              price: optionData?.price || 0
+              price_adjustment: optionData?.price || 0,
+              price: optionData?.price || 0,
+              quantity: 1
             };
           })
       );
 
-    const cartItemOptions: CartItemOption[] = selectedOptions.map(option => ({
+    const cartItemOptions = selectedOptions.map(option => ({
       id: `${option.name}-${option.value}`,
       name: option.name,
       value: option.value,
       price: option.price || 0,
-      quantity: 1
+      quantity: 1,
+      price_adjustment: option.price_adjustment || 0
     }));
 
-    const cartItem: CartItem = {
+    const cartItem = {
       id: item.id,
       menu_item_id: item.id,
       name: item.name,
@@ -154,12 +156,7 @@ const MenuItemCustomizationAdvanced = ({
     }
 
     if (selectedCombo) {
-      cartItem.combo_item = {
-        id: selectedCombo.id,
-        name: selectedCombo.name,
-        price: Math.round(selectedCombo.price * 0.85),
-        quantity: quantity
-      };
+      cartItem.combo_item = true;
     }
     
     onAddToCart(cartItem);

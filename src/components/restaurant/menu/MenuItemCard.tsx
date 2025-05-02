@@ -9,9 +9,10 @@ import { MenuItem as MenuItemType } from '@/types/menu';
 
 interface MenuItemCardProps {
   item: MenuItemType;
+  onClick?: () => void;
 }
 
-const MenuItemCard: React.FC<MenuItemCardProps> = ({ item }) => {
+const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onClick }) => {
   const { toast } = useToast();
   
   const handleAddToCart = () => {
@@ -21,8 +22,17 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item }) => {
     });
   };
   
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+  };
+  
   return (
-    <Card className="overflow-hidden flex flex-col h-full transition-all hover:shadow-md">
+    <Card 
+      className="overflow-hidden flex flex-col h-full transition-all hover:shadow-md"
+      onClick={handleClick}
+    >
       {item.image_url && (
         <div className="relative h-36 overflow-hidden">
           <img 
