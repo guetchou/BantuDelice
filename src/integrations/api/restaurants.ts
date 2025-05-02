@@ -25,7 +25,6 @@ export const restaurantApi = {
 
   getMenuItems: async (restaurantId: string): Promise<ApiResponse<any[]>> => {
     // Simulation d'un appel API
-    // Pour résoudre l'erreur, assurons-nous que ça retourne un tableau
     return [];
   },
 
@@ -53,15 +52,21 @@ export const restaurantApi = {
   },
 
   // Méthodes manquantes pour les heures spéciales
-  getSpecialHours: async (restaurantId: string): Promise<ApiResponse<any>> => {
+  getSpecialHours: async (restaurantId: string, filters?: any): Promise<ApiResponse<any>> => {
     // Simulation d'un appel API
     console.log(`Getting special hours for restaurant ${restaurantId}`);
-    return {
-      data: [
-        { id: '1', day: 'Monday', open: '08:00', close: '16:00', is_special: true },
-        { id: '2', day: 'Sunday', is_closed: true }
-      ]
-    };
+    return [
+      { 
+        id: '1', 
+        restaurant_id: restaurantId,
+        date: new Date().toISOString().split('T')[0], 
+        is_closed: false,
+        open_time: '08:00',
+        close_time: '16:00',
+        reason: 'Horaires spéciaux',
+        created_at: new Date().toISOString()
+      }
+    ];
   },
 
   setSpecialHours: async (restaurantId: string, specialHoursData: any): Promise<ApiResponse<any>> => {

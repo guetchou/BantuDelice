@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { restaurantApi } from '@/integrations/api/restaurants';
@@ -28,7 +29,13 @@ const MenuManagement = () => {
     setLoading(true);
     try {
       const response = await restaurantApi.getMenuItems(restaurantId);
-      setMenuItems(Array.isArray(response) ? response : response.data || []);
+      if (Array.isArray(response)) {
+        setMenuItems(response);
+      } else if (response && Array.isArray(response.data)) {
+        setMenuItems(response.data);
+      } else {
+        setMenuItems([]);
+      }
     } catch (error) {
       console.error('Error fetching menu items:', error);
       setMenuItems([]);

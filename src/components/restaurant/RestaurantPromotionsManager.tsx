@@ -72,7 +72,7 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { supabase } from '@/integrations/supabase/client';
-import { ReloadIcon, Copy, CheckCircle, AlertTriangle, Plus, Trash2, LoaderIcon } from "lucide-react";
+import { LoaderIcon } from 'lucide-react';
 
 interface RestaurantPromotionsManagerProps {
   restaurantId: string;

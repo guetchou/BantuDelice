@@ -1,3 +1,4 @@
+
 import type { MenuItem } from "@/types/restaurant";
 import type { CartItem } from "@/types/cart";
 
@@ -7,7 +8,7 @@ export interface MenuItemCardProps {
   onRemoveFromCart?: (itemId: string) => void;
   quantity?: number;
   showNutritionalInfo?: boolean;
-  onClick?: () => void;
+  onClick?: () => void; // Adding the missing onClick prop
 }
 
 export interface MenuCategory {

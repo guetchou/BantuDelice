@@ -157,6 +157,14 @@ export type MenuPromotion = {
   discount_percentage: number;
   start_date: string;
   end_date: string;
+  title: string;
+  discount_type: 'percentage' | 'amount';
+  discount_value: number;
+  valid_from: string;
+  valid_to: string;
+  promotion_hours?: { start: string; end: string }[];
+  conditions?: string;
+  min_order_value?: number;
 };
 
 export type MenuStatistics = {
@@ -187,6 +195,17 @@ export type MenuAnalysisResult = {
   slowMovers?: MenuItem[];
   fastMovers?: MenuItem[];
   priceChangeRecommendations?: Array<{ itemId: string; suggestedPrice: number }>;
+  totalItems: number;
+  priceStats: {
+    average: number;
+    highest: number;
+    lowest: number;
+  };
+  dietaryOptions: {
+    vegetarianCount: number;
+    vegetarianPercentage: number;
+  };
+  menuSuggestions: Array<{ message: string; priority: 'high' | 'medium' | 'low' }>;
 };
 
 export interface RestaurantFilters {
@@ -198,4 +217,5 @@ export interface RestaurantFilters {
   distance?: number;
   isOpen?: boolean;
   hasDelivery?: boolean;
+  hasPickup?: boolean;
 }

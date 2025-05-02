@@ -1,3 +1,4 @@
+
 import pb from '@/lib/pocketbase';
 import { pbWrapper, createCollection, authAdapter } from '@/adapters/pocketbaseAdapter';
 
@@ -6,6 +7,26 @@ export const authService = authAdapter;
 
 // Export function to get a collection
 export const getCollection = (name) => createCollection(name);
+
+// Client service - missing export
+export const clientService = {
+  getClients: async () => {
+    // Simulation for now
+    return { data: [], error: null };
+  },
+  createClient: async (data) => {
+    console.log('Creating client:', data);
+    return { error: null };
+  },
+  updateClient: async (id, data) => {
+    console.log(`Updating client ${id}:`, data);
+    return { error: null };
+  },
+  deleteClient: async (id) => {
+    console.log(`Deleting client ${id}`);
+    return { error: null };
+  }
+};
 
 // Services des restaurants
 export const restaurantService = {
@@ -170,7 +191,8 @@ export const pbService = {
   payments: paymentService,
   delivery: deliveryService,
   notifications: notificationService,
-  realTime: realTimeService
+  realTime: realTimeService,
+  clients: clientService // Add the client service here
 };
 
 export default pbService;

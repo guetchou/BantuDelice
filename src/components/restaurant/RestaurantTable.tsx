@@ -27,7 +27,7 @@ const RestaurantTable = ({
   const canBeSelected = isAvailable && isValidPartySize;
   
   // Support both tableNumber and table_number naming conventions
-  const tableNumberDisplay = table.tableNumber || table.table_number || `Table ${table.id.slice(0, 4)}`;
+  const tableNumberDisplay = table.tableNumber || `Table ${table.id.slice(0, 4)}`;
 
   return (
     <Card 

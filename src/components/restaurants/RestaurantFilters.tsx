@@ -1,3 +1,4 @@
+
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { RestaurantFilters } from "@/types/restaurant";
+import type { RestaurantFilters as RestaurantFiltersType } from "@/types/restaurant";
 
 const CUISINE_TYPES = [
   "Tout",
@@ -31,23 +32,15 @@ const CUISINE_TYPES = [
 ];
 
 interface RestaurantFiltersProps {
-  filters: RestaurantFilters;
-  onChange: (filters: RestaurantFilters) => void;
+  filters: RestaurantFiltersType;
+  onChange: (filters: RestaurantFiltersType) => void;
 }
 
-export interface RestaurantFilters {
-  cuisine_type?: string | null;
-  price_range?: number | null;
-  distance?: number | null;
-  isOpen?: boolean;
-  hasDelivery?: boolean;
-}
-
-export default function RestaurantFilters({
+const RestaurantFilters = ({
   filters,
   onChange
-}: RestaurantFiltersProps) {
-  const updateFilter = (key: keyof RestaurantFilters, value: any) => {
+}: RestaurantFiltersProps) => {
+  const updateFilter = (key: keyof RestaurantFiltersType, value: any) => {
     onChange({
       ...filters,
       [key]: value
@@ -74,8 +67,8 @@ export default function RestaurantFilters({
           <div className="space-y-4">
             <Label>Type de cuisine</Label>
             <Select 
-              value={filters.cuisine_type?.[0] || "all"}
-              onValueChange={(value) => updateFilter('cuisine_type', value === "all" ? [] : [value])}
+              value={filters.cuisine?.[0] || "all"}
+              onValueChange={(value) => updateFilter('cuisine', value === "all" ? [] : [value])}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez un type de cuisine" />
@@ -93,8 +86,8 @@ export default function RestaurantFilters({
           <div className="space-y-4">
             <Label>Gamme de prix</Label>
             <Select 
-              value={filters.price_range?.toString() || "all"}
-              onValueChange={(value) => updateFilter('price_range', value === "all" ? [] : value)}
+              value={filters.priceRange?.toString() || "all"}
+              onValueChange={(value) => updateFilter('priceRange', value === "all" ? [] : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une gamme de prix" />
@@ -151,16 +144,10 @@ export default function RestaurantFilters({
               onCheckedChange={(checked) => updateFilter('hasDelivery', checked)}
             />
           </div>
-
-          <div className="flex items-center justify-between">
-            <Label>À emporter disponible</Label>
-            <Switch
-              checked={filters.hasPickup}
-              onCheckedChange={(checked) => updateFilter('hasPickup', checked)}
-            />
-          </div>
         </div>
       </SheetContent>
     </Sheet>
   );
-}
+};
+
+export default RestaurantFilters;
