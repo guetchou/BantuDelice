@@ -1,4 +1,3 @@
-
 import type { MenuItem } from "@/types/restaurant";
 import type { CartItem } from "@/types/cart";
 

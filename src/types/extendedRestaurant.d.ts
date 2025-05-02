@@ -1,4 +1,3 @@
-
 import { Restaurant as BaseRestaurant, MenuItem, BusinessHours } from '@/types/restaurant';
 
 // Extension du type Restaurant pour inclure les propriétés manquantes
@@ -28,7 +27,7 @@ export interface ExtendedUserProfile {
   created_at?: string;
   updated_at?: string;
   phone?: string;
-  status?: "active" | "inactive" | "pending" | string;
+  status?: "active" | "inactive" | "pending";
   last_login?: string;
 }
 

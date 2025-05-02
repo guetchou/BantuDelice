@@ -10,7 +10,7 @@ export interface UserProfile {
   first_name?: string;
   last_name?: string;
   role?: string;
-  status?: string;
+  status?: "active" | "inactive" | "pending" | string;
   last_login?: string;
   preferences?: Record<string, any>;
   created_at?: string;

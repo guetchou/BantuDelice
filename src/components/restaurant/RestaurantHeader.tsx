@@ -16,8 +16,7 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
 
   const handleFavoriteClick = () => {
     setIsFavorite(!isFavorite);
-    toast({
-      title: !isFavorite ? "Ajouté aux favoris" : "Retiré des favoris",
+    toast(!isFavorite ? "Ajouté aux favoris" : "Retiré des favoris", {
       description: !isFavorite 
         ? `${restaurant.name} a été ajouté à vos favoris` 
         : `${restaurant.name} a été retiré de vos favoris`,
@@ -35,8 +34,7 @@ const RestaurantHeader = ({ restaurant }: RestaurantHeaderProps) => {
     } else {
       navigator.clipboard.writeText(window.location.href)
         .then(() => {
-          toast({
-            title: "Lien copié",
+          toast("Lien copié", {
             description: "Le lien a été copié dans le presse-papiers",
           });
         })

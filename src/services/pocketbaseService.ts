@@ -1,9 +1,11 @@
-
 import pb from '@/lib/pocketbase';
 import { pbWrapper, createCollection, authAdapter } from '@/adapters/pocketbaseAdapter';
 
 // Service d'authentification
 export const authService = authAdapter;
+
+// Export function to get a collection
+export const getCollection = (name) => createCollection(name);
 
 // Services des restaurants
 export const restaurantService = {

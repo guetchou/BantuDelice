@@ -5,7 +5,7 @@ export interface Restaurant {
   description: string;
   phone: string;
   status: string;
-  cuisine_type?: string;
+  cuisine_type?: string | string[];
   logo_url?: string;
   banner_url?: string;
   rating?: number;
@@ -20,6 +20,20 @@ export interface Restaurant {
     latitude: number;
     longitude: number;
   };
+  banner_image_url?: string;
+  average_rating?: number;
+  average_prep_time?: number;
+  price_range?: number;
+  total_ratings?: number;
+  trending?: boolean;
+  business_hours?: any;
+  website?: string;
+  special_features?: string[];
+  payment_methods?: string[];
+  estimated_delivery_time?: number;
+  min_order?: number;
+  available?: boolean;
+  is_available?: boolean;
 }
 
 export interface Table {
@@ -71,6 +85,7 @@ export interface MenuItem {
     protein?: number;
     carbs?: number;
     fat?: number;
+    fiber?: number;
   };
   preparation_time?: number;
   options?: MenuItemOption[];
@@ -78,6 +93,20 @@ export interface MenuItem {
   popular?: boolean;
   spicy_level?: number;
   tags?: string[];
+  category?: string;
+  dietary_preferences?: string[];
+  customization_options?: any[];
+  ingredients?: string[];
+  stock?: number;
+  available?: boolean;
+  nutrition?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+  };
+  popularity_score?: number;
 }
 
 export interface MenuItemOption {
@@ -109,4 +138,64 @@ export interface ApiResponse<T> {
   error?: string;
   message?: string;
   [key: string]: any;
+}
+
+export interface MenuCustomizationOption {
+  name: string;
+  values: string[];
+  required?: boolean;
+  multiple?: boolean;
+  min_selections?: number;
+  max_selections?: number;
+  choices?: { name: string; price: number }[];
+}
+
+export type MenuPromotion = {
+  id: string;
+  name: string;
+  description: string;
+  discount_percentage: number;
+  start_date: string;
+  end_date: string;
+};
+
+export type MenuStatistics = {
+  totalItems: number;
+  priceStats: {
+    average: number;
+    highest: number;
+    lowest: number;
+  };
+  dietaryOptions: {
+    vegetarianCount: number;
+    vegetarianPercentage: number;
+  };
+  menuSuggestions: Array<{ message: string; priority: 'high' | 'medium' | 'low' }>;
+};
+
+export type MenuRecommendation = {
+  id?: string;
+  recommendationType: string;
+  strength: string;
+};
+
+export type MenuAnalysisResult = {
+  score: number;
+  insights: string[];
+  lowProfitItems?: MenuItem[];
+  highProfitItems?: MenuItem[];
+  slowMovers?: MenuItem[];
+  fastMovers?: MenuItem[];
+  priceChangeRecommendations?: Array<{ itemId: string; suggestedPrice: number }>;
+};
+
+export interface RestaurantFilters {
+  cuisine?: string[];
+  rating?: number;
+  priceRange?: [number, number];
+  openNow?: boolean;
+  search?: string;
+  distance?: number;
+  isOpen?: boolean;
+  hasDelivery?: boolean;
 }

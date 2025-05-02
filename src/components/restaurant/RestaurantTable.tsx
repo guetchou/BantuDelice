@@ -25,6 +25,9 @@ const RestaurantTable = ({
   const isValidPartySize = partySize >= table.minimum_guests && partySize <= table.maximum_guests;
   
   const canBeSelected = isAvailable && isValidPartySize;
+  
+  // Support both tableNumber and table_number naming conventions
+  const tableNumberDisplay = table.tableNumber || table.table_number || `Table ${table.id.slice(0, 4)}`;
 
   return (
     <Card 
@@ -39,7 +42,7 @@ const RestaurantTable = ({
     >
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-medium">{table.tableNumber}</h3>
+          <h3 className="font-medium">{tableNumberDisplay}</h3>
           <p className="text-sm text-gray-500">{table.location}</p>
         </div>
         {isAvailable ? (
