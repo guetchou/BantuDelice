@@ -163,9 +163,26 @@ export interface RestaurantFilters {
   priceRange?: [number, number];
   openNow?: boolean;
   search?: string;
+  cuisine_type?: string[];
+  price_range?: string;
+  distance?: number;
+  isOpen?: boolean;
+  hasDelivery?: boolean;
+  hasPickup?: boolean;
 }
 
 export type ApiResponse<T> = T;
 
 // Ajout de l'export CartItem qui était manquant
 export type { CartItem } from '@/types/cart';
+
+// Added MenuPromotion type
+export interface MenuPromotion {
+  id?: string;
+  title: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  discount_type?: string;
+  discount_value?: number;
+}

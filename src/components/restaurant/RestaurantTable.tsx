@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,7 @@ const RestaurantTable = ({
     >
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-medium">Table {table.table_number}</h3>
+          <h3 className="font-medium">{table.tableNumber}</h3>
           <p className="text-sm text-gray-500">{table.location}</p>
         </div>
         {isAvailable ? (

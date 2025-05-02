@@ -72,7 +72,7 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { supabase } from '@/integrations/supabase/client';
-import { ReloadIcon, Copy, CheckCircle, AlertTriangle } from "lucide-react";
+import { ReloadIcon, Copy, CheckCircle, AlertTriangle, Plus, Trash2, LoaderIcon } from "lucide-react";
 
 interface RestaurantPromotionsManagerProps {
   restaurantId: string;
@@ -495,7 +495,7 @@ const RestaurantPromotionsManager: React.FC<RestaurantPromotionsManagerProps> = 
 
       {loading ? (
         <div className="flex items-center justify-center">
-          <ReloadIcon className="mr-2 h-8 w-8 animate-spin" />
+          <LoaderIcon className="mr-2 h-8 w-8 animate-spin" />
         </div>
       ) : promotions.length === 0 ? (
         <div className="flex items-center justify-center">

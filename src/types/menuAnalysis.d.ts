@@ -1,38 +1,53 @@
 
-// Types pour l'analyse des menus et des restaurants
+import { MenuItem } from './restaurant';
+
 export interface MenuPromotion {
-  id: string;
+  id?: string;
   title: string;
-  description: string;
-  discount_type?: string;
-  discount_value?: number;
-  start_date?: string;
-  end_date?: string;
-  conditions?: string[];
+  description?: string;
+  active?: boolean;
 }
 
 export interface MenuStatistics {
   popularItems: MenuItem[];
-  profitMargins: {itemId: string; margin?: number}[];
+  profitMargins: Array<{ itemId: string; margin?: number }>;
   salesTrends: any[];
   categoryPerformance: any[];
   timeBasedAnalysis: any[];
 }
 
 export interface MenuRecommendation {
-  id: string;
-  recommendationType: string;
-  strength: string;
-  details?: any;
+  id?: string;
+  recommendationType?: string;
+  strength?: string;
 }
 
-export interface ExtendedMenuAnalysisResult extends MenuAnalysisResult {
-  lowProfitItems?: MenuItem[];
-  highProfitItems?: MenuItem[];
-  slowMovers?: MenuItem[];
-  fastMovers?: MenuItem[];
-  priceChangeRecommendations?: { itemId: string; suggestedPrice: number }[];
-  bundleOpportunities?: MenuItem[];
+export interface ExtendedMenuAnalysisResult {
+  totalItems: number;
+  priceStats: {
+    average: number;
+    highest: number;
+    lowest: number;
+    median: number;
+  };
+  dietaryOptions: {
+    vegetarianCount: number;
+    veganCount: number;
+    glutenFreeCount: number;
+    vegetarianPercentage: number;
+    veganPercentage: number;
+    glutenFreePercentage: number;
+  };
+  menuSuggestions: {
+    message: string;
+    priority: 'high' | 'medium' | 'low';
+  }[];
+  lowProfitItems?: any[];
+  highProfitItems?: any[];
+  slowMovers?: any[];
+  fastMovers?: any[];
+  priceChangeRecommendations?: Array<{ itemId: string; suggestedPrice: number }>;
+  bundleOpportunities?: any[];
   seasonalRecommendations?: any[];
   mostPopularCategory?: string;
 }

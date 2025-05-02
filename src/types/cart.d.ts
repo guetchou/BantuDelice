@@ -1,6 +1,14 @@
 
 import { MenuItem } from './restaurant';
 
+export interface CartItemOption {
+  id: string;
+  name: string;
+  value: string;
+  price: number;
+  quantity: number;
+}
+
 export interface CartItem {
   id: string;
   menu_item_id: string;
@@ -15,4 +23,20 @@ export interface CartItem {
   special_instructions?: string;
   fiber?: number;
   customization_options?: any[];
+  options?: CartItemOption[];
+  combo_item?: {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+  };
+}
+
+export interface CartState {
+  items: CartItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  delivery_fee: number;
+  restaurant_id?: string;
 }

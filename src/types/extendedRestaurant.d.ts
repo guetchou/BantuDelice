@@ -28,7 +28,7 @@ export interface ExtendedUserProfile {
   created_at?: string;
   updated_at?: string;
   phone?: string;
-  status: "active" | "inactive" | "pending";
+  status?: "active" | "inactive" | "pending";
   last_login?: string;
 }
 
@@ -55,4 +55,30 @@ export interface ExtendedDayHours {
 export interface ExtendedCartItem {
   special_instructions?: string;
   fiber?: number;
+}
+
+// Types for menu analysis
+export interface MenuStatistics {
+  popularItems: MenuItem[];
+  profitMargins: Array<{ itemId: string, margin?: number }>;
+  salesTrends: any[];
+  categoryPerformance: any[];
+  timeBasedAnalysis: any[];
+}
+
+export interface MenuRecommendation {
+  id?: string;
+  recommendationType?: string;
+  strength?: string;
+}
+
+export interface ExtendedMenuAnalysisResult extends MenuItem {
+  lowProfitItems?: ExtendedMenuItem[];
+  highProfitItems?: ExtendedMenuItem[];
+  slowMovers?: MenuItem[];
+  fastMovers?: MenuItem[];
+  priceChangeRecommendations?: Array<{ itemId: string, suggestedPrice: number }>;
+  bundleOpportunities?: MenuItem[];
+  seasonalRecommendations?: any[];
+  mostPopularCategory?: string;
 }

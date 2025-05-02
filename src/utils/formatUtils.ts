@@ -1,6 +1,4 @@
 
-import { priceChangeStats } from './formatPrice';
-
 export const formatPrice = (amount: number): string => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -10,4 +8,13 @@ export const formatPrice = (amount: number): string => {
   }).format(amount);
 };
 
-export { priceChangeStats };
+export const priceChangeStats = (oldPrice: number, newPrice: number) => {
+  const absoluteDifference = newPrice - oldPrice;
+  const percentageDifference = (absoluteDifference / oldPrice) * 100;
+  
+  return {
+    absoluteDifference,
+    percentageDifference: Math.round(percentageDifference * 10) / 10,
+    isIncrease: newPrice > oldPrice
+  };
+};

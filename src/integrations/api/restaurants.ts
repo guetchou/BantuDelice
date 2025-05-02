@@ -18,7 +18,8 @@ export const restaurantApi = {
       description: 'Description du restaurant test',
       is_open: true,
       phone: '+237 123456789',
-      average_rating: 4.5
+      average_rating: 4.5,
+      status: 'open'  // Added missing status property
     };
   },
 
@@ -47,7 +48,7 @@ export const restaurantApi = {
   updateStatus: async (restaurantId: string, statusData: any): Promise<ApiResponse<any>> => {
     // Simulation d'un appel API
     console.log(`Updating status for restaurant ${restaurantId} to:`, statusData);
-    return { success: true };
+    return { success: true, is_open: statusData.is_open };
   },
 
   // Méthodes manquantes pour les heures spéciales
