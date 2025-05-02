@@ -482,7 +482,7 @@ const RestaurantPromotionsManager: React.FC<RestaurantPromotionsManagerProps> = 
                 <DialogFooter>
                   <Button type="submit" disabled={isCreating}>
                     {isCreating && (
-                      <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                      <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     Create
                   </Button>
@@ -534,7 +534,7 @@ const RestaurantPromotionsManager: React.FC<RestaurantPromotionsManagerProps> = 
                       disabled={isCopying && copiedPromotionId === promotion.id}
                     >
                       {isCopying && copiedPromotionId === promotion.id ? (
-                        <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                        <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         <Copy className="mr-2 h-4 w-4" />
                       )}
@@ -565,7 +565,7 @@ const RestaurantPromotionsManager: React.FC<RestaurantPromotionsManagerProps> = 
                             disabled={isDeleting}
                           >
                             {isDeleting && (
-                              <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                              <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
                             )}
                             Delete
                           </Button>

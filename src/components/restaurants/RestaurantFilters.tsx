@@ -1,4 +1,3 @@
-
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,6 +33,14 @@ const CUISINE_TYPES = [
 interface RestaurantFiltersProps {
   filters: RestaurantFilters;
   onChange: (filters: RestaurantFilters) => void;
+}
+
+export interface RestaurantFilters {
+  cuisine_type?: string | null;
+  price_range?: number | null;
+  distance?: number | null;
+  isOpen?: boolean;
+  hasDelivery?: boolean;
 }
 
 export default function RestaurantFilters({

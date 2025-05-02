@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User, UserProfile } from '@/types/user.d';
+import { User, UserProfile } from '@/types/user';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -40,7 +40,7 @@ export const useAuth = () => {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -51,8 +51,9 @@ export const useAuth = () => {
     }
   };
 
-  const signUp = async (email: string, password: string, userData: Partial<UserProfile>) => {
+  const register = async (userData: any) => {
     try {
+      const { email, password } = userData;
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -68,7 +69,15 @@ export const useAuth = () => {
     }
   };
 
-  const signOut = async () => {
+  const signIn = async (email: string, password: string) => {
+    return login(email, password);
+  };
+
+  const signUp = async (email: string, password: string, userData: Partial<UserProfile>) => {
+    return register({ email, password, ...userData });
+  };
+
+  const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -79,11 +88,24 @@ export const useAuth = () => {
     }
   };
 
+  const signOut = async () => {
+    return logout();
+  };
+
+  const isAuthenticated = !!user;
+  const isLoading = loading;
+
   return {
     user,
     loading,
     signIn,
     signUp,
-    signOut
+    signOut,
+    // Ajout des propriétés manquantes
+    login,
+    register,
+    logout,
+    isAuthenticated,
+    isLoading
   };
 };

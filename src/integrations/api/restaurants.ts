@@ -19,12 +19,13 @@ export const restaurantApi = {
       is_open: true,
       phone: '+237 123456789',
       average_rating: 4.5,
-      status: 'open'  // Added missing status property
+      status: 'open'
     };
   },
 
   getMenuItems: async (restaurantId: string): Promise<ApiResponse<any[]>> => {
     // Simulation d'un appel API
+    // Pour résoudre l'erreur, assurons-nous que ça retourne un tableau
     return [];
   },
 

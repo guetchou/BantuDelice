@@ -1,188 +1,112 @@
-
-export interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image_url?: string;
-  restaurant_id: string;
-  available: boolean;
-  created_at: string;
-  dietary_preferences?: string[];
-  preparation_time?: number;
-  is_vegetarian?: boolean;
-  is_vegan?: boolean;
-  is_gluten_free?: boolean;
-  is_spicy?: boolean;
-  allergens?: string[];
-  ingredients?: string[];
-  popularity_score?: number;
-  customization_options?: MenuCustomizationOption[];
-  nutritional_info?: {
-    calories?: number;
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-    sodium?: number;
-    fiber?: number;
-  };
-  portion_size?: string;
-  promotional_data?: {
-    is_on_promotion?: boolean;
-    discount_percentage?: number;
-    promotion_hours?: any;
-    original_price?: number;
-  };
-}
-
-export interface MenuCustomizationOption {
-  id: string;
-  name: string;
-  type: 'radio' | 'checkbox';
-  required: boolean;
-  max_selections?: number;
-  options: {
-    id: string;
-    name: string;
-    price?: number;
-    default?: boolean;
-  }[];
-}
-
 export interface Restaurant {
   id: string;
   name: string;
-  description: string;
   address: string;
+  description: string;
   phone: string;
-  email?: string;
+  status: string;
   cuisine_type?: string;
-  rating?: number;
-  image_url?: string;
-  banner_image_url?: string;
   logo_url?: string;
-  latitude?: number;
-  longitude?: number;
-  status: 'open' | 'closed' | 'busy';
+  banner_url?: string;
+  rating?: number;
+  delivery_time?: number;
   delivery_fee?: number;
-  min_order?: number;
   minimum_order?: number;
-  estimated_preparation_time: number;
-  distance?: number;
-  business_hours?: BusinessHours;
-  features?: string[];
-  services?: string[];
-  payment_methods?: string[];
-  trending?: boolean;
-  average_prep_time?: number;
-  average_rating?: number;
   is_open?: boolean;
-  total_ratings?: number;
-  website?: string;
-  special_features?: string[];
-  estimated_delivery_time?: number;
-  price_range?: number;
-  table_number?: string;
-}
-
-export interface BusinessHours {
-  regular: Record<string, { 
-    open: string; 
-    close: string;
-    is_closed?: boolean;
-  }>;
-  special?: Record<string, {
-    open: string;
-    close: string;
-    is_closed?: boolean;
-  }>;
-  holidays?: string[];
-}
-
-export interface MenuAnalysisResult {
-  totalItems: number;
-  totalCategories?: number;
-  mostPopularCategory?: string;
-  priceStats: {
-    average: number;
-    highest: number;
-    lowest: number;
-    median: number;
+  opening_hours?: BusinessHours;
+  categories?: MenuCategory[];
+  menu_items?: MenuItem[];
+  location?: {
+    latitude: number;
+    longitude: number;
   };
-  dietaryOptions: {
-    vegetarianCount: number;
-    veganCount: number;
-    glutenFreeCount: number;
-    vegetarianPercentage: number;
-    veganPercentage: number;
-    glutenFreePercentage: number;
-  };
-  menuSuggestions: {
-    message: string;
-    priority: 'high' | 'medium' | 'low';
-  }[];
-  categoryBreakdown?: Record<string, number>;
-  priceDistribution?: {
-    lowPriced: number;
-    mediumPriced: number;
-    highPriced: number;
-  };
-  missingPhotos?: number;
 }
 
 export interface Table {
   id: string;
   tableNumber: string;
+  location: string;
   capacity: number;
-  minimum_guests?: number;
-  maximum_guests?: number;
+  minimum_guests: number;
+  maximum_guests: number;
   is_available?: boolean;
   is_accessible?: boolean;
-  location?: string;
-  status?: string;
   notes?: string;
 }
 
-export interface RidesharingTrip {
+export interface BusinessHours {
+  monday?: { open: string; close: string };
+  tuesday?: { open: string; close: string };
+  wednesday?: { open: string; close: string };
+  thursday?: { open: string; close: string };
+  friday?: { open: string; close: string };
+  saturday?: { open: string; close: string };
+  sunday?: { open: string; close: string };
+}
+
+export interface MenuCategory {
   id: string;
-  driver_id?: string;
-  origin: string;
-  destination: string;
-  departure_time: string;
-  seats_available: number;
+  name: string;
+  description?: string;
+  image_url?: string;
+  items?: MenuItem[];
+}
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  description?: string;
   price: number;
-  status: string;
-  vehicle_type: string;
-  description?: string;
+  image_url?: string;
+  category_id?: string;
+  category_name?: string;
+  restaurant_id?: string;
+  is_available?: boolean;
+  is_vegetarian?: boolean;
+  is_vegan?: boolean;
+  is_gluten_free?: boolean;
+  allergens?: string[];
+  nutritional_info?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  };
+  preparation_time?: number;
+  options?: MenuItemOption[];
+  variations?: MenuItemVariation[];
+  popular?: boolean;
+  spicy_level?: number;
+  tags?: string[];
 }
 
-export interface RestaurantFilters {
-  cuisine?: string[];
-  rating?: number;
-  priceRange?: [number, number];
-  openNow?: boolean;
-  search?: string;
-  cuisine_type?: string[];
-  price_range?: string;
-  distance?: number;
-  isOpen?: boolean;
-  hasDelivery?: boolean;
-  hasPickup?: boolean;
+export interface MenuItemOption {
+  id: string;
+  name: string;
+  required?: boolean;
+  multiple?: boolean;
+  min_selections?: number;
+  max_selections?: number;
+  choices: MenuItemOptionChoice[];
 }
 
-export type ApiResponse<T> = T;
+export interface MenuItemOptionChoice {
+  id: string;
+  name: string;
+  price_adjustment: number;
+}
 
-// Ajout de l'export CartItem qui était manquant
-export type { CartItem } from '@/types/cart';
+export interface MenuItemVariation {
+  id: string;
+  name: string;
+  price: number;
+  is_available?: boolean;
+}
 
-// Added MenuPromotion type
-export interface MenuPromotion {
-  id?: string;
-  title: string;
-  description?: string;
-  start_date?: string;
-  end_date?: string;
-  discount_type?: string;
-  discount_value?: number;
+export interface ApiResponse<T> {
+  data?: T;
+  success?: boolean;
+  error?: string;
+  message?: string;
+  [key: string]: any;
 }
