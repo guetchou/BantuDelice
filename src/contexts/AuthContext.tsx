@@ -9,7 +9,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, userData?: object) => Promise<any>;
   signOut: () => Promise<any>;
+  logout: () => Promise<any>; // Alias for signOut
   loading: boolean;
+  isAuthenticated: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -18,7 +20,9 @@ export const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({}),
   signUp: async () => ({}),
   signOut: async () => ({}),
+  logout: async () => ({}), // Alias for signOut
   loading: true,
+  isAuthenticated: false
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -61,6 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     return supabase.auth.signOut();
   };
+  
+  // Alias for signOut to maintain compatibility
+  const logout = signOut;
 
   const value = {
     user,
@@ -68,7 +75,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
+    logout,
     loading,
+    isAuthenticated: !!user,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

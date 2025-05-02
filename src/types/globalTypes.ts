@@ -92,12 +92,13 @@ export interface ExtendedMenuAnalysisResult {
 export interface MenuPromotion {
   id: string;
   title: string;
+  description?: string;
   discount_type: 'percentage' | 'amount' | 'fixed_amount';
   discount_value: number;
   valid_from: string;
   valid_to: string;
   promotion_hours?: { start: string; end: string; days?: string[] }[];
-  conditions?: string[];
+  conditions?: string;
   min_order_value?: number;
 }
 

@@ -1,3 +1,4 @@
+
 import { ApiResponse, Restaurant } from '@/types/restaurant';
 
 export const restaurantApi = {
@@ -32,7 +33,7 @@ export const restaurantApi = {
     return { success: true };
   },
   
-  // Missing methods
+  // Adding missing methods
   updateStatus: async (restaurantId: string, isOpen: boolean): Promise<ApiResponse<any>> => {
     // Implementation
     return { success: true };

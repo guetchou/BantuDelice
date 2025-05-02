@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/ui/theme-provider';
 import { CartProvider } from '@/contexts/CartProvider';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import AuthProvider from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Root layout with providers
 const RootLayout = () => {
