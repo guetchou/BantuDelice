@@ -34,6 +34,8 @@ export interface Restaurant {
   min_order?: number;
   available?: boolean;
   is_available?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Table {
@@ -158,11 +160,11 @@ export type MenuPromotion = {
   start_date: string;
   end_date: string;
   title: string;
-  discount_type: 'percentage' | 'amount';
+  discount_type: 'percentage' | 'amount' | 'fixed_amount';
   discount_value: number;
   valid_from: string;
   valid_to: string;
-  promotion_hours?: { start: string; end: string }[];
+  promotion_hours?: { start: string; end: string; days?: string[] }[];
   conditions?: string;
   min_order_value?: number;
 };
@@ -173,10 +175,12 @@ export type MenuStatistics = {
     average: number;
     highest: number;
     lowest: number;
+    median: number; // Added median
   };
   dietaryOptions: {
     vegetarianCount: number;
     vegetarianPercentage: number;
+    veganCount: number; // Added veganCount
   };
   menuSuggestions: Array<{ message: string; priority: 'high' | 'medium' | 'low' }>;
 };
@@ -200,10 +204,12 @@ export type MenuAnalysisResult = {
     average: number;
     highest: number;
     lowest: number;
+    median: number; // Added median
   };
   dietaryOptions: {
     vegetarianCount: number;
     vegetarianPercentage: number;
+    veganCount: number; // Added veganCount
   };
   menuSuggestions: Array<{ message: string; priority: 'high' | 'medium' | 'low' }>;
 };
@@ -211,11 +217,17 @@ export type MenuAnalysisResult = {
 export interface RestaurantFilters {
   cuisine?: string[];
   rating?: number;
-  priceRange?: [number, number];
+  priceRange?: [number, number]; // Changed from price_range to priceRange
   openNow?: boolean;
   search?: string;
   distance?: number;
   isOpen?: boolean;
   hasDelivery?: boolean;
   hasPickup?: boolean;
+}
+
+export interface RidesharingTrip {
+  id: string;
+  description: string;
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 }

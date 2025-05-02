@@ -1,3 +1,4 @@
+
 import { Restaurant as BaseRestaurant, MenuItem, BusinessHours } from '@/types/restaurant';
 
 // Extension du type Restaurant pour inclure les propriétés manquantes
@@ -27,7 +28,7 @@ export interface ExtendedUserProfile {
   created_at?: string;
   updated_at?: string;
   phone?: string;
-  status?: "active" | "inactive" | "pending";
+  status?: "active" | "inactive" | "pending"; // Fixed to match UserProfile's status
   last_login?: string;
 }
 
@@ -71,7 +72,7 @@ export interface MenuRecommendation {
   strength?: string;
 }
 
-export interface ExtendedMenuAnalysisResult extends MenuItem {
+export interface ExtendedMenuAnalysisResult {
   lowProfitItems?: ExtendedMenuItem[];
   highProfitItems?: ExtendedMenuItem[];
   slowMovers?: MenuItem[];
@@ -80,4 +81,16 @@ export interface ExtendedMenuAnalysisResult extends MenuItem {
   bundleOpportunities?: MenuItem[];
   seasonalRecommendations?: any[];
   mostPopularCategory?: string;
+  priceStats: {
+    average: number;
+    highest: number;
+    lowest: number;
+    median: number;
+  };
+  dietaryOptions: string[];
+  insights: string[];
+  menuSuggestions: {
+    message: string;
+    priority: 'high' | 'medium' | 'low';
+  }[];
 }
