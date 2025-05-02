@@ -1,11 +1,5 @@
 
-export interface CartItemOption {
-  id: string;
-  name: string;
-  value: string;
-  price?: number;
-  quantity: number;
-}
+import { MenuItem } from './restaurant';
 
 export interface CartItem {
   id: string;
@@ -14,26 +8,11 @@ export interface CartItem {
   price: number;
   quantity: number;
   total: number;
-  image_url?: string;
-  restaurant_id?: string;
   description?: string;
-  options?: CartItemOption[];
+  image_url?: string;
+  restaurant_id: string;
   category?: string;
-  size?: string;
   special_instructions?: string;
-  combo_item?: {
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-  };
-}
-
-export interface CartState {
-  items: CartItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
-  delivery_fee: number;
-  restaurant_id?: string;
+  fiber?: number;
+  customization_options?: any[];
 }

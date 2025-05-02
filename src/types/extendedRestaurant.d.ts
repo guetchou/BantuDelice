@@ -1,3 +1,4 @@
+
 import { Restaurant as BaseRestaurant, MenuItem, BusinessHours } from '@/types/restaurant';
 
 // Extension du type Restaurant pour inclure les propriétés manquantes

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import type { Restaurant } from '@/types/restaurant';
+import Banknote from '@/components/icons/Banknote';
 
 interface RestaurantHeaderProps {
   restaurant: Restaurant;

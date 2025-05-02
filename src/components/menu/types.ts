@@ -1,4 +1,6 @@
-import type { MenuItem, CartItem } from "@/types/restaurant";
+
+import type { MenuItem } from "@/types/restaurant";
+import type { CartItem } from "@/types/cart";
 
 export interface MenuItemCardProps {
   item: MenuItem;
@@ -30,3 +32,6 @@ export interface MenuListProps {
   isLoading?: boolean;
   showNutritionalInfo?: boolean;
 }
+
+// Export explicite du type MenuItem pour les autres modules
+export type { MenuItem, CartItem };

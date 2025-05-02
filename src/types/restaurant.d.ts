@@ -1,3 +1,4 @@
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -24,6 +25,7 @@ export interface MenuItem {
     carbs?: number;
     fat?: number;
     sodium?: number;
+    fiber?: number;
   };
   portion_size?: string;
   promotional_data?: {
@@ -81,6 +83,7 @@ export interface Restaurant {
   special_features?: string[];
   estimated_delivery_time?: number;
   price_range?: number;
+  table_number?: string;
 }
 
 export interface BusinessHours {
@@ -154,4 +157,15 @@ export interface RidesharingTrip {
   description?: string;
 }
 
+export interface RestaurantFilters {
+  cuisine?: string[];
+  rating?: number;
+  priceRange?: [number, number];
+  openNow?: boolean;
+  search?: string;
+}
+
 export type ApiResponse<T> = T;
+
+// Ajout de l'export CartItem qui était manquant
+export type { CartItem } from '@/types/cart';

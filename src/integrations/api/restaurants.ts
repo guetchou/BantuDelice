@@ -1,3 +1,4 @@
+
 import { ApiResponse } from '@/types/restaurant';
 
 // Voici une API fictive pour les restaurants
@@ -21,7 +22,7 @@ export const restaurantApi = {
     };
   },
 
-  getMenuItems: async (restaurantId: string): Promise<ApiResponse<any>> => {
+  getMenuItems: async (restaurantId: string): Promise<ApiResponse<any[]>> => {
     // Simulation d'un appel API
     return [];
   },
