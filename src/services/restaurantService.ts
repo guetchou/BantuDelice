@@ -162,18 +162,23 @@ export const restaurantService = {
   },
 
   // Update restaurant status (open/closed)
-  async updateStatus(restaurantId: string, isOpen: boolean): Promise<ApiResponse<Restaurant>> {
+  async updateStatus(restaurantId: string, data: { is_open: boolean, reason?: string | null, estimated_reopening?: string | null }): Promise<ApiResponse<Restaurant>> {
     try {
-      const { data, error } = await supabase
+      const { data: updatedData, error } = await supabase
         .from('restaurants')
-        .update({ is_open: isOpen })
+        .update({ 
+          is_open: data.is_open,
+          status: data.is_open ? 'open' : 'closed',
+          closure_reason: data.reason,
+          estimated_reopening: data.estimated_reopening
+        })
         .eq('id', restaurantId)
         .select()
         .single();
 
       if (error) throw error;
 
-      return { data, error: null };
+      return { data: updatedData, error: null };
     } catch (error) {
       console.error('Error updating restaurant status:', error);
       return { data: null, error: error.message };

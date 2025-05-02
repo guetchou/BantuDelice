@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import {
   Home, 
   Briefcase, 
   Book, 
-  Cars, 
+  Car, 
   Scissors, 
   Utensils, 
   Palette, 
@@ -107,7 +106,7 @@ const professionalServices = [
   {
     title: "Transport spécialisé",
     description: "Transport de marchandises, déménagement et livraison.",
-    icon: <Cars size={24} />,
+    icon: <Car size={24} />,
     price: "25 000 XAF",
     link: "/services/transport"
   }

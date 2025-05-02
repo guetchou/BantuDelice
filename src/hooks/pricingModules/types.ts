@@ -48,6 +48,13 @@ export interface BusinessRateEstimate {
   formattedTotal: string;
   formattedSavings: string;
   minimumRidesForDiscount: number;
+  baseDiscount: number;
+  volumeDiscount: number;
+  totalDiscount: number;
+  standardRate: number;
+  businessRate: number;
+  monthlySavings: number;
+  annualSavings: number;
 }
 
 export interface SubscriptionDiscount {
@@ -55,4 +62,17 @@ export interface SubscriptionDiscount {
   monthlyLimit: number;
   remainingRides: number;
   applicableVehicleTypes: TaxiVehicleType[];
+}
+
+export interface BusinessRateCalculatorProps {
+  formData: BusinessRateFormData;
+  showResult: boolean;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSliderChange: (value: number) => void;
+  handleVehicleTypeChange: (value: string) => void;
+  handleCalculate: () => void;
+  handleSubmitRequest: () => void;
+  getEstimate: () => void;
+  isLoading: boolean;
+  businessRateEstimate: BusinessRateEstimate;
 }

@@ -87,7 +87,14 @@ export interface ExtendedMenuAnalysisResult {
     lowest: number;
     median: number;
   };
-  dietaryOptions: string[];
+  dietaryOptions: {
+    vegetarianCount: number;
+    veganCount: number;
+    glutenFreeCount: number;
+    vegetarianPercentage: number;
+    veganPercentage: number;
+    glutenFreePercentage: number;
+  };
   insights: string[];
   menuSuggestions: {
     message: string;

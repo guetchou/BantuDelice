@@ -87,6 +87,7 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
       name: option.name,
       value: option.value,
       price: option.price,
+      price_adjustment: option.price, // Add price_adjustment field
       quantity: 1
     }));
 

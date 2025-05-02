@@ -16,3 +16,7 @@ export interface BusinessRateFormData {
   averageDistance: number;
   vehicleType: string;
 }
+
+export type TaxiVehicleType = 'standard' | 'comfort' | 'premium' | 'suv' | 'van';
+
+export type PaymentMethod = 'cash' | 'credit_card' | 'mobile_money' | 'wallet';

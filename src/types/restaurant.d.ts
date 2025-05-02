@@ -230,4 +230,26 @@ export interface RidesharingTrip {
   id: string;
   description: string;
   day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+  origin_address?: string;
+  destination_address?: string;
+  departure_time?: string;
+  estimated_arrival_time?: string;
+  available_seats?: number;
+  price_per_seat?: number;
+  vehicle_model?: string;
+  vehicle_color?: string;
+  license_plate?: string;
+  preferences?: {
+    smoking_allowed: boolean;
+    pets_allowed: boolean;
+    music_allowed: boolean;
+    air_conditioning: boolean;
+    luggage_allowed: boolean;
+    chatty_driver?: boolean;
+  };
+  recurrence_pattern?: {
+    frequency: string;
+    days_of_week?: Array<'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'>;
+  };
+  status?: string;
 }

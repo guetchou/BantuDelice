@@ -1,39 +1,54 @@
 
-// Format a date string to a human-readable format
-export const formatDate = (dateString?: string): string => {
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+/**
+ * Format a date for display
+ * @param dateString ISO date string
+ * @param formatString Format pattern (default: 'dd/MM/yyyy')
+ * @returns Formatted date string
+ */
+export const formatDate = (dateString?: string, formatString: string = 'dd/MM/yyyy'): string => {
   if (!dateString) return 'N/A';
   
   try {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
-  } catch (e) {
-    return 'Date invalide';
+    return format(parseISO(dateString), formatString, { locale: fr });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
   }
 };
 
-// Get relative time from now
-export const getRelativeTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
+/**
+ * Format a time for display
+ * @param timeString ISO datetime string
+ * @param formatString Format pattern (default: 'HH:mm')
+ * @returns Formatted time string
+ */
+export const formatTime = (timeString?: string, formatString: string = 'HH:mm'): string => {
+  if (!timeString) return 'N/A';
   
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  try {
+    return format(parseISO(timeString), formatString, { locale: fr });
+  } catch (error) {
+    console.error('Error formatting time:', error);
+    return 'Invalid time';
+  }
+};
+
+/**
+ * Format a datetime for display
+ * @param datetimeString ISO datetime string
+ * @param formatString Format pattern (default: 'dd/MM/yyyy HH:mm')
+ * @returns Formatted datetime string
+ */
+export const formatDateTime = (datetimeString?: string, formatString: string = 'dd/MM/yyyy HH:mm'): string => {
+  if (!datetimeString) return 'N/A';
   
-  if (diffInSeconds < 60) {
-    return 'À l\'instant';
-  } else if (diffInSeconds < 3600) {
-    const minutes = Math.floor(diffInSeconds / 60);
-    return `Il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
-  } else if (diffInSeconds < 86400) {
-    const hours = Math.floor(diffInSeconds / 3600);
-    return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`;
-  } else if (diffInSeconds < 604800) {
-    const days = Math.floor(diffInSeconds / 86400);
-    return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
-  } else {
-    return formatDate(dateString);
+  try {
+    return format(parseISO(datetimeString), formatString, { locale: fr });
+  } catch (error) {
+    console.error('Error formatting datetime:', error);
+    return 'Invalid datetime';
   }
 };
