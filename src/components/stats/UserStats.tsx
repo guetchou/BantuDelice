@@ -35,7 +35,10 @@ const UserStats = () => {
 
       // Calculer les statistiques
       const totalOrders = orders?.length || 0;
-      const totalSpent = orders?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
+      const totalSpent = orders?.reduce((sum, order) => {
+        const amount = typeof order.total_amount === 'number' ? order.total_amount : 0;
+        return sum + amount;
+      }, 0) || 0;
       const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
       // Trouver le restaurant favori
@@ -46,19 +49,25 @@ const UserStats = () => {
         return acc;
       }, {} as Record<string, number>);
 
-      const favoriteRestaurantId = Object.entries(restaurantCounts || {})
-        .sort(([,a], [,b]) => b - a)[0]?.[0];
+      const favoriteRestaurantId = restaurantCounts && Object.entries(restaurantCounts).length > 0 
+        ? Object.entries(restaurantCounts).sort(([,a], [,b]) => b - a)[0]?.[0]
+        : null;
 
-      const { data: favoriteRestaurant } = await supabase
-        .from('restaurants')
-        .select('name')
-        .eq('id', favoriteRestaurantId)
-        .single();
+      let favoriteRestaurantName = 'Aucun';
+      if (favoriteRestaurantId) {
+        const { data: favoriteRestaurant } = await supabase
+          .from('restaurants')
+          .select('name')
+          .eq('id', favoriteRestaurantId)
+          .single();
+        
+        favoriteRestaurantName = favoriteRestaurant?.name || 'Aucun';
+      }
 
       return {
         totalOrders,
         totalSpent,
-        favoriteRestaurant: favoriteRestaurant?.name || 'Aucun',
+        favoriteRestaurant: favoriteRestaurantName,
         loyaltyPoints: loyalty?.points || 0,
         averageOrderValue
       } as UserStatistics;

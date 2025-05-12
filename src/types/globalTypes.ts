@@ -39,7 +39,16 @@ export interface UserProfile {
   status?: 'pending' | 'active' | 'inactive';
 }
 
-export interface ExtendedUserProfile extends UserProfile {
+export interface ExtendedUserProfile {
+  id: string;
+  name?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  status?: 'pending' | 'active' | 'inactive';
   role?: 'user' | 'admin' | 'restaurant_owner' | 'driver';
   phone?: string;
   last_login?: string;
@@ -113,7 +122,6 @@ export interface MenuPromotion {
 // ------------------ Ridesharing Trip ------------------
 export interface RidesharingTrip {
   id: string;
-  description: string;
   origin_address?: string;
   destination_address?: string;
   departure_time?: string;
@@ -137,6 +145,7 @@ export interface RidesharingTrip {
   };
   status?: string;
   day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+  description: string;
 }
 
 // ------------------ Business Rate Calculator Props ------------------
@@ -164,7 +173,7 @@ export interface BusinessRateCalculatorProps {
   handleVehicleTypeChange: (value: string) => void;
   handleCalculate: () => void;
   handleSubmitRequest: () => void;
-  getEstimate: () => void;
+  getEstimate: () => BusinessRateEstimate;
   isLoading: boolean;
   businessRateEstimate: BusinessRateEstimate;
 }

@@ -1,11 +1,11 @@
 
 /**
- * Format a price for display
- * @param price Price in cents
- * @returns Formatted price string
+ * Format a number to currency display
+ * @param value - The number value to format
+ * @returns Formatted currency string
  */
-export const formatPrice = (price: number): string => {
-  return (price / 100).toLocaleString('fr-FR', {
+export const formatCurrency = (value: number): string => {
+  return value.toLocaleString('fr-FR', {
     style: 'currency',
     currency: 'XAF',
     minimumFractionDigits: 0
@@ -13,21 +13,54 @@ export const formatPrice = (price: number): string => {
 };
 
 /**
- * Calculate price change statistics
- * @param oldPrice Original price
- * @param newPrice New price
- * @returns Statistics about the price change
+ * Format a date to a readable string
+ * @param dateString - The date string to format
+ * @returns Formatted date string
  */
-export const priceChangeStats = (oldPrice: number, newPrice: number) => {
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Calculate price difference with potential revenue impact
+ * @param oldPrice - The original price
+ * @param newPrice - The new suggested price
+ * @returns Object with difference metrics
+ */
+export const calculatePriceDifference = (oldPrice: number, newPrice: number) => {
   const absoluteDifference = newPrice - oldPrice;
-  const percentageDifference = oldPrice > 0 ? (absoluteDifference / oldPrice) * 100 : 0;
-  const isIncrease = newPrice > oldPrice;
-  const potentialRevenueIncrease = isIncrease ? absoluteDifference : 0;
-  
+  const percentageDifference = (absoluteDifference / oldPrice) * 100;
+  const isIncrease = absoluteDifference > 0;
+  const potentialRevenueIncrease = absoluteDifference * 30; // Estimation based on 30 sales
+
   return {
     absoluteDifference,
     percentageDifference,
     isIncrease,
     potentialRevenueIncrease
   };
+};
+
+/**
+ * Format a number to percentage display
+ * @param value - The number value to format as percentage
+ * @param decimals - Number of decimal places (default: 1)
+ * @returns Formatted percentage string
+ */
+export const formatPercentage = (value: number, decimals = 1): string => {
+  return `${value.toFixed(decimals)}%`;
+};
+
+/**
+ * Format a number to display with thousand separators
+ * @param value - The number value to format
+ * @returns Formatted number string
+ */
+export const formatNumber = (value: number): string => {
+  return value.toLocaleString('fr-FR');
 };
