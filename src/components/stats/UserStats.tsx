@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from "@/components/ui/card";
@@ -34,12 +35,14 @@ const UserStats = () => {
 
       // Calculer les statistiques
       const totalOrders = orders?.length || 0;
-      const totalSpent = orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
-      const averageOrderValue = totalOrders > 0 ? Number(totalSpent) / Number(totalOrders) : 0;
+      const totalSpent = orders?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
+      const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
       // Trouver le restaurant favori
-      const restaurantCounts = orders?.reduce((acc, order) => {
-        acc[order.restaurant_id] = (acc[order.restaurant_id] || 0) + 1;
+      const restaurantCounts = orders?.reduce((acc: Record<string, number>, order) => {
+        if (order.restaurant_id) {
+          acc[order.restaurant_id] = (acc[order.restaurant_id] || 0) + 1;
+        }
         return acc;
       }, {} as Record<string, number>);
 

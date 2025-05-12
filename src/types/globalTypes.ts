@@ -19,7 +19,11 @@ export interface Restaurant {
   longitude?: number;
   cuisine_type?: string | string[];
   rating?: number;
-  address?: string; // Added missing address property
+  address?: string;
+  image_url?: string;
+  estimated_preparation_time?: number;
+  distance?: number;
+  menu_items?: any[];
 }
 
 // ------------------ User Profile ------------------
@@ -32,7 +36,7 @@ export interface UserProfile {
   avatar_url?: string;
   created_at?: string;
   updated_at?: string;
-  status: 'pending' | 'active' | 'inactive';
+  status?: 'pending' | 'active' | 'inactive';
 }
 
 export interface ExtendedUserProfile extends UserProfile {
