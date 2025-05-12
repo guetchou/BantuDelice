@@ -19,23 +19,24 @@ export interface Restaurant {
   longitude?: number;
   cuisine_type?: string | string[];
   rating?: number;
+  address?: string; // Added missing address property
 }
 
 // ------------------ User Profile ------------------
 export interface UserProfile {
   id: string;
-  name: string;
+  name?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
   status: 'pending' | 'active' | 'inactive';
 }
 
 export interface ExtendedUserProfile extends UserProfile {
-  email?: string;
-  first_name?: string;
-  last_name?: string;
   role?: 'user' | 'admin' | 'restaurant_owner' | 'driver';
-  avatar_url?: string;
-  created_at?: string;
-  updated_at?: string;
   phone?: string;
   last_login?: string;
 }
@@ -65,16 +66,17 @@ export interface CartItem {
 
 // ------------------ Menu Analysis ------------------
 export interface ExtendedMenuAnalysisResult {
-  lowProfitItems: any[];
-  highProfitItems: any[];
-  slowMovers: any[];
-  fastMovers: any[];
+  lowProfitItems?: any[];
+  highProfitItems?: any[];
+  slowMovers?: any[];
+  fastMovers?: any[];
   priceStats: {
     average: number;
     highest: number;
     lowest: number;
     median: number;
   };
+  totalItems?: number;
   dietaryOptions: {
     vegetarianCount: number;
     vegetarianPercentage: number;
@@ -83,8 +85,8 @@ export interface ExtendedMenuAnalysisResult {
     glutenFreeCount: number;
     glutenFreePercentage: number;
   };
-  insights: string[];
-  menuSuggestions: {
+  insights?: string[];
+  menuSuggestions?: {
     message: string;
     priority: 'high' | 'medium' | 'low';
   }[];
@@ -134,6 +136,16 @@ export interface RidesharingTrip {
 }
 
 // ------------------ Business Rate Calculator Props ------------------
+export interface BusinessRateEstimate {
+  baseDiscount: number;
+  volumeDiscount: number;
+  totalDiscount: number;
+  standardRate: number;
+  businessRate: number;
+  monthlySavings: number;
+  annualSavings: number;
+}
+
 export interface BusinessRateCalculatorProps {
   formData: {
     companyName: string;
@@ -150,13 +162,5 @@ export interface BusinessRateCalculatorProps {
   handleSubmitRequest: () => void;
   getEstimate: () => void;
   isLoading: boolean;
-  businessRateEstimate: {
-    baseDiscount: number;
-    volumeDiscount: number;
-    totalDiscount: number;
-    standardRate: number;
-    businessRate: number;
-    monthlySavings: number;
-    annualSavings: number;
-  };
+  businessRateEstimate: BusinessRateEstimate;
 }

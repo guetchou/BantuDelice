@@ -1,3 +1,4 @@
+
 import { ApiResponse } from './base';
 import { fetchWithAuth } from './base';
 import { Restaurant } from '@/types/globalTypes';
@@ -50,8 +51,16 @@ export const restaurantApi = {
     });
   },
   
-  getSpecialHours: async (restaurantId: string): Promise<ApiResponse<any>> => {
-    return fetchWithAuth(`/restaurants/${restaurantId}/special-hours`);
+  getSpecialHours: async (restaurantId: string, params?: any): Promise<ApiResponse<any>> => {
+    let queryParams = '';
+    if (params) {
+      const urlParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) urlParams.append(key, String(value));
+      });
+      queryParams = `?${urlParams.toString()}`;
+    }
+    return fetchWithAuth(`/restaurants/${restaurantId}/special-hours${queryParams}`);
   },
   
   setSpecialHours: async (restaurantId: string, specialHours: any): Promise<ApiResponse<any>> => {

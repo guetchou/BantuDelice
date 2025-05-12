@@ -11,6 +11,7 @@ interface AuthContextType {
   signOut: () => Promise<any>;
   logout: () => Promise<any>; // Alias for signOut
   loading: boolean;
+  isLoading: boolean; // Added missing property
   isAuthenticated: boolean;
 }
 
@@ -22,6 +23,7 @@ export const AuthContext = createContext<AuthContextType>({
   signOut: async () => ({}),
   logout: async () => ({}), // Alias for signOut
   loading: true,
+  isLoading: true, // Added missing property
   isAuthenticated: false
 });
 
@@ -77,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     logout,
     loading,
+    isLoading: loading, // Set isLoading to the same value as loading
     isAuthenticated: !!user,
   };
 

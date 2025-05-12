@@ -1,57 +1,75 @@
 
+import React, { useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
+import { configService } from '@/utils/config';
 
-export const addDemoMarkers = (map: mapboxgl.Map, userLocation: [number, number] | null) => {
-  // Ajouter quelques marqueurs de démonstration pour les restaurants, taxis, etc.
-  const demoLocations = [
-    { 
-      lng: userLocation ? userLocation[1] + 0.005 : -4.2634 + 0.005, 
-      lat: userLocation ? userLocation[0] + 0.003 : 15.2429 + 0.003, 
-      type: 'restaurant', 
-      name: 'Restaurant Le Gourmet' 
-    },
-    { 
-      lng: userLocation ? userLocation[1] - 0.003 : -4.2634 - 0.003, 
-      lat: userLocation ? userLocation[0] + 0.002 : 15.2429 + 0.002, 
-      type: 'taxi', 
-      name: 'Taxi disponible' 
-    },
-    { 
-      lng: userLocation ? userLocation[1] + 0.002 : -4.2634 + 0.002, 
-      lat: userLocation ? userLocation[0] - 0.004 : 15.2429 - 0.004, 
-      type: 'covoiturage', 
-      name: 'Point de covoiturage' 
-    }
-  ];
+interface Marker {
+  id: string;
+  latitude: number;
+  longitude: number;
+  title?: string;
+  color?: string;
+  size?: number;
+}
 
-  const markers: mapboxgl.Marker[] = [];
+interface HomeMapMarkersProps {
+  markers: Marker[];
+  map: mapboxgl.Map | null;
+  onMarkerClick?: (markerId: string) => void;
+}
 
-  demoLocations.forEach(location => {
-    const el = document.createElement('div');
-    el.className = `marker-${location.type}`;
-    el.style.backgroundSize = 'cover';
-    el.style.width = '30px';
-    el.style.height = '30px';
-    el.style.backgroundImage = location.type === 'restaurant' 
-      ? 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZTExZDQ4IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtdXRlbnNpbHMiPjxwYXRoIGQ9Ik0zIDJoM3YxMGwzLTNsMy4wMDEgMyAwLTEwaC8iLz48cGF0aCBkPSJNMTUgMmg2djI0Ii8+PC9zdmc+")'
-      : location.type === 'taxi'
-      ? 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzQ5N2ZkIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtY2FyIj48cGF0aCBkPSJNMTQgMTZINW0xNSAwaC0zIi8+PHBhdGggZD0iTTcgTDguMDUgOS4wMCBBMi41IDIuNSAwIDAgMSAxMC4zMSA4aDIuMzhhMi41IDIuNSAwIDAgMSAyLjI2IDEuNDBMNiA4djZhMiAyIDAgMCAwIDIgMmgEVsDIvPjxjaXJjbGUgY3g9IjYuNSIgY3k9IjE2LjUiIHI9IjIuNSIvPjxjaXJjbGUgY3g9IjE2LjUiIGN5PSIxNi41IiByPSIyLjUiLz48L3N2Zz4=")'
-      : 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTBiOTgxIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtdXNlcnMiPjxwYXRoIGQ9Ik0xNiAyMXYtMmE0IDQgMCAwIDAtNC00SDVhNCA0IDAgMCAwLTQgNHYyIi8+PHBhdGggZD0iTSA5YTMgMCAxIDAgMCAxMDMgMyAwIDAgMCAwLTYiLz48cGF0aCBkPSJNMjMgMjF2LTJhNCA0IDAgMCAwLTMtMy44NyIvPjxwYXRoIGQ9Ik0xNiAzLjEzYTQgNCAwIDAgMSAwIDcuNzUiLz48L3N2Zz4=")';
-    
-    const marker = new mapboxgl.Marker(el)
-      .setLngLat([location.lng, location.lat])
-      .setPopup(new mapboxgl.Popup({ offset: 25 })
-        .setHTML(`<h3>${location.name}</h3>`))
-      .addTo(map);
-    
-    markers.push(marker);
-  });
+const HomeMapMarkers: React.FC<HomeMapMarkersProps> = ({ 
+  markers, 
+  map, 
+  onMarkerClick 
+}) => {
+  const markerRefs = useRef<{[key: string]: mapboxgl.Marker}>({});
 
-  return markers;
+  React.useEffect(() => {
+    if (!map) return;
+
+    // Clear existing markers
+    Object.values(markerRefs.current).forEach(marker => marker.remove());
+    markerRefs.current = {};
+
+    // Add new markers
+    markers.forEach(marker => {
+      // Create marker element
+      const el = document.createElement('div');
+      el.className = 'custom-marker';
+      el.style.backgroundColor = marker.color || '#FF5733';
+      el.style.width = `${marker.size || 20}px`;
+      el.style.height = `${marker.size || 20}px`;
+      el.style.borderRadius = '50%';
+      el.style.border = '2px solid white';
+      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+      el.style.cursor = 'pointer';
+      
+      // Create mapbox marker
+      const mapboxMarker = new mapboxgl.Marker({
+        element: el,
+      })
+        .setLngLat([marker.longitude, marker.latitude])
+        .addTo(map);
+      
+      // Add click event if needed
+      if (onMarkerClick) {
+        el.addEventListener('click', () => {
+          onMarkerClick(marker.id);
+        });
+      }
+      
+      // Store reference to marker for cleanup
+      markerRefs.current[marker.id] = mapboxMarker;
+    });
+
+    return () => {
+      // Cleanup on unmount
+      Object.values(markerRefs.current).forEach(marker => marker.remove());
+    };
+  }, [map, markers, onMarkerClick]);
+
+  return null; // This component does not render anything itself
 };
 
-export const addUserLocationMarker = (map: mapboxgl.Map, userLocation: [number, number]): mapboxgl.Marker => {
-  return new mapboxgl.Marker({ color: '#FF6B35' })
-    .setLngLat([userLocation[1], userLocation[0]])
-    .addTo(map);
-};
+export default HomeMapMarkers;
