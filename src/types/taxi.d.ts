@@ -1,4 +1,5 @@
 
+
 export interface BusinessRateEstimate {
   baseDiscount: number;
   volumeDiscount: number;
@@ -7,6 +8,10 @@ export interface BusinessRateEstimate {
   businessRate: number;
   monthlySavings: number;
   annualSavings: number;
+  formattedTotal?: string;
+  perRideDiscount?: number;
+  monthlyRides?: number;
+  vehicleType?: string;
 }
 
 export interface BusinessRateFormData {
@@ -15,6 +20,10 @@ export interface BusinessRateFormData {
   monthlyRides: number;
   averageDistance: number;
   vehicleType: string;
+  employeeCount?: number;
+  estimatedMonthlyRides?: number;
+  contactPerson?: string;
+  contactPhone?: string;
 }
 
 export type TaxiVehicleType = 'standard' | 'comfort' | 'premium' | 'suv' | 'van';
@@ -50,6 +59,28 @@ export interface TaxiRide {
   duration: number;
   created_at: string;
   scheduled_time?: string;
+  user_id?: string;
+  driver_id?: string;
+  pickup_time?: string;
+  estimated_price?: number;
+  actual_price?: number;
+  payment_status?: string;
+  vehicle_type?: string;
+  payment_method?: PaymentMethod;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  destination_latitude?: number;
+  destination_longitude?: number;
+  special_instructions?: string;
+  is_shared_ride?: boolean;
+  max_passengers?: number;
+  current_passengers?: number;
+  estimated_arrival_time?: string;
+  actual_arrival_time?: string;
+  distance_km?: number;
+  route_polyline?: string;
+  promo_code_applied?: string;
+  promo_discount?: number;
 }
 
 export interface TaxiSubscriptionPlan {
@@ -59,4 +90,10 @@ export interface TaxiSubscriptionPlan {
   benefits: string[];
   description: string;
   is_popular?: boolean;
+  duration?: string;
+  features?: string[];
+  discount_percentage?: number;
+  max_rides?: number;
+  popular?: boolean;
 }
+

@@ -145,7 +145,7 @@ export interface RidesharingTrip {
   };
   status?: string;
   day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-  description: string;
+  description?: string;
 }
 
 // ------------------ Business Rate Calculator Props ------------------
@@ -157,16 +157,14 @@ export interface BusinessRateEstimate {
   businessRate: number;
   monthlySavings: number;
   annualSavings: number;
+  formattedTotal?: string;
+  perRideDiscount?: number;
+  monthlyRides?: number;
+  vehicleType?: string;
 }
 
 export interface BusinessRateCalculatorProps {
-  formData: {
-    companyName: string;
-    contactEmail: string;
-    monthlyRides: number;
-    averageDistance: number;
-    vehicleType: string;
-  };
+  formData: BusinessRateFormData;
   showResult: boolean;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSliderChange: (value: number) => void;
@@ -176,4 +174,16 @@ export interface BusinessRateCalculatorProps {
   getEstimate: () => BusinessRateEstimate;
   isLoading: boolean;
   businessRateEstimate: BusinessRateEstimate;
+}
+
+export interface BusinessRateFormData {
+  companyName: string;
+  contactEmail: string;
+  monthlyRides: number;
+  averageDistance: number;
+  vehicleType: string;
+  employeeCount?: number;
+  estimatedMonthlyRides?: number;
+  contactPerson?: string;
+  contactPhone?: string;
 }

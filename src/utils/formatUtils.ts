@@ -64,3 +64,30 @@ export const formatPercentage = (value: number, decimals = 1): string => {
 export const formatNumber = (value: number): string => {
   return value.toLocaleString('fr-FR');
 };
+
+/**
+ * Format a price amount in XAF currency
+ * @param value - The price amount to format
+ * @returns Formatted price string
+ */
+export const formatPrice = (value: number): string => {
+  return formatCurrency(value);
+};
+
+/**
+ * Generate detailed price change statistics
+ * @param oldPrice - The original price
+ * @param newPrice - The new price
+ * @returns Price change statistics object
+ */
+export const priceChangeStats = (oldPrice: number, newPrice: number) => {
+  const diff = calculatePriceDifference(oldPrice, newPrice);
+  return {
+    ...diff,
+    formattedOldPrice: formatPrice(oldPrice),
+    formattedNewPrice: formatPrice(newPrice),
+    formattedDifference: formatPrice(Math.abs(diff.absoluteDifference)),
+    changeType: diff.isIncrease ? 'increase' : 'decrease'
+  };
+};
+

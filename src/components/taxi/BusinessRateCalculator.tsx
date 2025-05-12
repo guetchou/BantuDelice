@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Building2, Calculator } from "lucide-react";
 import { BusinessRateForm } from './business-rate/BusinessRateForm';
 import { RateEstimate } from './business-rate/RateEstimate';
-import { BusinessRateEstimate } from '@/types/taxi';
+import { BusinessRateEstimate, BusinessRateFormData } from '@/types/taxi';
 
 // mock useBusinessRate hook to replace the original hook with issues
 const useBusinessRate = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BusinessRateFormData>({
     companyName: '',
     contactEmail: '',
     monthlyRides: 50,
@@ -25,7 +25,11 @@ const useBusinessRate = () => {
     standardRate: 1000,
     businessRate: 850,
     monthlySavings: 7500,
-    annualSavings: 90000
+    annualSavings: 90000,
+    formattedTotal: '850 FCFA',
+    perRideDiscount: 150,
+    monthlyRides: 50,
+    vehicleType: 'standard'
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +65,7 @@ const useBusinessRate = () => {
     alert('Demande de tarif entreprise envoyée !');
   };
 
-  const getEstimate = () => {
+  const getEstimate = (): BusinessRateEstimate => {
     return businessRateEstimate;
   };
 

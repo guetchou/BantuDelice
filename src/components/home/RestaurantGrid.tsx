@@ -1,27 +1,10 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import RestaurantCard from "@/components/restaurants/RestaurantCard";
 import { useToast } from "@/hooks/use-toast";
-
-interface MenuItem {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-}
-
-interface Restaurant {
-  id: string;
-  name: string;
-  address: string;
-  image_url?: string;
-  rating?: number;
-  estimated_preparation_time: number;
-  cuisine_type?: string;
-  distance?: number;
-  menu_items?: MenuItem[];
-}
+import { Restaurant } from "@/types/globalTypes";
 
 interface RestaurantGridProps {
   searchQuery: string;
@@ -71,7 +54,23 @@ const RestaurantGrid = ({ searchQuery, selectedCategory, priceRange, sortBy }: R
         throw error;
       }
 
-      let filteredData = data as Restaurant[];
+      // Convert to Restaurant type with all required fields
+      const completeRestaurants = (data || []).map(item => ({
+        id: item.id || '',
+        name: item.name || '',
+        description: item.description || '',
+        phone: item.phone || '',
+        status: item.status || 'pending',
+        image_url: item.image_url,
+        rating: item.rating || 0,
+        estimated_preparation_time: item.estimated_preparation_time || 30,
+        cuisine_type: item.cuisine_type || 'Not specified',
+        distance: item.distance,
+        menu_items: item.menu_items
+      })) as Restaurant[];
+
+      // Filter by price range
+      let filteredData = completeRestaurants;
       if (priceRange !== 'all') {
         filteredData = filteredData.filter(restaurant => {
           const avgPrice = restaurant.menu_items?.reduce((acc, item) => acc + item.price, 0) / (restaurant.menu_items?.length || 1);

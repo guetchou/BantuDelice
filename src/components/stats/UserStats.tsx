@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from "@/components/ui/card";
+import { formatCurrency } from '@/utils/formatUtils';
 
 interface UserStatistics {
   totalOrders: number;
@@ -33,15 +34,17 @@ const UserStats = () => {
         .eq('user_id', user.id)
         .single();
 
-      // Calculer les statistiques
+      // Calculate statistics
       const totalOrders = orders?.length || 0;
       const totalSpent = orders?.reduce((sum, order) => {
         const amount = typeof order.total_amount === 'number' ? order.total_amount : 0;
         return sum + amount;
       }, 0) || 0;
-      const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
+      
+      // Ensure we have valid numbers for the division
+      const averageOrderValue = totalOrders > 0 ? (totalSpent / totalOrders) : 0;
 
-      // Trouver le restaurant favori
+      // Find favorite restaurant
       const restaurantCounts = orders?.reduce((acc: Record<string, number>, order) => {
         if (order.restaurant_id) {
           acc[order.restaurant_id] = (acc[order.restaurant_id] || 0) + 1;
@@ -93,7 +96,7 @@ const UserStats = () => {
         
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-2">Montant Total Dépensé</h3>
-          <p className="text-3xl font-bold">{stats?.totalSpent.toLocaleString()} FCFA</p>
+          <p className="text-3xl font-bold">{formatCurrency(stats?.totalSpent || 0)}</p>
         </Card>
         
         <Card className="p-6">
@@ -108,7 +111,7 @@ const UserStats = () => {
         
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-2">Valeur Moyenne des Commandes</h3>
-          <p className="text-3xl font-bold">{stats?.averageOrderValue.toLocaleString()} FCFA</p>
+          <p className="text-3xl font-bold">{formatCurrency(stats?.averageOrderValue || 0)}</p>
         </Card>
       </div>
     </div>
