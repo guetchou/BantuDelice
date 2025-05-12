@@ -17,6 +17,8 @@ export interface Restaurant {
   trending?: boolean;
   latitude?: number;
   longitude?: number;
+  cuisine_type?: string | string[];
+  rating?: number;
 }
 
 // ------------------ User Profile ------------------

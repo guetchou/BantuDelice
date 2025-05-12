@@ -3,8 +3,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from "@/components/ui/button";
-import { MapPin, Navigation, LocateFixed, Loader2 } from "lucide-react";
+import { LocateFixed, Loader2 } from "lucide-react";
 import { toast } from '@/hooks/use-toast';
+import { 
+  createPickupMarker, 
+  createDestinationMarker, 
+  createPassengerMarker 
+} from './RidesharingMapMarkers';
+import { 
+  getRouteDirections,
+  initializeRouteLayer 
+} from './RidesharingMapDirections';
+import { reverseGeocode } from './RidesharingMapGeocoding';
 
 // Initialize Mapbox (replace with your actual token or use environment variable)
 mapboxgl.accessToken = 'pk.eyJ1IjoibGF1cmVudGRldm1vIiwiYSI6ImNsdTF2NnN6djJrbHkya24wZWJreTBhcGEifQ.3tdP2ZwJRrdGVouUYnHxFA';
@@ -45,7 +55,7 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
   const pickupMarker = useRef<mapboxgl.Marker | null>(null);
   const destinationMarker = useRef<mapboxgl.Marker | null>(null);
   const passengerMarkers = useRef<mapboxgl.Marker[]>([]);
-  const routeLine = useRef<mapboxgl.Source | null>(null);
+  const routeLine = useRef<mapboxgl.GeoJSONSource | null>(null);
   
   const [isLoading, setIsLoading] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -102,27 +112,8 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
     }
   };
 
-  // Reverse geocode coordinates to address
-  const reverseGeocode = async (coordinates: [number, number]): Promise<string> => {
-    const [lng, lat] = coordinates;
-    try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`
-      );
-      const data = await response.json();
-      
-      if (data.features && data.features.length > 0) {
-        return data.features[0].place_name;
-      }
-      return 'Adresse inconnue';
-    } catch (error) {
-      console.error('Reverse geocoding error:', error);
-      return 'Adresse inconnue';
-    }
-  };
-
   // Handle map click
-  const handleMapClick = async (e: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
+  const handleMapClick = async (e: mapboxgl.MapMouseEvent) => {
     const { lng, lat } = e.lngLat;
     
     if (isSelectingPickup) {
@@ -153,35 +144,9 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
     map.current.on('click', handleMapClick);
     
     map.current.on('load', () => {
-      // Add route source and layer
-      map.current!.addSource('route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: []
-          }
-        }
-      });
-      
-      map.current!.addLayer({
-        id: 'route',
-        type: 'line',
-        source: 'route',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#3AAB67',
-          'line-width': 5,
-          'line-opacity': 0.75
-        }
-      });
-      
-      routeLine.current = map.current!.getSource('route');
+      if (map.current) {
+        routeLine.current = initializeRouteLayer(map.current);
+      }
     });
     
     // Try to get user's location on first load
@@ -205,14 +170,10 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
       if (pickupMarker.current) {
         pickupMarker.current.setLngLat(pickupCoordinates);
       } else {
-        // Create custom pickup marker element
-        const el = document.createElement('div');
-        el.className = 'pickup-marker';
-        el.innerHTML = '<div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg"><span class="text-white"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg></span></div>';
-        
-        pickupMarker.current = new mapboxgl.Marker(el)
-          .setLngLat(pickupCoordinates)
-          .addTo(map.current);
+        pickupMarker.current = createPickupMarker({
+          map: map.current,
+          pickupCoordinates
+        });
       }
       
       // Center map on pickup if it's newly selected
@@ -236,14 +197,10 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
       if (destinationMarker.current) {
         destinationMarker.current.setLngLat(destinationCoordinates);
       } else {
-        // Create custom destination marker element
-        const el = document.createElement('div');
-        el.className = 'destination-marker';
-        el.innerHTML = '<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center shadow-lg"><span class="text-white"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg></span></div>';
-        
-        destinationMarker.current = new mapboxgl.Marker(el)
-          .setLngLat(destinationCoordinates)
-          .addTo(map.current);
+        destinationMarker.current = createDestinationMarker({
+          map: map.current,
+          destinationCoordinates
+        });
       }
       
       // Center map on destination if it's newly selected
@@ -261,56 +218,13 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
 
   // Update route between pickup and destination
   useEffect(() => {
-    if (!map.current || !routeLine.current || !routeVisible) return;
-    
     if (pickupCoordinates && destinationCoordinates) {
-      // Get directions from Mapbox API
-      const getDirections = async () => {
-        try {
-          const response = await fetch(
-            `https://api.mapbox.com/directions/v5/mapbox/driving/${pickupCoordinates[0]},${pickupCoordinates[1]};${destinationCoordinates[0]},${destinationCoordinates[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`
-          );
-          const data = await response.json();
-          
-          if (data.routes && data.routes.length > 0) {
-            const route = data.routes[0].geometry.coordinates;
-            
-            // Update route line
-            (routeLine.current as mapboxgl.GeoJSONSource).setData({
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                type: 'LineString',
-                coordinates: route
-              }
-            });
-            
-            // Fit map to show entire route
-            const bounds = new mapboxgl.LngLatBounds();
-            route.forEach((coord: [number, number]) => {
-              bounds.extend(coord);
-            });
-            
-            map.current!.fitBounds(bounds, {
-              padding: 60,
-              maxZoom: 15
-            });
-          }
-        } catch (error) {
-          console.error('Directions API error:', error);
-        }
-      };
-      
-      getDirections();
-    } else {
-      // Clear route if pickup or destination is missing
-      (routeLine.current as mapboxgl.GeoJSONSource).setData({
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: []
-        }
+      getRouteDirections({
+        map: map.current,
+        routeLine: routeLine.current,
+        pickupCoordinates,
+        destinationCoordinates,
+        routeVisible
       });
     }
   }, [pickupCoordinates, destinationCoordinates, routeVisible]);
@@ -325,21 +239,14 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
     
     // Add new markers
     passengers.forEach(passenger => {
-      const el = document.createElement('div');
-      el.className = 'passenger-marker';
+      const marker = createPassengerMarker({
+        map: map.current,
+        passenger
+      });
       
-      el.innerHTML = `<div class="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center shadow-lg"><span class="text-white"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span></div>`;
-      
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat(passenger.coordinates)
-        .addTo(map.current!);
-      
-      if (passenger.name) {
-        const popup = new mapboxgl.Popup({ offset: 25 }).setText(passenger.name);
-        marker.setPopup(popup);
+      if (marker) {
+        passengerMarkers.current.push(marker);
       }
-      
-      passengerMarkers.current.push(marker);
     });
   }, [passengers]);
 
