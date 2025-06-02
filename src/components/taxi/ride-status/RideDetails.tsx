@@ -1,50 +1,65 @@
 
 import React from 'react';
+import { Clock, CreditCard, Car } from "lucide-react";
 import { TaxiRide } from '@/types/taxi';
-import { formatPrice } from '@/components/taxi/booking-form/bookingFormUtils';
-import { formatCurrency } from '@/utils/formatters';
 
 interface RideDetailsProps {
   ride: TaxiRide;
 }
 
-export const RideDetails: React.FC<RideDetailsProps> = ({ ride }) => {
+export const RideDetails = ({ ride }: RideDetailsProps) => {
+  const formatPrice = (price: number | undefined) => {
+    if (!price) return 'N/A';
+    return `${price.toLocaleString()} FCFA`;
+  };
+
+  const formatPaymentMethod = (method: string | undefined) => {
+    switch (method) {
+      case 'cash': return 'Espèces';
+      case 'credit_card': return 'Carte bancaire';
+      case 'mobile_money': return 'Mobile Money';
+      case 'wallet': return 'Portefeuille';
+      default: return method || 'Non spécifié';
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 gap-4 text-sm">
-      <div>
-        <p className="text-muted-foreground">Type de véhicule</p>
-        <p className="font-medium capitalize">{ride.vehicle_type}</p>
+      <div className="flex items-center gap-2">
+        <Clock className="h-4 w-4 text-muted-foreground" />
+        <div>
+          <p className="text-muted-foreground">Heure de départ</p>
+          <p className="font-medium">
+            {ride.created_at ? new Date(ride.created_at).toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }) : 'N/A'}
+          </p>
+        </div>
       </div>
       
-      <div>
-        <p className="text-muted-foreground">Méthode de paiement</p>
-        <p className="font-medium capitalize">{
-          ride.payment_method === 'cash' 
-            ? 'Espèces' 
-            : ride.payment_method === 'card' 
-              ? 'Carte' 
-              : ride.payment_method === 'mobile_money'
-                ? 'Mobile Money'
-                : ride.payment_method
-        }</p>
+      <div className="flex items-center gap-2">
+        <CreditCard className="h-4 w-4 text-muted-foreground" />
+        <div>
+          <p className="text-muted-foreground">Prix estimé</p>
+          <p className="font-medium">{formatPrice(ride.estimated_price)}</p>
+        </div>
       </div>
       
-      <div>
-        <p className="text-muted-foreground">Prix estimé</p>
-        <p className="font-medium">{formatCurrency(ride.estimated_price)}</p>
+      <div className="flex items-center gap-2">
+        <Car className="h-4 w-4 text-muted-foreground" />
+        <div>
+          <p className="text-muted-foreground">Type de véhicule</p>
+          <p className="font-medium capitalize">{ride.vehicle_type || 'Standard'}</p>
+        </div>
       </div>
       
-      <div>
-        <p className="text-muted-foreground">Heure de prise en charge</p>
-        <p className="font-medium">{
-          ride.pickup_time_type === 'now'
-            ? 'Immédiat'
-            : new Date(ride.pickup_time).toLocaleTimeString('fr-FR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-              })
-        }</p>
+      <div className="flex items-center gap-2">
+        <CreditCard className="h-4 w-4 text-muted-foreground" />
+        <div>
+          <p className="text-muted-foreground">Paiement</p>
+          <p className="font-medium">{formatPaymentMethod(ride.payment_method)}</p>
+        </div>
       </div>
     </div>
   );

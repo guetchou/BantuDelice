@@ -87,7 +87,7 @@ export const priceChangeStats = (oldPrice: number, newPrice: number) => {
     formattedOldPrice: formatPrice(oldPrice),
     formattedNewPrice: formatPrice(newPrice),
     formattedDifference: formatPrice(Math.abs(diff.absoluteDifference)),
-    changeType: diff.isIncrease ? 'increase' : 'decrease'
+    changeType: diff.isIncrease ? 'increase' : 'decrease',
+    potentialRevenueIncrease: diff.potentialRevenueIncrease
   };
 };
-

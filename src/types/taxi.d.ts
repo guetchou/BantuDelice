@@ -1,5 +1,4 @@
 
-
 export interface BusinessRateEstimate {
   baseDiscount: number;
   volumeDiscount: number;
@@ -64,7 +63,7 @@ export interface TaxiRide {
   pickup_time?: string;
   estimated_price?: number;
   actual_price?: number;
-  payment_status?: string;
+  payment_status?: 'pending' | 'paid' | 'failed';
   vehicle_type?: string;
   payment_method?: PaymentMethod;
   pickup_latitude?: number;
@@ -96,4 +95,3 @@ export interface TaxiSubscriptionPlan {
   max_rides?: number;
   popular?: boolean;
 }
-

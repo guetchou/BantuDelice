@@ -5,20 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Building2, Calculator } from "lucide-react";
 import { BusinessRateForm } from './business-rate/BusinessRateForm';
 import { RateEstimate } from './business-rate/RateEstimate';
-import { BusinessRateEstimate, BusinessRateFormData } from '@/types/taxi';
+import { BusinessRateEstimate, BusinessRateFormData } from '@/types/globalTypes';
 
-// mock useBusinessRate hook to replace the original hook with issues
 const useBusinessRate = () => {
   const [formData, setFormData] = useState<BusinessRateFormData>({
     companyName: '',
     contactEmail: '',
     monthlyRides: 50,
     averageDistance: 10,
-    vehicleType: 'standard'
+    vehicleType: 'standard',
+    employeeCount: 1,
+    estimatedMonthlyRides: 50,
+    contactPerson: '',
+    contactPhone: ''
   });
   
   const [showResult, setShowResult] = useState(false);
-  const [businessRateEstimate, setBusinessRateEstimate] = useState<BusinessRateEstimate>({
+  const [businessRateEstimate] = useState<BusinessRateEstimate>({
     baseDiscount: 10,
     volumeDiscount: 5,
     totalDiscount: 15,
@@ -40,10 +43,10 @@ const useBusinessRate = () => {
     }));
   };
 
-  const handleSliderChange = (value: number) => {
+  const handleSliderChange = (name: string, value: number[]) => {
     setFormData(prev => ({
       ...prev,
-      monthlyRides: value
+      [name]: value[0]
     }));
   };
 
@@ -55,13 +58,10 @@ const useBusinessRate = () => {
   };
 
   const handleCalculate = () => {
-    // In a real application, this would call an API
-    // For now, just show the result
     setShowResult(true);
   };
 
   const handleSubmitRequest = () => {
-    // This would submit the business rate request
     alert('Demande de tarif entreprise envoyée !');
   };
 
@@ -79,7 +79,8 @@ const useBusinessRate = () => {
     handleSubmitRequest,
     getEstimate,
     isLoading: false,
-    businessRateEstimate
+    businessRateEstimate,
+    setShowResult
   };
 };
 
@@ -92,7 +93,8 @@ const BusinessRateCalculator = () => {
     handleVehicleTypeChange,
     handleCalculate,
     handleSubmitRequest,
-    getEstimate
+    getEstimate,
+    setShowResult
   } = useBusinessRate();
   
   return (

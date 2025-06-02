@@ -37,7 +37,7 @@ const UserStats = () => {
       // Calculate statistics
       const totalOrders = orders?.length || 0;
       const totalSpent = orders?.reduce((sum, order) => {
-        const amount = typeof order.total_amount === 'number' ? order.total_amount : 0;
+        const amount = typeof order.total_amount === 'number' ? order.total_amount : parseFloat(order.total_amount) || 0;
         return sum + amount;
       }, 0) || 0;
       

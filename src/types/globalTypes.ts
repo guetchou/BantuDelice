@@ -19,7 +19,7 @@ export interface Restaurant {
   longitude?: number;
   cuisine_type?: string | string[];
   rating?: number;
-  address?: string;
+  address: string; // Made required
   image_url?: string;
   estimated_preparation_time?: number;
   distance?: number;
@@ -39,16 +39,7 @@ export interface UserProfile {
   status?: 'pending' | 'active' | 'inactive';
 }
 
-export interface ExtendedUserProfile {
-  id: string;
-  name?: string;
-  email?: string;
-  first_name?: string;
-  last_name?: string;
-  avatar_url?: string;
-  created_at?: string;
-  updated_at?: string;
-  status?: 'pending' | 'active' | 'inactive';
+export interface ExtendedUserProfile extends UserProfile {
   role?: 'user' | 'admin' | 'restaurant_owner' | 'driver';
   phone?: string;
   last_login?: string;
@@ -157,23 +148,10 @@ export interface BusinessRateEstimate {
   businessRate: number;
   monthlySavings: number;
   annualSavings: number;
-  formattedTotal?: string;
-  perRideDiscount?: number;
-  monthlyRides?: number;
-  vehicleType?: string;
-}
-
-export interface BusinessRateCalculatorProps {
-  formData: BusinessRateFormData;
-  showResult: boolean;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSliderChange: (value: number) => void;
-  handleVehicleTypeChange: (value: string) => void;
-  handleCalculate: () => void;
-  handleSubmitRequest: () => void;
-  getEstimate: () => BusinessRateEstimate;
-  isLoading: boolean;
-  businessRateEstimate: BusinessRateEstimate;
+  formattedTotal: string;
+  perRideDiscount: number;
+  monthlyRides: number;
+  vehicleType: string;
 }
 
 export interface BusinessRateFormData {
@@ -182,8 +160,8 @@ export interface BusinessRateFormData {
   monthlyRides: number;
   averageDistance: number;
   vehicleType: string;
-  employeeCount?: number;
-  estimatedMonthlyRides?: number;
-  contactPerson?: string;
-  contactPhone?: string;
+  employeeCount: number;
+  estimatedMonthlyRides: number;
+  contactPerson: string;
+  contactPhone: string;
 }

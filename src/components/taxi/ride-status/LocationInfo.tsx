@@ -1,18 +1,18 @@
 
 import React from 'react';
+import { MapPin, Navigation } from "lucide-react";
 import { TaxiRide } from '@/types/taxi';
 
 interface LocationInfoProps {
   ride: TaxiRide;
 }
 
-export const LocationInfo: React.FC<LocationInfoProps> = ({ ride }) => {
+export const LocationInfo = ({ ride }: LocationInfoProps) => {
   return (
     <div className="space-y-4">
-      <div className="flex gap-3">
-        <div className="mt-1">
-          <div className="h-3 w-3 rounded-full bg-primary"></div>
-          <div className="h-full w-0.5 bg-gray-200 mx-auto"></div>
+      <div className="flex items-start gap-3">
+        <div className="bg-green-100 p-2 rounded-full">
+          <MapPin className="h-4 w-4 text-green-600" />
         </div>
         <div className="flex-1">
           <p className="text-sm text-muted-foreground">Départ</p>
@@ -20,9 +20,9 @@ export const LocationInfo: React.FC<LocationInfoProps> = ({ ride }) => {
         </div>
       </div>
       
-      <div className="flex gap-3">
-        <div className="mt-1">
-          <div className="h-3 w-3 rounded-full bg-orange-500"></div>
+      <div className="flex items-start gap-3">
+        <div className="bg-red-100 p-2 rounded-full">
+          <Navigation className="h-4 w-4 text-red-600" />
         </div>
         <div className="flex-1">
           <p className="text-sm text-muted-foreground">Destination</p>
