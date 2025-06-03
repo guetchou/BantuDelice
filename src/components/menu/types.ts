@@ -1,5 +1,5 @@
 
-import type { MenuItem } from "@/types/restaurant";
+import type { MenuItem } from "@/types/globalTypes";
 import type { CartItem } from "@/types/cart";
 
 export interface MenuItemCardProps {
@@ -8,7 +8,7 @@ export interface MenuItemCardProps {
   onRemoveFromCart?: (itemId: string) => void;
   quantity?: number;
   showNutritionalInfo?: boolean;
-  onClick?: () => void; // Adding the missing onClick prop
+  onClick?: () => void;
 }
 
 export interface MenuCategory {
@@ -33,5 +33,4 @@ export interface MenuListProps {
   showNutritionalInfo?: boolean;
 }
 
-// Export explicite du type MenuItem pour les autres modules
 export type { MenuItem, CartItem };

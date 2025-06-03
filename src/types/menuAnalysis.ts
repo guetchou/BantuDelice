@@ -12,6 +12,13 @@ export interface MenuPromotion {
   active: boolean;
   restaurant_id: string;
   menu_item_ids?: string[];
+  discount_type?: string;
+  discount_value?: number;
+  valid_from?: string;
+  valid_to?: string;
+  promotion_hours?: any;
+  conditions?: any;
+  min_order_value?: number;
 }
 
 export interface MenuStatistics {

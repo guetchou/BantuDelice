@@ -19,4 +19,7 @@ export interface CartItem {
   special_instructions?: string;
   combo_item?: boolean;
   options: CartItemOption[];
+  description?: string;
+  image_url?: string;
+  category?: string;
 }
