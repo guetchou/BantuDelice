@@ -28,7 +28,8 @@ const MenuSection: React.FC<MenuSectionProps> = ({ items, onAddToCart }) => {
       restaurant_id: item.restaurant_id,
       menu_item_id: item.id,
       total: item.price * 1,
-      description: item.description
+      description: item.description,
+      options: []
     });
   };
 

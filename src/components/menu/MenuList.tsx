@@ -54,7 +54,8 @@ const MenuList = ({ items, onAddToCart, onRemoveFromCart, getQuantity, isLoading
       description: item.description,
       image_url: item.image_url,
       restaurant_id: item.restaurant_id,
-      category: item.category
+      category: item.category,
+      options: []
     };
     
     onAddToCart(cartItem);

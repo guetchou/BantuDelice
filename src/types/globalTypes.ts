@@ -30,6 +30,8 @@ export interface ExtendedUserProfile extends UserProfile {
   total_orders?: number;
   favorite_restaurants?: string[];
   payment_methods?: PaymentMethod[];
+  last_login?: string;
+  status?: 'active' | 'inactive' | 'suspended';
 }
 
 export interface Restaurant {
@@ -49,16 +51,19 @@ export interface Restaurant {
   delivery_fee?: number;
   minimum_order?: number;
   estimated_delivery_time?: number;
-  estimated_preparation_time?: number;
+  estimated_preparation_time: number;
+  average_prep_time?: number;
   image_url?: string;
   logo_url?: string;
   banner_url?: string;
+  banner_image_url?: string;
   features?: string[];
   created_at?: string;
   updated_at?: string;
   status?: 'pending' | 'approved' | 'suspended';
   distance?: number;
   menu_items?: MenuItem[];
+  trending?: boolean;
 }
 
 export interface CartItem {
@@ -72,6 +77,9 @@ export interface CartItem {
   special_instructions?: string;
   combo_item?: boolean;
   options: CartItemOption[];
+  description?: string;
+  image_url?: string;
+  category?: string;
 }
 
 export interface CartItemOption {
@@ -97,6 +105,8 @@ export interface MenuItem {
   is_vegan?: boolean;
   is_gluten_free?: boolean;
   allergens?: string[];
+  ingredients?: string[];
+  dietary_preferences?: string[];
   nutrition_info?: any;
   nutritional_info?: {
     calories?: number;
@@ -107,6 +117,8 @@ export interface MenuItem {
   };
   customization_options?: any[];
   stock_level?: number;
+  stock?: number;
+  popularity_score?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -173,11 +185,18 @@ export interface MenuPromotion {
   description: string;
   discount_percentage?: number;
   discount_amount?: number;
+  discount_type?: string;
+  discount_value?: number;
   start_date: string;
   end_date: string;
+  valid_from?: string;
+  valid_to?: string;
   active: boolean;
   restaurant_id: string;
   menu_item_ids?: string[];
+  promotion_hours?: any;
+  conditions?: any;
+  min_order_value?: number;
 }
 
 export interface ExtendedMenuItem extends MenuItem {

@@ -26,3 +26,7 @@ export const calculatePriceChange = (oldPrice: number, newPrice: number) => {
     isIncrease
   };
 };
+
+export const priceChangeStats = (oldPrice: number, newPrice: number) => {
+  return calculatePriceChange(oldPrice, newPrice);
+};

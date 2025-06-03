@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -35,10 +34,9 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [quantity, setQuantity] = useState(1);
 
-  // Process customization options safely
   const customizationOptions = typeof item.customization_options === 'object' && item.customization_options 
     ? (Array.isArray(item.customization_options) 
-        ? {} // If it's an array, convert to an empty object
+        ? {} 
         : item.customization_options as Record<string, CustomizationOption>) 
     : {};
     
@@ -60,7 +58,6 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
         ));
       }
     } else {
-      // For radio options, replace existing option
       const filteredOptions = selectedOptions.filter(option => option.name !== optionName);
       setSelectedOptions([...filteredOptions, { name: optionName, value: optionValue, price }]);
     }
@@ -81,13 +78,12 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
   };
 
   const handleAddToCart = () => {
-    // Create CartItemOption objects from selectedOptions
     const cartItemOptions: CartItemOption[] = selectedOptions.map(option => ({
       id: `${option.name}-${option.value}`,
       name: option.name,
       value: option.value,
       price: option.price,
-      price_adjustment: option.price, // Add price_adjustment field
+      price_adjustment: option.price,
       quantity: 1
     }));
 
@@ -115,7 +111,8 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
       total: comboItem.price,
       image_url: comboItem.image_url,
       quantity: 1,
-      restaurant_id: comboItem.restaurant_id
+      restaurant_id: comboItem.restaurant_id,
+      options: []
     });
   };
 
@@ -300,7 +297,6 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
 
 export default MenuItemCustomization;
 
-// Import du Minus qui manquait
 function Minus({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>

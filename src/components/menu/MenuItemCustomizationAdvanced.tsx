@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   AlertDialog,
@@ -8,7 +9,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,7 +50,6 @@ const MenuItemCustomizationAdvanced = ({
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(item.price);
   const [selectedCombo, setSelectedCombo] = useState<MenuItem | null>(null);
-  const [showNutritionalInfo, setShowNutritionalInfo] = useState(false);
   
   const nutritionalInfo: NutritionalInfo[] = item.nutritional_info ? [
     { label: 'Calories', value: item.nutritional_info.calories, unit: 'kcal' },
@@ -140,7 +139,7 @@ const MenuItemCustomizationAdvanced = ({
       price_adjustment: option.price_adjustment || 0
     }));
 
-    const cartItem = {
+    const cartItem: CartItem = {
       id: item.id,
       menu_item_id: item.id,
       name: item.name,
