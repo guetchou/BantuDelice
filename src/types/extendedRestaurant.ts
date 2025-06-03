@@ -13,4 +13,6 @@ export interface ExtendedUserProfile extends UserProfile {
   total_orders?: number;
   favorite_restaurants?: string[];
   payment_methods?: any[];
+  last_login?: string;
+  status?: 'active' | 'inactive' | 'suspended';
 }

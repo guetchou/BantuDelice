@@ -2,7 +2,7 @@
 import RestaurantCard from "./RestaurantCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import type { Restaurant } from '@/types/globalTypes';
+import type { Restaurant } from '@/types/restaurant';
 
 interface RestaurantGridProps {
   restaurants: Restaurant[];
