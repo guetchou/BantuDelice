@@ -37,8 +37,9 @@ const UserStats = () => {
       // Calculate statistics
       const totalOrders = orders?.length || 0;
       const totalSpent = orders?.reduce((sum, order) => {
-        const amount = typeof order.total_amount === 'number' ? order.total_amount : parseFloat(order.total_amount) || 0;
-        return sum + amount;
+        const amount = typeof order.total_amount === 'number' ? order.total_amount : 
+                       (typeof order.total_amount === 'string' ? parseFloat(order.total_amount) : 0);
+        return sum + (isNaN(amount) ? 0 : amount);
       }, 0) || 0;
       
       // Ensure we have valid numbers for the division

@@ -40,7 +40,7 @@ export interface Restaurant {
   phone?: string;
   email?: string;
   website?: string;
-  price_range: number; // Changed from string to number
+  price_range: number;
   cuisine_type?: string;
   rating?: number;
   average_rating?: number;
@@ -49,12 +49,16 @@ export interface Restaurant {
   delivery_fee?: number;
   minimum_order?: number;
   estimated_delivery_time?: number;
+  estimated_preparation_time?: number;
   image_url?: string;
   logo_url?: string;
   banner_url?: string;
   features?: string[];
   created_at?: string;
   updated_at?: string;
+  status?: 'pending' | 'approved' | 'suspended';
+  distance?: number;
+  menu_items?: MenuItem[];
 }
 
 export interface CartItem {
@@ -67,14 +71,16 @@ export interface CartItem {
   restaurant_id: string;
   special_instructions?: string;
   combo_item?: boolean;
-  options: {
-    id: string;
-    name: string;
-    value: string;
-    price: number;
-    quantity: number;
-    price_adjustment: number;
-  }[];
+  options: CartItemOption[];
+}
+
+export interface CartItemOption {
+  id: string;
+  name: string;
+  value: string;
+  price: number;
+  quantity: number;
+  price_adjustment: number;
 }
 
 export interface MenuItem {
@@ -92,6 +98,13 @@ export interface MenuItem {
   is_gluten_free?: boolean;
   allergens?: string[];
   nutrition_info?: any;
+  nutritional_info?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+  };
   customization_options?: any[];
   stock_level?: number;
   created_at?: string;
@@ -126,4 +139,103 @@ export interface SpecialHour {
   closing_time?: string;
   is_closed: boolean;
   reason?: string;
+}
+
+export interface BusinessRateEstimate {
+  baseDiscount: number;
+  volumeDiscount: number;
+  totalDiscount: number;
+  standardRate: number;
+  businessRate: number;
+  monthlySavings: number;
+  annualSavings: number;
+  formattedTotal?: string;
+  perRideDiscount?: number;
+  monthlyRides?: number;
+  vehicleType?: string;
+}
+
+export interface BusinessRateFormData {
+  companyName: string;
+  contactEmail: string;
+  monthlyRides: number;
+  averageDistance: number;
+  vehicleType: string;
+  employeeCount?: number;
+  estimatedMonthlyRides?: number;
+  contactPerson?: string;
+  contactPhone?: string;
+}
+
+export interface MenuPromotion {
+  id: string;
+  title: string;
+  description: string;
+  discount_percentage?: number;
+  discount_amount?: number;
+  start_date: string;
+  end_date: string;
+  active: boolean;
+  restaurant_id: string;
+  menu_item_ids?: string[];
+}
+
+export interface ExtendedMenuItem extends MenuItem {
+  profit_margin?: number;
+  popularity_score?: number;
+  sales_volume?: number;
+  last_ordered?: string;
+}
+
+export interface MenuAnalysisResult {
+  totalItems: number;
+  priceStats: {
+    average: number;
+    highest: number;
+    lowest: number;
+    median: number;
+  };
+  dietaryOptions: {
+    vegetarianCount: number;
+    veganCount: number;
+    glutenFreeCount: number;
+    vegetarianPercentage: number;
+    veganPercentage: number;
+    glutenFreePercentage: number;
+  };
+  menuSuggestions: Array<{
+    message: string;
+    priority: 'high' | 'medium' | 'low';
+  }>;
+}
+
+export interface ExtendedMenuAnalysisResult extends MenuAnalysisResult {
+  lowProfitItems?: ExtendedMenuItem[];
+  highProfitItems?: ExtendedMenuItem[];
+  slowMovers?: ExtendedMenuItem[];
+  fastMovers?: ExtendedMenuItem[];
+  priceChangeRecommendations?: Array<{
+    itemId: string;
+    suggestedPrice: number;
+  }>;
+  bundleOpportunities?: ExtendedMenuItem[];
+  seasonalRecommendations?: any[];
+  mostPopularCategory?: string;
+}
+
+export interface MenuStatistics {
+  popularItems: MenuItem[];
+  profitMargins: Array<{
+    itemId: string;
+    margin?: number;
+  }>;
+  salesTrends: any[];
+  categoryPerformance: any[];
+  timeBasedAnalysis: any[];
+}
+
+export interface MenuRecommendation {
+  id?: string;
+  recommendationType: string;
+  strength: string;
 }

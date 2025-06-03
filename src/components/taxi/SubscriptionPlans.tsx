@@ -17,7 +17,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onSelectPlan }) =
       name: "Plan Essentiel",
       description: "Parfait pour les utilisateurs occasionnels",
       price: 10000,
-      duration: 30, // en jours
+      duration: "30 jours",
       features: [
         "10% de réduction sur chaque course",
         "Annulation gratuite jusqu'à 5 min avant le départ",
@@ -34,7 +34,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onSelectPlan }) =
       name: "Plan Premium",
       description: "Idéal pour les utilisateurs réguliers",
       price: 25000,
-      duration: 30, // en jours
+      duration: "30 jours",
       features: [
         "20% de réduction sur chaque course",
         "Annulation gratuite jusqu'à la prise en charge",
@@ -52,7 +52,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onSelectPlan }) =
       name: "Plan Famille",
       description: "Économisez en famille (jusqu'à 5 membres)",
       price: 45000,
-      duration: 30, // en jours
+      duration: "30 jours",
       features: [
         "25% de réduction sur chaque course",
         "Partage avec 5 membres de la famille",
@@ -71,7 +71,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onSelectPlan }) =
       name: "Plan Entreprise",
       description: "Solution pour les équipes professionnelles",
       price: 100000,
-      duration: 30, // en jours
+      duration: "30 jours",
       features: [
         "30% de réduction sur chaque course",
         "Nombre illimité d'employés",
@@ -129,7 +129,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ onSelectPlan }) =
             <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
               <div className="flex items-center">
                 <Clock className="h-4 w-4 mr-1" />
-                <span>{plan.duration} jours</span>
+                <span>{plan.duration}</span>
               </div>
               <div className="flex items-center">
                 <Star className="h-4 w-4 mr-1" />

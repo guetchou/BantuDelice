@@ -7,7 +7,7 @@ import { Ban, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRideStatus } from '@/hooks/taxi/useRideStatus';
 
-// Importer les sous-composants
+// Import sub-components
 import { StatusHeader } from './ride-status/StatusHeader';
 import { ProgressBar } from './ride-status/ProgressBar';
 import { LocationInfo } from './ride-status/LocationInfo';
@@ -16,7 +16,6 @@ import { RideDetails } from './ride-status/RideDetails';
 import { RatingForm } from './ride-status/RatingForm';
 import { FooterActions } from './ride-status/FooterActions';
 
-// Composant principal de suivi de course
 export default function TaxiRideStatus() {
   const { rideId } = useParams<{ rideId: string }>();
   
@@ -36,16 +35,14 @@ export default function TaxiRideStatus() {
     contactDriver
   } = useRideStatus(rideId);
   
-  // Actualiser automatiquement les données de la course
   useEffect(() => {
     const intervalId = setInterval(() => {
       refreshRide();
-    }, 30000); // Rafraîchir toutes les 30 secondes
+    }, 30000);
     
     return () => clearInterval(intervalId);
   }, []);
   
-  // Afficher un message d'erreur
   if (error) {
     return (
       <Card className="max-w-md mx-auto">
@@ -61,7 +58,6 @@ export default function TaxiRideStatus() {
     );
   }
   
-  // Afficher un spinner de chargement
   if (loading && !ride) {
     return (
       <Card className="max-w-md mx-auto">
@@ -75,7 +71,6 @@ export default function TaxiRideStatus() {
     );
   }
   
-  // Si pas de course trouvée
   if (!ride) {
     return (
       <Card className="max-w-md mx-auto">
@@ -100,26 +95,19 @@ export default function TaxiRideStatus() {
       </CardHeader>
       
       <CardContent className="space-y-6 pt-4">
-        {/* Barre de progression */}
         <ProgressBar status={ride.status} />
-        
-        {/* Adresses */}
         <LocationInfo ride={ride} />
-        
         <Separator />
         
-        {/* Informations sur le chauffeur */}
-        {driver && ride.status !== 'pending' && ride.status !== 'cancelled' && ride.status !== 'rejected' && (
+        {driver && ride.status !== 'pending' && ride.status !== 'cancelled' && (
           <DriverInfo 
             driver={driver} 
             onContactDriver={contactDriver} 
           />
         )}
         
-        {/* Détails du trajet */}
         <RideDetails ride={ride} />
         
-        {/* Instructions spéciales */}
         {ride.special_instructions && (
           <div className="bg-primary/5 p-3 rounded-md border border-primary/10 text-sm">
             <p className="font-medium mb-1">Instructions spéciales:</p>
@@ -127,7 +115,6 @@ export default function TaxiRideStatus() {
           </div>
         )}
         
-        {/* Section d'évaluation */}
         {ride.status === 'completed' && isRatingOpen && (
           <RatingForm 
             onSubmit={submitRating}
