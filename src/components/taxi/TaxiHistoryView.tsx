@@ -3,379 +3,347 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, MapPin, Car, CreditCard, ArrowUpRight, CalendarClock, Info, Ban } from "lucide-react";
-import { useTaxiHistory } from '@/hooks/useTaxiHistory';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Clock, MapPin, CreditCard, Star, Search, Filter, Download } from "lucide-react";
 import { TaxiRide } from '@/types/taxi';
+import { useToast } from '@/hooks/use-toast';
 
-export default function TaxiHistoryView() {
-  const navigate = useNavigate();
-  const { pastRides, upcomingRides, isLoading, cancelUpcomingRide } = useTaxiHistory();
-  const [selectedTab, setSelectedTab] = useState('upcoming');
-  const [selectedRide, setSelectedRide] = useState<TaxiRide | null>(null);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd MMMM yyyy, HH:mm', { locale: fr });
-    } catch (error) {
-      return dateString;
-    }
-  };
-  
-  const formatStatus = (status: string) => {
-    switch(status) {
-      case 'pending': return 'En attente';
-      case 'accepted': return 'Acceptée';
-      case 'en_route': return 'En route';
-      case 'arrived': return 'Arrivée';
-      case 'in_progress': return 'En cours';
-      case 'completed': return 'Terminée';
-      case 'cancelled': return 'Annulée';
-      default: return status;
-    }
-  };
-  
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'pending': return 'bg-yellow-500';
-      case 'accepted': return 'bg-blue-500';
-      case 'en_route': return 'bg-indigo-500';
-      case 'arrived': return 'bg-purple-500';
-      case 'in_progress': return 'bg-green-500';
-      case 'completed': return 'bg-green-700';
-      case 'cancelled': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-  
-  const handleCancelRide = async () => {
-    if (!selectedRide) return;
+interface TaxiHistoryViewProps {
+  userId?: string;
+}
+
+const TaxiHistoryView: React.FC<TaxiHistoryViewProps> = ({ userId }) => {
+  const [rides, setRides] = useState<TaxiRide[]>([]);
+  const [filteredRides, setFilteredRides] = useState<TaxiRide[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<string>('all');
+  const { toast } = useToast();
+
+  // Mock data for demonstration
+  useEffect(() => {
+    const mockRides: TaxiRide[] = [
+      {
+        id: '1',
+        pickup_address: 'Gombe, Kinshasa',
+        destination_address: 'Limete, Kinshasa',
+        status: 'completed',
+        price: 15000,
+        distance: 12,
+        duration: 25,
+        created_at: '2024-01-15T10:30:00Z',
+        estimated_price: 15000,
+        payment_status: 'paid',
+        vehicle_type: 'standard',
+        payment_method: 'mobile_money'
+      },
+      {
+        id: '2',
+        pickup_address: 'Bandalungwa, Kinshasa',
+        destination_address: 'Kintambo, Kinshasa',
+        status: 'completed',
+        price: 8000,
+        distance: 6,
+        duration: 15,
+        created_at: '2024-01-14T14:15:00Z',
+        estimated_price: 8000,
+        payment_status: 'paid',
+        vehicle_type: 'comfort',
+        payment_method: 'credit_card'
+      },
+      {
+        id: '3',
+        pickup_address: 'Matete, Kinshasa',
+        destination_address: 'Centre-ville, Kinshasa',
+        status: 'cancelled',
+        price: 0,
+        distance: 0,
+        duration: 0,
+        created_at: '2024-01-13T09:45:00Z',
+        estimated_price: 12000,
+        payment_status: 'pending',
+        vehicle_type: 'standard',
+        payment_method: 'cash'
+      }
+    ];
     
-    const success = await cancelUpcomingRide(selectedRide.id);
-    
-    if (success) {
-      toast.success("Course annulée avec succès");
-      setShowCancelDialog(false);
-      setSelectedRide(null);
-    } else {
-      toast.error("Impossible d'annuler la course");
+    setRides(mockRides);
+    setFilteredRides(mockRides);
+    setLoading(false);
+  }, [userId]);
+
+  // Filter rides based on search and filters
+  useEffect(() => {
+    let filtered = [...rides];
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(ride =>
+        ride.pickup_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ride.destination_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ride.id.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
-  };
-  
-  const showRideDetails = (ride: TaxiRide) => {
-    setSelectedRide(ride);
-  };
-  
-  const viewRideDetails = (rideId: string) => {
-    navigate(`/taxi/ride/${rideId}`);
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(ride => ride.status === statusFilter);
+    }
+
+    // Payment filter
+    if (paymentFilter !== 'all') {
+      filtered = filtered.filter(ride => ride.payment_method === paymentFilter);
+    }
+
+    // Date range filter
+    if (dateRange !== 'all') {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (dateRange) {
+        case 'today':
+          filterDate.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          filterDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          filterDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+      
+      if (dateRange !== 'all') {
+        filtered = filtered.filter(ride => new Date(ride.created_at) >= filterDate);
+      }
+    }
+
+    setFilteredRides(filtered);
+  }, [rides, searchQuery, statusFilter, paymentFilter, dateRange]);
+
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      'completed': 'default',
+      'cancelled': 'destructive',
+      'in_progress': 'secondary',
+      'pending': 'outline'
+    } as const;
+    
+    const labels = {
+      'completed': 'Terminée',
+      'cancelled': 'Annulée',
+      'in_progress': 'En cours',
+      'pending': 'En attente'
+    };
+
+    return (
+      <Badge variant={variants[status as keyof typeof variants] || 'outline'}>
+        {labels[status as keyof typeof labels] || status}
+      </Badge>
+    );
   };
 
-  // Prevent date format issues
-  const safeFormat = (date: string | Date, formatStr: string) => {
-    try {
-      return format(new Date(date), formatStr, { locale: fr });
-    } catch (error) {
-      console.error('Date format error:', error);
-      return 'Date non disponible';
-    }
+  const getPaymentMethodLabel = (method: string) => {
+    const labels = {
+      'cash': 'Espèces',
+      'credit_card': 'Carte bancaire',
+      'mobile_money': 'Mobile Money',
+      'wallet': 'Portefeuille'
+    };
+    return labels[method as keyof typeof labels] || method;
   };
-  
+
+  const formatPrice = (price: number) => {
+    return `${price.toLocaleString()} FCFA`;
+  };
+
+  const exportToCSV = () => {
+    const csvContent = [
+      ['Date', 'Départ', 'Destination', 'Statut', 'Prix', 'Paiement'],
+      ...filteredRides.map(ride => [
+        new Date(ride.created_at).toLocaleDateString(),
+        ride.pickup_address,
+        ride.destination_address,
+        ride.status,
+        ride.price.toString(),
+        getPaymentMethodLabel(ride.payment_method || '')
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'historique_courses.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export réussi",
+      description: "L'historique a été exporté avec succès",
+    });
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center h-40">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="upcoming" className="relative">
-            Courses prévues
-            {upcomingRides.length > 0 && (
-              <Badge className="absolute top-0 right-2 translate-x-1/2 -translate-y-1/2 bg-primary text-xs h-5 min-w-5 flex items-center justify-center">
-                {upcomingRides.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="past">Historique</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="upcoming" className="mt-4">
-          {isLoading ? (
-            <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-            </div>
-          ) : upcomingRides.length > 0 ? (
-            <div className="space-y-4">
-              {upcomingRides.map(ride => (
-                <Card key={ride.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-0">
-                    <div className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium">{safeFormat(ride.pickup_time, 'EEEE d MMMM')}</h3>
-                          <p className="text-sm text-gray-500">{safeFormat(ride.pickup_time, 'HH:mm')}</p>
-                        </div>
-                        <Badge className={`${getStatusColor(ride.status)}`}>
-                          {formatStatus(ride.status)}
-                        </Badge>
-                      </div>
-                      
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-start gap-2">
-                          <div className="mt-1">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Départ</p>
-                            <p className="text-sm text-gray-600">{ride.pickup_address}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2">
-                          <div className="mt-1">
-                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">Destination</p>
-                            <p className="text-sm text-gray-600">{ride.destination_address}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 flex justify-between items-center">
-                        <div className="text-sm">
-                          <span className="font-medium">Prix estimé:</span> {ride.estimated_price} FCFA
-                        </div>
-                        <div className="text-sm capitalize">
-                          <Car className="inline-block mr-1 h-3.5 w-3.5" /> {ride.vehicle_type}
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedRide(ride);
-                            setShowCancelDialog(true);
-                          }}
-                        >
-                          <Ban className="mr-1 h-4 w-4" /> Annuler
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          onClick={() => viewRideDetails(ride.id)}
-                        >
-                          Détails <ArrowUpRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10">
-              <CalendarClock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Aucune course prévue</h3>
-              <p className="text-gray-500 mb-6">Vous n'avez pas de courses à venir</p>
-              <Button onClick={() => navigate('/taxi/booking')}>
-                Réserver un taxi
-              </Button>
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="past" className="mt-4">
-          {isLoading ? (
-            <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-            </div>
-          ) : pastRides.length > 0 ? (
-            <div className="space-y-4">
-              {pastRides.map(ride => (
-                <Card key={ride.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-0">
-                    <div className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium">{formatDate(String(ride.pickup_time))}</h3>
-                        </div>
-                        <Badge className={`${getStatusColor(ride.status)}`}>
-                          {formatStatus(ride.status)}
-                        </Badge>
-                      </div>
-                      
-                      <div className="mt-3 space-y-2">
-                        <div className="flex items-start gap-2">
-                          <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                          <p className="text-sm text-gray-600">{ride.pickup_address} → {ride.destination_address}</p>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <Clock className="h-3.5 w-3.5 mr-1" />
-                            {ride.distance_km ? `${ride.distance_km} km` : "Distance non disponible"}
-                          </div>
-                          <div className="flex items-center">
-                            <CreditCard className="h-3.5 w-3.5 mr-1" />
-                            {ride.actual_price ? `${ride.actual_price} FCFA` : `${ride.estimated_price} FCFA`}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-3 flex justify-end">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-primary" 
-                          onClick={() => showRideDetails(ride)}
-                        >
-                          Voir détails
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-10">
-              <Info className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Aucun historique</h3>
-              <p className="text-gray-500">Vous n'avez pas encore effectué de course</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-      
-      {/* Détails de la course sélectionnée */}
-      {selectedRide && (
-        <Dialog open={!!selectedRide && !showCancelDialog} onOpenChange={() => setSelectedRide(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Détails de la course</DialogTitle>
-              <DialogDescription>
-                {formatDate(String(selectedRide.pickup_time))}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-2">
-              <div className="flex flex-col gap-1">
-                <div className="text-sm text-gray-500">Statut</div>
-                <Badge className={`${getStatusColor(selectedRide.status)}`}>
-                  {formatStatus(selectedRide.status)}
-                </Badge>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm text-gray-500">Type de véhicule</div>
-                  <div className="capitalize">{selectedRide.vehicle_type}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Mode de paiement</div>
-                  <div className="capitalize">
-                    {selectedRide.payment_method === 'cash' ? 'Espèces' : 
-                     selectedRide.payment_method === 'card' ? 'Carte bancaire' : 
-                     selectedRide.payment_method === 'mobile_money' ? 'Mobile Money' : 
-                     selectedRide.payment_method}
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">Trajet</div>
-                <div className="space-y-2 mt-1">
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Départ</p>
-                      <p className="text-sm text-gray-600">{selectedRide.pickup_address}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1">
-                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Destination</p>
-                      <p className="text-sm text-gray-600">{selectedRide.destination_address}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm text-gray-500">Distance</div>
-                  <div>{selectedRide.distance_km ? `${selectedRide.distance_km} km` : "Non disponible"}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-gray-500">Prix</div>
-                  <div className="font-medium">
-                    {selectedRide.actual_price ? `${selectedRide.actual_price} FCFA` : `${selectedRide.estimated_price} FCFA (estimé)`}
-                  </div>
-                </div>
-              </div>
-              
-              {selectedRide.special_instructions && (
-                <div>
-                  <div className="text-sm text-gray-500">Instructions spéciales</div>
-                  <div className="p-2 bg-gray-50 rounded text-sm mt-1">
-                    {selectedRide.special_instructions}
-                  </div>
-                </div>
-              )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Historique des courses</span>
+            <Button variant="outline" size="sm" onClick={exportToCSV}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Rechercher..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
             
-            <DialogFooter>
-              <Button 
-                onClick={() => {
-                  setSelectedRide(null);
-                  if (selectedRide.status === 'pending' || selectedRide.status === 'accepted') {
-                    navigate(`/taxi/ride/${selectedRide.id}`);
-                  }
-                }}
-              >
-                Fermer
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-      
-      {/* Boîte de dialogue pour l'annulation */}
-      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmer l'annulation</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir annuler cette course ?
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <p className="text-sm text-gray-500">
-              L'annulation peu de temps avant le départ peut entraîner des frais supplémentaires conformément à nos conditions générales.
-            </p>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="completed">Terminées</SelectItem>
+                <SelectItem value="cancelled">Annulées</SelectItem>
+                <SelectItem value="in_progress">En cours</SelectItem>
+                <SelectItem value="pending">En attente</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Paiement" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les paiements</SelectItem>
+                <SelectItem value="cash">Espèces</SelectItem>
+                <SelectItem value="credit_card">Carte bancaire</SelectItem>
+                <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                <SelectItem value="wallet">Portefeuille</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Période" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les dates</SelectItem>
+                <SelectItem value="today">Aujourd'hui</SelectItem>
+                <SelectItem value="week">Cette semaine</SelectItem>
+                <SelectItem value="month">Ce mois</SelectItem>
+                <SelectItem value="year">Cette année</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
-              Retour
-            </Button>
-            <Button variant="destructive" onClick={handleCancelRide}>
-              Confirmer l'annulation
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          {/* Results */}
+          {filteredRides.length === 0 ? (
+            <div className="text-center p-8">
+              <div className="text-gray-400 mb-2">
+                <Filter className="h-12 w-12 mx-auto" />
+              </div>
+              <p className="text-gray-500">Aucune course trouvée avec ces critères</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredRides.map((ride) => (
+                <Card key={ride.id} className="border">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-medium">Course #{ride.id.substring(0, 8)}</span>
+                          {getStatusBadge(ride.status)}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-green-600 mt-0.5" />
+                            <div>
+                              <p className="text-sm text-gray-500">Départ</p>
+                              <p className="font-medium">{ride.pickup_address}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-red-600 mt-0.5" />
+                            <div>
+                              <p className="text-sm text-gray-500">Destination</p>
+                              <p className="font-medium">{ride.destination_address}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="md:text-right space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm">
+                            {new Date(ride.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm">
+                            {new Date(ride.created_at).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm">
+                            {getPaymentMethodLabel(ride.payment_method || '')}
+                          </span>
+                        </div>
+                        
+                        <div className="text-lg font-bold">
+                          {formatPrice(ride.price)}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default TaxiHistoryView;

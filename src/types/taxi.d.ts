@@ -89,9 +89,10 @@ export interface TaxiSubscriptionPlan {
   benefits: string[];
   description: string;
   is_popular?: boolean;
-  duration?: string;
+  duration: string;
   features?: string[];
   discount_percentage?: number;
   max_rides?: number;
   popular?: boolean;
+  type?: 'individual' | 'family' | 'business';
 }

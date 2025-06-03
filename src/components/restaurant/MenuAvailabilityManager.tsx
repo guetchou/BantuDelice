@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import apiClient from '@/integrations/api/client';
 import { useToast } from '@/hooks/use-toast';
@@ -58,13 +59,13 @@ export function MenuAvailabilityManager({ restaurantId, isOwner = true }: MenuAv
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
-      const data = await apiClient.restaurants.getMenu(restaurantId);
+      const response = await apiClient.restaurants.getMenu(restaurantId);
       
-      if (data) {
-        setMenuItems(data);
+      if (response.success && response.data) {
+        setMenuItems(response.data);
         
         const uniqueCategories = Array.from(
-          new Set(data.map((item: MenuItem) => item.category))
+          new Set(response.data.map((item: MenuItem) => item.category))
         ).filter(Boolean) as string[];
         
         setCategories(uniqueCategories);

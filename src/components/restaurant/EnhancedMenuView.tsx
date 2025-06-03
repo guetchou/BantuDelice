@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,7 +75,7 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
         const seasonalRecommendations: any[] = [];
         const mostPopularCategory = extendedMenuItems[0]?.category;
 
-        // Create basic MenuAnalysisResult
+        // Create basic MenuAnalysisResult with complete dietary options
         const baseAnalysis: MenuAnalysisResult = {
           totalItems: menuItems.length,
           priceStats: {

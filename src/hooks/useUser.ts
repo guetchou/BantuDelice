@@ -1,14 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { User, UserProfile, ExtendedUserProfile } from '@/types/globalTypes';
 
-interface User {
-  id: string;
-  email?: string;
-  first_name?: string;
-  last_name?: string;
-  phone?: string;
-}
+export { UserProfile, ExtendedUserProfile };
 
 export const useUser = () => {
   const { user: authUser } = useAuth();

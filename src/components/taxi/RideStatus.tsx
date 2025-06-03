@@ -52,7 +52,12 @@ export default function RideStatus({ rideId }: RideStatusProps) {
           distance_km: data.distance_km || undefined,
           route_polyline: data.route_polyline || undefined,
           promo_code_applied: data.promo_code_applied || undefined,
-          promo_discount: data.promo_discount || undefined
+          promo_discount: data.promo_discount || undefined,
+          // Add missing required properties
+          price: data.actual_price || data.estimated_price || 0,
+          distance: data.distance_km || 0,
+          duration: 30, // Default duration
+          created_at: data.created_at || new Date().toISOString()
         };
         
         setRide(fetchedRide);
@@ -118,7 +123,7 @@ export default function RideStatus({ rideId }: RideStatusProps) {
             <div>
               <p className="text-xs text-gray-600">Heure de départ</p>
               <p className="font-medium">
-                {new Date(ride.pickup_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(ride.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
           </div>
