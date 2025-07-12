@@ -1,57 +1,49 @@
 
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSupabase';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  adminOnly?: boolean;
-  superAdminOnly?: boolean;
-  restaurantOwnerOnly?: boolean;
-  driverOnly?: boolean;
+  requireAuth?: boolean;
+  redirectTo?: string;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+export default function ProtectedRoute({ 
   children, 
-  adminOnly = false,
-  superAdminOnly = false,
-  restaurantOwnerOnly = false,
-  driverOnly = false
-}) => {
-  const { user, loading, isAuthenticated } = useAuth();
+  requireAuth = true, 
+  redirectTo = '/auth' 
+}: ProtectedRouteProps) {
+  const { user, loading } = useAuth();
   const location = useLocation();
 
+  // Afficher un loader pendant le chargement
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
-    // Redirect to login page with return URL
-    return <Navigate to={`/auth/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+  // Si l'authentification est requise et l'utilisateur n'est pas connecté
+  if (requireAuth && !user) {
+    return (
+      <Navigate 
+        to={redirectTo} 
+        state={{ from: location }} 
+        replace 
+      />
+    );
   }
 
-  // Check for specific permissions
-  if (superAdminOnly && user?.role !== 'superadmin' && user?.role !== 'super_admin') {
-    return <Navigate to="/" replace />;
-  }
-
-  if (adminOnly && !['admin', 'superadmin', 'super_admin'].includes(user?.role || '')) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (restaurantOwnerOnly && user?.role !== 'restaurant_owner') {
-    return <Navigate to="/" replace />;
-  }
-
-  if (driverOnly && user?.role !== 'driver') {
+  // Si l'utilisateur est connecté et essaie d'accéder à la page d'auth
+  if (!requireAuth && user && location.pathname === '/auth') {
     return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
-};
-
-export default ProtectedRoute;
+}

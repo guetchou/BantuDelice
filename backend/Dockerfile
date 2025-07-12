@@ -10,8 +10,7 @@ RUN addgroup -S nodeapp && \
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm ci --production && \
-    npm cache clean --force
+RUN npm ci --only=production
 
 # Copy application code
 COPY . .
@@ -27,11 +26,11 @@ ENV PORT=5000
 USER nodeapp
 
 # Expose API port
-EXPOSE 5000
+EXPOSE 5000 4000
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget -qO- http://localhost:5000/api/health || exit 1
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["npm", "start"]

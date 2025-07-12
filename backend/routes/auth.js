@@ -1,8 +1,8 @@
 
-const express = require('express');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { pool } = require('../config/database');
+import express from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { pool } from '../config/database.js';
 const router = express.Router();
 
 /**
@@ -18,7 +18,7 @@ router.post('/register', async (req, res) => {
     }
     
     // Check if user already exists
-    const [existingUsers] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    const { rows: existingUsers } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     
     if (existingUsers.length > 0) {
       return res.status(409).json({ error: 'User already exists with this email' });
@@ -28,14 +28,14 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Create new user
-    const [result] = await pool.query(
-      'INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)',
+    const { rows: result } = await pool.query(
+      'INSERT INTO users (email, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id',
       [email, hashedPassword, firstName || null, lastName || null]
     );
     
     // Generate token
     const token = jwt.sign(
-      { userId: result.insertId, email, role: 'user' },
+      { userId: result[0].id, email, role: 'user' },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -44,7 +44,7 @@ router.post('/register', async (req, res) => {
       message: 'User registered successfully',
       token,
       user: {
-        id: result.insertId,
+        id: result[0].id,
         email,
         firstName: firstName || null,
         lastName: lastName || null
@@ -69,7 +69,7 @@ router.post('/login', async (req, res) => {
     }
     
     // Find user
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    const { rows: users } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     
     if (users.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -124,7 +124,7 @@ router.get('/me', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Get user data
-    const [users] = await pool.query('SELECT id, email, first_name, last_name, role, created_at FROM users WHERE id = ?', [decoded.userId]);
+    const { rows: users } = await pool.query('SELECT id, email, first_name, last_name, role, created_at FROM users WHERE id = $1', [decoded.userId]);
     
     if (users.length === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -152,4 +152,4 @@ router.get('/me', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

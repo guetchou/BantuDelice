@@ -1,5 +1,5 @@
 
-const { pool } = require('../config/database');
+import { pool } from '../config/database.js';
 
 // In-memory cache for feature flags
 let featureFlagsCache = {};
@@ -87,6 +87,5 @@ const featureFlagsMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = featureFlagsMiddleware;
-module.exports.isFeatureEnabled = isFeatureEnabled;
-module.exports.refreshFeatureFlags = refreshFeatureFlags;
+export default featureFlagsMiddleware;
+export { isFeatureEnabled, refreshFeatureFlags };

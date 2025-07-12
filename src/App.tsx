@@ -1,49 +1,41 @@
-
 import React from 'react';
-import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { ThemeProvider } from '@/components/ui/theme-provider';
-import { CartProvider } from '@/contexts/CartProvider';
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
+import { ApiAuthProvider } from './contexts/ApiAuthContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartProvider';
 
-// Root layout with providers
-const RootLayout = () => {
+const App = () => {
+  console.log('🔍 App.tsx rendering...');
+  
   return (
-    <ThemeProvider defaultTheme="light" storageKey="buntudelice-ui-theme">
-      <AuthProvider>
-        <CartProvider>
-          <Outlet />
-        </CartProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <>
+      <div style={{
+        minHeight: '100vh',
+        width: '100vw',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: -1,
+        backgroundImage: `url('/images/thedrop24BG.jpg')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        filter: 'blur(0px) brightness(0.95)'
+      }} aria-hidden="true" />
+      <ThemeProvider defaultTheme="light" storageKey="buntudelice-ui-theme">
+        <ApiAuthProvider>
+          <AuthProvider>
+            <CartProvider>
+              <div className="glass-effect min-h-screen min-w-full">
+                <Outlet />
+              </div>
+            </CartProvider>
+          </AuthProvider>
+        </ApiAuthProvider>
+      </ThemeProvider>
+    </>
   );
 };
 
-// Define routes
-export const router = createBrowserRouter([
-  {
-    element: <RootLayout />,
-    children: [
-      {
-        path: "/",
-        element: <div className="p-8 text-center">Welcome to BuntuDelice!</div>,
-      },
-      {
-        path: "/auth/login",
-        element: <Login />,
-      },
-      {
-        path: "/auth/register",
-        element: <Register />,
-      },
-      // Add other routes as needed
-    ],
-  },
-]);
-
-export default function App() {
-  return (
-    <RouterProvider router={router} />
-  );
-}
+export default App;

@@ -1,8 +1,8 @@
 
-const express = require('express');
-const { pool } = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
-const { verifyRestaurantOwnership } = require('../middleware/restaurantOwner');
+import express from 'express';
+import { pool } from '../config/database.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { verifyRestaurantOwnership } from '../middleware/restaurantOwner.js';
 const router = express.Router();
 
 /**
@@ -258,4 +258,4 @@ router.delete('/restaurants/:id/special-hours/:dateId', authenticateToken, verif
   }
 });
 
-module.exports = router;
+export default router;

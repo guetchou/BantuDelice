@@ -1,27 +1,31 @@
 
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+import pkg from 'pg';
+const { Pool } = pkg;
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Create database connection pool
-const pool = mysql.createPool({
+const pool = new Pool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  port: parseInt(process.env.DB_PORT) || 55509,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
 // Test database connection
 const connect = async () => {
   try {
-    const connection = await pool.getConnection();
-    console.log('MySQL database connected successfully');
-    connection.release();
+    const client = await pool.connect();
+    console.log('PostgreSQL database connected successfully');
+    client.release();
     return pool;
   } catch (err) {
-    console.error('Error connecting to MySQL database:', err);
+    console.error('Error connecting to PostgreSQL database:', err);
     throw err;
   }
 };
@@ -30,13 +34,13 @@ const connect = async () => {
 const disconnect = async () => {
   try {
     await pool.end();
-    console.log('MySQL database disconnected successfully');
+    console.log('PostgreSQL database disconnected successfully');
   } catch (err) {
-    console.error('Error disconnecting from MySQL database:', err);
+    console.error('Error disconnecting from PostgreSQL database:', err);
   }
 };
 
-module.exports = {
+export {
   pool,
   connect,
   disconnect

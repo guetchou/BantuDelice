@@ -1,5 +1,5 @@
 
-const { pool } = require('../config/database');
+import { pool } from '../config/database.js';
 
 /**
  * Middleware to verify restaurant owner permissions
@@ -84,7 +84,7 @@ const verifyRestaurantOwnership = async (req, res, next) => {
   }
 };
 
-module.exports = {
+export {
   requireRestaurantOwner,
   verifyRestaurantOwnership
 };

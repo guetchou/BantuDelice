@@ -1,14 +1,20 @@
 
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const { connect } = require('./config/database');
-const authRoutes = require('./routes/auth');
-const restaurantRoutes = require('./routes/restaurants');
-const orderRoutes = require('./routes/orders');
-const availabilityRoutes = require('./routes/availability');
-const featureFlagsMiddleware = require('./middleware/featureFlags');
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { connect } from './config/database.js';
+import authRoutes from './routes/auth.js';
+import restaurantRoutes from './routes/restaurants.js';
+import orderRoutes from './routes/orders.js';
+import availabilityRoutes from './routes/availability.js';
+import featureFlagsMiddleware from './middleware/featureFlags.js';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,6 +36,16 @@ app.use(express.urlencoded({ extended: true }));
 
 // Feature flags middleware
 app.use(featureFlagsMiddleware);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Buntudelice API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -56,4 +72,4 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = app;
+export default app;

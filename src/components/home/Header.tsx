@@ -1,42 +1,22 @@
-import { ChevronDown, Search, User, ShoppingCart, Menu } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import SearchBar from "./SearchBar";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { useApiAuth } from "@/contexts/ApiAuthContext";
+import React from 'react';
 
-interface HeaderProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-}
-
-// Note: This component is now deprecated since its functionality 
-// has been moved to MainNavbar.tsx
-// Keeping it for backwards compatibility
-const Header = ({ searchQuery, setSearchQuery }: HeaderProps) => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useApiAuth();
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  // This component is now deprecated, navigation has been moved to MainNavbar.tsx
-  return null;
+const Header = () => {
+  return (
+    <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-2xl font-bold text-white">Buntudelice</h1>
+          </div>
+          <nav className="hidden md:flex space-x-6">
+            <a href="#services" className="text-white/80 hover:text-white transition">Services</a>
+            <a href="#about" className="text-white/80 hover:text-white transition">À propos</a>
+            <a href="#contact" className="text-white/80 hover:text-white transition">Contact</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
 };
 
 export default Header;

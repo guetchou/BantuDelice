@@ -1,8 +1,5 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, UtensilsCrossed, Package, Car, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const ServicesSection = () => {
@@ -10,94 +7,62 @@ const ServicesSection = () => {
 
   const services = [
     {
-      title: "Restaurants",
-      description: "Découvrez une sélection de restaurants à Brazzaville",
-      icon: UtensilsCrossed,
-      action: () => navigate("/restaurants"),
-      color: "bg-gradient-to-br from-orange-400 to-red-500"
+      id: 'food-delivery',
+      title: 'Livraison de Nourriture',
+      description: 'Commandez vos plats préférés et faites-vous livrer rapidement',
+      icon: '🍕',
+      color: 'bg-orange-500',
+      path: '/order'
     },
     {
-      title: "Livraison",
-      description: "Suivez votre livraison en temps réel",
-      icon: Package,
-      action: () => navigate("/delivery"),
-      color: "bg-gradient-to-br from-green-400 to-green-600"
+      id: 'taxi',
+      title: 'Service de Taxi',
+      description: 'Réservez un taxi pour vos déplacements en ville',
+      icon: '🚕',
+      color: 'bg-yellow-500',
+      path: '/delivery'
     },
     {
-      title: "Taxi",
-      description: "Réservez un taxi rapidement et en toute sécurité",
-      icon: Car,
-      action: () => navigate("/taxis"),
-      color: "bg-gradient-to-br from-blue-400 to-blue-600"
+      id: 'colis',
+      title: 'Livraison de Colis',
+      description: 'Envoyez et recevez vos colis en toute sécurité',
+      icon: '📦',
+      color: 'bg-blue-500',
+      path: '/services/colis'
     },
     {
-      title: "Covoiturage",
-      description: "Partagez vos trajets et économisez",
-      icon: Users,
-      action: () => navigate("/covoiturage"),
-      color: "bg-gradient-to-br from-teal-400 to-teal-600"
+      id: 'covoiturage',
+      title: 'Covoiturage',
+      description: 'Partagez vos trajets et économisez sur vos déplacements',
+      icon: '🚗',
+      color: 'bg-green-500',
+      path: '/delivery'
     }
   ];
 
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.1,
-        duration: 0.5
-      }
-    })
-  };
-
   return (
-    <section className="py-20 bg-gradient-to-b from-black via-gray-900 to-black">
-      <div className="container mx-auto px-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">Nos Services</h2>
-          <p className="text-gray-300 text-center max-w-3xl mx-auto mb-16">Découvrez notre gamme complète de services conçus pour vous offrir confort et commodité au quotidien.</p>
-        </motion.div>
+    <section id="services" className="py-16 bg-white/5 backdrop-blur-sm">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-white mb-4">Nos Services</h2>
+          <p className="text-xl text-white/80 max-w-2xl mx-auto">
+            Découvrez tous nos services pour faciliter votre quotidien à Brazzaville
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {services.map((service, index) => (
-            <motion.div
-              key={service.title}
-              custom={index}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeInUp}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {services.map((service) => (
+            <div
+              key={service.id}
+              onClick={() => navigate(service.path)}
+              className="bg-white/10 backdrop-blur-md rounded-xl p-6 cursor-pointer hover:bg-white/20 transition-all duration-300 border border-white/20 hover:border-white/40 group"
             >
-              <div 
-                className="bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/50 
-                         transition-all h-full text-white cursor-pointer rounded-xl overflow-hidden"
-                onClick={service.action}
-              >
-                <div className={`${service.color} rounded-t-lg py-6 px-4`}>
-                  <service.icon className="w-12 h-12 text-white" />
-                </div>
-                <div className="pt-6 pb-8 px-6">
-                  <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                  <p className="text-gray-300 text-sm mb-6">{service.description}</p>
-                  <Button 
-                    onClick={service.action}
-                    className="w-full group bg-white/10 hover:bg-white/20 text-white"
-                    variant="ghost"
-                  >
-                    Découvrir
-                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </div>
+              <div className={`w-16 h-16 ${service.color} rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
+                {service.icon}
               </div>
-            </motion.div>
+              <h3 className="text-xl font-semibold text-white mb-2">{service.title}</h3>
+              <p className="text-white/70 text-sm">{service.description}</p>
+            </div>
           ))}
         </div>
       </div>

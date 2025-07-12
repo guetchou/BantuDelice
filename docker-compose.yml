@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # Supabase (auto-hébergé)
+  supabase-db:
+    image: postgres:15-alpine
+    container_name: supabase-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: supabase_password
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  supabase-rest:
+    image: supabase/postgrest:v11.2.2
+    depends_on:
+      - supabase-db
+    environment:
+      PGRST_DB_URI: postgres://postgres:supabase_password@supabase-db:5432/postgres
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: supersecretjwt
+    ports:
+      - "3000:3000"
+
+  supabase-realtime:
+    image: supabase/realtime:v2.25.41
+    depends_on:
+      - supabase-db
+    environment:
+      DB_HOST: supabase-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: supabase_password
+      DB_NAME: postgres
+      PORT: 4000
+      JWT_SECRET: supersecretjwt
+    ports:
+      - "4001:4000"
+
+  supabase-storage:
+    image: supabase/storage-api:v0.41.5
+    depends_on:
+      - supabase-db
+    environment:
+      ANON_KEY: anonkey
+      SERVICE_KEY: servicekey
+      POSTGREST_URL: http://supabase-rest:3000
+      PGRST_JWT_SECRET: supersecretjwt
+      DATABASE_URL: postgres://postgres:supabase_password@supabase-db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: s3
+      REGION: us-east-1
+      GLOBAL_S3_BUCKET: supabase-storage
+    ports:
+      - "5001:5000"
+
+  supabase-studio:
+    image: supabase/studio:20240510-4b1b7e6
+    depends_on:
+      - supabase-db
+    environment:
+      SUPABASE_DB_HOST: supabase-db
+      SUPABASE_DB_PORT: 5432
+      SUPABASE_DB_NAME: postgres
+      SUPABASE_DB_USER: postgres
+      SUPABASE_DB_PASSWORD: supabase_password
+      JWT_SECRET: supersecretjwt
+    ports:
+      - "8080:3000"
+
+  # Backend Node.js (API + chat)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: buntudelice-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DB_HOST: supabase-db
+      DB_USER: postgres
+      DB_PASSWORD: supabase_password
+      DB_NAME: postgres
+      JWT_SECRET: supersecretjwt
+    depends_on:
+      - supabase-db
+    ports:
+      - "5000:5000"
+      - "4000:4000" # Socket.IO
+    volumes:
+      - ./backend/logs:/app/logs
+      - ./backend/uploads:/app/uploads
+
+  # Frontend React (via nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: buntudelice-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  supabase-db-data: 
