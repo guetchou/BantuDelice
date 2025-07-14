@@ -1,18 +1,12 @@
 
-export interface PaymentMethod {
-  id: string;
-  type: 'credit_card' | 'mobile_money' | 'cash' | 'wallet';
-  details: any;
-  is_default?: boolean;
-}
-
 export interface PaymentFormData {
-  method: string;
-  amount: number;
-  currency: string;
-  phoneNumber?: string;
-  operator?: string;
-  lastFour?: string;
+  method: 'mobile_money' | 'card' | 'cash';
+  mobileNumber?: string;
+  provider?: string;
+  cardNumber?: string;
+  expiryDate?: string;
+  cvv?: string;
+  cardHolder?: string;
 }
 
 export interface PaymentTransaction {
@@ -27,4 +21,11 @@ export interface PaymentTransaction {
   phoneNumber?: string;
   operator?: string;
   lastFour?: string;
+}
+
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  icon: string;
+  available: boolean;
 }

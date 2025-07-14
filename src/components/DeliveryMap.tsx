@@ -33,6 +33,15 @@ const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
       const loadMap = () => {
         if (mapContainer.current) {
           mapContainer.current.innerHTML = `
+            <style>
+              @keyframes pulse {
+                0%, 100% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.5; transform: scale(1.2); }
+              }
+              .pulse-animation {
+                animation: pulse 2s infinite;
+              }
+            </style>
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: relative;">
               <div style="text-align: center; z-index: 10;">
                 <div style="font-size: 18px; margin-bottom: 10px;">📍 Position actuelle</div>
@@ -41,7 +50,7 @@ const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
                 ${orderId ? `<div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">Commande: ${orderId}</div>` : ''}
                 ${location ? '<div style="font-size: 12px; margin-top: 8px; color: #4ade80;">✓ Géolocalisation active</div>' : '<div style="font-size: 12px; margin-top: 8px; color: #fbbf24;">⚠ Position par défaut</div>'}
               </div>
-              <div style="position: absolute; top: 20px; right: 20px; width: 12px; height: 12px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite;"></div>
+              <div class="pulse-animation" style="position: absolute; top: 20px; right: 20px; width: 12px; height: 12px; background: #4ade80; border-radius: 50%;"></div>
             </div>
           `;
         }
@@ -78,13 +87,6 @@ const DeliveryMap = ({ latitude, longitude, orderId }: DeliveryMapProps) => {
           {loading ? 'Localisation...' : 'Ma position'}
         </Button>
       </div>
-      
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.2); }
-        }
-      `}</style>
     </div>
   );
 };

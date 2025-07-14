@@ -1,20 +1,4 @@
 
-export interface CartItem {
-  id: string;
-  menu_item_id: string;
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-  total: number;
-  restaurant_id: string;
-  image_url: string;
-  category?: string;
-  special_instructions?: string;
-  combo_item?: boolean;
-  options: CartItemOption[];
-}
-
 export interface CartItemOption {
   id: string;
   name: string;
@@ -24,8 +8,21 @@ export interface CartItemOption {
   price_adjustment: number;
 }
 
+export interface CartItem {
+  id: string;
+  menu_item_id: string;
+  name: string;
+  description: string;
+  price: number;
+  total: number;
+  image_url: string;
+  quantity: number;
+  options: CartItemOption[];
+  restaurant_id: string;
+  special_instructions?: string;
+}
+
 export interface Cart {
   items: CartItem[];
   total: number;
-  restaurant_id?: string;
 }
