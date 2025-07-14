@@ -17,10 +17,10 @@ const ServicesSection = () => {
     {
       id: 'taxi',
       title: 'Service de Taxi',
-      description: 'Réservez un taxi pour vos déplacements en ville',
+      description: 'Réservez un taxi rapidement et en toute sécurité',
       icon: '🚕',
-      color: 'bg-yellow-500',
-      path: '/delivery'
+      color: 'bg-gradient-to-br from-blue-400 to-blue-600',
+      path: '/taxi'
     },
     {
       id: 'colis',

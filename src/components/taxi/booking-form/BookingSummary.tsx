@@ -18,10 +18,10 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   currentStep,
   selectedDriver
 }) => {
-  const { formState, estimatedPrice, getDistanceEstimate } = useBookingForm();
+  const { formState } = useBookingForm();
   
   // Obtenir la distance estimée si disponible
-  const distance = getDistanceEstimate();
+  const distance = formState.estimatedDistance;
   
   return (
     <Card className="sticky top-6 shadow-sm">
@@ -111,18 +111,6 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
                   </div>
                 )}
                 
-                {formState.isSharingEnabled && (
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span>Trajet partagé</span>
-                    </div>
-                    <Badge variant="secondary">
-                      Max {formState.maxPassengers} passager{formState.maxPassengers > 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                )}
-                
                 {selectedDriver && currentStep >= 4 && (
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
@@ -140,7 +128,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Prix de base</span>
-                  <span>{formatPrice(estimatedPrice - 500)}</span>
+                  <span>{formatPrice(formState.estimatedPrice - 500)}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
@@ -157,7 +145,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
                 
                 <div className="flex justify-between pt-2 font-medium text-base">
                   <span>Total</span>
-                  <span>{formatPrice(estimatedPrice)}</span>
+                  <span>{formatPrice(formState.estimatedPrice)}</span>
                 </div>
               </div>
             </>
@@ -187,7 +175,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           )}
           
           {/* Notice d'estimation */}
-          {estimatedPrice > 0 && (
+          {formState.estimatedPrice > 0 && (
             <div className="flex items-start gap-2 bg-amber-50 p-3 rounded-md text-sm text-amber-800">
               <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <p>

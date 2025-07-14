@@ -54,7 +54,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ foodImages }) => {
             Commander maintenant
           </button>
           <button
-            onClick={() => navigate('/delivery')}
+            onClick={() => navigate('/services')}
             className="bg-white/20 hover:bg-white/30 text-white font-semibold px-8 py-4 rounded-full text-lg backdrop-blur-sm transition-colors"
           >
             Découvrir nos services

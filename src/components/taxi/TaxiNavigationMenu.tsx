@@ -58,11 +58,13 @@ const TaxiNavigationMenu: React.FC<TaxiNavigationMenuProps> = ({ activeRoute }) 
             <Button
               key={item.id}
               asChild
-              variant={isActive ? "default" : "ghost"}
-              className="flex-shrink-0 gap-2"
+              variant="ghost"
+              className={`flex-shrink-0 gap-2 px-4 py-2 rounded-lg font-semibold transition-colors duration-200 
+                ${isActive ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg' : 'text-orange-500 hover:bg-orange-100/10 hover:text-orange-600'}
+              `}
             >
-              <Link to={item.path}>
-                <Icon className="h-4 w-4" />
+              <Link to={item.path} className="flex items-center gap-2">
+                <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-orange-400'}`} />
                 <span>{item.label}</span>
               </Link>
             </Button>

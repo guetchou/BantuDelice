@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Building2, Users, CreditCard, CalendarClock, BarChart, CheckCircle, Shield, Car, MoveRight } from 'lucide-react';
+import { ArrowLeft, Building2, Users, CreditCard, CalendarClock, BarChart, CheckCircle, Shield, Car, MoveRight, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import TaxiNavigationMenu from '@/components/taxi/TaxiNavigationMenu';
 import { Separator } from '@/components/ui/separator';
@@ -57,6 +57,14 @@ const TaxiBusinessPage = () => {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/')}
+          className="mr-4"
+        >
+          Accueil
+        </Button>
         <h1 className="text-3xl font-bold">Solutions Entreprises</h1>
       </div>
       
@@ -73,7 +81,7 @@ const TaxiBusinessPage = () => {
               <CheckCircle className="h-4 w-4" />
               Demander un devis
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => navigate('/services')}>
               <MoveRight className="h-4 w-4" />
               Découvrir nos offres
             </Button>

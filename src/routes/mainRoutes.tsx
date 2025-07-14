@@ -12,6 +12,13 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import App from "@/App";
 import Services from "@/pages/Services";
 import Restaurants from "@/pages/Restaurants";
+import Taxi from "@/pages/Taxi";
+import TaxiBooking from "@/pages/taxi/Booking";
+import TaxiHistory from "@/pages/taxi/History";
+import TaxiLocations from "@/pages/taxi/Locations";
+import TaxiSubscription from "@/pages/taxi/Subscription";
+import TaxiBusiness from "@/pages/taxi/Business";
+import Contact from "@/pages/Contact";
 
 const mainRoutes = [
   {
@@ -24,6 +31,13 @@ const mainRoutes = [
       { path: "delivery/map", element: <MapPage /> },
       { path: "services", element: <Services /> },
       { path: "restaurants", element: <Restaurants /> },
+      { path: "taxi", element: <Taxi /> },
+      { path: "taxi/booking", element: <TaxiBooking /> },
+      { path: "taxi/history", element: <TaxiHistory /> },
+      { path: "taxi/locations", element: <TaxiLocations /> },
+      { path: "taxi/subscription", element: <TaxiSubscription /> },
+      { path: "taxi/business", element: <TaxiBusiness /> },
+      { path: "contact", element: <Contact /> },
       { 
         path: "order", 
         element: (
