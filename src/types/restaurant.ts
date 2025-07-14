@@ -1,69 +1,141 @@
 
-export interface OpeningHours {
-  open: string;
-  close: string;
-  closed?: boolean;
-  is_closed?: boolean;
-}
-
 export interface Restaurant {
   id: string;
   name: string;
-  description: string;
-  latitude: number;
-  longitude: number;
-  image_url?: string;
-  cuisine_type: string;
-  rating: number;
-  average_rating?: number;
-  review_count: number;
-  delivery_time: string;
-  delivery_fee: number;
-  min_order?: number;
+  description?: string;
+  address: string;
   phone?: string;
-  address?: string;
-  opening_hours?: OpeningHours;
+  email?: string;
+  website?: string;
+  price_range: number;
+  cuisine_type?: string;
+  rating?: number;
+  average_rating?: number;
   is_open?: boolean;
-  special_features?: string[];
-  payment_methods?: string[];
-  categories?: string[];
-  featured?: boolean;
-  promotions?: any[];
+  opening_hours?: any;
+  business_hours?: any;
+  delivery_fee?: number;
+  minimum_order?: number;
+  estimated_delivery_time?: number;
+  estimated_preparation_time?: number;
+  average_prep_time?: number;
+  image_url?: string;
+  logo_url?: string;
+  banner_url?: string;
+  banner_image_url?: string;
+  features?: string[];
+  created_at?: string;
+  updated_at?: string;
+  status?: 'pending' | 'approved' | 'suspended';
   distance?: number;
-  owner_id?: string;
+  trending?: boolean;
+  latitude?: number;
+  longitude?: number;
+  review_count?: number;
+  delivery_time?: number;
+  menu_items?: MenuItem[];
+  total_ratings?: number;
+}
+
+export interface MenuItem {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image_url?: string;
+  available: boolean;
+  preparation_time?: number;
+  is_vegetarian?: boolean;
+  is_vegan?: boolean;
+  is_gluten_free?: boolean;
+  allergens?: string[];
+  ingredients?: string[];
+  dietary_preferences?: string[];
+  nutrition_info?: any;
+  nutritional_info?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+  };
+  customization_options?: any[];
+  stock_level?: number;
+  stock?: number;
+  popularity_score?: number;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface Table {
+export interface MenuCustomizationOption {
   id: string;
-  restaurant_id: string;
-  table_number: number;
-  capacity: number;
-  status: 'available' | 'occupied' | 'reserved';
-  location?: string;
-}
-
-export interface RestaurantFilters {
-  cuisine: string[];
-  rating: number;
-  deliveryTime: string;
-  priceRange: string;
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
   name: string;
-  phone?: string;
-  address?: string;
-  role: 'customer' | 'delivery_driver';
-  created_at: string;
-  updated_at?: string;
+  type: 'single' | 'multiple';
+  required: boolean;
+  options: {
+    id: string;
+    name: string;
+    price: number;
+  }[];
 }
 
-export interface ExtendedRestaurant extends Restaurant {
-  menu_items?: any[];
-  orders?: any[];
-  analytics?: any;
+export interface MenuPromotion {
+  id: string;
+  title: string;
+  description: string;
+  discount_percentage?: number;
+  discount_amount?: number;
+  discount_type?: string;
+  discount_value?: number;
+  start_date: string;
+  end_date: string;
+  valid_from?: string;
+  valid_to?: string;
+  active: boolean;
+  restaurant_id: string;
+  menu_item_ids?: string[];
+  promotion_hours?: any;
+  conditions?: any;
+  min_order_value?: number;
+}
+
+export interface MenuStatistics {
+  popularItems: MenuItem[];
+  profitMargins: Array<{
+    itemId: string;
+    margin?: number;
+  }>;
+  salesTrends: any[];
+  categoryPerformance: any[];
+  timeBasedAnalysis: any[];
+}
+
+export interface MenuAnalysisResult {
+  totalItems: number;
+  priceStats: {
+    average: number;
+    highest: number;
+    lowest: number;
+    median: number;
+  };
+  dietaryOptions: {
+    vegetarianCount: number;
+    veganCount: number;
+    glutenFreeCount: number;
+    vegetarianPercentage: number;
+    veganPercentage: number;
+    glutenFreePercentage: number;
+  };
+  menuSuggestions: Array<{
+    message: string;
+    priority: 'high' | 'medium' | 'low';
+  }>;
+}
+
+export interface MenuRecommendation {
+  id?: string;
+  recommendationType: string;
+  strength: string;
 }

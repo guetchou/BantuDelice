@@ -12,17 +12,14 @@ export interface CartItem {
   id: string;
   menu_item_id: string;
   name: string;
-  description: string;
   price: number;
-  total: number;
-  image_url: string;
   quantity: number;
-  options: CartItemOption[];
+  total: number;
   restaurant_id: string;
   special_instructions?: string;
-}
-
-export interface Cart {
-  items: CartItem[];
-  total: number;
+  combo_item?: boolean;
+  options: CartItemOption[];
+  description: string;
+  image_url: string;
+  category?: string;
 }
