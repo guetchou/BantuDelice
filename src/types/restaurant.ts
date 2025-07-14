@@ -2,60 +2,83 @@
 export interface Restaurant {
   id: string;
   name: string;
-  description: string;
-  image_url: string;
-  rating: number;
-  average_rating: number;
-  total_ratings: number;
-  cuisine_type: string;
-  phone: string;
+  description?: string;
   address: string;
-  latitude: number;
-  longitude: number;
-  is_open: boolean;
-  business_hours: BusinessHours;
-  min_order: number;
-  delivery_fee: number;
-  delivery_time: string;
-  special_features: string[];
-  payment_methods: string[];
-  created_at: string;
-  updated_at: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  price_range: number;
+  cuisine_type?: string;
+  rating?: number;
+  average_rating?: number;
+  total_ratings?: number;
+  is_open?: boolean;
+  opening_hours?: BusinessHours;
+  business_hours?: BusinessHours;
+  delivery_fee?: number;
+  minimum_order?: number;
+  estimated_delivery_time?: number;
+  estimated_preparation_time: number;
+  average_prep_time?: number;
+  image_url?: string;
+  logo_url?: string;
+  banner_url?: string;
+  banner_image_url?: string;
+  features?: string[];
+  created_at?: string;
+  updated_at?: string;
+  status?: 'pending' | 'approved' | 'suspended';
+  distance?: number;
+  latitude?: number;
+  longitude?: number;
+  trending?: boolean;
+  menu_items?: MenuItem[];
 }
 
 export interface BusinessHours {
-  monday: { open: string; close: string; closed?: boolean };
-  tuesday: { open: string; close: string; closed?: boolean };
-  wednesday: { open: string; close: string; closed?: boolean };
-  thursday: { open: string; close: string; closed?: boolean };
-  friday: { open: string; close: string; closed?: boolean };
-  saturday: { open: string; close: string; closed?: boolean };
-  sunday: { open: string; close: string; closed?: boolean };
+  regular?: {
+    [key: string]: {
+      open: string;
+      close: string;
+      closed?: boolean;
+    };
+  };
+  special?: Array<{
+    date: string;
+    open?: string;
+    close?: string;
+    closed: boolean;
+  }>;
 }
 
-export interface Table {
+export interface MenuItem {
   id: string;
   restaurant_id: string;
-  table_number: number;
-  capacity: number;
-  status: 'available' | 'occupied' | 'reserved';
-  location?: string;
-}
-
-export interface RestaurantFilters {
-  cuisine_type?: string;
-  rating?: number;
-  price_range?: string;
-  delivery_time?: string;
-  is_open?: boolean;
-}
-
-export interface SpecialHour {
-  id: string;
-  restaurant_id: string;
-  date: string;
-  open_time?: string;
-  close_time?: string;
-  is_closed: boolean;
-  reason?: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image_url?: string;
+  available: boolean;
+  preparation_time?: number;
+  is_vegetarian?: boolean;
+  is_vegan?: boolean;
+  is_gluten_free?: boolean;
+  allergens?: string[];
+  ingredients?: string[];
+  dietary_preferences?: string[];
+  nutrition_info?: any;
+  nutritional_info?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+  };
+  customization_options?: any[];
+  stock_level?: number;
+  stock?: number;
+  popularity_score?: number;
+  created_at?: string;
+  updated_at?: string;
 }

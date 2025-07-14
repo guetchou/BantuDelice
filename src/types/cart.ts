@@ -3,13 +3,16 @@ export interface CartItem {
   id: string;
   menu_item_id: string;
   name: string;
+  description: string;
   price: number;
   quantity: number;
-  image_url: string;
-  description: string;
-  restaurant_id: string;
-  options: CartItemOption[];
   total: number;
+  restaurant_id: string;
+  image_url: string;
+  category?: string;
+  special_instructions?: string;
+  combo_item?: boolean;
+  options: CartItemOption[];
 }
 
 export interface CartItemOption {
@@ -17,4 +20,12 @@ export interface CartItemOption {
   name: string;
   value: string;
   price: number;
+  quantity: number;
+  price_adjustment: number;
+}
+
+export interface Cart {
+  items: CartItem[];
+  total: number;
+  restaurant_id?: string;
 }

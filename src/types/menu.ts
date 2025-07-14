@@ -1,19 +1,25 @@
 
-// Re-export from globalTypes to maintain compatibility
-export type { 
-  MenuItem, 
-  MenuPromotion, 
-  MenuStatistics, 
-  MenuRecommendation, 
-  MenuAnalysisResult,
-  ExtendedMenuAnalysisResult
-} from './globalTypes';
+import { MenuItem } from './globalTypes';
+
+export interface MenuCustomization {
+  id: string;
+  name: string;
+  type: 'radio' | 'checkbox' | 'select';
+  required: boolean;
+  options: CustomizationOption[];
+}
+
+export interface CustomizationOption {
+  id: string;
+  name: string;
+  price_adjustment: number;
+}
 
 export interface MenuCategory {
   id: string;
   name: string;
   description?: string;
-  restaurant_id: string;
-  display_order?: number;
-  active?: boolean;
+  items: MenuItem[];
 }
+
+export { MenuItem };
