@@ -10,6 +10,8 @@ import PaymentHistory from "@/components/payment/PaymentHistory";
 import LocationPage from "@/pages/LocationPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import App from "@/App";
+import Services from "@/pages/Services";
+import Restaurants from "@/pages/Restaurants";
 
 const mainRoutes = [
   {
@@ -20,6 +22,8 @@ const mainRoutes = [
       { path: "services/colis", element: <ColisServicePage /> },
       { path: "delivery", element: <DeliveryPage /> },
       { path: "delivery/map", element: <MapPage /> },
+      { path: "services", element: <Services /> },
+      { path: "restaurants", element: <Restaurants /> },
       { 
         path: "order", 
         element: (

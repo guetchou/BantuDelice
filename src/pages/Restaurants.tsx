@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import NavbarGlassmorphism from '@/components/NavbarGlassmorphism';
 
 export default function Restaurants() {
   const navigate = useNavigate();
@@ -133,7 +134,9 @@ export default function Restaurants() {
   };
   
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <NavbarGlassmorphism />
+      <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Restaurants</h1>
       
       {/* Barre de recherche */}
@@ -345,5 +348,6 @@ export default function Restaurants() {
         </>
       )}
     </div>
+    </>
   );
 }
