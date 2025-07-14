@@ -1,6 +1,5 @@
 
-import type { MenuItem } from "@/types/globalTypes";
-import type { CartItem } from "@/types/cart";
+import type { MenuItem, CartItem } from "@/types/globalTypes";
 
 export interface MenuItemCardProps {
   item: MenuItem;
