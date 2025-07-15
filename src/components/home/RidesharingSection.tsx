@@ -37,7 +37,7 @@ const RidesharingSection = () => {
               </div>
             </div>
             <button
-              onClick={() => navigate('/delivery')}
+              onClick={() => navigate('/covoiturage')}
               className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-4 rounded-full text-lg transition-colors"
             >
               Trouver un trajet

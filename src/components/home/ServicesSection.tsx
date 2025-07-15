@@ -36,7 +36,7 @@ const ServicesSection = () => {
       description: 'Partagez vos trajets et économisez sur vos déplacements',
       icon: '🚗',
       color: 'bg-green-500',
-      path: '/delivery'
+      path: '/covoiturage'
     }
   ];
 

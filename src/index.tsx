@@ -11,15 +11,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <Toaster />
   </React.StrictMode>
 );
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
-      .then(registration => {
-        console.log('Service Worker Firebase enregistré avec succès:', registration);
-      })
-      .catch(err => {
-        console.error('Erreur lors de l\'enregistrement du Service Worker Firebase:', err);
-      });
-  });
-}
