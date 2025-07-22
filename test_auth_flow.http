@@ -1,0 +1,23 @@
+### Test inscription
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "TestPassword123!",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### Test connexion
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "TestPassword123!"
+}
+
+### Test récupération du profil utilisateur
+GET http://localhost:3000/auth/me
+Authorization: Bearer {{token}} 

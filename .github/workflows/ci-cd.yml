@@ -1,0 +1,83 @@
+name: CI/CD Docker Compose
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy .env.example to .env (pour tests)
+        run: cp env.example .env
+
+      - name: Synchronise .env.
+        run: bash scripts/sync-env.sh
+
+      - name: Build backend image
+        run: docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest ./backend
+
+      - name: Build frontend image
+        run: docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest ./frontend
+
+      - name: Lint & Test backend (optionnel)
+        run: |
+          cd backend
+          npm ci
+          npm run lint || true
+          # npm test  # décommente si tu as des tests
+
+      - name: Lint & Test frontend (optionnel)
+        run: |
+          cd frontend
+          npm ci
+          npm run lint || true
+          # npm test  # décommente si tu as des tests
+
+      - name: Docker Compose up (test intégration)
+        run: |
+          docker compose --env-file .env up -d
+          sleep 30
+          docker compose ps
+          docker compose logs --tail=50
+
+      - name: Run healthcheck (API)
+        run: |
+          curl --fail http://localhost:5000/api/health || (docker compose logs && exit 1)
+
+      - name: Stop containers
+        run: docker compose down
+
+      - name: Push backend image
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
+
+      - name: Push frontend image
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+
+  # Ajoute ici un job de déploiement si tu veux déployer automatiquement sur un serveur
+  # deploy:
+  #   needs: build-and-test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Deploy via SSH, rsync, etc.
+  #       run: echo "Déploiement à personnaliser" 
