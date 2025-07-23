@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { QrReader } from 'react-qr-reader';
+import React, { useState, useRef, useCallback } from 'react';
+import { useZxing } from 'react-zxing';
 import { Button } from '@/components/ui/button';
 
 const statusOptions = [
@@ -30,14 +30,29 @@ export default function TrackingScanUpdate() {
     }
   };
 
-  // Scan QR code
-  const handleScan = (data: string | null) => {
-    if (data) {
-      setScanResult(data);
-      setTrackingNumber(data);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Configuration du lecteur QR
+  const { ref } = useZxing({
+    onDecodeResult: (result) => {
+      const text = result.getText();
+      setScanResult(text);
+      setTrackingNumber(text);
       setMessage(null);
+    },
+    onError: (error) => {
+      console.error(error);
+      setMessage('Erreur lors de la lecture du QR code');
+    },
+    timeBetweenDecodingAttempts: 300,
+    constraints: {
+      video: {
+        facingMode: 'environment',
+        width: { min: 640, ideal: 1280, max: 1920 },
+        height: { min: 480, ideal: 720, max: 1080 }
+      }
     }
-  };
+  });
 
   // Envoi de la mise à jour
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,11 +85,31 @@ export default function TrackingScanUpdate() {
     <div className="max-w-md mx-auto p-4 bg-white rounded shadow">
       <h2 className="text-lg font-bold mb-4">Scan QR & mise à jour tracking</h2>
       <div className="mb-4">
-        <QrReader
-          onResult={result => handleScan(result?.getText() || null)}
-          constraints={{ facingMode: 'environment' }}
-        />
-        {scanResult && <div className="mt-2 text-sm">Tracking détecté : <b>{scanResult}</b></div>}
+        <div className="relative w-full aspect-video bg-black rounded overflow-hidden">
+          <video
+            ref={(node) => {
+              if (node) {
+                // @ts-ignore - react-zxing utilise une ref différente
+                ref(node);
+                videoRef.current = node;
+              }
+            }}
+            className="w-full h-full object-cover"
+            style={{
+              transform: 'scaleX(-1)' // Miroir pour une meilleure expérience utilisateur
+            }}
+            playsInline
+          />
+        </div>
+        {scanResult ? (
+          <div className="mt-2 p-2 bg-green-100 text-green-800 rounded text-sm">
+            Tracking détecté : <b>{scanResult}</b>
+          </div>
+        ) : (
+          <div className="mt-2 p-2 bg-yellow-100 text-yellow-800 rounded text-sm">
+            Scannez un code QR de suivi
+          </div>
+        )}
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

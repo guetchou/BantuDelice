@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: './', // Important pour le déploiement statique
   server: {
     host: true, // Listen on all available network interfaces
     port: 9595,
@@ -21,5 +22,15 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     sourcemap: false, // Disable sourcemaps to resolve errors
+    outDir: 'dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          vendor: ['lodash', 'date-fns']
+        }
+      }
+    }
   }
 }));

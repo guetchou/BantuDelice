@@ -1,19 +1,19 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Truck, Globe, Calculator, Package, Users, Star, ArrowRight, MapPin, Clock, Shield, QrCode } from 'lucide-react';
-import { QrReader } from 'react-qr-reader';
+import { useZxing } from 'react-zxing';
+import { BrowserQRCodeReader } from '@zxing/browser';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import jsQR from 'jsqr';
 
 const ColisLandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [trackingInput, setTrackingInput] = React.useState("");
-  const [showScanner, setShowScanner] = React.useState(false);
-  const [qrError, setQrError] = React.useState<string | null>(null);
-  const qrRef = useRef<any>(null);
+  const [trackingInput, setTrackingInput] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,27 +25,47 @@ const ColisLandingPage: React.FC = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const img = new window.Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return setQrError('Erreur de lecture de l\'image.');
-      ctx.drawImage(img, 0, 0, img.width, img.height);
-      const imageData = ctx.getImageData(0, 0, img.width, img.height);
-      const code = jsQR(imageData.data, img.width, img.height);
-      if (code) {
-        setTrackingInput(code.data);
+    
+    try {
+      const codeReader = new BrowserQRCodeReader();
+      const result = await codeReader.decodeFromImage(undefined, URL.createObjectURL(file));
+      
+      if (result) {
+        setTrackingInput(result.getText());
         setShowScanner(false);
         setQrError(null);
-        navigate(`/colis/tracking?code=${encodeURIComponent(code.data)}`);
+        navigate(`/colis/tracking?code=${encodeURIComponent(result.getText())}`);
       } else {
         setQrError('Aucun QR code détecté dans l\'image.');
       }
-    };
+    } catch (error) {
+      console.error('Erreur lors de la lecture du QR code:', error);
+      setQrError('Erreur lors de la lecture du QR code.');
+    }
   };
+
+  // Configuration du lecteur QR
+  const { ref } = useZxing({
+    onDecodeResult: (result) => {
+      const text = result.getText();
+      setTrackingInput(text);
+      setShowScanner(false);
+      setQrError(null);
+      navigate(`/colis/tracking?code=${encodeURIComponent(text)}`);
+    },
+    onError: (error) => {
+      console.error(error);
+      setQrError('Erreur lors de la lecture du QR code');
+    },
+    timeBetweenDecodingAttempts: 300,
+    constraints: {
+      video: {
+        facingMode: 'environment',
+        width: { min: 640, ideal: 1280, max: 1920 },
+        height: { min: 480, ideal: 720, max: 1080 }
+      }
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-100 to-yellow-200">
@@ -107,37 +127,29 @@ const ColisLandingPage: React.FC = () => {
                     <DialogTitle>Scanner un QR code</DialogTitle>
                   </DialogHeader>
                   <div className="flex flex-col items-center gap-4">
-                    <QrReader
-                      ref={qrRef}
-                      constraints={{ facingMode: 'environment' }}
-                      onResult={(result, error) => {
-                        if (!!result) {
-                          setTrackingInput(result.getText() || '');
-                          setShowScanner(false);
-                          setQrError(null);
-                          navigate(`/colis/tracking?code=${encodeURIComponent(result.getText() || '')}`);
-                        }
-                        if (!!error && error.name !== 'NotFoundException') {
-                          setQrError('Impossible d\'accéder à la caméra. Autorisez l\'accès ou téléversez une image.');
+                    <div className="relative w-full aspect-video bg-black rounded overflow-hidden">
+                    <video
+                      ref={(node) => {
+                        if (node) {
+                          // @ts-ignore - react-zxing utilise une ref différente
+                          ref(node);
+                          videoRef.current = node;
                         }
                       }}
-                      videoContainerStyle={{ width: '100%' }}
-                      containerStyle={{ width: '100%' }}
-                      scanDelay={500}
-                      legacyMode={!!qrError}
+                      className="w-full h-full object-cover"
+                      style={{
+                        transform: 'scaleX(-1)' // Miroir pour une meilleure expérience utilisateur
+                      }}
+                      playsInline
                     />
+                  </div>
                     <Button
                       type="button"
                       variant="outline"
                       className="mt-2"
                       onClick={() => {
                         setQrError(null);
-                        if (qrRef.current && typeof qrRef.current.openImageDialog === 'function') {
-                          qrRef.current.openImageDialog();
-                        } else {
-                          // Fallback natif
-                          document.getElementById('qr-upload-fallback')?.click();
-                        }
+                        document.getElementById('qr-upload-fallback')?.click();
                       }}
                     >
                       Téléverser une image

@@ -1,2 +1,7 @@
 .vercel
+<<<<<<< HEAD
 node_modules
+=======
+dist/
+node_modules/
+>>>>>>> 80da2eec (chore: commit all local changes before rebase)
