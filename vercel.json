@@ -1,0 +1,18 @@
+{
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://api.bantudelice.cg/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/dist/index.html"
+    }
+  ]
+}
