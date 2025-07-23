@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import Map, { Marker, Popup } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
