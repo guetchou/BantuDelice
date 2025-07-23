@@ -8,7 +8,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://api.bantudelice.cg/api/$1"
+      "dest": "https://api.bantudelice.cg/api/"
     },
     {
       "src": "/(.*)",
