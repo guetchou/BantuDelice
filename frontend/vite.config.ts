@@ -27,8 +27,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          vendor: ['lodash', 'date-fns']
+          react: ['react', 'react-dom', 'react-router-dom']
         }
       }
     }
