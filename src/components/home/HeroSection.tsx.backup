@@ -1,0 +1,131 @@
+
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import OptimizedImage from "@/components/ui/OptimizedImage";
+
+export default function HeroSection() {
+  const navigate = useNavigate();
+
+  return (
+    <section 
+      className="relative min-h-screen flex items-center justify-center overflow-hidden" 
+      aria-labelledby="hero-title"
+    >
+      {/* Image de fond immersive avec support WebP et responsive */}
+      <OptimizedImage
+        src="/images/team-celebrating.jpg"
+        webpSrc="/images/team-celebrating.jpg"
+        mobileSrc="/images/team-celebrating.jpg"
+        mobileWebpSrc="/images/team-celebrating.jpg"
+        alt="Vue de Brazzaville avec éléments de livraison, transport et restauration - Votre super app tout-en-un au Congo"
+        className="absolute inset-0 w-full h-full object-cover object-center"
+        loading="eager"
+      />
+      
+      {/* Overlay dégradé pour lisibilité et contraste */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30 z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10"></div>
+      
+      {/* Overlay supplémentaire pour améliorer le contraste */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-900/20 to-blue-900/20 z-10"></div>
+
+      {/* Contenu centré */}
+      <div className="relative z-20 container mx-auto px-4 py-12 text-center">
+        {/* Badge de confiance */}
+        <div className="inline-flex items-center bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-6 py-3 mb-8 animate-fade-in shadow-lg">
+          <svg className="w-4 h-4 mr-2 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+          <span className="text-white/95 text-sm font-medium">
+            Plus de 10,000 utilisateurs satisfaits au Congo
+          </span>
+        </div>
+
+        {/* Titre principal avec ombre portée pour lisibilité */}
+        <h1 
+          id="hero-title" 
+          className="text-5xl sm:text-7xl lg:text-8xl font-extrabold text-white mb-6 leading-tight animate-slide-up drop-shadow-2xl"
+        >
+          <span className="block drop-shadow-lg">BantuDelice</span>
+          <span className="block text-3xl sm:text-4xl lg:text-5xl font-bold text-orange-200 mt-4 drop-shadow-lg">
+            La plateforme qui vous simplifie la vie
+          </span>
+        </h1>
+
+        {/* Sous-titre avec meilleur contraste */}
+        <p className="text-xl sm:text-2xl lg:text-3xl text-white/95 mb-8 max-w-4xl mx-auto leading-relaxed animate-slide-up-delay-1 drop-shadow-lg">
+          Commandez vos repas préférés, réservez un taxi en 30 secondes, 
+          <span className="font-semibold text-orange-200"> expédiez vos colis</span> ou trouvez un professionnel de confiance. 
+          <br className="hidden sm:block" />
+          <span className="text-white font-medium">Tout depuis une seule application.</span>
+        </p>
+
+        {/* Call-to-Action principal avec effets glass */}
+        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-2xl mx-auto justify-center mb-12 animate-slide-up-delay-2" 
+             role="group" 
+             aria-label="Actions principales">
+          <Button 
+            className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-5 text-xl shadow-2xl hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-300 rounded-xl border-2 border-orange-400/30 backdrop-blur-md" 
+            onClick={() => navigate('/delivery')}
+          >
+            <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Commencer maintenant
+          </Button>
+          <Button 
+            className="flex-1 backdrop-blur-md bg-white/15 border-2 border-white/40 text-white font-bold py-5 text-xl hover:bg-white/25 hover:border-white/60 transition-all duration-300 rounded-xl shadow-xl" 
+            onClick={() => navigate('/delivery')}
+          >
+            <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Explorer les services
+          </Button>
+        </div>
+
+        {/* Indicateurs de confiance avec meilleur contraste */}
+        <div className="flex flex-wrap justify-center gap-8 text-white/95 text-lg mb-12 animate-fade-in-delay-3">
+          <div className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-white/20">
+            <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span className="font-medium">Livraison en 30 min</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-white/20">
+            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span className="font-medium">Paiement sécurisé</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-white/20">
+            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            <span className="font-medium">Application gratuite</span>
+          </div>
+        </div>
+        </div>
+  {/* Scroll indicator amélioré */} 
+<div className="absolute bottom-8 left-1/2 -translate-x-1/2 transform animate-bounce z-20">
+  <div className="w-7 h-12 border-2 border-white/50 rounded-full flex items-start justify-center bg-white/10 backdrop-blur-md shadow-md">
+    <div className="w-1.5 h-4 bg-white rounded-full mt-2 animate-pulse"></div>
+  </div>
+  <p className="text-sm text-white mt-2 text-center font-medium tracking-wide">
+    Découvrir plus
+  </p>
+</div>
+
+      {/* Particules décoratives flottantes avec meilleur contraste */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/40 rounded-full animate-float shadow-lg"></div>
+        <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-orange-300/60 rounded-full animate-float-delay-1 shadow-lg"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-1.5 h-1.5 bg-white/30 rounded-full animate-float-delay-2 shadow-lg"></div>
+        <div className="absolute top-2/3 right-1/4 w-1 h-1 bg-orange-200/50 rounded-full animate-float shadow-lg"></div>
+        <div className="absolute top-1/2 left-1/6 w-1 h-1 bg-white/35 rounded-full animate-float-delay-1 shadow-lg"></div>
+        <div className="absolute bottom-1/4 right-1/6 w-1.5 h-1.5 bg-orange-100/40 rounded-full animate-float-delay-2 shadow-lg"></div>
+      </div>
+    </section>
+  );
+}

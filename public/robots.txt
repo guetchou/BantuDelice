@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bantudelice.cg/sitemap.xml 
