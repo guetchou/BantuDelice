@@ -16,8 +16,8 @@ export interface MenuPromotion {
   discount_value?: number;
   valid_from?: string;
   valid_to?: string;
-  promotion_hours?: any;
-  conditions?: any;
+  promotion_hours?: unknown;
+  conditions?: unknown;
   min_order_value?: number;
 }
 
@@ -27,9 +27,9 @@ export interface MenuStatistics {
     itemId: string;
     margin?: number;
   }>;
-  salesTrends: any[];
-  categoryPerformance: any[];
-  timeBasedAnalysis: any[];
+  salesTrends: unknown[];
+  categoryPerformance: unknown[];
+  timeBasedAnalysis: unknown[];
 }
 
 export interface MenuRecommendation {
@@ -67,6 +67,6 @@ export interface ExtendedMenuAnalysisResult {
     suggestedPrice: number;
   }>;
   bundleOpportunities?: MenuItem[];
-  seasonalRecommendations?: any[];
+  seasonalRecommendations?: unknown[];
   mostPopularCategory?: string;
 }

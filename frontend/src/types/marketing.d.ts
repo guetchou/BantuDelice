@@ -1,5 +1,5 @@
 
-import { Database } from "@/integrations/supabase/database.types";
+import { any } from "@/integrations/supabase/database.types";
 
 export type ReferralProgram = {
   id: string;

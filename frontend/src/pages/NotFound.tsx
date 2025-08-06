@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const NotFound = () => {
@@ -15,17 +14,19 @@ const NotFound = () => {
         </p>
         
         <div className="space-y-3">
-          <Button asChild className="w-full">
-            <Link to="/">
-              Retour à l'accueil
-            </Link>
-          </Button>
+          <Link 
+            to="/"
+            className="block w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition text-center"
+          >
+            Retour à l'accueil
+          </Link>
           
-          <Button variant="outline" asChild className="w-full">
-            <Link to="/help">
-              Centre d'aide
-            </Link>
-          </Button>
+          <Link 
+            to="/help"
+            className="block w-full border border-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-50 transition text-center"
+          >
+            Centre d'aide
+          </Link>
         </div>
       </div>
     </div>

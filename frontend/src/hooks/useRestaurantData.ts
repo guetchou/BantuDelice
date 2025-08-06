@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { restaurantService } from '@/services/restaurantService';
 import { Restaurant, RestaurantFilters } from '@/types/restaurant';
 import { MenuItem } from '@/types/menu';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { toast } from 'sonner';
 
 export const useRestaurantData = () => {
@@ -98,22 +98,15 @@ export const useRestaurantData = () => {
       queryFn: async () => {
         if (!restaurantId) throw new Error('Restaurant ID is required');
         try {
-          // Fetch menu items and analyze them
-          const { data, error } = await supabase
-            .from('menu_items')
-            .select('*')
-            .eq('restaurant_id', restaurantId);
-            
-          if (error) throw error;
-          
-          const items = data as MenuItem[];
+          // Fetch menu items using API service
+          const items = await apiService.getMenuItems(restaurantId);
           
           // Exemple simple d'analyse de menu
           const totalItems = items.length;
           const categories = {};
           let totalPrice = 0;
           
-          items.forEach(item => {
+          items.forEach((item: MenuItem) => {
             categories[item.category] = (categories[item.category] || 0) + 1;
             totalPrice += item.price;
           });
@@ -141,9 +134,9 @@ export const useRestaurantData = () => {
           
           // 2. Analyse des prix
           const priceRange = {
-            low: items.filter(item => item.price < avgPrice * 0.7).length,
-            medium: items.filter(item => item.price >= avgPrice * 0.7 && item.price <= avgPrice * 1.3).length,
-            high: items.filter(item => item.price > avgPrice * 1.3).length
+            low: items.filter((item: MenuItem) => item.price < avgPrice * 0.7).length,
+            medium: items.filter((item: MenuItem) => item.price >= avgPrice * 0.7 && item.price <= avgPrice * 1.3).length,
+            high: items.filter((item: MenuItem) => item.price > avgPrice * 1.3).length
           };
           
           if (priceRange.medium < totalItems * 0.3) {
@@ -157,7 +150,7 @@ export const useRestaurantData = () => {
           }
           
           // 3. Analyse des options diététiques (si disponibles)
-          const vegetarianCount = items.filter(item => item.is_vegetarian).length;
+          const vegetarianCount = items.filter((item: MenuItem) => item.is_vegetarian).length;
           if (vegetarianCount < totalItems * 0.2) {
             recommendations.push({
               type: 'dietary_options',
@@ -181,7 +174,7 @@ export const useRestaurantData = () => {
         } catch (err) {
           console.error('Error fetching menu recommendations:', err);
           toast.error('Impossible de générer les recommandations');
-          return { stats: {}, recommendations: [] };
+          return { stats: Record<string, unknown>, recommendations: [] };
         }
       },
       enabled: !!restaurantId
@@ -195,21 +188,14 @@ export const useRestaurantData = () => {
       queryFn: async () => {
         if (!restaurantId) throw new Error('Restaurant ID is required');
         try {
-          // Récupération des éléments du menu
-          const { data, error } = await supabase
-            .from('menu_items')
-            .select('*')
-            .eq('restaurant_id', restaurantId);
-            
-          if (error) throw error;
-          
-          const items = data as MenuItem[];
+          // Récupération des éléments du menu via API
+          const items = await apiService.getMenuItems(restaurantId);
           
           // Exemple simple d'optimisation des prix
           // Dans un contexte réel, cela serait basé sur des données historiques,
           // la concurrence, et des études de marché
           
-          const priceRecommendations = items.map(item => {
+          const priceRecommendations = items.map((item: MenuItem) => {
             // Simuler une élasticité des prix (sensibilité des clients aux changements de prix)
             const elasticity = Math.random() * 0.5 + 0.5; // entre 0.5 et 1
             
@@ -274,7 +260,7 @@ export const useRestaurantData = () => {
         } catch (err) {
           console.error('Error optimizing pricing:', err);
           toast.error('Impossible de générer l\'optimisation des prix');
-          return { recommendations: [], summary: {} };
+          return { recommendations: [], summary: Record<string, unknown> };
         }
       },
       enabled: !!restaurantId
@@ -402,14 +388,7 @@ export const useRestaurantData = () => {
     return useMutation({
       mutationFn: async ({ itemId, available }: { itemId: string; available: boolean }) => {
         try {
-          const { data, error } = await supabase
-            .from('menu_items')
-            .update({ available })
-            .eq('id', itemId)
-            .select('id, name, restaurant_id')
-            .single();
-            
-          if (error) throw error;
+          const data = await apiService.updateMenuItem('restaurantId', itemId, { available });
           return data;
         } catch (err) {
           console.error('Error updating item availability:', err);

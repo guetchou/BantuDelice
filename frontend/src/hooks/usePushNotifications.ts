@@ -5,7 +5,7 @@ const VAPID_KEY = 'VOTRE_CLE_VAPID_PUBLIC'; // À remplacer par ta clé VAPID We
 export function usePushNotifications() {
   const [token, setToken] = useState<string | null>(null);
   const [permission, setPermission] = useState(Notification.permission);
-  const [message, setMessage] = useState<any>(null);
+  const [message, setMessage] = useState<unknown>(null);
 
   useEffect(() => {
     if (permission === 'granted') {

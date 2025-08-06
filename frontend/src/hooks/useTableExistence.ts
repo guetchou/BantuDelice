@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 
 interface UseTableExistenceResult {
   exists: boolean;
@@ -94,7 +94,7 @@ export async function createTableIfNotExists(
     console.log(`Table ${tableName} created successfully`);
     return { success: true, message: `Table ${tableName} created successfully` };
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorMessage = err instanceof Error ? err.message : string(err);
     console.error(`Unexpected error creating table ${tableName}:`, err);
     return { success: false, message: errorMessage };
   }

@@ -19,7 +19,7 @@ const createDefaultBusinessHours = () => ({
 });
 
 // Convertir le format précédent si nécessaire
-const convertHoursFormat = (hours: any) => {
+const convertHoursFormat = (hours: unknown) => {
   if (Array.isArray(hours)) {
     const businessHours = createDefaultBusinessHours();
     
@@ -112,7 +112,7 @@ export const DeliverySettings: React.FC<DeliverySettingsProps> = ({ restaurantId
     }
   }, [restaurantId, toast]);
 
-  const handleChange = (field: keyof DeliverySettingsType, value: any) => {
+  const handleChange = (field: keyof DeliverySettingsType, value: unknown) => {
     setSettings(prev => ({
       ...prev,
       [field]: value

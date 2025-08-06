@@ -23,12 +23,12 @@ interface FavoritesListProps {
 }
 
 const FavoritesList: React.FC<FavoritesListProps> = ({ userId }) => {
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   // Mock cart functionality that can be expanded later
-  const addToCart = (item: any) => {
+  const addToCart = (item: unknown) => {
     console.log("Adding to cart:", item);
     toast({
       title: "Ajouté au panier",

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { OrderTrackingDetails } from "@/types/orderTracking";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
@@ -76,7 +76,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      apiService.removeChannel(channel);
     };
   }, [orderId]);
 

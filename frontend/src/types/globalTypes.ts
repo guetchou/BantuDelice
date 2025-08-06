@@ -47,7 +47,7 @@ export interface Restaurant {
   rating?: number;
   average_rating?: number;
   is_open?: boolean;
-  opening_hours?: any;
+  opening_hours?: unknown;
   delivery_fee?: number;
   minimum_order?: number;
   estimated_delivery_time?: number;
@@ -107,7 +107,7 @@ export interface MenuItem {
   allergens?: string[];
   ingredients?: string[];
   dietary_preferences?: string[];
-  nutrition_info?: any;
+  nutrition_info?: unknown;
   nutritional_info?: {
     calories?: number;
     protein?: number;
@@ -115,7 +115,7 @@ export interface MenuItem {
     fat?: number;
     fiber?: number;
   };
-  customization_options?: any[];
+  customization_options?: unknown[];
   stock_level?: number;
   stock?: number;
   popularity_score?: number;
@@ -126,7 +126,7 @@ export interface MenuItem {
 export interface PaymentMethod {
   id: string;
   type: 'credit_card' | 'mobile_money' | 'cash' | 'wallet';
-  details: any;
+  details: unknown;
   is_default?: boolean;
 }
 
@@ -194,8 +194,8 @@ export interface MenuPromotion {
   active: boolean;
   restaurant_id: string;
   menu_item_ids?: string[];
-  promotion_hours?: any;
-  conditions?: any;
+  promotion_hours?: unknown;
+  conditions?: unknown;
   min_order_value?: number;
 }
 
@@ -238,7 +238,7 @@ export interface ExtendedMenuAnalysisResult extends MenuAnalysisResult {
     suggestedPrice: number;
   }>;
   bundleOpportunities?: ExtendedMenuItem[];
-  seasonalRecommendations?: any[];
+  seasonalRecommendations?: unknown[];
   mostPopularCategory?: string;
 }
 
@@ -248,9 +248,9 @@ export interface MenuStatistics {
     itemId: string;
     margin?: number;
   }>;
-  salesTrends: any[];
-  categoryPerformance: any[];
-  timeBasedAnalysis: any[];
+  salesTrends: unknown[];
+  categoryPerformance: unknown[];
+  timeBasedAnalysis: unknown[];
 }
 
 export interface MenuRecommendation {

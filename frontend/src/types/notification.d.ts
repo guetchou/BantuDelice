@@ -8,7 +8,7 @@ export interface Notification {
   read: boolean;
   link?: string;
   created_at: string;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export interface NotificationPreference {

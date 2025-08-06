@@ -295,7 +295,7 @@ export function MenuItemAvailabilityManager({ restaurantId, isOwner = true }: Me
                         {getStockBadge(item)}
                       </div>
                       <p className="text-sm text-gray-500 mt-1 line-clamp-1">{item.description}</p>
-                      <p className="text-sm font-medium mt-1">{item.price.toFixed(2)} €</p>
+                      <p className="text-sm font-medium mt-1">{item.price.toFixed(2)} FCFA </p>
                     </div>
                     
                     {isOwner && (

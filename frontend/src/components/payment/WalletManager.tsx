@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { Wallet, CreditCard, ReceiptText, PlusCircle, ArrowRightLeft, ChevronRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { toast } from "sonner";
 import MobilePayment from '@/components/payment/MobilePayment';
 import { Transaction } from "@/types/wallet";
@@ -16,7 +16,7 @@ const WalletManager = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isAddingFunds, setIsAddingFunds] = useState(false);
   const [amount, setAmount] = useState("");
-  const [walletData, setWalletData] = useState<any>(null);
+  const [walletData, setWalletData] = useState<unknown>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +27,7 @@ const WalletManager = () => {
   const fetchWalletData = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       
       if (!user) {
         navigate("/auth");

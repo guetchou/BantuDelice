@@ -19,7 +19,7 @@ const AProposColisPage: React.FC = () => (
         <li>Interopérabilité avec les acteurs majeurs (SOPECO, etc.)</li>
       </ul>
       <p className="text-gray-700 mb-2">
-        <b>Contact :</b> <a href="mailto:contact@bantudelice.com" className="text-orange-700 underline">contact@bantudelice.com</a>
+        <b>Contact :</b> <a href="mailto:contact@bantudelice.cg" className="text-orange-700 underline">contact@bantudelice.cg</a>
       </p>
       <p className="text-gray-700">
         <b>Adresse :</b> 123, Avenue de la Logistique, Brazzaville, Congo

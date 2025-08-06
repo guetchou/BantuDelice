@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Copy, Share2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useApiAuth } from "@/contexts/ApiAuthContext";
+import { useColisAuth } from "@/context/ColisAuthContext";
 import useFeature from "@/utils/featureFlags";
 
 const ReferralProgram = () => {
-  const { user } = useApiAuth();
+  const { user } = useColisAuth();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const isEnabled = useFeature('referral_program');

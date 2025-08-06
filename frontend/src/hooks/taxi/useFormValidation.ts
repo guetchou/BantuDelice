@@ -8,7 +8,7 @@ export function useFormValidation() {
    * @param formState L'état actuel du formulaire
    * @returns true si l'étape est valide, sinon false
    */
-  const validateStep = (step: number, formState: any): boolean => {
+  const validateStep = (step: number, formState: unknown): boolean => {
     switch (step) {
       case 1: // Étape des adresses
         return validateAddressStep(formState);
@@ -24,7 +24,7 @@ export function useFormValidation() {
   };
   
   // Valide l'étape des adresses
-  const validateAddressStep = (formState: any): boolean => {
+  const validateAddressStep = (formState: unknown): boolean => {
     const { 
       pickupAddress, 
       pickupLatitude, 
@@ -46,7 +46,7 @@ export function useFormValidation() {
   };
   
   // Valide l'étape du véhicule et du partage
-  const validateVehicleStep = (formState: any): boolean => {
+  const validateVehicleStep = (formState: unknown): boolean => {
     const { vehicleType } = formState;
     
     // Vérifier si le type de véhicule est sélectionné
@@ -54,7 +54,7 @@ export function useFormValidation() {
   };
   
   // Valide l'étape de l'heure et du paiement
-  const validateTimeAndPaymentStep = (formState: any): boolean => {
+  const validateTimeAndPaymentStep = (formState: unknown): boolean => {
     const { pickupTime, scheduledTime, paymentMethod } = formState;
     
     // Si le pickup est programmé, vérifier qu'une heure est définie
@@ -67,14 +67,14 @@ export function useFormValidation() {
   };
   
   // Valide l'étape de confirmation finale
-  const validateConfirmationStep = (formState: any): boolean => {
+  const validateConfirmationStep = (formState: unknown): boolean => {
     // Cette étape n'a généralement pas de validation supplémentaire
     // mais pourrait vérifier par exemple si les CGU sont acceptées
     return true;
   };
   
   // Valide le formulaire complet
-  const validateFullForm = (formState: any): boolean => {
+  const validateFullForm = (formState: unknown): boolean => {
     return (
       validateAddressStep(formState) &&
       validateVehicleStep(formState) &&

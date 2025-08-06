@@ -67,7 +67,7 @@ const PaymentGateway: React.FC<PaymentGatewayProps> = ({ amount, onPaymentInitia
   );
 
   return (
-    <Card className="mt-6">
+    <Card className="mt-6 bg-white/40 backdrop-blur-md border border-white/30 shadow-lg">
         <CardHeader>
             <CardTitle>Paiement de la commande</CardTitle>
         </CardHeader>

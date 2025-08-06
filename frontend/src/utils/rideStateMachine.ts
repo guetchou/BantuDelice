@@ -145,9 +145,9 @@ export const transitions: Record<RideStatus, Partial<Record<RideEvent, RideStatu
   arrived_at_destination: {
     COMPLETE_RIDE: 'completed'
   },
-  completed: {},
-  cancelled: {},
-  rejected: {}
+  completed: Record<string, unknown>,
+  cancelled: Record<string, unknown>,
+  rejected: Record<string, unknown>
 };
 
 /**

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { toast } from 'sonner';
 import { TaxiDriver, TaxiVehicleType } from '@/types/taxi';
 
@@ -10,11 +10,11 @@ export function useRideCreation() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   
   // Crée un trajet initial lors de la sélection de l'emplacement
-  const createInitialRide = async (formState: any, estimatedPrice: number): Promise<boolean> => {
+  const createInitialRide = async (formState: unknown, estimatedPrice: number): Promise<boolean> => {
     try {
       setLoading(true);
       
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await apiService.auth.getUser()).data.user;
       
       if (!user) {
         throw new Error('Utilisateur non connecté');
@@ -81,7 +81,7 @@ export function useRideCreation() {
       }
       
       // Mettre à jour le trajet avec les informations finales
-      const updateData: any = {
+      const updateData: unknown = {
         status: 'pending',
       };
       

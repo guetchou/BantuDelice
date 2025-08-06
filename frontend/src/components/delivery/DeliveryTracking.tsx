@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Truck, MapPin, Clock, AlertTriangle, PackageCheck, User, Store } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/utils/formatters";
 import DeliveryChat from './DeliveryChat';

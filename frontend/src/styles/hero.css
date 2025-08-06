@@ -1,0 +1,62 @@
+/* Hero Section Styles */
+.hero-background {
+  background-image: 
+    linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 100%),
+    linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%),
+    url('/images/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* Fallback pour les navigateurs qui ne supportent pas background-attachment: fixed */
+@supports not (background-attachment: fixed) {
+  .hero-background {
+    background-attachment: scroll;
+  }
+}
+
+/* Animation pour les particules */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-delay-1 {
+  animation: float 3s ease-in-out infinite 0.5s;
+}
+
+.animate-float-delay-2 {
+  animation: float 3s ease-in-out infinite 1s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-background {
+    background-attachment: scroll;
+  }
+}
+
+/* Amélioration de l'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-up-delay-1,
+  .animate-slide-up-delay-2,
+  .animate-fade-in-delay-1,
+  .animate-fade-in-delay-2,
+  .animate-fade-in-delay-3,
+  .animate-float,
+  .animate-float-delay-1,
+  .animate-float-delay-2 {
+    animation: none;
+  }
+} 

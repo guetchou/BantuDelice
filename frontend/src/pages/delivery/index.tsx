@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Package, Route as RouteIcon, ArrowRight, Clock, Activity, MessageSquare, Settings } from 'lucide-react';
 import { motion } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
-import { useApiAuth, ApiAuthProvider } from '@/contexts/ApiAuthContext';
+import { useColisAuth, ColisAuthProvider } from '@/context/ColisAuthContext';
 
 const DeliveryPageContent = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useApiAuth();
+  const { user, isAuthenticated } = useColisAuth();
   const [currentLocation, setCurrentLocation] = React.useState<{latitude: number, longitude: number} | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   
@@ -296,9 +296,9 @@ const DeliveryPageContent = () => {
 };
 
 const DeliveryPage = () => (
-  <ApiAuthProvider>
+  <ColisAuthProvider>
     <DeliveryPageContent />
-  </ApiAuthProvider>
+  </ColisAuthProvider>
 );
 
 export default DeliveryPage;

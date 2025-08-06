@@ -178,7 +178,7 @@ export const useMenuPromotions = (restaurantId: string) => {
   /**
    * Applique un coupon à un panier complet
    */
-  const applyCouponToCart = (couponCode: string, cartTotal: number, cartItems: any[]) => {
+  const applyCouponToCart = (couponCode: string, cartTotal: number, cartItems: unknown[]) => {
     const promotion = validateCoupon(couponCode);
     
     if (!promotion) return { success: false, message: 'Code promo invalide ou expiré' };

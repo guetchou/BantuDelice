@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { TaxiRideRequest } from '@/types/taxi';
 
 export function useDriverRequests() {

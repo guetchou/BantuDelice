@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Star } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -33,7 +33,7 @@ export default function DeliveryRating({ orderId, restaurantId, onRatingSubmitte
   const submitRating = async () => {
     try {
       setIsSubmitting(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       
       if (!user) {
         toast({

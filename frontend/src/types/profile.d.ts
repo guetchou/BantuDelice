@@ -20,7 +20,7 @@ export interface UserProfile {
     last_name?: string;
     full_name?: string;
     avatar_url?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 

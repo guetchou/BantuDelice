@@ -30,11 +30,11 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors group cursor-pointer">
                 <MapPin className="h-4 w-4 text-indigo-400 group-hover:scale-110 transition-transform" />
-                <span>25 Rue de la Gastronomie, Paris</span>
+                <span>28 Rue du Docteur Curreux, Centre-Ville, Brazzaville</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors group cursor-pointer">
                 <Phone className="h-4 w-4 text-indigo-400 group-hover:scale-110 transition-transform" />
-                <span>+33 1 23 45 67 89</span>
+                <span>+242 06 449 53 53</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors group cursor-pointer">
                 <Mail className="h-4 w-4 text-indigo-400 group-hover:scale-110 transition-transform" />

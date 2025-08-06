@@ -64,7 +64,7 @@ const RecurringTripsTab: React.FC<RecurringTripsTabProps> = ({
   };
   
   // Confirm booking
-  const handleConfirmBooking = async (bookingData: any) => {
+  const handleConfirmBooking = async (bookingData: unknown) => {
     if (!selectedTrip) return;
     
     try {

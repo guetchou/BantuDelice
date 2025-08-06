@@ -27,7 +27,7 @@ const Login = () => {
       if (result && result.success) {
         navigate('/');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Failed to login. Please check your credentials.');
     } finally {
       setIsLoading(false);

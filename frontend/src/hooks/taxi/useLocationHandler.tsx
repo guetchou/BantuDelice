@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { geocodeAddress, reverseGeocode, getCurrentPosition } from '@/utils/locationUtils';
 import { SavedLocation } from '@/types/taxi';
 
@@ -88,7 +88,7 @@ export function useLocationHandler() {
   };
   
   // Gérer la sélection d'une adresse
-  const handleLocationSelect = async (address: string, isPickup: boolean, updateFormState: (update: any) => void) => {
+  const handleLocationSelect = async (address: string, isPickup: boolean, updateFormState: (update: unknown) => void) => {
     try {
       if (!address) return;
       
@@ -111,7 +111,7 @@ export function useLocationHandler() {
       }
       
       // Sauvegarder l'adresse pour une utilisation future
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await apiService.auth.getUser()).data.user;
       
       if (user?.id) {
         await saveLocationToHistory(address, coords.latitude, coords.longitude, user.id);
@@ -167,7 +167,7 @@ export function useLocationHandler() {
   };
   
   // Utiliser la position actuelle de l'utilisateur
-  const handleUseCurrentLocation = async (updateFormState: (update: any) => void) => {
+  const handleUseCurrentLocation = async (updateFormState: (update: unknown) => void) => {
     try {
       // Obtenir la position actuelle
       const position = await getCurrentPosition();
@@ -183,7 +183,7 @@ export function useLocationHandler() {
       });
       
       // Sauvegarder comme emplacement actuel
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await apiService.auth.getUser()).data.user;
       
       if (user?.id) {
         try {

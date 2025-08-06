@@ -1,258 +1,312 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import PhotoGallery from '@/components/PhotoGallery';
+import BackToHome from '@/components/BackToHome';
 import { 
+  Users, 
   Award, 
-  Clock, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Package, 
-  UserCheck, 
-  Shield, 
   Globe, 
-  ThumbsUp 
+  Heart, 
+  Target, 
+  TrendingUp, 
+  Shield, 
+  Star,
+  MapPin,
+  Phone,
+  Mail,
+  Clock
 } from 'lucide-react';
-import SEO from '@/components/SEO';
-import Breadcrumb from '@/components/navigation/Breadcrumb';
 
-const About = () => {
-  const teamMembers = [
-    {
-      name: "Laurent Durand",
-      title: "Fondateur & CEO",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=3&w=300&h=300&q=80",
-      bio: "Entrepreneur passionné par l'innovation technologique et l'amélioration des services en Afrique."
-    },
-    {
-      name: "Marie Kamara",
-      title: "Directrice des Opérations",
-      image: "https://images.unsplash.com/photo-1546961329-78bef0414d7c?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=3&w=300&h=300&q=80",
-      bio: "Experte en logistique avec 10 ans d'expérience dans l'optimisation des chaînes d'approvisionnement."
-    },
-    {
-      name: "Jean Mbeki",
-      title: "Responsable Technologie",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=3&w=300&h=300&q=80",
-      bio: "Ingénieur logiciel spécialisé dans le développement d'applications mobiles et de solutions innovantes."
-    }
+const About: React.FC = () => {
+  const stats = [
+    { label: 'Clients satisfaits', value: '50,000+', icon: Users },
+    { label: 'Villes desservies', value: '25+', icon: MapPin },
+    { label: 'Livraisons/jour', value: '1,200+', icon: TrendingUp },
+    { label: 'Années d\'expérience', value: '8+', icon: Award }
   ];
 
   const values = [
     {
-      title: "Qualité",
-      description: "Nous nous engageons à offrir des services et produits de la plus haute qualité.",
-      icon: <Award className="h-8 w-8 text-primary" />
+      icon: Heart,
+      title: 'Service client exceptionnel',
+      description: 'Notre équipe dédiée est disponible 24h/24 pour vous accompagner'
     },
     {
-      title: "Innovation",
-      description: "Nous sommes constamment à la recherche de nouvelles façons d'améliorer nos services.",
-      icon: <Globe className="h-8 w-8 text-primary" />
+      icon: Shield,
+      title: 'Sécurité garantie',
+      description: 'Vos colis sont assurés et suivis à chaque étape'
     },
     {
-      title: "Confiance",
-      description: "Nous bâtissons des relations durables basées sur la confiance et la transparence.",
-      icon: <Shield className="h-8 w-8 text-primary" />
+      icon: Target,
+      title: 'Innovation continue',
+      description: 'Nous développons constamment de nouvelles solutions'
     },
     {
-      title: "Excellence",
-      description: "Nous visons l'excellence dans tous les aspects de notre entreprise.",
-      icon: <ThumbsUp className="h-8 w-8 text-primary" />
+      icon: Globe,
+      title: 'Impact social',
+      description: 'Nous contribuons au développement économique local'
+    }
+  ];
+
+  const team = [
+    {
+      name: 'Jean-Pierre Mboungou',
+      role: 'PDG & Fondateur',
+      image: '/team/ceo.jpg',
+      description: 'Visionnaire passionné par l\'innovation technologique'
+    },
+    {
+      name: 'Marie-Louise Nzamba',
+      role: 'Directrice Opérationnelle',
+      image: '/team/coo.jpg',
+      description: 'Experte en logistique et gestion des opérations'
+    },
+    {
+      name: 'David Kimbembe',
+      role: 'Directeur Technique',
+      image: '/team/cto.jpg',
+      description: 'Spécialiste en développement et architecture système'
     }
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <SEO 
-        title="À propos de Buntudelice | Notre histoire et nos valeurs"
-        description="Découvrez l'histoire de Buntudelice, notre mission et nos valeurs. Nous sommes dédiés à fournir des services de qualité à Brazzaville et dans toute la RDC."
-        keywords="à propos, Buntudelice, histoire, mission, valeurs, Brazzaville, RDC"
-      />
-      
-      <div className="mb-8">
-        <Breadcrumb items={[
-          { label: 'Accueil', path: '/' },
-          { label: 'À propos', path: '/about' },
-        ]} />
-      </div>
-
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-xl p-8 mb-16 flex flex-col lg:flex-row items-center">
-        <div className="lg:w-1/2 mb-8 lg:mb-0">
-          <h1 className="text-4xl font-bold mb-4">À propos de Buntudelice</h1>
-          <p className="text-lg mb-6">
-            Fondé en 2023, Buntudelice est une plateforme de services tout-en-un dédiée à simplifier le quotidien 
-            des habitants de Brazzaville et de toute la République Démocratique du Congo.
-          </p>
-          <Button asChild>
-            <Link to="/contact">Contactez-nous</Link>
-          </Button>
-        </div>
-        <div className="lg:w-1/2 flex justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-100">
+      {/* Hero Section avec effet glass */}
+      <section className="relative py-20 bg-gradient-to-r from-orange-600 to-pink-600 text-white overflow-hidden">
+        {/* Arrière-plan avec image */}
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-600/90 to-pink-600/90"></div>
+        
+        {/* Image d'arrière-plan */}
+        <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80" 
-            alt="Team Buntudelice" 
-            className="rounded-lg shadow-lg" 
+            src="/images/thedrop24BG.jpg" 
+            alt="BantuDelice Background" 
+            className="w-full h-full object-cover opacity-20"
           />
         </div>
-      </div>
+        
+        <div className="container mx-auto px-4 text-center relative z-10">
+          {/* Bouton retour à l'accueil */}
+          <div className="absolute top-4 left-4 z-30">
+            <BackToHome variant="icon" />
+          </div>
+          
+          <h1 className="text-5xl font-bold mb-6">À propos de BantuDelice</h1>
+          <p className="text-xl mb-8 max-w-3xl mx-auto">
+            Leader de la livraison de colis au Congo, nous connectons les personnes 
+            et les entreprises avec des solutions innovantes et fiables.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300">
+              <Link to="/gallery">Voir notre galerie</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300">
+              <Link to="/contact">Nous contacter</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
-      {/* Our Mission */}
-      <div className="mb-16 text-center">
-        <h2 className="text-3xl font-bold mb-6">Notre Mission</h2>
-        <p className="text-xl max-w-3xl mx-auto">
-          Notre mission est de rendre les services essentiels accessibles, abordables et fiables pour tous les Congolais, 
-          en utilisant la technologie pour connecter les clients avec des prestataires de qualité.
-        </p>
-      </div>
+      {/* Statistiques avec effet glass */}
+      <section className="py-16 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-100/50 to-pink-100/50"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={index} className="text-center border-0 shadow-xl backdrop-blur-md bg-white/70 hover:bg-white/90 transition-all duration-300 group">
+                  <CardContent className="pt-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Icon className="h-8 w-8 text-white" />
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
+                    <div className="text-gray-600">{stat.label}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
-      {/* Our Values */}
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold mb-10 text-center">Nos Valeurs</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {values.map((value, index) => (
-            <Card key={index}>
-              <CardContent className="pt-6 text-center">
-                <div className="mb-4 flex justify-center">
-                  {value.icon}
+      {/* Notre histoire */}
+      <section className="py-16 bg-white relative overflow-hidden">
+        {/* Illustration de fond */}
+        <div className="hidden md:block absolute inset-0 z-0 pointer-events-none">
+          <img 
+            src="/images/illustrations/urban-scene.jpg" 
+            alt="Scène urbaine Congo" 
+            className="w-full h-full object-cover opacity-10"
+            loading="lazy"
+          />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Notre Histoire</h2>
+              <p className="text-lg text-gray-600">
+                Découvrez comment BantuDelice est devenu le leader de la livraison au Congo
+              </p>
+            </div>
+            
+            <div className="space-y-12">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="md:w-1/2">
+                  <div className="bg-orange-100 rounded-lg p-8">
+                    <h3 className="text-2xl font-bold text-orange-700 mb-4">2016 - Les débuts</h3>
+                    <p className="text-gray-700">
+                      Fondée par Jean-Pierre Mboungou, BantuDelice démarre avec une simple 
+                      idée : faciliter les livraisons dans la région de Brazzaville. 
+                      L'entreprise commence avec 5 employés et 2 véhicules.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-2">{value.title}</h3>
-                <p className="text-gray-600">{value.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+                <div className="md:w-1/2">
+                  <div className="bg-gradient-to-br from-orange-400 to-pink-500 rounded-lg p-8 text-white">
+                    <h3 className="text-2xl font-bold mb-4">2020 - L'expansion</h3>
+                    <p>
+                      BantuDelice étend ses services à 10 nouvelles villes et lance 
+                      sa plateforme numérique. L'entreprise emploie maintenant 150 personnes 
+                      et gère plus de 500 livraisons par jour.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-      {/* Our Story */}
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold mb-6 text-center">Notre Histoire</h2>
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="prose max-w-none">
-            <p>
-              L'idée de Buntudelice est née d'un constat simple : dans les grandes villes africaines comme Brazzaville, 
-              trouver des services fiables et de qualité peut être un véritable défi. Notre fondateur, Laurent Durand, 
-              a vécu cette réalité et a décidé de créer une solution.
+              <div className="flex flex-col md:flex-row-reverse items-center gap-8">
+                <div className="md:w-1/2">
+                  <div className="bg-yellow-100 rounded-lg p-8">
+                    <h3 className="text-2xl font-bold text-yellow-700 mb-4">2023 - L'innovation</h3>
+                    <p className="text-gray-700">
+                      Lancement de l'IA prédictive et des drones de livraison. 
+                      BantuDelice devient la première entreprise de livraison 
+                      à utiliser l'intelligence artificielle en Afrique centrale.
+                    </p>
+                  </div>
+                </div>
+                <div className="md:w-1/2">
+                  <div className="bg-gradient-to-br from-pink-400 to-purple-500 rounded-lg p-8 text-white">
+                    <h3 className="text-2xl font-bold mb-4">2024 - Le leadership</h3>
+                    <p>
+                      BantuDelice est maintenant le leader incontesté avec 50,000+ clients, 
+                      25+ villes desservies et une technologie de pointe. 
+                      L'entreprise continue d'innover pour servir mieux.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Nos valeurs */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Nos Valeurs</h2>
+            <p className="text-lg text-gray-600">
+              Les principes qui guident nos actions au quotidien
             </p>
-            <p>
-              Après des mois de recherche et de développement, Buntudelice a été lancé en 2023 avec une vision claire : 
-              devenir la plateforme de référence pour tous les services du quotidien en RDC, en mettant la technologie au 
-              service de l'amélioration de la vie quotidienne.
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {values.map((value, index) => {
+              const Icon = value.icon;
+              return (
+                <Card key={index} className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
+                  <CardContent className="pt-6">
+                    <Icon className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{value.title}</h3>
+                    <p className="text-gray-600">{value.description}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Notre équipe avec photos */}
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-orange-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Notre Équipe</h2>
+            <p className="text-lg text-gray-600">
+              Des experts passionnés qui font de BantuDelice une entreprise d'excellence
             </p>
-            <p>
-              Depuis, notre équipe s'est agrandie, notre offre s'est diversifiée, et nous continuons à innover pour 
-              répondre aux besoins spécifiques de nos utilisateurs. Notre engagement reste le même : offrir un service 
-              de qualité, fiable et accessible à tous.
-            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {team.map((member, index) => (
+              <Card key={index} className="text-center border-0 shadow-xl backdrop-blur-md bg-white/80 hover:bg-white/90 transition-all duration-300 group">
+                <CardContent className="pt-6">
+                  <div className="relative w-32 h-32 mx-auto mb-4">
+                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-orange-200 group-hover:border-orange-400 transition-colors duration-300">
+                      <img 
+                        src={member.image} 
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback vers les initiales si l'image ne charge pas
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                      <div className="w-full h-full bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center" style={{display: 'none'}}>
+                        <span className="text-3xl font-bold text-white">
+                          {member.name.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h3>
+                  <Badge variant="outline" className="mb-3 bg-orange-50 text-orange-700 border-orange-200">{member.role}</Badge>
+                  <p className="text-gray-600">{member.description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* The Team */}
-      <div className="mb-16">
-        <h2 className="text-3xl font-bold mb-10 text-center">Notre Équipe</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {teamMembers.map((member, index) => (
-            <div key={index} className="bg-white p-6 rounded-lg shadow-sm text-center">
-              <img 
-                src={member.image} 
-                alt={member.name} 
-                className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="text-xl font-bold mb-1">{member.name}</h3>
-              <p className="text-primary mb-3">{member.title}</p>
-              <p className="text-gray-600">{member.bio}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Galerie Photo */}
+      <PhotoGallery />
 
-      {/* Why Choose Us */}
-      <div className="mb-16 bg-gray-50 p-8 rounded-xl">
-        <h2 className="text-3xl font-bold mb-10 text-center">Pourquoi Nous Choisir</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="flex items-start">
-            <div className="mr-4 mt-1">
-              <Clock className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-2">Service Rapide</h3>
-              <p className="text-gray-600">
-                Notre plateforme permet de connecter rapidement les clients avec les prestataires de services.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start">
-            <div className="mr-4 mt-1">
-              <UserCheck className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-2">Prestataires Vérifiés</h3>
-              <p className="text-gray-600">
-                Tous nos partenaires sont rigoureusement sélectionnés et vérifiés pour garantir un service de qualité.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start">
-            <div className="mr-4 mt-1">
-              <Package className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-2">Services Variés</h3>
-              <p className="text-gray-600">
-                De la livraison de repas aux services professionnels, nous offrons une large gamme de solutions.
-              </p>
-            </div>
+      {/* Contact avec effet glass */}
+      <section className="relative py-16 bg-gradient-to-r from-orange-600 to-pink-600 text-white overflow-hidden">
+        {/* Arrière-plan avec image */}
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0">
+          <img 
+            src="/images/client-satisfait.png" 
+            alt="Client satisfait" 
+            className="w-full h-full object-cover opacity-10"
+          />
+        </div>
+        
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <h2 className="text-4xl font-bold mb-6">Prêt à nous rejoindre ?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
+            Découvrez comment BantuDelice peut transformer vos livraisons 
+            et contribuer au succès de votre entreprise.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60 transition-all duration-300">
+              <Link to="/contact">Nous contacter</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300">
+              <Link to="/services">Découvrir nos services</Link>
+            </Button>
           </div>
         </div>
-      </div>
-
-      {/* Contact Info */}
-      <div className="text-center mb-16">
-        <h2 className="text-3xl font-bold mb-8">Contactez-nous</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex flex-col items-center">
-            <div className="mb-4 bg-primary/10 p-4 rounded-full">
-              <MapPin className="h-6 w-6 text-primary" />
-            </div>
-            <h3 className="text-lg font-bold mb-2">Adresse</h3>
-            <p className="text-gray-600">123 Avenue du Commerce, Gombe, Brazzaville, RDC</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="mb-4 bg-primary/10 p-4 rounded-full">
-              <Phone className="h-6 w-6 text-primary" />
-            </div>
-            <h3 className="text-lg font-bold mb-2">Téléphone</h3>
-            <p className="text-gray-600">+242 81 234 5678</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="mb-4 bg-primary/10 p-4 rounded-full">
-              <Mail className="h-6 w-6 text-primary" />
-            </div>
-            <h3 className="text-lg font-bold mb-2">Email</h3>
-            <p className="text-gray-600">contact@buntudelice.com</p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Call to Action */}
-      <div className="bg-primary text-white rounded-xl p-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">Rejoignez la communauté Buntudelice</h2>
-        <p className="mb-6 max-w-2xl mx-auto">
-          Que vous soyez à la recherche de services ou que vous souhaitiez devenir partenaire,
-          nous serions ravis de vous accueillir dans notre communauté en pleine croissance.
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Button variant="secondary" asChild>
-            <Link to="/auth/register">S'inscrire</Link>
-          </Button>
-          <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-primary" asChild>
-            <Link to="/partners">Devenir partenaire</Link>
-          </Button>
-        </div>
-      </div>
+      </section>
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 // Animation Lottie (CDN)
-const Lottie = (props: any) => <iframe src="https://lottie.host/embed/2e2e1b7b-2e2e-4e2e-8e2e-2e2e2e2e2e2e/2e2e2e2e.json" style={{border:0,width:120,height:120,background:'none'}} title="Lottie animation" />;
+const Lottie = (props: unknown) => <iframe src="https://lottie.host/embed/2e2e1b7b-2e2e-4e2e-8e2e-2e2e2e2e2e2e/2e2e2e2e.json" style={{border:0,width:120,height:120,background:'none'}} title="Lottie animation" />;
 import io from 'socket.io-client';
 import EmojiPicker from 'emoji-picker-react';
 import { useNavigate } from 'react-router-dom';
@@ -40,7 +40,7 @@ function getClientBadge(orderCount: number) {
   return { label: 'Nouveau client', color: 'bg-green-400' };
 }
 
-function generateReceipt(order: any) {
+function generateReceipt(order: unknown) {
   const win = window.open('', '', 'width=600,height=800');
   win.document.write(`<h2>Reçu de commande Buntudelice</h2>`);
   win.document.write(`<p><b>Code :</b> ${order.code}</p>`);
@@ -106,7 +106,7 @@ export default function OrderPage() {
   // Chat temps réel
   const [chatMessages, setChatMessages] = React.useState<{from: string, text: string, time: string}[]>([]);
   const [chatInput, setChatInput] = React.useState('');
-  const [socket, setSocket] = React.useState<any>(null);
+  const [socket, setSocket] = React.useState<unknown>(null);
   const userAvatar = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(name || 'Client');
   const [showSurprise, setShowSurprise] = React.useState(false);
   const [showEmoji, setShowEmoji] = React.useState(false);
@@ -218,7 +218,7 @@ export default function OrderPage() {
     }
   };
 
-  const handleEmojiClick = (emojiData: any) => {
+  const handleEmojiClick = (emojiData: unknown) => {
     setChatInput(chatInput + emojiData.emoji);
     setShowEmoji(false);
     if (socket) socket.emit('typing', 'client');

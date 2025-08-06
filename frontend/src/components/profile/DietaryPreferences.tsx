@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +24,7 @@ const DietaryPreferences = () => {
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       if (!user) throw new Error('Non authentifié');
 
       const { data, error } = await supabase
@@ -40,7 +40,7 @@ const DietaryPreferences = () => {
 
   const updatePreferencesMutation = useMutation({
     mutationFn: async (preferences: string[]) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       if (!user) throw new Error('Non authentifié');
 
       const { error } = await supabase

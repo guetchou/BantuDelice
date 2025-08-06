@@ -26,7 +26,7 @@ export interface Restaurant {
   price_range?: number;
   total_ratings?: number;
   trending?: boolean;
-  business_hours?: any;
+  business_hours?: unknown;
   website?: string;
   special_features?: string[];
   payment_methods?: string[];
@@ -97,7 +97,7 @@ export interface MenuItem {
   tags?: string[];
   category?: string;
   dietary_preferences?: string[];
-  customization_options?: any[];
+  customization_options?: unknown[];
   ingredients?: string[];
   stock?: number;
   available?: boolean;
@@ -139,7 +139,7 @@ export interface ApiResponse<T> {
   success?: boolean;
   error?: string;
   message?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface MenuCustomizationOption {

@@ -33,7 +33,7 @@ export const getRouteDirections = async ({
         // Update route line
         routeLine.setData({
           type: 'Feature',
-          properties: {},
+          properties: Record<string, unknown>,
           geometry: {
             type: 'LineString',
             coordinates: route
@@ -64,7 +64,7 @@ export const getRouteDirections = async ({
     // Clear route if pickup or destination is missing
     routeLine.setData({
       type: 'Feature',
-      properties: {},
+      properties: Record<string, unknown>,
       geometry: {
         type: 'LineString',
         coordinates: []
@@ -81,7 +81,7 @@ export const initializeRouteLayer = (map: mapboxgl.Map | null): mapboxgl.GeoJSON
     type: 'geojson',
     data: {
       type: 'Feature',
-      properties: {},
+      properties: Record<string, unknown>,
       geometry: {
         type: 'LineString',
         coordinates: []

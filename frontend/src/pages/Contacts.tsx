@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import { useSidebar } from "@/contexts/SidebarContext";
+// Navbar removed - now handled by MainLayout
+// import { useSidebar } from "@/contexts/SidebarContext";
 
 const Contacts = () => {
-  const { isCollapsed } = useSidebar();
+  // const { isCollapsed } = useSidebar();
+  const isCollapsed = false;
   const [search, setSearch] = useState("");
 
   const mockContacts = [
@@ -17,7 +18,7 @@ const Contacts = () => {
 
   return (
     <div className="min-h-screen bg-white flex relative">
-      <Navbar />
+      {/* Navbar removed - now handled by MainLayout */}
       <main className={`flex-1 p-4 sm:p-8 transition-all duration-300 ${
         isCollapsed ? 'ml-[60px]' : 'ml-[60px] sm:ml-64'
       }`}>

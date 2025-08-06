@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useOrders } from '@/contexts/OrderContext';
+import { useOrders } from '@/hooks/useOrders';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Clock, Package, Calendar, Info } from 'lucide-react';
@@ -105,7 +105,7 @@ const Orders = () => {
                   <div className="flex justify-between items-center">
                     <p className="text-sm">
                       <span className="font-medium">Montant:</span>{' '}
-                      {(order.total_amount / 100).toFixed(2)}€
+                      {(order.total_amount / 100).toFixed(2)}FCFA 
                     </p>
                     {order.estimated_preparation_time && (
                       <p className="text-sm">
@@ -180,7 +180,7 @@ const Orders = () => {
                   <div className="flex justify-between items-center">
                     <p className="text-sm">
                       <span className="font-medium">Montant:</span>{' '}
-                      {(order.total_amount / 100).toFixed(2)}€
+                      {(order.total_amount / 100).toFixed(2)}FCFA 
                     </p>
                     
                     {order.delivered_at && (

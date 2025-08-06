@@ -1,66 +1,74 @@
 
-"use client";
-
-import * as React from "react";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { fr } from "date-fns/locale";
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import React, { useState } from 'react';
+import { Calendar, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface DatePickerProps {
-  date?: Date;
-  setDate?: (date?: Date) => void;
-  className?: string;
-  disabled?: boolean;
+  date: Date | null;
+  onSelect: (date: Date | null) => void;
   placeholder?: string;
-  format?: string;
+  className?: string;
 }
 
-export function DatePicker({
+const DatePicker: React.FC<DatePickerProps> = ({
   date,
-  setDate,
-  className,
-  disabled,
+  onSelect,
   placeholder = "Sélectionner une date",
-  format: dateFormat = "PP",
-}: DatePickerProps) {
+  className = ""
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return '';
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const clearDate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelect(null);
+  };
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground",
-            className
-          )}
-          disabled={disabled}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? (
-            format(date, dateFormat, { locale: fr })
-          ) : (
-            <span>{placeholder}</span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          initialFocus
-          locale={fr}
-        />
-      </PopoverContent>
-    </Popover>
+    <div className="relative">
+      <Button
+        variant="outline"
+        className={`w-full justify-start text-left font-normal ${className}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Calendar className="mr-2 h-4 w-4" />
+        {date ? (
+          <div className="flex items-center justify-between w-full">
+            <span>{formatDate(date)}</span>
+            <X
+              className="h-4 w-4 text-gray-400 hover:text-gray-600"
+              onClick={clearDate}
+            />
+          </div>
+        ) : (
+          <span className="text-gray-500">{placeholder}</span>
+        )}
+      </Button>
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+          <Input
+            type="date"
+            onChange={(e) => {
+              const selectedDate = e.target.value ? new Date(e.target.value) : null;
+              onSelect(selectedDate);
+              setIsOpen(false);
+            }}
+            className="w-full"
+          />
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default DatePicker;

@@ -64,9 +64,9 @@ export function useRideTracking() {
     
     // Simulation des messages WebSocket
     const mockSocket = {
-      onmessage: (callback: (event: any) => void) => {},
+      onmessage: (callback: (event: unknown) => void) => {},
       onclose: (callback: () => void) => {},
-      onerror: (callback: (error: any) => void) => {},
+      onerror: (callback: (error: unknown) => void) => {},
       close: () => {}
     };
     

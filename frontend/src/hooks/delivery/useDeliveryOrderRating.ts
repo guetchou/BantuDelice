@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { DeliveryRequest, DeliveryStatus } from '@/types/delivery';
 import { useToast } from '@/hooks/use-toast';
 
@@ -103,7 +103,7 @@ export function useDeliveryOrderRating(orderId: string) {
           });
         
           // Vérifier si l'utilisateur a déjà évalué la livraison
-          const { data: { user } } = await supabase.auth.getUser();
+          const { data: { user } } = await apiService.auth.getUser();
           
           if (user && requestData) {
             // Vérifier notation restaurant

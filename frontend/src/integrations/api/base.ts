@@ -17,7 +17,7 @@ export async function fetchWithAuth<T>(endpoint: string, options: RequestInit = 
   
   const headers = {
     'Content-Type': 'application/json',
-    ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+    ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : Record<string, unknown>),
     ...(options.headers || {}),
   };
   

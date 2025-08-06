@@ -14,21 +14,21 @@ export const configService = {
    * Get the base API URL
    */
   getApiBaseUrl: () => {
-    return process.env.REACT_APP_API_URL || 'https://api.buntudelice.com';
+    return import.meta.env?.VITE_API_URL || 'https://api.buntudelice.com';
   },
   
   /**
    * Get environment name
    */
   getEnvironment: () => {
-    return process.env.NODE_ENV || 'development';
+    return import.meta.env?.MODE || 'development';
   },
   
   /**
    * Check if in development environment
    */
   isDevelopment: () => {
-    return (process.env.NODE_ENV || 'development') === 'development';
+    return (import.meta.env?.MODE || 'development') === 'development';
   },
   
   /**

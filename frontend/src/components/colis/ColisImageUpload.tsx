@@ -34,7 +34,7 @@ const ColisImageUpload: React.FC<ColisImageUploadProps> = ({ onImagesUpload, col
           } else {
             throw new Error(data.message || "Erreur d'upload");
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           setError(err.message || "Erreur lors de l'upload");
         }
       } else {
@@ -78,7 +78,7 @@ const ColisImageUpload: React.FC<ColisImageUploadProps> = ({ onImagesUpload, col
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className="border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer mb-4 bg-gray-50 hover:bg-gray-100"
+        className="border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer mb-4 bg-white/40 backdrop-blur-md border-white/30 shadow-lg hover:bg-white/60"
         style={{ minHeight: 120 }}
         onClick={() => (dropRef.current?.querySelector('input[type=file]') as HTMLInputElement)?.click()}
       >

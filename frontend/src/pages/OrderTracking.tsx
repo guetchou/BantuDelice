@@ -1,391 +1,357 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Order } from '@/types/order';
-import { DeliveryRequest } from '@/types/delivery';
-import DeliveryTracking from '@/components/delivery/DeliveryTracking';
-import OrderProgress from '@/components/orders/OrderProgress';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Receipt, Clock, CalendarClock, MapPin, User, Phone, AlertTriangle, Share2 } from 'lucide-react';
-import { usePageTitle } from '@/hooks/usePageTitle';
+import { Separator } from '@/components/ui/separator';
+import { 
+  ArrowLeft, 
+  CheckCircle, 
+  Clock, 
+  Truck, 
+  MapPin,
+  Phone,
+  MessageCircle,
+  Star,
+  Shield
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-export default function OrderTracking() {
-  const { orderId } = useParams<{ orderId: string }>();
-  const [order, setOrder] = useState<Order | null>(null);
-  const [deliveryRequest, setDeliveryRequest] = useState<DeliveryRequest | null>(null);
-  const [restaurant, setRestaurant] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+interface OrderStatus {
+  step: number;
+  title: string;
+  description: string;
+  completed: boolean;
+  time?: string;
+}
 
-  usePageTitle({ title: `Suivi de commande #${orderId?.substring(0, 8) || ''}` });
+interface Driver {
+  name: string;
+  phone: string;
+  rating: number;
+  photo: string;
+  vehicle: string;
+  plateNumber: string;
+}
+
+const OrderTracking: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [estimatedTime, setEstimatedTime] = useState(25);
+  const [driver, setDriver] = useState<Driver | null>(null);
+
+  // Récupérer les données de la commande
+  const orderData = location.state || {
+    orderId: 'CMD-123456789',
+    restaurantName: 'Le Gourmet Congolais',
+    estimatedTime: '25-30 minutes'
+  };
+
+  const orderSteps: OrderStatus[] = [
+    {
+      step: 1,
+      title: 'Commande confirmée',
+      description: 'Votre commande a été reçue et confirmée',
+      completed: true,
+      time: '14:30'
+    },
+    {
+      step: 2,
+      title: 'En préparation',
+      description: 'Le restaurant prépare votre commande',
+      completed: currentStep >= 2,
+      time: '14:35'
+    },
+    {
+      step: 3,
+      title: 'Prêt pour la livraison',
+      description: 'Votre commande est prête et attend le livreur',
+      completed: currentStep >= 3,
+      time: '14:45'
+    },
+    {
+      step: 4,
+      title: 'En route',
+      description: 'Le livreur est en route vers vous',
+      completed: currentStep >= 4,
+      time: '14:50'
+    },
+    {
+      step: 5,
+      title: 'Livré',
+      description: 'Votre commande a été livrée',
+      completed: currentStep >= 5,
+      time: '15:00'
+    }
+  ];
 
   useEffect(() => {
-    if (orderId) {
-      fetchOrderData();
-      // Subscribe to real-time updates
-      const orderSubscription = supabase
-        .channel(`order-${orderId}`)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${orderId}`
-        }, () => {
-          fetchOrderData();
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(orderSubscription);
-      };
-    }
-  }, [orderId]);
-
-  const fetchOrderData = async () => {
-    if (!orderId) return;
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
-
-      if (error) throw error;
-      setOrder(data);
-
-      // Fetch restaurant data
-      if (data.restaurant_id) {
-        const { data: restaurantData, error: restaurantError } = await supabase
-          .from('restaurants')
-          .select('*')
-          .eq('id', data.restaurant_id)
-          .single();
-
-        if (restaurantError) throw restaurantError;
-        setRestaurant(restaurantData);
-      }
-
-      // Fetch delivery request if exists
-      const { data: deliveryData, error: deliveryError } = await supabase
-        .from('delivery_requests')
-        .select('*')
-        .eq('order_id', orderId)
-        .single();
-
-      if (!deliveryError) {
-        setDeliveryRequest(deliveryData);
-      }
-    } catch (error) {
-      console.error('Error fetching order data:', error);
-      setError('Impossible de charger les données de la commande');
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les données de la commande',
-        variant: 'destructive',
+    // Simuler la progression de la commande
+    const interval = setInterval(() => {
+      setCurrentStep(prev => {
+        if (prev < 5) {
+          return prev + 1;
+        }
+        return prev;
       });
-    } finally {
-      setLoading(false);
-    }
-  };
+    }, 30000); // Change d'étape toutes les 30 secondes pour la démo
 
-  const shareTracking = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `Suivi de commande #${orderId?.substring(0, 8)}`,
-        text: `Suivez ma commande chez ${restaurant?.name} en temps réel!`,
-        url: window.location.href
-      })
-      .catch((error) => console.log('Error sharing', error));
-    } else {
-      // Fallback for browsers that don't support navigator.share
-      navigator.clipboard.writeText(window.location.href)
-        .then(() => {
-          toast({
-            title: 'Lien copié',
-            description: 'Le lien de suivi a été copié dans votre presse-papier',
-          });
-        })
-        .catch(err => {
-          console.error('Could not copy text: ', err);
+    // Simuler l'arrivée du livreur à l'étape 4
+    const driverTimeout = setTimeout(() => {
+      if (currentStep >= 4) {
+        setDriver({
+          name: 'Jean-Pierre Mukeba',
+          phone: '+242 123 456 789',
+          rating: 4.8,
+          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+          vehicle: 'Moto Yamaha',
+          plateNumber: 'KIN-1234'
         });
+      }
+    }, 35000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(driverTimeout);
+    };
+  }, [currentStep]);
+
+  const handleCallDriver = () => {
+    if (driver) {
+      toast.success(`Appel en cours vers ${driver.name}...`);
+      // Ici on pourrait ouvrir l'appel téléphonique
     }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pending': return 'En attente';
-      case 'accepted': return 'Acceptée';
-      case 'preparing': return 'En préparation';
-      case 'prepared': return 'Prête';
-      case 'delivering': return 'En livraison';
-      case 'delivered': return 'Livrée';
-      case 'cancelled': return 'Annulée';
-      default: return status;
+  const handleMessageDriver = () => {
+    if (driver) {
+      toast.success(`Ouverture du chat avec ${driver.name}...`);
+      // Ici on pourrait ouvrir le chat
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'accepted': return 'bg-blue-100 text-blue-800';
-      case 'preparing': return 'bg-purple-100 text-purple-800';
-      case 'prepared': return 'bg-indigo-100 text-indigo-800';
-      case 'delivering': return 'bg-orange-100 text-orange-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const handleRateOrder = () => {
+    toast.success('Merci pour votre évaluation !');
+    navigate('/restaurants');
   };
 
-  const isCancellable = () => {
-    if (!order) return false;
-    return ['pending', 'accepted'].includes(order.status);
+  const getProgressPercentage = () => {
+    return (currentStep / 5) * 100;
   };
-
-  const cancelOrder = async () => {
-    if (!order || !isCancellable()) return;
-
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          status: 'cancelled',
-          cancelled_at: new Date().toISOString(),
-          cancellation_reason: 'Annulée par le client'
-        })
-        .eq('id', order.id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Commande annulée',
-        description: 'Votre commande a bien été annulée',
-      });
-
-      fetchOrderData();
-    } catch (error) {
-      console.error('Error cancelling order:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible d\'annuler la commande',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="container max-w-4xl mx-auto p-4 py-8">
-        <div className="flex justify-center">
-          <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !order) {
-    return (
-      <div className="container max-w-4xl mx-auto p-4 py-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center text-center">
-              <AlertTriangle className="h-10 w-10 text-destructive" />
-              <h3 className="mt-2 text-lg font-medium">{error || 'Commande non trouvée'}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                La commande que vous recherchez n'existe pas ou n'est plus disponible.
-              </p>
-              <Button asChild className="mt-4">
-                <Link to="/orders">Voir mes commandes</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
-    <div className="container max-w-4xl mx-auto p-4 py-8">
-      <div className="flex flex-col space-y-6">
-        <div className="flex justify-between items-center">
-          <Button asChild variant="ghost" className="p-0 hover:bg-transparent">
-            <Link to="/orders" className="flex items-center text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Retour aux commandes
-            </Link>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/restaurants')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Retour
           </Button>
-          <Button variant="outline" size="sm" onClick={shareTracking}>
-            <Share2 className="h-4 w-4 mr-2" />
-            Partager
-          </Button>
+            <h1 className="text-xl font-bold text-gray-900">Suivi de commande</h1>
+            <div className="w-20"></div>
+          </div>
         </div>
+      </header>
 
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Informations de la commande */}
         <Card>
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-start">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Commande #{orderData.orderId}</span>
+                <Badge variant={currentStep === 5 ? "default" : "secondary"}>
+                  {currentStep === 5 ? "Livré" : "En cours"}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">🍽️</span>
+                </div>
               <div>
-                <CardTitle className="text-xl">Commande #{order?.id.substring(0, 8)}</CardTitle>
-                <CardDescription>
-                  {order ? formatDate(order.created_at) : 'Loading...'}
-                </CardDescription>
+                  <h3 className="font-semibold">{orderData.restaurantName}</h3>
+                  <p className="text-sm text-gray-500">Livraison estimée: {orderData.estimatedTime}</p>
+                </div>
               </div>
-              <Badge className={order ? getStatusColor(order.status) : ''}>
-                {order ? getStatusLabel(order.status) : 'Loading...'}
-              </Badge>
+
+              {/* Barre de progression */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-gray-500 mb-2">
+                  <span>Progression</span>
+                  <span>{Math.round(getProgressPercentage())}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-orange-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${getProgressPercentage()}%` }}
+                  ></div>
+                </div>
             </div>
-          </CardHeader>
-          <CardContent className="pb-4">
-            <div className="space-y-4">
-              {/* Restaurant Info */}
-              {restaurant && (
-                <div className="flex items-start space-x-4">
-                  <div className="h-12 w-12 bg-muted rounded-md overflow-hidden flex-shrink-0">
-                    {restaurant.logo_url ? (
-                      <img 
-                        src={restaurant.logo_url} 
-                        alt={restaurant.name} 
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-primary/10">
-                        <span className="text-lg font-bold text-primary/70">
-                          {restaurant.name.charAt(0)}
+
+              {/* Temps restant */}
+              {currentStep < 5 && (
+                <div className="flex items-center gap-2 text-orange-600">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    Temps restant estimé: {estimatedTime} minutes
                         </span>
                       </div>
                     )}
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{restaurant.name}</h3>
-                    <p className="text-sm text-muted-foreground">{restaurant.address}</p>
-                    <div className="flex space-x-2 mt-1">
-                      {restaurant.phone && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-7 px-2 text-xs" 
-                          onClick={() => window.location.href = `tel:${restaurant.phone}`}
-                        >
-                          <Phone className="h-3 w-3 mr-1" />
-                          Appeler
-                        </Button>
+            </CardContent>
+          </Card>
+
+          {/* Étapes de la commande */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Statut de votre commande</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {orderSteps.map((step, index) => (
+                  <div key={step.step} className="flex items-start gap-4">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      step.completed 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {step.completed ? (
+                        <CheckCircle className="w-5 h-5" />
+                      ) : (
+                        <span className="text-sm font-medium">{step.step}</span>
                       )}
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 px-2 text-xs"
-                        asChild
-                      >
-                        <Link to={`/restaurant/${restaurant.id}`}>
-                          Voir le restaurant
-                        </Link>
-                      </Button>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className={`font-medium ${
+                          step.completed ? 'text-gray-900' : 'text-gray-500'
+                        }`}>
+                          {step.title}
+                        </h4>
+                        {step.time && (
+                          <span className="text-sm text-gray-400">{step.time}</span>
+                        )}
+                      </div>
+                      <p className={`text-sm ${
+                        step.completed ? 'text-gray-600' : 'text-gray-400'
+                      }`}>
+                        {step.description}
+                      </p>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Order Progress */}
-              <div className="py-2">
-                {order && <OrderProgress status={order.status} orderId={order.id} />}
+                ))}
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Order Details Card */}
-              <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Receipt className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="font-medium">Détails de la commande</span>
-                  </div>
-                  <Link to={`/order/${order.id}`} className="text-sm text-primary hover:underline">
-                    Voir les détails
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Total</span>
-                    <span className="font-medium">
-                      {order.total_amount.toLocaleString()} FCFA
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Paiement</span>
-                    <span className="font-medium">
-                      {order.payment_status === 'completed' ? 'Payé' : 'En attente'}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Date</span>
-                    <span>
-                      {new Date(order.created_at).toLocaleDateString('fr-FR')}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-muted-foreground">Heure</span>
-                    <span>
-                      {new Date(order.created_at).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
+          {/* Informations du livreur */}
+          {driver && currentStep >= 4 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-blue-500" />
+                  Votre livreur
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-4">
+                  <img 
+                    src={driver.photo} 
+                    alt={driver.name}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-semibold">{driver.name}</h4>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span>{driver.rating} ({Math.floor(Math.random() * 50) + 100} livraisons)</span>
+                    </div>
+                    <p className="text-sm text-gray-500">{driver.vehicle} - {driver.plateNumber}</p>
                   </div>
                 </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleCallDriver}
+                    className="flex-1"
+                    variant="outline"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Appeler
+                  </Button>
+                  <Button 
+                    onClick={handleMessageDriver}
+                    className="flex-1"
+                    variant="outline"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Message
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Actions finales */}
+          {currentStep === 5 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  Commande livrée !
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">
+                  Votre commande a été livrée avec succès. Nous espérons que vous avez apprécié votre repas !
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleRateOrder}
+                    className="flex-1"
+                  >
+                    <Star className="w-4 h-4 mr-2" />
+                    Évaluer la commande
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/restaurants')}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Commander à nouveau
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Informations de sécurité */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-blue-700">
+                <Shield className="w-5 h-5" />
+                <span className="font-medium">Informations importantes</span>
               </div>
-
-              {/* Delivery Address */}
-              <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">Adresse de livraison</p>
-                  <p className="text-muted-foreground">{order.delivery_address}</p>
-                  {order.delivery_instructions && (
-                    <p className="text-sm italic mt-1">{order.delivery_instructions}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Cancel Button */}
-              {isCancellable() && (
-                <>
-                  <Separator />
-                  <div className="flex justify-center">
-                    <Button 
-                      variant="destructive"
-                      onClick={cancelOrder}
-                    >
-                      Annuler la commande
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
+              <ul className="mt-2 text-sm text-blue-600 space-y-1">
+                <li>• Vérifiez votre commande avant de signer</li>
+                <li>• Le livreur portera un uniforme BantuDelice</li>
+                <li>• Paiement sécurisé et tracé</li>
+                <li>• Support client disponible 24/7</li>
+              </ul>
           </CardContent>
         </Card>
-
-        {/* Delivery Tracking */}
-        {order && (order.delivery_status !== 'pending' || deliveryRequest) && (
-          <DeliveryTracking orderId={order.id} />
-        )}
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default OrderTracking;

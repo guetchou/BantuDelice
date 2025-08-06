@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, DollarSign, Megaphone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { PremiumBadge } from "@/components/subscription/PremiumBadge";
 import { SubscriptionTier } from "@/types/subscription";

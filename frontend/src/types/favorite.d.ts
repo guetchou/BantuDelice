@@ -1,6 +1,6 @@
 
-import { Database } from "@/integrations/supabase/database.types";
+import { any } from "@/integrations/supabase/database.types";
 
-export type Favorite = Database['public']['Tables']['favorites']['Row'];
-export type FavoriteInsert = Database['public']['Tables']['favorites']['Insert'];
-export type FavoriteUpdate = Database['public']['Tables']['favorites']['Update'];
+export type Favorite = any['public']['Tables']['favorites']['Row'];
+export type FavoriteInsert = any['public']['Tables']['favorites']['Insert'];
+export type FavoriteUpdate = any['public']['Tables']['favorites']['Update'];

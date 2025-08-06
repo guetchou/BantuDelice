@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { useToast } from './use-toast';
 import { Cashback } from '@/types/wallet';
 
@@ -59,7 +59,7 @@ export function useLoyalty(options?: LoyaltyHookOptions) {
         // No loyalty record found
         setStatus(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching loyalty status:', err);
       setError(err.message || 'Failed to fetch loyalty status');
     } finally {
@@ -124,7 +124,7 @@ export function useLoyalty(options?: LoyaltyHookOptions) {
       
       return { success: true };
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error adding loyalty points:', err);
       toast({
         title: "Erreur",

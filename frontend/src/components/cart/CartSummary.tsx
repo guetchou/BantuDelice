@@ -23,7 +23,7 @@ const CartSummary = ({
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
-  const deliveryFee = 299; // 2.99€ en centimes
+  const deliveryFee = 299; // 2.99FCFA  en centimes
   const totalWithDelivery = calculateTotalWithDelivery(deliveryFee);
   
   const handleCheckout = () => {
@@ -40,7 +40,7 @@ const CartSummary = ({
   
   // Formatter pour afficher les montants en euros
   const formatPrice = (price: number): string => {
-    return (price / 100).toFixed(2) + ' €';
+    return (price / 100).toFixed(2) + ' FCFA ';
   };
   
   return (

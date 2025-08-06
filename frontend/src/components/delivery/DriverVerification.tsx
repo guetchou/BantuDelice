@@ -29,7 +29,7 @@ type FormData = z.infer<typeof formSchema>;
 
 const DriverVerification = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedDocuments, setSubmittedDocuments] = useState<any[]>([]);
+  const [submittedDocuments, setSubmittedDocuments] = useState<unknown[]>([]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { Transaction } from "@/types/wallet";
 
 const Deposit = () => {
@@ -16,7 +16,7 @@ const Deposit = () => {
   const handleDeposit = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       
       if (!user) {
         toast({

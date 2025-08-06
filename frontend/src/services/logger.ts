@@ -6,7 +6,7 @@ interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
-  data?: any;
+  data?: unknown;
   context?: {
     userId?: string;
     route?: string;
@@ -33,7 +33,7 @@ class Logger {
     return Logger.instance;
   }
 
-  private formatMessage(level: LogLevel, message: string, data?: any, context?: LogEntry['context']): LogEntry {
+  private formatMessage(level: LogLevel, message: string, data?: unknown, context?: LogEntry['context']): LogEntry {
     return {
       level,
       message,
@@ -78,12 +78,12 @@ class Logger {
     }
   }
 
-  info(message: string, data?: any, context?: LogEntry['context']) {
+  info(message: string, data?: unknown, context?: LogEntry['context']) {
     const entry = this.formatMessage('info', message, data, context);
     this.store(entry);
   }
 
-  warn(message: string, data?: any, context?: LogEntry['context']) {
+  warn(message: string, data?: unknown, context?: LogEntry['context']) {
     const entry = this.formatMessage('warn', message, data, context);
     this.store(entry);
     toast({
@@ -93,7 +93,7 @@ class Logger {
     });
   }
 
-  error(message: string, data?: any, context?: LogEntry['context']) {
+  error(message: string, data?: unknown, context?: LogEntry['context']) {
     const entry = this.formatMessage('error', message, data, context);
     this.store(entry);
     toast({
@@ -103,8 +103,8 @@ class Logger {
     });
   }
 
-  debug(message: string, data?: any, context?: LogEntry['context']) {
-    if (process.env.NODE_ENV === 'development') {
+  debug(message: string, data?: unknown, context?: LogEntry['context']) {
+    if (import.meta.env?.MODE === 'development') {
       const entry = this.formatMessage('debug', message, data, context);
       this.store(entry);
     }

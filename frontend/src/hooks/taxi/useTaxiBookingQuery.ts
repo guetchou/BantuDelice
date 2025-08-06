@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { TaxiRide } from '@/types/taxi';
 
 /**
@@ -15,7 +15,7 @@ export function useTaxiBookingQuery() {
     setError(null);
     
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData } = await apiService.auth.getUser();
       if (!userData.user) {
         throw new Error('User not authenticated');
       }

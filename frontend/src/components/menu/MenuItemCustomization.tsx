@@ -38,7 +38,7 @@ const MenuItemCustomization = ({ item, onAddToCart, onClose, suggestedCombos = [
     ? (Array.isArray(item.customization_options) 
         ? {} 
         : item.customization_options as Record<string, CustomizationOption>) 
-    : {};
+    : Record<string, unknown>;
     
   const hasCustomizationOptions = Object.keys(customizationOptions).length > 0;
 

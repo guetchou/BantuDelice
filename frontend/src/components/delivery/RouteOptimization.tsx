@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { DeliveryDriver, DeliveryRequest, DeliveryRoute } from '@/types/delivery';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ export default function RouteOptimization({ driverId }: RouteOptimizationProps) 
   const [pendingRequests, setPendingRequests] = useState<DeliveryRequest[]>([]);
   const [activeRoutes, setActiveRoutes] = useState<DeliveryRoute[]>([]);
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
-  const [optimizedRoute, setOptimizedRoute] = useState<any>(null);
+  const [optimizedRoute, setOptimizedRoute] = useState<unknown>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showMap, setShowMap] = useState(false);

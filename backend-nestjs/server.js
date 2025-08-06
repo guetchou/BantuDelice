@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js';
 import restaurantRoutes from './routes/restaurants.js';
 import orderRoutes from './routes/orders.js';
 import availabilityRoutes from './routes/availability.js';
+import configRoutes from './routes/config.js';
 import featureFlagsMiddleware from './middleware/featureFlags.js';
 
 dotenv.config();
@@ -52,6 +53,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/availability', availabilityRoutes);
+app.use('/api/config', configRoutes);
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {

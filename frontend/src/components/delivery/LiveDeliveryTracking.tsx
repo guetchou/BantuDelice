@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import L from 'leaflet';
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';

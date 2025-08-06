@@ -10,7 +10,7 @@ import {
 import SearchBar from "./SearchBar";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useApiAuth } from "@/contexts/ApiAuthContext";
+import { useColisAuth } from "@/context/ColisAuthContext";
 
 interface HeaderProps {
   searchQuery: string;
@@ -22,7 +22,7 @@ interface HeaderProps {
 // Keeping it for backwards compatibility
 const Header = ({ searchQuery, setSearchQuery }: HeaderProps) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useApiAuth();
+  const { isAuthenticated } = useColisAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {

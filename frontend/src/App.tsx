@@ -1,37 +1,41 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { ThemeProvider } from '@/components/ui/theme-provider';
-import { ApiAuthProvider } from './contexts/ApiAuthContext';
-import { AuthProvider } from './contexts/AuthContext';
-import { CartProvider } from './contexts/CartProvider';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { HelmetProvider } from 'react-helmet-async';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { NotificationProvider } from '@/context/NotificationContext';
+import { NotificationContainer } from '@/components/NotificationContainer';
+import { ColisProvider } from '@/context/ColisContext';
+import { ColisAuthProvider } from '@/context/ColisAuthContext';
+import FloatingGalleryButton from '@/components/FloatingGalleryButton';
+import { AccessibilityProvider } from '@/components/AccessibilityProvider';
+import AccessibilityShortcuts from '@/components/AccessibilityShortcuts';
+import ContextTransition from '@/components/navigation/ContextTransition';
+import MainLayout from '@/layouts/MainLayout';
 
-const App = () => (
-  <>
-    <div style={{
-      minHeight: '100vh',
-      width: '100vw',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      zIndex: -1,
-      backgroundImage: `url('/images/thedrop24BG.jpg')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
-      filter: 'blur(0px) brightness(0.95)'
-    }} aria-hidden="true" />
-    <ThemeProvider defaultTheme="light" storageKey="buntudelice-ui-theme">
-      <ApiAuthProvider>
-        <AuthProvider>
-          <CartProvider>
-            <div className="glass-effect min-h-screen min-w-full">
-              <Outlet />
-            </div>
-          </CartProvider>
-        </AuthProvider>
-      </ApiAuthProvider>
-    </ThemeProvider>
-  </>
-);
+const App = () => {
+  return (
+    <AccessibilityProvider>
+      <HelmetProvider>
+        <ThemeProvider>
+          <NotificationProvider>
+            <ColisAuthProvider>
+              <ColisProvider>
+                <ContextTransition>
+                  <ErrorBoundary>
+                    <MainLayout />
+                  </ErrorBoundary>
+                  <NotificationContainer />
+                  <FloatingGalleryButton />
+                  <AccessibilityShortcuts />
+                </ContextTransition>
+              </ColisProvider>
+            </ColisAuthProvider>
+          </NotificationProvider>
+        </ThemeProvider>
+      </HelmetProvider>
+    </AccessibilityProvider>
+  );
+};
 
 export default App;

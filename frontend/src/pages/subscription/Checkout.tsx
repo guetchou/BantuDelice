@@ -57,7 +57,7 @@ const Checkout = () => {
   
   const [paymentMethod, setPaymentMethod] = useState('credit-card');
   const [loading, setLoading] = useState(false);
-  const [plan, setPlan] = useState<any>(null);
+  const [plan, setPlan] = useState<unknown>(null);
   
   const navigate = useNavigate();
   const { toast } = useToast();

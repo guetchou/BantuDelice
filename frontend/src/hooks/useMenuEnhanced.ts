@@ -35,7 +35,7 @@ export const useMenuEnhanced = (restaurantId: string) => {
   const [filters, setFilters] = useState<FilterState>({
     keyword: '',
     categories: [],
-    priceRange: {},
+    priceRange: Record<string, unknown>,
     dietary: {
       vegetarian: false,
       vegan: false,
@@ -107,7 +107,7 @@ export const useMenuEnhanced = (restaurantId: string) => {
     setFilters({
       keyword: '',
       categories: [],
-      priceRange: {},
+      priceRange: Record<string, unknown>,
       dietary: {
         vegetarian: false,
         vegan: false,

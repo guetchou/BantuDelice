@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Clock, ChefHat, Truck, CheckCircle } from 'lucide-react';
-import { Database } from '@/integrations/supabase/types';
+import { any } from '@/integrations/supabase/types';
 
 interface OrderStatusProps {
   orderId: string;
 }
 
-type Order = Database['public']['Tables']['orders']['Row'];
-type DeliveryTracking = Database['public']['Tables']['delivery_tracking']['Row'];
+type Order = any['public']['Tables']['orders']['Row'];
+type DeliveryTracking = any['public']['Tables']['delivery_tracking']['Row'];
 
 const OrderStatus = ({ orderId }: OrderStatusProps) => {
   const [status, setStatus] = useState<string>('pending');
@@ -81,8 +81,8 @@ const OrderStatus = ({ orderId }: OrderStatusProps) => {
     loadInitialStatus();
 
     return () => {
-      supabase.removeChannel(orderChannel);
-      supabase.removeChannel(deliveryChannel);
+      apiService.removeChannel(orderChannel);
+      apiService.removeChannel(deliveryChannel);
     };
   }, [orderId]);
 

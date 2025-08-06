@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { TaxiDriver, TaxiVehicleType } from '@/types/taxi';
 import { toast } from 'sonner';
 

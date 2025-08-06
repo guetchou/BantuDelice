@@ -40,7 +40,7 @@ const RestaurantFilters = ({
   filters,
   onChange
 }: RestaurantFiltersProps) => {
-  const updateFilter = (key: keyof RestaurantFiltersType, value: any) => {
+  const updateFilter = (key: keyof RestaurantFiltersType, value: unknown) => {
     onChange({
       ...filters,
       [key]: value
@@ -94,9 +94,9 @@ const RestaurantFilters = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les prix</SelectItem>
-                <SelectItem value="low">€ (Moins de 5000 XAF)</SelectItem>
-                <SelectItem value="medium">€€ (5000-15000 XAF)</SelectItem>
-                <SelectItem value="high">€€€ (Plus de 15000 XAF)</SelectItem>
+                <SelectItem value="low">FCFA  (Moins de 5000 XAF)</SelectItem>
+                <SelectItem value="medium">FCFA FCFA  (5000-15000 XAF)</SelectItem>
+                <SelectItem value="high">FCFA FCFA FCFA  (Plus de 15000 XAF)</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -37,7 +37,7 @@ const Register = () => {
       if (result && result.success) {
         navigate('/');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err.message || 'Failed to register. Please try again.');
     } finally {
       setIsLoading(false);

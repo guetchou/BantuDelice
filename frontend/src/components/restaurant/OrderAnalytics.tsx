@@ -69,7 +69,7 @@ const OrderAnalytics: React.FC<OrderAnalyticsProps> = ({
                 <XAxis dataKey="day" />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value) => [`${(Number(value)/100).toFixed(2)} €`, 'Chiffre d\'affaires']}
+                  formatter={(value) => [`${(Number(value)/100).toFixed(2)} FCFA `, 'Chiffre d\'affaires']}
                   labelFormatter={(label) => `Jour: ${label}`}
                 />
                 <Line 

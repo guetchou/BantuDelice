@@ -210,7 +210,7 @@ export default function ServiceBookingForm({ provider, onClose, onSubmit }: Serv
     }
   };
 
-  const handleInputChange = (field: keyof BookingFormData, value: any) => {
+  const handleInputChange = (field: keyof BookingFormData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

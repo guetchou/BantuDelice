@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { Award, Gift, Crown } from "lucide-react";
 
 interface LoyaltyPoints {
@@ -42,7 +42,7 @@ const Rewards = () => {
   useEffect(() => {
     const fetchLoyaltyPoints = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await apiService.auth.getUser();
         if (!user) return;
 
         const { data } = await supabase

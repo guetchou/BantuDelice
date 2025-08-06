@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import { MenuItemAvailabilityManager } from '@/components/restaurant/MenuItemAvailabilityManager';
 import { RestaurantAvailabilityManager } from '@/components/restaurant/RestaurantAvailabilityManager';
 import DeliveryManagement from '@/components/restaurant/DeliveryManagement';
 import DeliverySettings from '@/components/restaurant/DeliverySettings';
-import { RestaurantPromotionsManager } from '@/components/restaurant/RestaurantPromotionsManager';
+import RestaurantPromotionsManager from '@/components/restaurant/RestaurantPromotionsManager';
 import { MenuAvailabilityManager } from '@/components/restaurant/MenuAvailabilityManager';
 import { RestaurantStatusManager } from '@/components/restaurant/RestaurantStatusManager';
 import { SpecialHoursManager } from '@/components/restaurant/SpecialHoursManager';

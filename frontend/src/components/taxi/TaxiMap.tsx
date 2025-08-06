@@ -173,7 +173,7 @@ const TaxiMap: React.FC<TaxiMapProps> = ({
         type: 'geojson',
         data: {
           type: 'Feature',
-          properties: {},
+          properties: Record<string, unknown>,
           geometry: {
             type: 'LineString',
             coordinates: []
@@ -291,7 +291,7 @@ const TaxiMap: React.FC<TaxiMapProps> = ({
             // Update route line
             (routeLine.current as mapboxgl.GeoJSONSource).setData({
               type: 'Feature',
-              properties: {},
+              properties: Record<string, unknown>,
               geometry: {
                 type: 'LineString',
                 coordinates: route
@@ -319,7 +319,7 @@ const TaxiMap: React.FC<TaxiMapProps> = ({
       // Clear route if pickup or destination is missing
       (routeLine.current as mapboxgl.GeoJSONSource).setData({
         type: 'Feature',
-        properties: {},
+        properties: Record<string, unknown>,
         geometry: {
           type: 'LineString',
           coordinates: []

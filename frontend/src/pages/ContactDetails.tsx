@@ -1,11 +1,12 @@
 import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Mail, Phone, Building, MapPin } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import { useSidebar } from "@/contexts/SidebarContext";
+// Navbar removed - now handled by MainLayout
+// import { useSidebar } from "@/contexts/SidebarContext";
 
 const ContactDetails = () => {
-  const { isCollapsed } = useSidebar();
+  // const { isCollapsed } = useSidebar();
+  const isCollapsed = false;
   const { id } = useParams();
 
   const contact = {
@@ -23,7 +24,7 @@ const ContactDetails = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
+      {/* Navbar removed - now handled by MainLayout */}
       <main className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-64'} p-8`}>
         <div className="mb-8">
           <h1 className="text-3xl font-bold">{contact.name}</h1>

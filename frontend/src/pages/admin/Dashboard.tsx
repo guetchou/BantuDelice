@@ -32,7 +32,7 @@ import {
   DollarSign,
   CircleUser,
   Settings,
-  Database,
+  any,
   Flag
 } from 'lucide-react';
 
@@ -98,7 +98,7 @@ const AdminDashboard = () => {
     },
     { 
       title: 'Revenu',
-      value: '32,450 €',
+      value: '32,450 FCFA ',
       change: '+15.3%',
       icon: <DollarSign className="h-6 w-6 text-red-500" />,
       description: 'Depuis le mois dernier'
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
                     className="justify-start px-2 data-[state=active]:bg-muted data-[state=active]:shadow-none"
                     onClick={() => setActiveTab('overview')}
                   >
-                    <Database className="h-4 w-4 mr-2" />
+                    <any className="h-4 w-4 mr-2" />
                     Vue d'ensemble
                   </TabsTrigger>
                   <TabsTrigger 

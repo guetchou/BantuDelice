@@ -6,20 +6,29 @@ import { ChevronRight, Car } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface HeroSectionProps {
-  foodImages: string[];
+  foodImages?: string[];
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ foodImages }) => {
+const HeroSection: React.FC<HeroSectionProps> = ({ foodImages = [] }) => {
   const navigate = useNavigate();
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
+  // Images par défaut si aucune n'est fournie
+  const defaultImages = [
+    'images/restaurant_images/congolais/Congo_plat1.webp',
+    'images/restaurant_images/congolais/Congo_plat3.jpg',
+    'images/restaurant_images/congolais/Congo_plat2.png'
+  ];
+
+  const images = foodImages.length > 0 ? foodImages : defaultImages;
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % foodImages.length);
+      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 5000);
     
     return () => clearInterval(interval);
-  }, [foodImages.length]);
+  }, [images.length]);
 
   const heroContainer = {
     hidden: { opacity: 0 },
@@ -43,7 +52,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ foodImages }) => {
 
   return (
     <section className="relative h-screen overflow-hidden">
-      {foodImages.map((image, index) => (
+      {images.map((image, index) => (
         <motion.div
           key={image}
           className="absolute inset-0 bg-cover bg-center"

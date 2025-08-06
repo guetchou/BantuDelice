@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Check, CreditCard, Clock, MapPin, ShoppingBag, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from '@/hooks/useCart';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 
 const OrderSummary: React.FC = () => {
@@ -18,8 +18,8 @@ const OrderSummary: React.FC = () => {
   
   const [paymentMethod, setPaymentMethod] = useState<string>('credit_card');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [deliveryFee, setDeliveryFee] = useState<number>(399); // 3.99€ in cents
-  const [restaurantDetails, setRestaurantDetails] = useState<any>(null);
+  const [deliveryFee, setDeliveryFee] = useState<number>(399); // 3.99FCFA  in cents
+  const [restaurantDetails, setRestaurantDetails] = useState<unknown>(null);
   const [userId, setUserId] = useState<string | null>(null);
   
   useEffect(() => {
@@ -36,7 +36,7 @@ const OrderSummary: React.FC = () => {
     
     // Get current user
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       if (user) {
         setUserId(user.id);
       } else {
@@ -213,7 +213,7 @@ const OrderSummary: React.FC = () => {
                     </div>
                   </div>
                   <div className="font-medium">
-                    {((item.price * item.quantity) / 100).toFixed(2)} €
+                    {((item.price * item.quantity) / 100).toFixed(2)} FCFA 
                   </div>
                 </div>
               ))}
@@ -280,7 +280,7 @@ const OrderSummary: React.FC = () => {
                   <RadioGroupItem value="wallet" id="wallet" />
                   <Label htmlFor="wallet" className="flex-1 cursor-pointer">
                     <div className="font-medium">Wallet</div>
-                    <div className="text-sm text-muted-foreground">Solde disponible: 50,00 €</div>
+                    <div className="text-sm text-muted-foreground">Solde disponible: 50,00 FCFA </div>
                   </Label>
                 </div>
                 
@@ -311,16 +311,16 @@ const OrderSummary: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Sous-total</span>
-                  <span>{(state.total / 100).toFixed(2)} €</span>
+                  <span>{(state.total / 100).toFixed(2)} FCFA </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Frais de livraison</span>
-                  <span>{(deliveryFee / 100).toFixed(2)} €</span>
+                  <span>{(deliveryFee / 100).toFixed(2)} FCFA </span>
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>{(totalWithDelivery / 100).toFixed(2)} €</span>
+                  <span>{(totalWithDelivery / 100).toFixed(2)} FCFA </span>
                 </div>
               </div>
             </CardContent>

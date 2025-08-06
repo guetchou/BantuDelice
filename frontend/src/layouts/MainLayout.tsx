@@ -1,13 +1,17 @@
 
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import MainNavbar from "@/components/layout/MainNavbar";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from '@/components/ui/toaster';
 import SEO from '@/components/SEO';
+import NavbarGlassmorphism from '@/components/NavbarGlassmorphism';
 
 const MainLayout: React.FC = () => {
   const location = useLocation();
+  const isColisContext = location.pathname.startsWith('/colis');
+  const isAuthContext = location.pathname.startsWith('/login') || 
+                       location.pathname.startsWith('/register') || 
+                       location.pathname.startsWith('/auth');
 
   // Scroll to top on page change
   useEffect(() => {
@@ -19,6 +23,13 @@ const MainLayout: React.FC = () => {
     const basePath = location.pathname.split('/')[1];
     
     switch (basePath) {
+      case 'colis':
+        return {
+          title: 'BantuDelice Colis | Livraison de colis au Congo',
+          description: 'Service de livraison de colis national et international au Congo. Suivi en temps réel, tarifs transparents.',
+          keywords: 'colis, livraison, Congo, Brazzaville, Pointe-Noire, suivi, expédition',
+          ogImage: '/images/og-colis.jpg'
+        };
       case 'restaurants':
         return {
           title: 'Restaurants | Buntudelice',
@@ -59,6 +70,43 @@ const MainLayout: React.FC = () => {
 
   const seoData = getSEOData();
 
+  // Layout spécial pour les pages d'authentification
+  if (isAuthContext) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <SEO
+          title={seoData.title}
+          description={seoData.description}
+          keywords={seoData.keywords}
+          ogImage={seoData.ogImage}
+          url={`https://buntudelice.com${location.pathname}`}
+          canonical={`https://buntudelice.com${location.pathname}`}
+        />
+        <Outlet />
+        <Toaster />
+      </div>
+    );
+  }
+
+  // Layout spécial pour les pages colis
+  if (isColisContext) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-500 to-pink-600 dark:from-gray-900 dark:to-gray-800">
+        <SEO
+          title={seoData.title}
+          description={seoData.description}
+          keywords={seoData.keywords}
+          ogImage={seoData.ogImage}
+          url={`https://buntudelice.com${location.pathname}`}
+          canonical={`https://buntudelice.com${location.pathname}`}
+        />
+        <Outlet />
+        <Toaster />
+      </div>
+    );
+  }
+
+  // Layout normal pour toutes les autres pages
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <SEO
@@ -70,7 +118,7 @@ const MainLayout: React.FC = () => {
         canonical={`https://buntudelice.com${location.pathname}`}
       />
       
-      <MainNavbar />
+      <NavbarGlassmorphism />
       
       <main className="flex-1">
         <Outlet />

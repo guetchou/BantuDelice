@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react';
 import ImprovedRestaurantCard from '@/components/restaurants/ImprovedRestaurantCard';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { useRestaurantSearch } from '@/hooks/useRestaurantSearch';
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function Restaurants() {
   const navigate = useNavigate();
-  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [restaurants, setRestaurants] = useState<unknown[]>([]);
   
   const { 
     searchQuery, 

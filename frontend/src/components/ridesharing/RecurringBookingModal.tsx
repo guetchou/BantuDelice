@@ -24,7 +24,7 @@ interface RecurringBookingModalProps {
   driverName: string;
   isOpen: boolean;
   onClose: () => void;
-  onBook: (bookingData: any) => void;
+  onBook: (bookingData: unknown) => void;
   isLoading?: boolean;
   selectedDays: string[];
 }

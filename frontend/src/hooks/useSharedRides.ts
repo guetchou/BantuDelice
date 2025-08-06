@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { TaxiRide, RideShareRequest } from '@/types/taxi';
 
 export function useSharedRides(rideId: string | undefined, isSharingEnabled: boolean) {

@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import type { Restaurant, BusinessHours } from '@/types/restaurant';
 
 export const useRestaurant = (restaurantId: string) => {

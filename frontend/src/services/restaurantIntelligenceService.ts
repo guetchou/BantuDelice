@@ -3,7 +3,7 @@ import { MenuItem } from '@/types/menu';
 import { Restaurant } from '@/types/restaurant';
 import { MenuStatistics, MenuRecommendation } from '@/types/menu';
 import { RestaurantAnalytics } from '@/types/analytics';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 
 // Fonction avancée 1: Analyse de rentabilité du menu
 export const analyzeMenuProfitability = async (restaurantId: string): Promise<MenuStatistics | null> => {
@@ -173,7 +173,7 @@ export const generateMenuRecommendations = async (restaurantId: string): Promise
 };
 
 // Fonction avancée 3: Prévisions de ventes basées sur l'historique
-export const generateSalesForecast = async (restaurantId: string, days: number = 7): Promise<any> => {
+export const generateSalesForecast = async (restaurantId: string, days: number = 7): Promise<unknown> => {
   // Simulé - dans un environnement réel, nous utiliserions des données historiques
   const mockForecast = {
     dailyRevenue: Array.from({ length: days }, (_, i) => ({
@@ -204,7 +204,7 @@ export const generateSalesForecast = async (restaurantId: string, days: number =
 };
 
 // Fonction avancée 4: Optimisation des prix basée sur l'élasticité
-export const optimizePricing = async (restaurantId: string): Promise<any> => {
+export const optimizePricing = async (restaurantId: string): Promise<unknown> => {
   try {
     const { data: menuItems, error } = await supabase
       .from('menu_items')

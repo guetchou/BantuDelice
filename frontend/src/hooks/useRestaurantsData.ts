@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useTableExistence } from '@/hooks/useTableExistence';
 import type { Restaurant, RestaurantFilters } from '@/types/restaurant';

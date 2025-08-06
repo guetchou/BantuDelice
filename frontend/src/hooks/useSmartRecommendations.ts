@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import type { MenuItem } from '@/types/menu';
 import type { Order } from '@/types/order';
 
@@ -26,7 +26,7 @@ const analyzeUserBehavior = (orders: Order[]): UserPreferences => {
   orders.forEach(order => {
     // Extract dietary preferences and categories from order items if available
     if (order.order_items) {
-      order.order_items.forEach((item: any) => {
+      order.order_items.forEach((item: unknown) => {
         if (item.dietary_preferences) {
           preferences.dietaryPreferences = [
             ...new Set([...preferences.dietaryPreferences, ...item.dietary_preferences])
@@ -109,9 +109,9 @@ const getSmartRecommendations = (
 
   // Sort by score and return top recommendations
   return scoredItems
-    .sort((a: any, b: any) => b.score - a.score)
+    .sort((a: unknown, b: unknown) => b.score - a.score)
     .slice(0, 6)
-    .map(({ score, ...item }: any) => item);
+    .map(({ score, ...item }: unknown) => item);
 };
 
 export const useSmartRecommendations = (restaurantId: string) => {
@@ -120,7 +120,7 @@ export const useSmartRecommendations = (restaurantId: string) => {
     queryFn: async () => {
       try {
         // Récupération des données nécessaires
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await apiService.auth.getUser();
         if (!user) throw new Error('User not authenticated');
 
         // Récupération de l'historique des commandes

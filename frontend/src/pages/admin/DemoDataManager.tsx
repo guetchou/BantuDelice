@@ -49,7 +49,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
-  Database,
+  any,
   Plus,
   Edit,
   Trash2,
@@ -79,7 +79,7 @@ const DemoDataManager = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DemoData | null>(null);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<unknown>({});
   const [syncing, setSyncing] = useState(false);
 
   // Redirection si l'utilisateur n'est pas admin
@@ -301,7 +301,7 @@ const DemoDataManager = () => {
       case 'driver': return <Car className="h-4 w-4" />;
       case 'review': return <Star className="h-4 w-4" />;
       case 'promotion': return <DollarSign className="h-4 w-4" />;
-      default: return <Database className="h-4 w-4" />;
+      default: return <any className="h-4 w-4" />;
     }
   };
 

@@ -6,12 +6,12 @@ import {
   RecurringTripMatch,
   RidesharingRecurringBooking
 } from '@/types/ridesharing';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { toast } from 'sonner';
-import { useApiAuth } from '@/contexts/ApiAuthContext';
+import { useColisAuth } from '@/context/ColisAuthContext';
 
 export function useRidesharing() {
-  const { user } = useApiAuth();
+  const { user } = useColisAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [trips, setTrips] = useState<RidesharingTrip[]>([]);
   const [myTrips, setMyTrips] = useState<RidesharingTrip[]>([]);
@@ -608,7 +608,7 @@ export function useRidesharing() {
     }
   };
   
-  const bookRecurringTrip = async (tripId: string, bookingData: any) => {
+  const bookRecurringTrip = async (tripId: string, bookingData: unknown) => {
     try {
       setIsLoading(true);
       

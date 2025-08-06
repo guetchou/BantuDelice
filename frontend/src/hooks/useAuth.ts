@@ -1,111 +1,119 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User, UserProfile } from '@/types/user';
+import { useState, useEffect, useCallback } from 'react';
+import apiService, { User, LoginRequest, RegisterRequest } from '../services/apiService';
+
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
 
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isLoading: true,
+  });
 
+  // Vérifier l'authentification au chargement
   useEffect(() => {
-    // Get current session
-    const getCurrentUser = async () => {
-      setLoading(true);
+    const checkAuth = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } catch (error) {
-        console.error('Error getting user:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getCurrentUser();
-
-    // Set up auth listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session?.user) {
-          setUser(session.user);
+        const token = apiService.getToken();
+        if (token) {
+          const user = await apiService.getProfile();
+          setAuthState({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+          });
         } else {
-          setUser(null);
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
         }
-        setLoading(false);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        apiService.clearToken();
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
       }
-    );
-
-    return () => {
-      authListener?.subscription.unsubscribe();
     };
+
+    checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (credentials: LoginRequest) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      return { success: true };
-    } catch (error) {
-      console.error('Error signing in:', error);
-      return { success: false, error };
-    }
-  };
-
-  const register = async (userData: any) => {
-    try {
-      const { email, password } = userData;
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData
-        }
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      const response = await apiService.login(credentials);
+      apiService.setToken(response.access_token);
+      setAuthState({
+        user: response.user,
+        isAuthenticated: true,
+        isLoading: false,
       });
-      if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Error signing up:', error);
-      return { success: false, error };
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Login failed' 
+      };
     }
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
-    return login(email, password);
-  };
-
-  const signUp = async (email: string, password: string, userData: Partial<UserProfile>) => {
-    return register({ email, password, ...userData });
-  };
-
-  const logout = async () => {
+  const register = useCallback(async (userData: RegisterRequest) => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      return { success: true };
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      const response = await apiService.register(userData);
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      return { success: true, user: response.user };
     } catch (error) {
-      console.error('Error signing out:', error);
-      return { success: false, error };
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Registration failed' 
+      };
     }
-  };
+  }, []);
 
-  const signOut = async () => {
-    return logout();
-  };
+  const logout = useCallback(() => {
+    apiService.clearToken();
+    setAuthState({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+  }, []);
 
-  const isAuthenticated = !!user;
-  const isLoading = loading;
+  const updateProfile = useCallback(async (userData: Partial<User>) => {
+    try {
+      if (!authState.user) throw new Error('No user logged in');
+      const updatedUser = await apiService.updateUser(authState.user.id, userData);
+      setAuthState(prev => ({
+        ...prev,
+        user: updatedUser,
+      }));
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Profile update failed' 
+      };
+    }
+  }, [authState.user]);
 
   return {
-    user,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    // Ajout des propriétés manquantes
+    ...authState,
     login,
     register,
     logout,
-    isAuthenticated,
-    isLoading
+    updateProfile,
   };
 };

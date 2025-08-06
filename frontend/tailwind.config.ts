@@ -1,110 +1,50 @@
 
 import type { Config } from "tailwindcss";
 
-export default {
-  darkMode: ["class"],
+const config: Config = {
+  darkMode: 'class',
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  prefix: "",
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
-      fontFamily: {
-        sans: ['Geist Sans', 'sans-serif'],
-      },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: '#3b82f6',
+          foreground: '#ffffff',
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: '#f3f4f6',
+          foreground: '#1f2937',
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: '#ef4444',
+          foreground: '#ffffff',
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: '#f9fafb',
+          foreground: '#6b7280',
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: '#f3f4f6',
+          foreground: '#1f2937',
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: '#ffffff',
+          foreground: '#1f2937',
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: '#ffffff',
+          foreground: '#1f2937',
         },
-        neon: {
-          blue: '#00f3ff',
-          purple: '#8a2be2',
-          pink: '#ff1493',
-          green: '#00ff9f',
-        }
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "0.5rem",
+        md: "0.375rem",
+        sm: "0.25rem",
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        "gradient-x": {
-          "0%, 100%": {
-            "background-size": "200% 200%",
-            "background-position": "left center",
-          },
-          "50%": {
-            "background-size": "200% 200%",
-            "background-position": "right center",
-          },
-        },
-        "neon-pulse": {
-          "0%, 100%": {
-            opacity: "1",
-            filter: "brightness(1)",
-          },
-          "50%": {
-            opacity: "0.8",
-            filter: "brightness(1.2)",
-          },
-        },
-        "float": {
-          "0%, 100%": {
-            transform: "translateY(0)",
-          },
-          "50%": {
-            transform: "translateY(-10px)",
-          },
-        },
         "fade-in": {
           "0%": { 
             opacity: "0",
@@ -115,36 +55,71 @@ export default {
             transform: "translateY(0)"
           }
         },
-        "scale-in": {
-          "0%": {
-            transform: "scale(0.95)",
-            opacity: "0"
+        "slide-up": {
+          "0%": { 
+            opacity: "0",
+            transform: "translateY(30px)"
           },
-          "100%": {
-            transform: "scale(1)",
-            opacity: "1"
+          "100%": { 
+            opacity: "1",
+            transform: "translateY(0)"
           }
         },
-        "glow": {
-          "0%, 100%": {
-            boxShadow: "0 0 5px rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.2)",
+        "fade-in-delay-1": {
+          "0%": { 
+            opacity: "0",
+            transform: "translateY(20px)"
           },
-          "50%": {
-            boxShadow: "0 0 20px rgba(0, 243, 255, 0.8), 0 0 40px rgba(0, 243, 255, 0.4)",
+          "50%": { 
+            opacity: "0",
+            transform: "translateY(20px)"
           },
+          "100%": { 
+            opacity: "1",
+            transform: "translateY(0)"
+          }
+        },
+        "fade-in-delay-2": {
+          "0%": { 
+            opacity: "0",
+            transform: "translateY(20px)"
+          },
+          "66%": { 
+            opacity: "0",
+            transform: "translateY(20px)"
+          },
+          "100%": { 
+            opacity: "1",
+            transform: "translateY(0)"
+          }
+        },
+        "fade-in-delay-3": {
+          "0%": { 
+            opacity: "0",
+            transform: "translateY(20px)"
+          },
+          "80%": { 
+            opacity: "0",
+            transform: "translateY(20px)"
+          },
+          "100%": { 
+            opacity: "1",
+            transform: "translateY(0)"
+          }
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "gradient-x": "gradient-x 15s ease infinite",
-        "neon-pulse": "neon-pulse 2s ease-in-out infinite",
-        "float": "float 6s ease-in-out infinite",
-        "glow": "glow 3s ease-in-out infinite",
-        "fade-in": "fade-in 0.3s ease-out",
-        "scale-in": "scale-in 0.2s ease-out",
+        "fade-in": "fade-in 0.6s ease-out",
+        "slide-up": "slide-up 0.8s ease-out",
+        "slide-up-delay-1": "slide-up 0.8s ease-out 0.2s both",
+        "slide-up-delay-2": "slide-up 0.8s ease-out 0.4s both",
+        "fade-in-delay-1": "fade-in-delay-1 1.2s ease-out",
+        "fade-in-delay-2": "fade-in-delay-2 1.4s ease-out",
+        "fade-in-delay-3": "fade-in-delay-3 1.6s ease-out",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+  plugins: [],
+};
+
+export default config;

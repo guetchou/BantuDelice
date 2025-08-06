@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { TaxiRide } from '@/types/taxi';
-import { useApiAuth } from '@/contexts/ApiAuthContext';
+import { useColisAuth } from '@/context/ColisAuthContext';
 
 export function useTaxiHistory() {
   const [pastRides, setPastRides] = useState<TaxiRide[]>([]);
   const [upcomingRides, setUpcomingRides] = useState<TaxiRide[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useApiAuth();
+  const { user } = useColisAuth();
 
   useEffect(() => {
     if (user) {

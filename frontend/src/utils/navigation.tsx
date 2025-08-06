@@ -1,7 +1,6 @@
 
-import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 export interface NavigationLinkProps {
@@ -16,17 +15,22 @@ export const NavigationLink: React.FC<NavigationLinkProps> = ({
   to,
   children,
   className,
-  activeClassName = 'bg-primary/10',
+  activeClassName,
   onClick,
+  ...props
 }) => {
   const location = useLocation();
   const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
-  
+
   return (
-    <Link 
-      to={to} 
-      className={cn(className, isActive && activeClassName)} 
+    <Link
+      to={to}
+      className={cn(
+        className,
+        isActive && activeClassName
+      )}
       onClick={onClick}
+      {...props}
     >
       {children}
     </Link>
@@ -47,7 +51,10 @@ export const useAppNavigation = () => {
 
   const navigateWithToast = (path: string, message: string, duration = 3000) => {
     navigate(path);
-    toast.success(message, { duration });
+    toast({
+      title: message,
+      duration: duration,
+    });
   };
 
   const isActive = (path: string) => {
@@ -55,9 +62,10 @@ export const useAppNavigation = () => {
   };
 
   return {
+    navigate,
     goBack,
-    navigateWithToast,
     currentPath: location.pathname,
-    isActive
+    isActive,
+    navigateWithToast
   };
 };

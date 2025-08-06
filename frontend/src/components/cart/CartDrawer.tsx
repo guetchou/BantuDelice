@@ -111,7 +111,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ onClose }) => {
                     <div className="flex justify-between">
                       <h3 className="font-medium truncate">{item.name}</h3>
                       <span className="font-bold ml-2 whitespace-nowrap">
-                        {((item.price * item.quantity) / 100).toFixed(2)} €
+                        {((item.price * item.quantity) / 100).toFixed(2)} FCFA 
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-2">
@@ -153,16 +153,16 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ onClose }) => {
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
                 <span>Sous-total</span>
-                <span>{(state.total / 100).toFixed(2)} €</span>
+                <span>{(state.total / 100).toFixed(2)} FCFA </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Frais de livraison</span>
-                <span>3.99 €</span>
+                <span>3.99 FCFA </span>
               </div>
               <Separator />
               <div className="flex justify-between font-bold">
                 <span>Total</span>
-                <span>{((state.total / 100) + 3.99).toFixed(2)} €</span>
+                <span>{((state.total / 100) + 3.99).toFixed(2)} FCFA </span>
               </div>
             </div>
             

@@ -78,7 +78,7 @@ const CartSection: React.FC<CartSectionProps> = ({
                         {item.options.map(opt => `${opt.name}`).join(', ')}
                       </div>
                     )}
-                    <div className="text-sm">{(item.price / 100).toFixed(2)} €</div>
+                    <div className="text-sm">{(item.price / 100).toFixed(2)} FCFA </div>
                   </div>
                   
                   <div className="flex items-center space-x-2">
@@ -123,16 +123,16 @@ const CartSection: React.FC<CartSectionProps> = ({
             <div className="space-y-1.5">
               <div className="flex justify-between text-sm">
                 <span>Sous-total</span>
-                <span>{(total / 100).toFixed(2)} €</span>
+                <span>{(total / 100).toFixed(2)} FCFA </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Frais de livraison</span>
-                <span>2,99 €</span>
+                <span>2,99 FCFA </span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span>{((total + 299) / 100).toFixed(2)} €</span>
+                <span>{((total + 299) / 100).toFixed(2)} FCFA </span>
               </div>
             </div>
           </>

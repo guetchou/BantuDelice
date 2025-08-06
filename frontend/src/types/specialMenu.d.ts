@@ -1,9 +1,9 @@
 
-import { Database } from "@/integrations/supabase/database.types";
+import { any } from "@/integrations/supabase/database.types";
 
-export type SpecialMenu = Database['public']['Tables']['special_menus']['Row'];
-export type SpecialMenuInsert = Database['public']['Tables']['special_menus']['Insert'];
-export type SpecialMenuUpdate = Database['public']['Tables']['special_menus']['Update'];
+export type SpecialMenu = any['public']['Tables']['special_menus']['Row'];
+export type SpecialMenuInsert = any['public']['Tables']['special_menus']['Insert'];
+export type SpecialMenuUpdate = any['public']['Tables']['special_menus']['Update'];
 
 export type MenuType = 'seasonal' | 'holiday' | 'event' | 'daily_special';
 

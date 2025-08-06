@@ -323,7 +323,7 @@ const RestaurantMenu: React.FC = () => {
                     </div>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.description}</p>
                     <div className="flex justify-between items-center mt-2">
-                      <span className="font-bold">{(item.price / 100).toFixed(2)} €</span>
+                      <span className="font-bold">{(item.price / 100).toFixed(2)} FCFA </span>
                       {item.preparation_time && (
                         <div className="flex items-center text-xs text-gray-500">
                           <Clock className="h-3 w-3 mr-1" />

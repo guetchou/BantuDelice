@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Wallet as WalletIcon, User, Truck, CreditCard, History, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { Wallet as WalletType, Transaction } from "@/types/wallet";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ export default function Wallet() {
     const fetchWalletData = async () => {
       try {
         setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await apiService.auth.getUser();
         
         if (!user) {
           navigate("/auth");

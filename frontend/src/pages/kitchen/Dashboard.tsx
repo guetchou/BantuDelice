@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import DashboardCard from "@/components/DashboardCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ const KitchenDashboard = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      apiService.removeChannel(channel);
     };
   }, [toast]);
 
@@ -82,8 +82,8 @@ const KitchenDashboard = () => {
       .from("orders")
       .update({ 
         status: newStatus,
-        ...(newStatus === 'accepted' ? { accepted_at: new Date().toISOString() } : {}),
-        ...(newStatus === 'prepared' ? { prepared_at: new Date().toISOString() } : {})
+        ...(newStatus === 'accepted' ? { accepted_at: new Date().toISOString() } : Record<string, unknown>),
+        ...(newStatus === 'prepared' ? { prepared_at: new Date().toISOString() } : Record<string, unknown>)
       })
       .eq("id", orderId);
 
@@ -151,7 +151,7 @@ const KitchenDashboard = () => {
             <div className="space-y-2 mb-4">
               <p>
                 <span className="font-medium">Montant:</span>{" "}
-                {(order.total_amount / 100).toFixed(2)}€
+                {(order.total_amount / 100).toFixed(2)}FCFA 
               </p>
               <p>
                 <span className="font-medium">Adresse:</span>{" "}

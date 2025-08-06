@@ -28,7 +28,7 @@ export const InventoryManager = ({ restaurantId }: InventoryManagerProps) => {
     <div className="space-y-4">
       <h2 className="text-2xl font-bold mb-4">Gestion du Stock</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {inventoryLevels?.map((item: any) => (
+        {inventoryLevels?.map((item: unknown) => (
           <Card key={item.id} className="p-4">
             <div className="flex items-start justify-between">
               <div>

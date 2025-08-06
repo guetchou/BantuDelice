@@ -18,7 +18,7 @@ export default function LoyaltyStatus({ userId, showDetailedInfo = true }: Loyal
     fetchLoyaltyStatus();
   }, [fetchLoyaltyStatus, userId]);
 
-  const parseBenefits = (benefits: any): string[] => {
+  const parseBenefits = (benefits: unknown): string[] => {
     if (Array.isArray(benefits)) return benefits;
     if (typeof benefits === 'string') {
       try {

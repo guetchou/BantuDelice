@@ -4,22 +4,22 @@ declare module 'mapbox-gl' {
   export type MapMouseEvent = any;
   
   export class Map {
-    constructor(options: any);
-    addControl(control: any, position?: string): void;
-    on(event: string, listener: any): void;
-    off(event: string, listener: any): void;
+    constructor(options: unknown);
+    addControl(control: unknown, position?: string): void;
+    on(event: string, listener: unknown): void;
+    off(event: string, listener: unknown): void;
     remove(): void;
     getCanvas(): HTMLCanvasElement;
     getCenter(): LngLat;
     getZoom(): number;
-    flyTo(options: any): void;
-    easeTo(options: any): void;
-    fitBounds(bounds: LngLatBounds, options?: any): void;
-    addSource(id: string, source: any): void;
+    flyTo(options: unknown): void;
+    easeTo(options: unknown): void;
+    fitBounds(bounds: LngLatBounds, options?: unknown): void;
+    addSource(id: string, source: unknown): void;
     getSource(id: string): GeoJSONSource | any;
-    addLayer(layer: any): void;
+    addLayer(layer: unknown): void;
     scrollZoom: { enable(): void; disable(): void };
-    setFog(fog: any): void;
+    setFog(fog: unknown): void;
   }
   
   export class Marker {
@@ -33,7 +33,7 @@ declare module 'mapbox-gl' {
   }
   
   export class Popup {
-    constructor(options?: any);
+    constructor(options?: unknown);
     setLngLat(lngLat: [number, number] | LngLat): this;
     setHTML(html: string): this;
     setText(text: string): this;
@@ -42,7 +42,7 @@ declare module 'mapbox-gl' {
   }
   
   export class NavigationControl {
-    constructor(options?: any);
+    constructor(options?: unknown);
   }
   
   export class LngLat {
@@ -73,7 +73,7 @@ declare module 'mapbox-gl' {
   }
   
   export class GeoJSONSource {
-    setData(data: any): void;
+    setData(data: unknown): void;
   }
   
   export let accessToken: string;

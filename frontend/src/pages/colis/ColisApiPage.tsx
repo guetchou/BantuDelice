@@ -38,35 +38,10 @@ const ColisApiPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-100 to-yellow-200">
-      {/* Header avec navigation */}
-      <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-yellow-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <img src="/images/logo/logo.png" alt="BantuDelice" className="h-10 w-10 rounded-full border-2 border-yellow-400 shadow" />
-              <span className="font-bold text-orange-700 text-xl">BantuDelice Colis</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/colis" className="text-orange-700 hover:text-orange-900 font-medium">Accueil</Link>
-              <Link to="/colis/tracking" className="text-orange-700 hover:text-orange-900 font-medium">Suivi</Link>
-              <Link to="/colis/tarifs" className="text-orange-700 hover:text-orange-900 font-medium">Tarifs</Link>
-              <Link to="/colis/expedier" className="text-orange-700 hover:text-orange-900 font-medium">Expédier</Link>
-              <Link to="/colis/historique" className="text-orange-700 hover:text-orange-900 font-medium">Historique</Link>
-            </nav>
-            <Button asChild className="bg-gradient-to-r from-orange-400 to-yellow-400 text-white font-bold">
-              <Link to="/colis/tracking">Suivre un colis</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header de la page */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-orange-700 mb-2">Documentation API</h1>
-          <p className="text-gray-600">Intégrez le suivi de colis dans vos applications</p>
-        </div>
-
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-1">

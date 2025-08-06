@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Award, Medal } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Cashback } from '@/types/wallet';
@@ -29,7 +29,7 @@ const CashbackLeaderboard = ({ limit = 10 }: { limit?: number }) => {
     const fetchLeaderboard = async () => {
       try {
         setLoading(true);
-        const { data } = await supabase.auth.getUser();
+        const { data } = await apiService.auth.getUser();
         
         if (data.user) {
           setCurrentUserId(data.user.id);

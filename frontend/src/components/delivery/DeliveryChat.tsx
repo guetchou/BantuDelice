@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { Send } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,7 +79,7 @@ export default function DeliveryChat({ orderId, userType }: DeliveryChatProps) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      apiService.removeChannel(channel);
     };
   };
 
@@ -87,7 +87,7 @@ export default function DeliveryChat({ orderId, userType }: DeliveryChatProps) {
     if (!newMessage.trim()) return;
 
     setIsLoading(true);
-    const { data } = await supabase.auth.getUser();
+    const { data } = await apiService.auth.getUser();
     
     if (!data.user) {
       toast({

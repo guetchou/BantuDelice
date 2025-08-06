@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { Card } from "@/components/ui/card";
 import { formatCurrency } from '@/utils/formatUtils';
 
@@ -17,7 +17,7 @@ const UserStats = () => {
     queryKey: ['userStats'],
     queryFn: async () => {
       console.log('Fetching user statistics');
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');

@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { toast } from "@/hooks/use-toast";
 import type { Table, Reservation } from "@/types/restaurant";
 import { useRestaurantTables } from "./useRestaurantTables";

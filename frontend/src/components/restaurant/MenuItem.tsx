@@ -35,7 +35,7 @@ const MenuItem: React.FC<MenuItemComponentProps> = ({ item }) => {
       <div className="flex flex-col space-y-1">
         <h3 className="font-medium text-lg">{item.name}</h3>
         <p className="text-sm text-gray-500">{item.description}</p>
-        <p className="text-sm font-bold mt-1 text-orange-500">{(item.price / 100).toFixed(2)} €</p>
+        <p className="text-sm font-bold mt-1 text-orange-500">{(item.price / 100).toFixed(2)} FCFA </p>
       </div>
       
       <Button 

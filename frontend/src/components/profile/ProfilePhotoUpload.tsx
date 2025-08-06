@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -32,7 +32,7 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
 
       console.log('Uploading file to path:', filePath);
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError, data } = await apiService.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -46,7 +46,7 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
 
       console.log('Upload successful, getting public URL...');
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: { publicUrl } } = apiService.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
@@ -79,7 +79,7 @@ const ProfilePhotoUpload = ({ userId, currentAvatarUrl, onUploadComplete }: Prof
       if (error instanceof Error) {
         errorMessage = error.message;
       } else if (typeof error === 'object' && error !== null) {
-        // @ts-ignore
+        // @ts-expect-error
         errorMessage = error.message || error.error_description || errorMessage;
       }
       

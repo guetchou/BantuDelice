@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 import { RecurrencePattern } from '@/types/ridesharing';
 
 interface RecurringTripsFormProps {
-  onCreateRecurringTrip: (tripData: any) => Promise<void>;
+  onCreateRecurringTrip: (tripData: unknown) => Promise<void>;
   isLoading: boolean;
-  initialFormState?: any;
+  initialFormState?: unknown;
   isEditing?: boolean;
 }
 

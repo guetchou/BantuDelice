@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { getCurrentPosition, reverseGeocode } from '@/utils/locationUtils';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 
 // Improved geocoding function with more accurate coordinates for Brazzaville
 const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number }> => {

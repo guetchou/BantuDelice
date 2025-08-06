@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import apiService from '@/services/api';
 
 export interface N8NWorkflow {
   id: string;
@@ -17,7 +17,7 @@ export interface N8NNode {
   id: string;
   type: 'supabase' | 'http' | 'email' | 'notification' | 'transform' | 'condition';
   operation: string;
-  config: any;
+  config: unknown;
   position: { x: number; y: number };
 }
 
@@ -27,7 +27,7 @@ export interface N8NExecution {
   status: 'success' | 'error' | 'running';
   startTime: string;
   endTime?: string;
-  result?: any;
+  result?: unknown;
   error?: string;
   environment: 'demo' | 'production';
 }
@@ -418,7 +418,7 @@ class N8NIntegrationService {
   }
 
   // Exécuter un workflow manuellement (démo uniquement)
-  async executeWorkflow(workflowId: string, data?: any): Promise<N8NExecution> {
+  async executeWorkflow(workflowId: string, data?: unknown): Promise<N8NExecution> {
     if (!this.isDemoMode) {
       throw new Error('Exécution de workflows N8N disponible uniquement en mode démonstration');
     }
@@ -567,7 +567,7 @@ class N8NIntegrationService {
   }
 
   // Méthode pour obtenir les statistiques de démonstration uniquement
-  async getDemoStatistics(): Promise<any> {
+  async getDemoStatistics(): Promise<unknown> {
     if (!this.isDemoMode) {
       return {
         available: false,
@@ -589,9 +589,9 @@ class N8NIntegrationService {
       const stats = await response.json();
       return {
         available: true,
-        demoWorkflows: stats.workflows?.filter((w: any) => w.environment === 'demo') || [],
-        demoExecutions: stats.executions?.filter((e: any) => e.environment === 'demo') || [],
-        totalDemoExecutions: stats.executions?.filter((e: any) => e.environment === 'demo').length || 0
+        demoWorkflows: stats.workflows?.filter((w: unknown) => w.environment === 'demo') || [],
+        demoExecutions: stats.executions?.filter((e: unknown) => e.environment === 'demo') || [],
+        totalDemoExecutions: stats.executions?.filter((e: unknown) => e.environment === 'demo').length || 0
       };
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error);

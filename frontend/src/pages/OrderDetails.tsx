@@ -1,13 +1,13 @@
 
 import { useParams } from 'react-router-dom';
-import { useOrders } from '@/contexts/OrderContext';
+import { useOrders } from '@/hooks/useOrders';
 import OrderTracking from '@/components/orders/OrderTracking';
 import OrderProgress from '@/components/orders/OrderProgress';
 import LiveTracking from '@/components/delivery/LiveTracking';
 import DeliveryAssignment from '@/components/delivery/DeliveryAssignment';
 import { Card } from "@/components/ui/card";
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import OrderHeader from '@/components/orders/OrderHeader';
 import RestaurantClosed from '@/components/orders/RestaurantClosed';
 import OrderSpecialInstructions from '@/components/orders/OrderSpecialInstructions';

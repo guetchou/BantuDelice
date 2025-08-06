@@ -11,7 +11,7 @@ import { RecurrencePattern } from '@/types/ridesharing';
 import RecurringTripsForm from './RecurringTripsForm';
 
 interface CreateTripFormProps {
-  onCreateTrip: (tripData: any) => Promise<void>;
+  onCreateTrip: (tripData: unknown) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -154,7 +154,7 @@ const CreateTripForm: React.FC<CreateTripFormProps> = ({
   };
 
   // Handle recurring trip creation
-  const handleCreateRecurringTrip = async (tripData: any) => {
+  const handleCreateRecurringTrip = async (tripData: unknown) => {
     try {
       await onCreateTrip({
         ...tripData,

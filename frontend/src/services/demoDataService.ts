@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import apiService from '@/services/api';
 
 export interface DemoData {
   id: string;
@@ -8,7 +8,7 @@ export interface DemoData {
   status: 'active' | 'inactive' | 'pending';
   created_at: string;
   updated_at: string;
-  data: any;
+  data: unknown;
 }
 
 export interface RestaurantDemo {
@@ -25,7 +25,7 @@ export interface RestaurantDemo {
   min_order_amount: number;
   avg_preparation_time: number;
   is_open: boolean;
-  opening_hours: any;
+  opening_hours: unknown;
 }
 
 export interface UserDemo {
@@ -56,7 +56,7 @@ export interface OrderDemo {
   status: string;
   payment_status: string;
   delivery_address: string;
-  items: any[];
+  items: unknown[];
 }
 
 export interface ReviewDemo {
@@ -86,7 +86,7 @@ class DemoDataService {
   // Initialiser la table demo_data si elle n'existe pas
   async initializeTable() {
     try {
-      const { error } = await supabase.rpc('create_demo_data_table_if_not_exists');
+      const { error } = await apiService.rpc('create_demo_data_table_if_not_exists');
       if (error) {
         console.warn('Table demo_data pourrait déjà exister:', error.message);
       }

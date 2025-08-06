@@ -24,11 +24,11 @@ const CartSection: React.FC<CartSectionProps> = ({
 }) => {
   const { items, total, totalItems, removeItem, updateQuantity } = useCart();
   
-  const deliveryFee = 299; // €2.99
+  const deliveryFee = 299; // FCFA 2.99
   const totalWithDelivery = total + deliveryFee;
   
   const formatPrice = (price: number) => {
-    return (price / 100).toFixed(2) + ' €';
+    return (price / 100).toFixed(2) + ' FCFA ';
   };
 
   const handleRemoveItem = (id: string) => {

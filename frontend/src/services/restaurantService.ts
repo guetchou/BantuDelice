@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { Restaurant, MenuItem, RestaurantFilters, MenuPromotion } from '@/types/restaurant';
 
 // Define ApiResponse type
@@ -12,7 +12,7 @@ export const restaurantService = {
   // Get all restaurants with optional filters
   async getAll(filters?: RestaurantFilters): Promise<ApiResponse<Restaurant[]>> {
     try {
-      let query = supabase.from('restaurants').select('*');
+      let query = apiService.from('restaurants').select('*');
 
       // Apply filters if provided
       if (filters) {
@@ -186,7 +186,7 @@ export const restaurantService = {
   },
 
   // Get special hours for a restaurant
-  async getSpecialHours(restaurantId: string): Promise<ApiResponse<any[]>> {
+  async getSpecialHours(restaurantId: string): Promise<ApiResponse<unknown[]>> {
     try {
       const { data, error } = await supabase
         .from('restaurant_special_hours')
@@ -203,7 +203,7 @@ export const restaurantService = {
   },
 
   // Set special hours for a restaurant
-  async setSpecialHours(restaurantId: string, specialHours: any): Promise<ApiResponse<any>> {
+  async setSpecialHours(restaurantId: string, specialHours: unknown): Promise<ApiResponse<unknown>> {
     try {
       const { data, error } = await supabase
         .from('restaurant_special_hours')
@@ -223,7 +223,7 @@ export const restaurantService = {
   },
 
   // Delete special hours for a restaurant
-  async deleteSpecialHours(specialHoursId: string): Promise<ApiResponse<any>> {
+  async deleteSpecialHours(specialHoursId: string): Promise<ApiResponse<unknown>> {
     try {
       const { data, error } = await supabase
         .from('restaurant_special_hours')

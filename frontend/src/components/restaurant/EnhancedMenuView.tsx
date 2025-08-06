@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { MenuItem } from '@/types/globalTypes';
 import { formatPrice } from '@/utils/formatPrice';
@@ -15,10 +15,10 @@ interface EnhancedMenuViewProps {
 const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [statistics, setStatistics] = useState<any>(null);
-  const [promotions, setPromotions] = useState<any[]>([]);
+  const [analysisResult, setAnalysisResult] = useState<unknown>(null);
+  const [recommendations, setRecommendations] = useState<unknown[]>([]);
+  const [statistics, setStatistics] = useState<unknown>(null);
+  const [promotions, setPromotions] = useState<unknown[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
           suggestedPrice: item.price * (1 + (Math.random() - 0.5) * 0.2),
         }));
         const bundleOpportunities = menuItems.sort(() => Math.random() - 0.5).slice(0, 2);
-        const seasonalRecommendations: any[] = [];
+        const seasonalRecommendations: unknown[] = [];
         const mostPopularCategory = menuItems[0]?.category;
 
         const extendedAnalysis = {
@@ -96,7 +96,7 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
         setAnalysisResult(extendedAnalysis);
 
         // Simulate recommendations
-        const newRecommendations: any[] = [];
+        const newRecommendations: unknown[] = [];
         setRecommendations(newRecommendations);
 
         // Simulate statistics
@@ -110,7 +110,7 @@ const EnhancedMenuView: React.FC<EnhancedMenuViewProps> = ({ restaurantId }) => 
         setStatistics(newStatistics);
 
         // Simulate promotions
-        const newPromotions: any[] = [];
+        const newPromotions: unknown[] = [];
         setPromotions(newPromotions);
 
       } catch (error) {

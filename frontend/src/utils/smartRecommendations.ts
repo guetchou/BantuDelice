@@ -63,7 +63,7 @@ export const getSmartRecommendations = (
     .map(({ score, ...item }) => item);
 };
 
-export const analyzeUserBehavior = (orders: any[]): UserPreferences => {
+export const analyzeUserBehavior = (orders: unknown[]): UserPreferences => {
   const preferences: UserPreferences = {
     dietaryPreferences: [],
     favoriteCategories: [],
@@ -75,7 +75,7 @@ export const analyzeUserBehavior = (orders: any[]): UserPreferences => {
   orders.forEach(order => {
     // Extract dietary preferences
     if (order.items) {
-      order.items.forEach((item: any) => {
+      order.items.forEach((item: unknown) => {
         if (item.dietary_preferences) {
           preferences.dietaryPreferences = [
             ...new Set([...preferences.dietaryPreferences, ...item.dietary_preferences])

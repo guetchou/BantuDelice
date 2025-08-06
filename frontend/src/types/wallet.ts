@@ -69,7 +69,7 @@ export interface DriverWallet {
   updated_at: string;
   commission_rate?: number;
   total_earnings?: number;
-  payout_details?: any;
+  payout_details?: unknown;
 }
 
 export interface DriverTransaction {

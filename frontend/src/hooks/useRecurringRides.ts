@@ -252,7 +252,7 @@ export function useRecurringRides() {
   }, [user]);
   
   // Rechercher des correspondances pour les trajets récurrents
-  const findRecurringTripMatches = useCallback(async (searchParams: any) => {
+  const findRecurringTripMatches = useCallback(async (searchParams: unknown) => {
     setIsLoading(true);
     
     try {
@@ -306,7 +306,7 @@ export function useRecurringRides() {
   }, []);
   
   // Réserver un trajet récurrent
-  const bookRecurringTrip = useCallback(async (tripId: string, bookingData: any) => {
+  const bookRecurringTrip = useCallback(async (tripId: string, bookingData: unknown) => {
     if (!user) {
       toast.error("Vous devez être connecté pour réserver un trajet");
       return null;

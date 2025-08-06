@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
@@ -27,7 +27,7 @@ const LiveNotifications = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const { data } = await supabase.auth.getUser();
+        const { data } = await apiService.auth.getUser();
         if (!data.user) return;
 
         const { data: notificationsData, error } = await supabase
@@ -70,7 +70,7 @@ const LiveNotifications = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      apiService.removeChannel(channel);
     };
   }, [toast]);
 

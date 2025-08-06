@@ -18,7 +18,7 @@ const Search = () => {
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [currentTab, setCurrentTab] = useState('restaurants');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Simuler des résultats de recherche basés sur la requête

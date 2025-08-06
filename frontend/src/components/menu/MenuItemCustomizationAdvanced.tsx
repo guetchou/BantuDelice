@@ -64,7 +64,7 @@ const MenuItemCustomizationAdvanced = ({
       const initialCustomizations: { [category: string]: { [option: string]: boolean } } = {};
       Object.keys(item.customization_options).forEach(category => {
         initialCustomizations[category] = {};
-        item.customization_options![category].options.forEach((option: any) => {
+        item.customization_options![category].options.forEach((option: unknown) => {
           initialCustomizations[category][option.name] = false;
         });
       });
@@ -108,7 +108,7 @@ const MenuItemCustomizationAdvanced = ({
   const getOptionByName = (category: string, optionName: string) => {
     const categoryOptions = item.customization_options?.[category];
     if (categoryOptions && categoryOptions.options) {
-      return categoryOptions.options.find((option: any) => option.name === optionName);
+      return categoryOptions.options.find((option: unknown) => option.name === optionName);
     }
     return null;
   };
@@ -227,7 +227,7 @@ const MenuItemCustomizationAdvanced = ({
                     <div key={category} className="space-y-3">
                       <h3 className="text-lg font-semibold">{category}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {options.options.map((option: any) => (
+                        {options.options.map((option: unknown) => (
                           <div key={option.name} className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50">
                             <input
                               type="checkbox"

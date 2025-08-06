@@ -18,7 +18,7 @@ const nestTokenStorage = {
 const nestApiRequest = async (
   endpoint: string, 
   method: string = 'GET', 
-  data: any = null, 
+  data: unknown = null, 
   requiresAuth: boolean = true
 ) => {
   try {
@@ -29,9 +29,9 @@ const nestApiRequest = async (
       method,
       headers: {
         'Content-Type': 'application/json',
-        ...(requiresAuth && token ? { 'Authorization': `Bearer ${token}` } : {})
+        ...(requiresAuth && token ? { 'Authorization': `Bearer ${token}` } : Record<string, unknown>)
       },
-      ...(data ? { body: JSON.stringify(data) } : {})
+      ...(data ? { body: JSON.stringify(data) } : Record<string, unknown>)
     };
 
     const response = await fetch(url, options);
@@ -114,11 +114,11 @@ export const nestEmployeeApi = {
     return nestApiRequest(`/employees/${id}`);
   },
   
-  create: async (employeeData: any) => {
+  create: async (employeeData: unknown) => {
     return nestApiRequest('/employees', 'POST', employeeData);
   },
   
-  update: async (id: string, employeeData: any) => {
+  update: async (id: string, employeeData: unknown) => {
     return nestApiRequest(`/employees/${id}`, 'PATCH', employeeData);
   },
   

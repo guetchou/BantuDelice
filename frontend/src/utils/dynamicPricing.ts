@@ -54,7 +54,7 @@ export const calculateDynamicPrice = (factors: PricingFactors): number => {
 };
 
 export const getDemandMultiplier = (
-  historicalOrders: any[],
+  historicalOrders: unknown[],
   currentHour: number,
   dayOfWeek: number
 ): number => {

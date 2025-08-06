@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 
 // Types des fonctionnalités
 export type FeatureFlag = 
@@ -31,18 +31,15 @@ export const useFeature = (featureName: FeatureFlag): boolean => {
   useEffect(() => {
     const fetchFeatureFlag = async () => {
       try {
-        const { data, error } = await supabase
-          .from('feature_flags')
-          .select('enabled')
-          .eq('name', featureName)
-          .single();
-
-        if (error) {
-          console.warn(`Erreur lors de la récupération du feature flag '${featureName}':`, error);
-          // Utiliser la valeur par défaut en cas d'erreur
+        // Utiliser apiService au lieu de supabase
+        const response = await apiService.getFeatureFlags();
+        const featureFlag = response.find((flag: unknown) => flag.name === featureName);
+        
+        if (featureFlag) {
+          setIsEnabled(featureFlag.enabled);
+        } else {
+          // Utiliser la valeur par défaut si le flag n'est pas trouvé
           setIsEnabled(defaultFeatures[featureName] || false);
-        } else if (data) {
-          setIsEnabled(data.enabled);
         }
       } catch (error) {
         console.error(`Erreur lors de la vérification du feature flag '${featureName}':`, error);
@@ -56,6 +53,39 @@ export const useFeature = (featureName: FeatureFlag): boolean => {
   }, [featureName]);
 
   return isEnabled;
+};
+
+// Hook pour gérer tous les feature flags
+export const useFeatureFlags = () => {
+  const [featureFlags, setFeatureFlags] = useState<Record<FeatureFlag, boolean>>(defaultFeatures);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchAllFeatureFlags = async () => {
+      try {
+        const response = await apiService.getFeatureFlags();
+        const flagsMap: Record<FeatureFlag, boolean> = { ...defaultFeatures };
+        
+        response.forEach((flag: unknown) => {
+          if (flag.name in defaultFeatures) {
+            flagsMap[flag.name as FeatureFlag] = flag.enabled;
+          }
+        });
+        
+        setFeatureFlags(flagsMap);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des feature flags:', error);
+        // Utiliser les valeurs par défaut en cas d'erreur
+        setFeatureFlags(defaultFeatures);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAllFeatureFlags();
+  }, []);
+
+  return { featureFlags, isLoading };
 };
 
 export default useFeature;

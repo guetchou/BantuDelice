@@ -8,7 +8,7 @@ interface ApiResponse<T> {
 
 const apiClient = {
   restaurants: {
-    getAll: async (filters?: any): Promise<ApiResponse<any>> => {
+    getAll: async (filters?: unknown): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: [], 
@@ -16,7 +16,7 @@ const apiClient = {
       };
     },
     
-    getById: async (id: string): Promise<ApiResponse<any>> => {
+    getById: async (id: string): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: {
@@ -30,7 +30,7 @@ const apiClient = {
       };
     },
     
-    getMenuItems: async (restaurantId: string): Promise<ApiResponse<any>> => {
+    getMenuItems: async (restaurantId: string): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: [], 
@@ -38,7 +38,7 @@ const apiClient = {
       };
     },
     
-    getMenu: async (restaurantId: string): Promise<ApiResponse<any>> => {
+    getMenu: async (restaurantId: string): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: [], 
@@ -46,7 +46,7 @@ const apiClient = {
       };
     },
     
-    updateMenuItemAvailability: async (itemId: string, available: boolean): Promise<ApiResponse<any>> => {
+    updateMenuItemAvailability: async (itemId: string, available: boolean): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: { id: itemId, available }, 
@@ -54,7 +54,7 @@ const apiClient = {
       };
     },
     
-    updateMenuItemStock: async (itemId: string, inStock: number): Promise<ApiResponse<any>> => {
+    updateMenuItemStock: async (itemId: string, inStock: number): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: { id: itemId, in_stock: inStock }, 
@@ -62,7 +62,7 @@ const apiClient = {
       };
     },
     
-    updateStatus: async (restaurantId: string, status: any): Promise<ApiResponse<any>> => {
+    updateStatus: async (restaurantId: string, status: unknown): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: { id: restaurantId, ...status }, 
@@ -70,7 +70,7 @@ const apiClient = {
       };
     },
     
-    getSpecialHours: async (restaurantId: string, params: any): Promise<ApiResponse<any>> => {
+    getSpecialHours: async (restaurantId: string, params: unknown): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: [], 
@@ -78,7 +78,7 @@ const apiClient = {
       };
     },
     
-    setSpecialHours: async (restaurantId: string, hours: any): Promise<ApiResponse<any>> => {
+    setSpecialHours: async (restaurantId: string, hours: unknown): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: { id: restaurantId, ...hours }, 
@@ -86,7 +86,7 @@ const apiClient = {
       };
     },
     
-    deleteSpecialHours: async (restaurantId: string, hoursId: string): Promise<ApiResponse<any>> => {
+    deleteSpecialHours: async (restaurantId: string, hoursId: string): Promise<ApiResponse<unknown>> => {
       // Mock implementation
       return { 
         data: { id: hoursId, deleted: true }, 

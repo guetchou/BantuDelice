@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { DeliveryDriver, DeliveryRequest } from '@/types/delivery';
 
 // Calculate distance between two points using the Haversine formula

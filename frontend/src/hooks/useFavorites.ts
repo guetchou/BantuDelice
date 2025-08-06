@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { toast } from 'sonner';
 import { MenuItem } from '@/types/menu';
 import { Favorite } from '@/types/favorite';
@@ -11,7 +11,7 @@ export const useFavorites = () => {
   const { data: favorites, isLoading, error } = useQuery({
     queryKey: ['favorites'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');
@@ -48,7 +48,7 @@ export const useFavorites = () => {
 
   const addFavoriteMutation = useMutation({
     mutationFn: async (menuItemId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await apiService.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');

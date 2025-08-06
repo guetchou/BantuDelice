@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { MenuItem } from "./types";
 
@@ -50,7 +50,7 @@ export const useMenuItems = (filters: MenuFilters) => {
 
   const addToFavoritesMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: session } = await apiService.auth.getSession();
       if (!session?.session?.user) {
         throw new Error('User not authenticated');
       }
@@ -86,7 +86,7 @@ export const useMenuItems = (filters: MenuFilters) => {
 
   const addRatingMutation = useMutation({
     mutationFn: async ({ itemId, rating }: { itemId: string; rating: number }) => {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: session } = await apiService.auth.getSession();
       if (!session?.session?.user) {
         throw new Error('User not authenticated');
       }

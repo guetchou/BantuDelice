@@ -12,7 +12,7 @@ import { MenuItem, Restaurant } from '@/types/restaurant';
  */
 export const optimizePricing = (
   menuItems: MenuItem[], 
-  salesData: any[] = [], 
+  salesData: unknown[] = [], 
   competitorPrices: Record<string, number> = {}
 ) => {
   const recommendations: {
@@ -82,7 +82,7 @@ export const optimizePricing = (
  */
 export const optimizeMenu = (
   menuItems: MenuItem[],
-  salesData: any[] = [],
+  salesData: unknown[] = [],
   costData: Record<string, number> = {}
 ) => {
   const recommendations: {
@@ -164,8 +164,8 @@ export const optimizeMenu = (
  * @returns Inventory optimization recommendations
  */
 export const optimizeInventory = (
-  inventoryItems: any[],
-  consumptionData: any[] = []
+  inventoryItems: unknown[],
+  consumptionData: unknown[] = []
 ) => {
   // This would be a complex algorithm in a real application
   // Here we just provide a simplified mock implementation
@@ -207,8 +207,8 @@ export const optimizeInventory = (
  * @returns Staff scheduling recommendations
  */
 export const optimizeStaffScheduling = (
-  staffSchedule: any[] = [],
-  orderData: any[] = [],
+  staffSchedule: unknown[] = [],
+  orderData: unknown[] = [],
   staffPositions: string[] = []
 ) => {
   // This would be a complex algorithm in a real application
@@ -251,9 +251,9 @@ export const optimizeStaffScheduling = (
  * @returns Marketing recommendations
  */
 export const optimizeMarketing = (
-  customerData: any[] = [],
-  salesData: any[] = [],
-  currentPromotions: any[] = []
+  customerData: unknown[] = [],
+  salesData: unknown[] = [],
+  currentPromotions: unknown[] = []
 ) => {
   // This would be a complex algorithm in a real application
   // Here we just provide a simplified mock implementation
@@ -295,8 +295,8 @@ export const optimizeMarketing = (
  * @returns Sales forecast for the requested period
  */
 export const forecastDemand = (
-  historicalSales: any[] = [],
-  externalFactors: any[] = [],
+  historicalSales: unknown[] = [],
+  externalFactors: unknown[] = [],
   forecast: number = 7
 ) => {
   // This would use a complex time-series analysis in a real application
@@ -346,7 +346,7 @@ export const forecastDemand = (
  * @param customerData Customer data with order history
  * @returns Segmented customer groups with characteristics
  */
-export const segmentCustomers = (customerData: any[] = []) => {
+export const segmentCustomers = (customerData: unknown[] = []) => {
   // This would use clustering algorithms in a real application
   // Here we just provide a simplified mock implementation
   

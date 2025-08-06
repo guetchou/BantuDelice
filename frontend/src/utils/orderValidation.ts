@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { toast } from "@/hooks/use-toast";
 
 export interface OrderValidationResult {
@@ -109,6 +109,6 @@ export const subscribeToOrderStatus = (
     .subscribe();
 
   return () => {
-    supabase.removeChannel(channel);
+    apiService.removeChannel(channel);
   };
 };

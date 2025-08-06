@@ -159,7 +159,7 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
           type: 'geojson',
           data: {
             type: 'Feature',
-            properties: {},
+            properties: Record<string, unknown>,
             geometry: {
               type: 'LineString',
               coordinates: []
@@ -280,7 +280,7 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
             // Update route line
             routeLine.current.setData({
               type: 'Feature',
-              properties: {},
+              properties: Record<string, unknown>,
               geometry: {
                 type: 'LineString',
                 coordinates: route
@@ -310,7 +310,7 @@ const RidesharingMap: React.FC<RidesharingMapProps> = ({
       // Clear route if pickup or destination is missing
       routeLine.current.setData({
         type: 'Feature',
-        properties: {},
+        properties: Record<string, unknown>,
         geometry: {
           type: 'LineString',
           coordinates: []

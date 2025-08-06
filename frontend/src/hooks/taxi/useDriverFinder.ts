@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { TaxiDriver } from '@/types/taxi';
 import { calculateDistance } from '@/utils/deliveryOptimization';
 
@@ -120,7 +120,7 @@ export function useDriverFinder() {
       ];
       
       // Filter by vehicle type if provided
-      let filteredDrivers = vehicleType 
+      const filteredDrivers = vehicleType 
         ? mockDrivers.filter(driver => driver.vehicle_type === vehicleType)
         : mockDrivers;
       

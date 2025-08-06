@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Layout } from '@/components/Layout';
 import { Check, ChevronRight, Info, Zap, Percent, Clock, Shield, Award } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { useUser } from '@/hooks/useUser';
 import { SubscriptionPlan, SubscriptionBenefit, SubscriptionInterval } from '@/types/subscription';
 

@@ -8,7 +8,7 @@ interface LocationMapProps {
   currentLocation: { latitude: number; longitude: number } | null;
   onUpdateLocation: () => Promise<void>;
   restaurantId?: string;
-  activeDrivers?: any[];
+  activeDrivers?: unknown[];
   isLoading?: boolean;
 }
 

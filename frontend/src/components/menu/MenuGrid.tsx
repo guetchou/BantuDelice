@@ -47,7 +47,7 @@ const MenuGrid = ({ items, onFavorite, onRate }: MenuGridProps) => {
                   ))}
                 </div>
               </div>
-              <span className="text-lg font-bold">{item.price / 100}€</span>
+              <span className="text-lg font-bold">{item.price / 100}FCFA </span>
             </div>
             <p className="text-gray-600 text-sm mb-4">{item.description}</p>
             <div className="flex flex-wrap gap-2">

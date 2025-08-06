@@ -50,7 +50,7 @@ export interface MenuItem {
   promotional_data?: {
     is_on_promotion?: boolean;
     discount_percentage?: number;
-    promotion_hours?: any;
+    promotion_hours?: unknown;
     original_price?: number;
     discount_type?: string;
     discount_value?: number;

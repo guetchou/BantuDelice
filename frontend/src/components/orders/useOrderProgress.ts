@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { OrderStatus } from '@/types/order';
 import { DeliveryStatus } from '@/types/delivery';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 
 export const useOrderProgress = (initialStatus: OrderStatus, orderId: string) => {
   const [status, setStatus] = useState<OrderStatus>(initialStatus);
@@ -85,7 +85,7 @@ export const useOrderProgress = (initialStatus: OrderStatus, orderId: string) =>
       .subscribe();
       
     return () => {
-      supabase.removeChannel(subscription);
+      apiService.removeChannel(subscription);
     };
   }, [initialStatus, orderId]);
 

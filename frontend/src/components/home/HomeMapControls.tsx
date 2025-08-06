@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MapPin, Search } from 'lucide-react';
+import { MapPin, Search, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,6 +12,7 @@ interface HomeMapControlsProps {
   saveTokenToLocalStorage: () => void;
   handleUpdateLocation: () => void;
   mapInitialized: boolean;
+  tokenError?: string | null;
 }
 
 const HomeMapControls = ({
@@ -20,7 +21,8 @@ const HomeMapControls = ({
   handleTokenSubmit,
   saveTokenToLocalStorage,
   handleUpdateLocation,
-  mapInitialized
+  mapInitialized,
+  tokenError
 }: HomeMapControlsProps) => {
   const navigate = useNavigate();
 
@@ -29,39 +31,28 @@ const HomeMapControls = ({
       {!mapInitialized ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center h-full p-6">
           <div className="max-w-md w-full">
-            <h3 className="text-white text-lg font-semibold mb-4">
-              Pour utiliser la carte Mapbox complète:
-            </h3>
-            <p className="text-gray-300 mb-4">
-              Entrez votre token Mapbox public ci-dessous pour afficher une carte interactive 
-              montrant les restaurants, taxis et services disponibles à proximité.
-            </p>
-            <form onSubmit={handleTokenSubmit} className="mb-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={mapboxToken}
-                  onChange={(e) => setMapboxToken(e.target.value)}
-                  placeholder="Entrez votre token Mapbox public"
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
-                <button 
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-orange-500 text-white p-2 rounded-md hover:bg-orange-600 transition-colors"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
+            {tokenError ? (
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <h3 className="text-red-400 font-semibold">Erreur de configuration</h3>
+                </div>
+                <p className="text-red-300 text-sm">{tokenError}</p>
+                <p className="text-gray-400 text-xs mt-2">
+                  La carte ne peut pas être chargée. Veuillez contacter l'administrateur.
+                </p>
               </div>
-            </form>
-            <div className="flex flex-col space-y-2 mb-4">
-              <Button
-                variant="outline"
-                className="w-full bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
-                onClick={saveTokenToLocalStorage}
-              >
-                Sauvegarder ce token pour plus tard
-              </Button>
-            </div>
+            ) : (
+              <>
+                <h3 className="text-white text-lg font-semibold mb-4">
+                  Carte interactive en cours de chargement...
+                </h3>
+                <p className="text-gray-300 mb-4">
+                  Récupération sécurisée de la configuration de la carte depuis le serveur.
+                </p>
+              </>
+            )}
+            
             <div className="flex flex-col md:flex-row gap-4">
               <Button
                 className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold"

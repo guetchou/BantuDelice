@@ -110,7 +110,7 @@ const PersonalizedRecommendations: React.FC<PersonalizedRecommendationsProps> = 
               <h3 className="font-semibold truncate">{item.name}</h3>
               <p className="text-sm text-gray-500 line-clamp-2 h-10">{item.description}</p>
               <div className="flex justify-between items-center mt-2">
-                <span className="font-bold">{(item.price / 100).toFixed(2)} €</span>
+                <span className="font-bold">{(item.price / 100).toFixed(2)} FCFA </span>
                 <Button 
                   size="icon" 
                   variant="ghost" 

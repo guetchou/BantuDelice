@@ -53,7 +53,7 @@ import {
   Trash2,
   Eye,
   Activity,
-  Database,
+  any,
   Mail,
   Bell,
   Shield,
@@ -347,7 +347,7 @@ const N8NWorkflowManager = () => {
       case 'cron': return <Clock className="h-4 w-4" />;
       case 'webhook': return <Network className="h-4 w-4" />;
       case 'manual': return <Play className="h-4 w-4" />;
-      case 'database': return <Database className="h-4 w-4" />;
+      case 'database': return <any className="h-4 w-4" />;
       default: return <Zap className="h-4 w-4" />;
     }
   };

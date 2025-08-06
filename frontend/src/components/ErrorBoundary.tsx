@@ -1,7 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 
 interface Props {
   children: ReactNode;
@@ -33,21 +30,24 @@ class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <Alert variant="destructive" className="max-w-lg animate-fade-in">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Une erreur est survenue</AlertTitle>
-            <AlertDescription className="mt-2">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-red-50">
+          <div className="max-w-lg bg-white p-6 rounded-lg shadow-lg border border-red-200">
+            <div className="flex items-center mb-4">
+              <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white text-sm font-bold">!</span>
+              </div>
+              <h2 className="text-xl font-bold text-red-800">Une erreur est survenue</h2>
+            </div>
+            <p className="text-gray-700 mb-4">
               {this.state.error?.message || "Une erreur inattendue s'est produite."}
-            </AlertDescription>
-            <Button 
-              variant="outline" 
-              className="mt-4"
+            </p>
+            <button 
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
               onClick={this.handleReset}
             >
               Réessayer
-            </Button>
-          </Alert>
+            </button>
+          </div>
         </div>
       );
     }

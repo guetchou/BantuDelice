@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { Transaction } from "@/types/wallet";
 
@@ -11,7 +11,7 @@ const Transactions = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await apiService.auth.getUser();
         if (!user) return;
 
         const { data: wallet } = await supabase

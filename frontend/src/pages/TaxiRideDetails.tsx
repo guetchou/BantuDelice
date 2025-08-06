@@ -24,7 +24,7 @@ import {
   ArrowRight,
   Calendar
 } from "lucide-react";
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -222,7 +222,7 @@ const TaxiRideDetails = () => {
                 
                 <div className="flex items-center">
                   <div className="h-5 w-5 flex items-center justify-center text-gray-500 mr-3">
-                    <span className="font-bold">€</span>
+                    <span className="font-bold">FCFA </span>
                   </div>
                   <div>
                     <p className="font-medium">Prix estimé</p>
@@ -233,7 +233,7 @@ const TaxiRideDetails = () => {
                 {ride.actual_price && (
                   <div className="flex items-center">
                     <div className="h-5 w-5 flex items-center justify-center text-primary mr-3">
-                      <span className="font-bold">€</span>
+                      <span className="font-bold">FCFA </span>
                     </div>
                     <div>
                       <p className="font-medium">Prix final</p>

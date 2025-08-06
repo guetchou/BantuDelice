@@ -107,6 +107,6 @@ La plupart des Congolais de la diaspora et des nationaux rencontrent de grandes 
 
 ## 9. Contact & Support
 
-- Pour toute question technique ou partenariat : [contact@bantudelice.com]
+- Pour toute question technique ou partenariat : [contact@bantudelice.cg]
 - Documentation API : `/docs/API_PUBLIC_WIDGET.md`
 - Support client : via l’interface web ou mobile 

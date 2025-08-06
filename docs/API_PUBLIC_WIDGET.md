@@ -89,7 +89,7 @@ GET /api/public/colis/{trackingNumber}
 
 #### Clé API
 ```bash
-curl -X GET "https://api.bantudelice.com/api/public/colis/123456" \
+curl -X GET "https://api.bantudelice.cg/api/public/colis/123456" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Accept: application/json"
 ```
@@ -183,7 +183,7 @@ curl -X GET "https://api.bantudelice.com/api/public/colis/123456" \
 ```javascript
 // Exemple avec fetch
 async function trackParcel(trackingNumber) {
-  const response = await fetch(`https://api.bantudelice.com/api/public/colis/${trackingNumber}`, {
+  const response = await fetch(`https://api.bantudelice.cg/api/public/colis/${trackingNumber}`, {
     headers: {
       'Authorization': 'Bearer YOUR_API_KEY',
       'Accept': 'application/json'
@@ -266,7 +266,7 @@ app.post('/webhook/tracking', (req, res) => {
 ```javascript
 // ✅ Bon : Clé API côté serveur
 app.get('/api/tracking/:number', async (req, res) => {
-  const result = await fetch(`https://api.bantudelice.com/api/public/colis/${req.params.number}`, {
+  const result = await fetch(`https://api.bantudelice.cg/api/public/colis/${req.params.number}`, {
     headers: { 'Authorization': `Bearer ${process.env.BANTUDELICE_API_KEY}` }
   });
   res.json(await result.json());

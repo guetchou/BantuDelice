@@ -45,7 +45,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ items, onAddToCart }) => {
             <Card key={item.id} className="overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">{item.name}</CardTitle>
-                <CardDescription>{item.price.toFixed(2)} €</CardDescription>
+                <CardDescription>{item.price.toFixed(2)} FCFA </CardDescription>
               </CardHeader>
               <CardFooter className="flex justify-between pt-2">
                 <Button

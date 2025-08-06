@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 
 interface AnalyticsMetrics {
   totalRevenue: number;
@@ -46,7 +46,7 @@ export const generateBusinessAnalytics = async (
   // Calculate popular items
   const itemStats = new Map<string, { count: number; revenue: number; name: string }>();
   orders.forEach(order => {
-    order.order_items.forEach((item: any) => {
+    order.order_items.forEach((item: unknown) => {
       const existing = itemStats.get(item.id) || { count: 0, revenue: 0, name: item.item_name };
       itemStats.set(item.id, {
         count: existing.count + item.quantity,

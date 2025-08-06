@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -9,7 +9,7 @@ import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-let DefaultIcon = L.icon({
+const DefaultIcon = L.icon({
     iconUrl: icon,
     shadowUrl: iconShadow
 });
@@ -61,7 +61,7 @@ const DeliveryDriverTracking = () => {
     fetchDriverData();
 
     // Set up real-time listener
-    const channel = supabase.channel('delivery_driver_location');
+    const channel = apiService.channel('delivery_driver_location');
 
     channel
       .on('postgres_changes', { 
@@ -81,7 +81,7 @@ const DeliveryDriverTracking = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      apiService.removeChannel(channel);
     };
   }, [driverId]);
 

@@ -25,5 +25,5 @@ export interface OrderProgressStep {
   label: string;
   time?: string;
   completed: boolean;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<unknown>;
 }

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 
 interface NearbyRestaurantsSectionProps {
-  restaurants: any[];
+  restaurants: unknown[];
 }
 
 const NearbyRestaurantsSection: React.FC<NearbyRestaurantsSectionProps> = ({ restaurants }) => {

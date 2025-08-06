@@ -14,7 +14,7 @@ export const tokenStorage = {
 export const apiRequest = async (
   endpoint: string, 
   method: string = 'GET', 
-  data: any = null, 
+  data: unknown = null, 
   requiresAuth: boolean = true
 ) => {
   try {
@@ -25,9 +25,9 @@ export const apiRequest = async (
       method,
       headers: {
         'Content-Type': 'application/json',
-        ...(requiresAuth && token ? { 'Authorization': `Bearer ${token}` } : {})
+        ...(requiresAuth && token ? { 'Authorization': `Bearer ${token}` } : Record<string, unknown>)
       },
-      ...(data ? { body: JSON.stringify(data) } : {})
+      ...(data ? { body: JSON.stringify(data) } : Record<string, unknown>)
     };
 
     const response = await fetch(url, options);

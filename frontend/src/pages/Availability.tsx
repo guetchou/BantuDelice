@@ -151,7 +151,7 @@ const mockMenuItems: MenuItemAvailability[] = [
 ];
 
 // Composant pour les horaires d'ouverture
-const OpeningHoursEditor: React.FC<{ hours: any; onChange: (hours: any) => void }> = ({ hours, onChange }) => {
+const OpeningHoursEditor: React.FC<{ hours: unknown; onChange: (hours: unknown) => void }> = ({ hours, onChange }) => {
   const days = [
     { key: 'monday', label: 'Lundi' },
     { key: 'tuesday', label: 'Mardi' },
@@ -162,7 +162,7 @@ const OpeningHoursEditor: React.FC<{ hours: any; onChange: (hours: any) => void 
     { key: 'sunday', label: 'Dimanche' }
   ];
 
-  const updateDay = (dayKey: string, field: string, value: any) => {
+  const updateDay = (dayKey: string, field: string, value: unknown) => {
     const newHours = { ...hours };
     newHours[dayKey] = { ...newHours[dayKey], [field]: value };
     onChange(newHours);

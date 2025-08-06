@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { DeliveryDriver, DeliverySettings } from '@/types/delivery';
 import { useTableExistence } from '@/hooks/useTableExistence';
 import { useToast } from '@/hooks/use-toast';

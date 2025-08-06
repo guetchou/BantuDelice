@@ -1,111 +1,71 @@
 version: '3.8'
 
 services:
-  # Supabase (auto-hébergé)
-  supabase-db:
+  postgres:
     image: postgres:15-alpine
-    container_name: supabase-db
-    restart: unless-stopped
+    container_name: bantudelice_postgres
     environment:
-      POSTGRES_PASSWORD: supabase_password
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
+      POSTGRES_DB: bantudelice
+      POSTGRES_USER: bantudelice
+      POSTGRES_PASSWORD: bantudelice
+    ports:
+      - "1530:5432"
     volumes:
-      - supabase-db-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - bantudelice_network
 
-  supabase-rest:
-    image: supabase/postgrest:v11.2.2
-    depends_on:
-      - supabase-db
-    environment:
-      PGRST_DB_URI: postgres://postgres:supabase_password@supabase-db:5432/postgres
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: supersecretjwt
+  redis:
+    image: redis:7-alpine
+    container_name: bantudelice_redis
     ports:
-      - "3000:3000"
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bantudelice_network
 
-  supabase-realtime:
-    image: supabase/realtime:v2.25.41
-    depends_on:
-      - supabase-db
-    environment:
-      DB_HOST: supabase-db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: supabase_password
-      DB_NAME: postgres
-      PORT: 4000
-      JWT_SECRET: supersecretjwt
-    ports:
-      - "4001:4000"
-
-  supabase-storage:
-    image: supabase/storage-api:v0.41.5
-    depends_on:
-      - supabase-db
-    environment:
-      ANON_KEY: anonkey
-      SERVICE_KEY: servicekey
-      POSTGREST_URL: http://supabase-rest:3000
-      PGRST_JWT_SECRET: supersecretjwt
-      DATABASE_URL: postgres://postgres:supabase_password@supabase-db:5432/postgres
-      FILE_SIZE_LIMIT: 52428800
-      STORAGE_BACKEND: s3
-      REGION: us-east-1
-      GLOBAL_S3_BUCKET: supabase-storage
-    ports:
-      - "5001:5000"
-
-  supabase-studio:
-    image: supabase/studio:20240510-4b1b7e6
-    depends_on:
-      - supabase-db
-    environment:
-      SUPABASE_DB_HOST: supabase-db
-      SUPABASE_DB_PORT: 5432
-      SUPABASE_DB_NAME: postgres
-      SUPABASE_DB_USER: postgres
-      SUPABASE_DB_PASSWORD: supabase_password
-      JWT_SECRET: supersecretjwt
-    ports:
-      - "8080:3000"
-
-  # Backend Node.js (API + chat)
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: buntudelice-backend
-    restart: unless-stopped
+    container_name: bantudelice_backend
     environment:
-      NODE_ENV: production
-      DB_HOST: supabase-db
-      DB_USER: postgres
-      DB_PASSWORD: supabase_password
-      DB_NAME: postgres
-      JWT_SECRET: supersecretjwt
-    depends_on:
-      - supabase-db
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=bantudelice
+      - DB_PASSWORD=bantudelice
+      - DB_NAME=bantudelice
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=6fc5cdc107d6daa1d198a1cf02baa5d6d660d6c5802cc56ea704c72ce761aaeb627e1770da8a3b2bb6097378f12cdbba047be92c83b674cfaa831fd1dc9884d7
+      - NODE_ENV=development
     ports:
-      - "5000:5000"
-      - "4000:4000" # Socket.IO
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    env_file:
+      - .env
     volumes:
-      - ./backend/logs:/app/logs
-      - ./backend/uploads:/app/uploads
-
-  # Frontend React (via nginx)
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: buntudelice-frontend
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+      - ./backend:/app
+      - .docker_node_modules:/app/node_modules
+    networks:
+      - bantudelice_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
-  supabase-db-data: 
+  postgres_data:
+  redis_data:
+  .docker_node_modules:
+
+networks:
+  bantudelice_network:
+    driver: bridge 

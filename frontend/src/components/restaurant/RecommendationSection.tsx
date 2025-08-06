@@ -55,7 +55,7 @@ const RecommendationSection = ({ restaurant, onAddToCart }: RecommendationSectio
                 <CardDescription>{item.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-500">{(item.price / 100).toFixed(2)} €</p>
+                <p className="text-sm text-gray-500">{(item.price / 100).toFixed(2)} FCFA </p>
               </CardContent>
               <CardFooter className="flex justify-between pt-2">
                 <Button

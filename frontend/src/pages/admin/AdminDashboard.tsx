@@ -153,7 +153,7 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <p className="font-medium">Commande #{1000 + i}</p>
-                      <p className="text-xs text-muted-foreground">Restaurant {i+1} • {25 + i*2}€</p>
+                      <p className="text-xs text-muted-foreground">Restaurant {i+1} • {25 + i*2}FCFA </p>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" className="h-8 gap-1">

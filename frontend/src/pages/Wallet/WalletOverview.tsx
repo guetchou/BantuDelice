@@ -5,21 +5,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
 export default function WalletOverview() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [balance, setBalance] = useState<number>(0);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
         setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await apiService.auth.getUser();
         
         if (!user) {
           toast({
@@ -69,7 +69,7 @@ export default function WalletOverview() {
         if (transactionsError) throw transactionsError;
         
         setTransactions(transactionsData || []);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Erreur lors du chargement des données du portefeuille:', error);
         toast({
           title: "Erreur",

@@ -1,6 +1,6 @@
 
 import { ReactNode, createContext, useContext } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import apiService from "@/services/api";
 
 interface SupabaseContextType {
   supabase: typeof supabase;

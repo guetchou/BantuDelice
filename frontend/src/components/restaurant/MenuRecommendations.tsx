@@ -86,7 +86,7 @@ const MenuRecommendations = ({ restaurantId, currentItem, onAddToCart }: MenuRec
               <CardDescription>{item.description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-bold">{(item.price / 100).toFixed(2)} €</p>
+              <p className="text-lg font-bold">{(item.price / 100).toFixed(2)} FCFA </p>
               <Button onClick={() => handleAddToCart(item)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter au panier

@@ -245,7 +245,7 @@ const CovoiturageBooking = () => {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Prix par personne</span>
-                <span>{tripDetails.price} €</span>
+                <span>{tripDetails.price} FCFA </span>
               </div>
               
               <div className="flex justify-between">
@@ -257,7 +257,7 @@ const CovoiturageBooking = () => {
               
               <div className="flex justify-between font-medium">
                 <span>Total</span>
-                <span>{tripDetails.price * passengerCount} €</span>
+                <span>{tripDetails.price * passengerCount} FCFA </span>
               </div>
               
               <div className="text-xs text-muted-foreground pt-4">

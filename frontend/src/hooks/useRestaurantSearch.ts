@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/apiService';
 import { toast } from 'sonner';
 
 interface RestaurantSearchProps {
@@ -30,22 +30,27 @@ export function useRestaurantSearch({
   useEffect(() => {
     const fetchCuisineTypes = async () => {
       try {
-        const { data, error } = await supabase
-          .from('restaurants')
-          .select('cuisine_type')
-          .not('cuisine_type', 'is', null);
-          
-        if (error) throw error;
+        // Données mockées pour l'instant
+        const mockCuisineTypes = [
+          'Tout',
+          'Congolaise',
+          'Panafricaine',
+          'Fast Food',
+          'Française',
+          'Italienne',
+          'Chinoise',
+          'Japonaise',
+          'Mexicaine',
+          'Indienne',
+          'Libanaise',
+          'Américaine'
+        ];
         
-        // Extract unique cuisine types
-        const uniqueCuisineTypes = Array.from(
-          new Set(data.map(item => item.cuisine_type))
-        ).filter(Boolean);
-        
-        setCuisineTypes(['Tout', ...uniqueCuisineTypes.sort()]);
+        setCuisineTypes(mockCuisineTypes);
       } catch (error) {
         console.error('Error fetching cuisine types:', error);
-        toast.error('Impossible de charger les catégories de cuisine');
+        // Fallback avec des types de base
+        setCuisineTypes(['Tout', 'Congolaise', 'Panafricaine', 'Fast Food', 'Française', 'Italienne']);
       }
     };
     

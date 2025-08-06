@@ -6,8 +6,8 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean; // Add missing isAuthenticated
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
-  signUp: (email: string, password: string, userData: Partial<User>) => Promise<{ success: boolean; error?: any }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: unknown }>;
+  signUp: (email: string, password: string, userData: Partial<User>) => Promise<{ success: boolean; error?: unknown }>;
   signOut: () => Promise<void>;
   logout: () => Promise<void>; // Add missing logout alias for signOut
 }

@@ -14,7 +14,7 @@ import { MenuItem } from '@/types/menu';
  */
 export const generatePersonalizedRecommendations = (
   items: MenuItem[],
-  orderHistory: any[] = [],
+  orderHistory: unknown[] = [],
   count: number = 4
 ): MenuItem[] => {
   if (!items || items.length === 0) {
@@ -49,7 +49,7 @@ export const generatePersonalizedRecommendations = (
 
   orderHistory.forEach(order => {
     if (order.items) {
-      order.items.forEach((orderedItem: any) => {
+      order.items.forEach((orderedItem: unknown) => {
         const menuItem = items.find(item => item.id === orderedItem.menuItemId);
         if (menuItem) {
           // Comptabiliser la catégorie

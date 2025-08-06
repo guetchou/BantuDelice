@@ -1,672 +1,250 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import BackToHome from '@/components/BackToHome';
 import { 
-  Search,
-  MapPin,
+  Car, 
+  Users, 
+  MapPin, 
+  Clock, 
+  Star, 
+  Shield, 
+  CreditCard,
+  MessageCircle,
   Calendar,
-  Clock,
-  Users,
-  Car,
-  ArrowRight,
-  Info,
-  Star,
-  User,
-  Calendar as CalendarIcon,
-  Heart,
-  HeartOff
+  Route
 } from 'lucide-react';
-import RideForm from '@/components/covoiturage/RideForm';
-import { toast } from 'sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-// Données simulées pour la démo
-const recentTrips = [
-  {
-    id: 'trip1',
-    origin: 'Centre-ville, Brazzaville',
-    destination: 'Aéroport Maya-Maya, Brazzaville',
-    date: new Date(Date.now() + 3600000 * 24 * 2).toISOString(),
-    price: 2000,
-    driver: {
-      id: 'driver1',
-      name: 'Thomas Ndolo',
-      rating: 4.8,
-      profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300'
+const Covoiturage: React.FC = () => {
+  const features = [
+    {
+      icon: Shield,
+      title: "Sécurité garantie",
+      description: "Tous nos conducteurs sont vérifiés et assurés"
     },
-    seats: 3,
-    status: 'upcoming'
-  },
-  {
-    id: 'trip2',
-    origin: 'Talangaï, Brazzaville',
-    destination: 'Université Marien Ngouabi, Brazzaville',
-    date: new Date(Date.now() - 3600000 * 24 * 1).toISOString(),
-    price: 1500,
-    driver: {
-      id: 'driver2',
-      name: 'Marie Loemba',
-      rating: 4.9,
-      profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300'
+    {
+      icon: CreditCard,
+      title: "Paiement sécurisé",
+      description: "Paiement en ligne ou en espèces, c'est vous qui choisissez"
     },
-    seats: 2,
-    status: 'completed'
-  },
-  {
-    id: 'trip3',
-    origin: 'Pointe-Noire Centre',
-    destination: 'Plage BASM, Pointe-Noire',
-    date: new Date(Date.now() - 3600000 * 24 * 5).toISOString(),
-    price: 2500,
-    driver: {
-      id: 'driver3',
-      name: 'Jean Moungala',
-      rating: 4.7,
-      profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300'
+    {
+      icon: MessageCircle,
+      title: "Chat intégré",
+      description: "Communiquez directement avec votre conducteur"
     },
-    seats: 4,
-    status: 'completed'
-  }
-];
-
-// Trajets réguliers simulés
-const recurringTrips = [
-  {
-    id: 'rec1',
-    origin: 'Bacongo, Brazzaville',
-    destination: 'Centre-ville, Brazzaville',
-    days: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'],
-    time: '08:00',
-    returnTime: '18:00',
-    price: 1000,
-    driver: {
-      id: 'driver4',
-      name: 'Alain Massamba',
-      rating: 4.9,
-      profileImage: 'https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=300'
-    },
-    passengers: 2,
-    seats: 4,
-    status: 'active'
-  },
-  {
-    id: 'rec2',
-    origin: 'Moungali, Brazzaville',
-    destination: 'Zone Industrielle, Brazzaville',
-    days: ['Lundi', 'Mercredi', 'Vendredi'],
-    time: '07:30',
-    returnTime: '17:30',
-    price: 1200,
-    driver: {
-      id: 'driver5',
-      name: 'Christelle Moukila',
-      rating: 4.7,
-      profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300'
-    },
-    passengers: 1,
-    seats: 3,
-    status: 'active'
-  }
-];
-
-// Trajets favoris simulés
-const favoriteTrips = [
-  {
-    id: 'fav1',
-    origin: 'Aéroport Maya-Maya, Brazzaville',
-    destination: 'Centre-ville, Brazzaville',
-    price: 2000,
-    seats: 3
-  },
-  {
-    id: 'fav2',
-    origin: 'Université Marien Ngouabi, Brazzaville',
-    destination: 'Bacongo, Brazzaville',
-    price: 1500,
-    seats: 2
-  }
-];
-
-export default function Covoiturage() {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('search');
-  const [searchOrigin, setSearchOrigin] = useState('');
-  const [searchDestination, setSearchDestination] = useState('');
-  const [createMode, setCreateMode] = useState<'single' | 'recurring' | null>(null);
-  const [favorites, setFavorites] = useState<string[]>(['fav1']);
-  
-  const handleSearch = () => {
-    if (!searchOrigin || !searchDestination) {
-      toast.error("Veuillez entrer une origine et une destination");
-      return;
+    {
+      icon: Route,
+      title: "Trajets optimisés",
+      description: "Routes calculées pour minimiser le temps de trajet"
     }
-    
-    // Simuler une recherche
-    toast.success("Recherche en cours", {
-      description: `Trajets de ${searchOrigin} à ${searchDestination}`
-    });
-    
-    // Reset search
-    setSearchOrigin('');
-    setSearchDestination('');
-  };
-  
-  const handleCreateRide = (type: 'single' | 'recurring') => {
-    setCreateMode(type);
-  };
-  
-  const handleCancelCreate = () => {
-    setCreateMode(null);
-  };
-  
-  const handleToggleFavorite = (tripId: string) => {
-    setFavorites(prev => 
-      prev.includes(tripId) 
-        ? prev.filter(id => id !== tripId) 
-        : [...prev, tripId]
-    );
-    
-    // Show notification
-    const isFavorite = favorites.includes(tripId);
-    toast.success(
-      isFavorite 
-        ? "Retiré des favoris" 
-        : "Ajouté aux favoris"
-    );
-  };
-  
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    };
-    return new Date(dateString).toLocaleDateString('fr-FR', options);
-  };
-  
+  ];
+
+  const popularRoutes = [
+    {
+      from: "Brazzaville Centre",
+      to: "Aéroport Maya-Maya",
+      price: "2000 FCFA",
+      duration: "25 min",
+      frequency: "Toutes les 30 min"
+    },
+    {
+      from: "Pointe-Noire Centre",
+      to: "Port Autonome",
+      price: "1500 FCFA",
+      duration: "20 min",
+      frequency: "Toutes les 15 min"
+    },
+    {
+      from: "Dolisie",
+      to: "Brazzaville",
+      price: "8000 FCFA",
+      duration: "2h 30",
+      frequency: "3 fois par jour"
+    }
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Covoiturage</h1>
-      
-      {!createMode ? (
-        <div className="space-y-8">
-          <Tabs 
-            defaultValue="search" 
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
-              <TabsTrigger value="search" className="text-sm">Rechercher</TabsTrigger>
-              <TabsTrigger value="my-trips" className="text-sm">Mes trajets</TabsTrigger>
-              <TabsTrigger value="favorites" className="text-sm">Favoris</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="search" className="space-y-6 mt-6">
-              <Card>
-                <CardContent className="p-6 space-y-6">
-                  <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Trouver un trajet</h2>
-                    
-                    <div className="space-y-4">
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                        <Input
-                          placeholder="Lieu de départ"
-                          className="pl-10"
-                          value={searchOrigin}
-                          onChange={(e) => setSearchOrigin(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                        <Input
-                          placeholder="Destination"
-                          className="pl-10"
-                          value={searchDestination}
-                          onChange={(e) => setSearchDestination(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                        <Input
-                          type="date"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      className="w-full" 
-                      size="lg"
-                      onClick={handleSearch}
-                    >
-                      <Search className="mr-2 h-4 w-4" />
-                      Rechercher
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  className="flex-1 bg-green-600 hover:bg-green-700" 
-                  onClick={() => handleCreateRide('single')}
-                >
-                  <Car className="mr-2 h-4 w-4" />
-                  Proposer un trajet
-                </Button>
-                
-                <Button 
-                  className="flex-1 bg-blue-600 hover:bg-blue-700" 
-                  onClick={() => handleCreateRide('recurring')}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  Trajet régulier
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Trajets populaires</h2>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[
-                    { origin: 'Centre-ville', destination: 'Aéroport Maya-Maya', price: 2000 },
-                    { origin: 'Bacongo', destination: 'Université Marien Ngouabi', price: 1500 },
-                    { origin: 'Pointe-Noire', destination: 'Brazzaville', price: 15000 }
-                  ].map((trip, index) => (
-                    <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex flex-col h-full justify-between">
-                          <div className="space-y-3">
-                            <div className="flex items-start gap-3">
-                              <MapPin className="h-4 w-4 text-green-500 mt-1" />
-                              <div>
-                                <p className="text-sm text-gray-500">Départ</p>
-                                <p className="font-medium">{trip.origin}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-start gap-3">
-                              <MapPin className="h-4 w-4 text-orange-500 mt-1" />
-                              <div>
-                                <p className="text-sm text-gray-500">Destination</p>
-                                <p className="font-medium">{trip.destination}</p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex justify-between items-center mt-4 pt-3 border-t">
-                            <span className="font-semibold text-primary">
-                              {trip.price.toLocaleString('fr-FR')} FCFA
-                            </span>
-                            <Button size="sm" variant="ghost">
-                              Rechercher
-                              <ArrowRight className="ml-1 h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="my-trips" className="space-y-6 mt-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Mes trajets</h2>
-                <Button 
-                  variant="outline" 
-                  className="gap-2"
-                  onClick={() => handleCreateRide('single')}
-                >
-                  <Car className="h-4 w-4" />
-                  Nouveau trajet
-                </Button>
-              </div>
-              
-              <Tabs defaultValue="upcoming">
-                <TabsList>
-                  <TabsTrigger value="upcoming">À venir</TabsTrigger>
-                  <TabsTrigger value="recurring">Réguliers</TabsTrigger>
-                  <TabsTrigger value="past">Passés</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="upcoming" className="space-y-4 mt-4">
-                  {recentTrips
-                    .filter(trip => trip.status === 'upcoming')
-                    .map(trip => (
-                      <Card key={trip.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex flex-col md:flex-row gap-4">
-                            <div className="space-y-3 flex-1">
-                              <div className="flex justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="h-4 w-4 text-gray-500" />
-                                  <span className="font-medium">{formatDate(trip.date)}</span>
-                                </div>
-                                <Badge className="bg-blue-500">{trip.seats} places</Badge>
-                              </div>
-                              
-                              <div className="flex items-start gap-3">
-                                <MapPin className="h-4 w-4 text-green-500 mt-1" />
-                                <div>
-                                  <p className="text-sm text-gray-500">Départ</p>
-                                  <p className="font-medium">{trip.origin}</p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-start gap-3">
-                                <MapPin className="h-4 w-4 text-orange-500 mt-1" />
-                                <div>
-                                  <p className="text-sm text-gray-500">Destination</p>
-                                  <p className="font-medium">{trip.destination}</p>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-col justify-between items-end">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={trip.driver.profileImage} />
-                                  <AvatarFallback>{trip.driver.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="font-medium">{trip.driver.name}</p>
-                                  <div className="flex items-center text-sm">
-                                    <Star className="h-3 w-3 text-yellow-500 mr-1" fill="currentColor" />
-                                    <span>{trip.driver.rating}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="text-right">
-                                <p className="text-lg font-bold text-primary">
-                                  {trip.price.toLocaleString('fr-FR')} FCFA
-                                </p>
-                                <Button
-                                  size="sm"
-                                  variant="default"
-                                  className="mt-2"
-                                >
-                                  Détails
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    
-                  {recentTrips.filter(trip => trip.status === 'upcoming').length === 0 && (
-                    <div className="text-center py-12">
-                      <Info className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Aucun trajet à venir</h3>
-                      <p className="text-gray-500 max-w-md mx-auto mb-4">
-                        Vous n'avez pas de trajets planifiés pour l'instant. Réservez un nouveau trajet ou proposez-en un.
-                      </p>
-                      <Button onClick={() => handleCreateRide('single')}>
-                        Proposer un trajet
-                      </Button>
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="recurring" className="space-y-4 mt-4">
-                  {recurringTrips.map(trip => (
-                    <Card key={trip.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex flex-col md:flex-row gap-4">
-                          <div className="space-y-3 flex-1">
-                            <div className="flex justify-between">
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-gray-500" />
-                                <div>
-                                  <span className="font-medium">{trip.time} - {trip.returnTime}</span>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {trip.days.map(day => (
-                                      <Badge key={day} variant="outline" className="font-normal text-xs">
-                                        {day.substring(0, 3)}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                              <Badge className="bg-green-500">Actif</Badge>
-                            </div>
-                            
-                            <div className="flex items-start gap-3">
-                              <MapPin className="h-4 w-4 text-green-500 mt-1" />
-                              <div>
-                                <p className="text-sm text-gray-500">Départ</p>
-                                <p className="font-medium">{trip.origin}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-start gap-3">
-                              <MapPin className="h-4 w-4 text-orange-500 mt-1" />
-                              <div>
-                                <p className="text-sm text-gray-500">Destination</p>
-                                <p className="font-medium">{trip.destination}</p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-col justify-between items-end">
-                            <div className="flex items-center gap-2">
-                              <div className="flex -space-x-2">
-                                <Avatar className="h-7 w-7 border-2 border-white">
-                                  <AvatarFallback>P1</AvatarFallback>
-                                </Avatar>
-                                <Avatar className="h-7 w-7 border-2 border-white">
-                                  <AvatarFallback>P2</AvatarFallback>
-                                </Avatar>
-                              </div>
-                              <div>
-                                <p className="text-sm">
-                                  {trip.passengers}/{trip.seats} passagers
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-primary">
-                                {trip.price.toLocaleString('fr-FR')} FCFA
-                              </p>
-                              <p className="text-xs text-gray-500">par trajet</p>
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="mt-2"
-                              >
-                                Gérer
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  
-                  {recurringTrips.length === 0 && (
-                    <div className="text-center py-12">
-                      <CalendarIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Aucun trajet régulier</h3>
-                      <p className="text-gray-500 max-w-md mx-auto mb-4">
-                        Vous n'avez pas de trajets réguliers configurés. Créez un trajet régulier pour vos déplacements quotidiens.
-                      </p>
-                      <Button onClick={() => handleCreateRide('recurring')}>
-                        Créer un trajet régulier
-                      </Button>
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="past" className="space-y-4 mt-4">
-                  {recentTrips
-                    .filter(trip => trip.status === 'completed')
-                    .map(trip => (
-                      <Card key={trip.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex flex-col md:flex-row gap-4">
-                            <div className="space-y-3 flex-1">
-                              <div className="flex justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="h-4 w-4 text-gray-500" />
-                                  <span className="text-gray-600">{formatDate(trip.date)}</span>
-                                </div>
-                                <Badge variant="outline" className="text-gray-500 bg-gray-100">Terminé</Badge>
-                              </div>
-                              
-                              <div className="flex items-start gap-3">
-                                <MapPin className="h-4 w-4 text-green-500 mt-1" />
-                                <div>
-                                  <p className="text-sm text-gray-500">Départ</p>
-                                  <p className="font-medium text-gray-600">{trip.origin}</p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-start gap-3">
-                                <MapPin className="h-4 w-4 text-orange-500 mt-1" />
-                                <div>
-                                  <p className="text-sm text-gray-500">Destination</p>
-                                  <p className="font-medium text-gray-600">{trip.destination}</p>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-col justify-between items-end">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={trip.driver.profileImage} />
-                                  <AvatarFallback>{trip.driver.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="font-medium text-gray-600">{trip.driver.name}</p>
-                                  <div className="flex items-center text-sm">
-                                    <Star className="h-3 w-3 text-yellow-500 mr-1" fill="currentColor" />
-                                    <span>{trip.driver.rating}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="text-right">
-                                <p className="text-lg font-bold text-gray-600">
-                                  {trip.price.toLocaleString('fr-FR')} FCFA
-                                </p>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="mt-2"
-                                >
-                                  Détails
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                </TabsContent>
-              </Tabs>
-            </TabsContent>
-            
-            <TabsContent value="favorites" className="space-y-6 mt-6">
-              <h2 className="text-xl font-semibold">Mes trajets favoris</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {favoriteTrips.map(trip => (
-                  <Card 
-                    key={trip.id} 
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between mb-4">
-                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-                          <Users className="h-3 w-3 mr-1" />
-                          {trip.seats} places
-                        </Badge>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-rose-500"
-                          onClick={() => handleToggleFavorite(trip.id)}
-                        >
-                          {favorites.includes(trip.id) ? (
-                            <Heart className="h-5 w-5" fill="currentColor" />
-                          ) : (
-                            <HeartOff className="h-5 w-5" />
-                          )}
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3">
-                          <MapPin className="h-4 w-4 text-green-500 mt-1" />
-                          <div>
-                            <p className="text-sm text-gray-500">Départ</p>
-                            <p className="font-medium">{trip.origin}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-3">
-                          <MapPin className="h-4 w-4 text-orange-500 mt-1" />
-                          <div>
-                            <p className="text-sm text-gray-500">Destination</p>
-                            <p className="font-medium">{trip.destination}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center mt-4 pt-3 border-t">
-                        <span className="font-semibold text-primary">
-                          {trip.price.toLocaleString('fr-FR')} FCFA
-                        </span>
-                        <Button size="sm">
-                          Rechercher
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                
-                {favoriteTrips.length === 0 && (
-                  <div className="col-span-full text-center py-12">
-                    <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Aucun trajet favori</h3>
-                    <p className="text-gray-500 max-w-md mx-auto">
-                      Vous n'avez pas encore de trajets favoris. Ajoutez-en pour y accéder rapidement.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Hero Section */}
+      <section className="relative py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white overflow-hidden">
+        {/* Arrière-plan avec image */}
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0">
+          <img 
+            src="/images/covoiturage.jpg" 
+            alt="Covoiturage BantuDelice" 
+            className="w-full h-full object-cover opacity-20"
+          />
         </div>
-      ) : (
-        <div className="max-w-2xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">
-              {createMode === 'single' ? 'Proposer un trajet' : 'Proposer un trajet régulier'}
-            </h2>
-            <Button variant="ghost" size="sm" onClick={handleCancelCreate}>
-              Annuler
-            </Button>
+        
+        <div className="container mx-auto px-4 text-center relative z-10">
+          {/* Bouton retour à l'accueil */}
+          <div className="absolute top-4 left-4 z-30">
+            <BackToHome variant="icon" />
           </div>
           
-          <RideForm isRecurring={createMode === 'recurring'} />
+          <div className="flex items-center justify-center mb-6">
+            <Car className="h-12 w-12 mr-4" />
+            <h1 className="text-5xl font-bold">Covoiturage BantuDelice</h1>
+          </div>
+          <p className="text-xl mb-8 max-w-3xl mx-auto">
+            Économisez jusqu'à 60% sur vos trajets en partageant votre véhicule 
+            ou en rejoignant d'autres voyageurs. Écologique et économique !
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300">
+              <Link to="/covoiturage/proposer">
+                <Car className="h-4 w-4 mr-2" />
+                Proposer un trajet
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300">
+              <Link to="/covoiturage/rechercher">
+                <Route className="h-4 w-4 mr-2" />
+                Rechercher un trajet
+              </Link>
+            </Button>
+          </div>
         </div>
-      )}
+      </section>
+
+      {/* Statistiques */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8">
+            {[
+              { icon: Users, value: "50K+", label: "Utilisateurs actifs" },
+              { icon: Car, value: "15K+", label: "Trajets effectués" },
+              { icon: MapPin, value: "25+", label: "Villes desservies" },
+              { icon: Star, value: "4.8", label: "Note moyenne" }
+            ].map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={index} className="text-center border-0 shadow-xl backdrop-blur-md bg-white/70 hover:bg-white/90 transition-all duration-300">
+                  <CardContent className="pt-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Icon className="h-8 w-8 text-white" />
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
+                    <div className="text-gray-600">{stat.label}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Fonctionnalités */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Pourquoi choisir notre covoiturage ?
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Une solution économique, écologique et sociale pour vos déplacements
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <Card key={index} className="text-center border-0 shadow-lg backdrop-blur-md bg-white/80 hover:bg-white/90 transition-all duration-300">
+                  <CardContent className="pt-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                      <Icon className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                    <p className="text-gray-600">{feature.description}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Trajets populaires */}
+      <section className="py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Trajets populaires
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Découvrez les trajets les plus demandés et réservez en quelques clics
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {popularRoutes.map((route, index) => (
+              <Card key={index} className="border-0 shadow-xl backdrop-blur-md bg-white/80 hover:bg-white/90 transition-all duration-300 hover:-translate-y-2">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      Populaire
+                    </Badge>
+                    <div className="text-2xl font-bold text-blue-600">{route.price}</div>
+                  </div>
+                  
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">De: {route.from}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Vers: {route.to}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Durée: {route.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">{route.frequency}</span>
+                    </div>
+                  </div>
+                  
+                  <Button asChild className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600">
+                    <Link to={`/covoiturage/reserver/${index}`}>
+                      Réserver ce trajet
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="relative py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <h2 className="text-4xl font-bold mb-6">
+            Prêt à voyager autrement ?
+          </h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
+            Rejoignez notre communauté de covoitureurs et contribuez à un avenir plus durable
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60 transition-all duration-300">
+              <Link to="/covoiturage/inscription">Commencer maintenant</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300">
+              <Link to="/contact">En savoir plus</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
-}
+};
+
+export default Covoiturage;

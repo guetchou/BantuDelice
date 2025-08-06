@@ -1,119 +1,123 @@
 
-import { useContext } from 'react';
-import { CartContext } from '@/contexts/CartProvider';
-import { CartItem, CartItemOption } from '@/types/cart';
-import { toast } from 'sonner';
+import { useState, useCallback } from 'react';
+
+// Types simplifiés pour le panier
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartState {
+  items: CartItem[];
+  total: number;
+}
 
 /**
- * Hook pour gérer le panier d'achat
- * Facilite l'accès au contexte du panier et ajoute des fonctionnalités utiles
+ * Hook simplifié pour gérer le panier d'achat
+ * Version temporaire qui ne dépend pas de CartContext
  */
 export const useCart = () => {
-  const context = useContext(CartContext);
-  
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  
-  // Fonction étendue pour ajouter un article avec notification
-  const addToCart = (item: CartItem) => {
-    if (!item.menu_item_id) {
-      item.menu_item_id = item.id;
-    }
-    
-    if (!item.total) {
-      item.total = item.price * item.quantity;
-    }
-    
-    if (!item.quantity) {
-      item.quantity = 1;
-    }
-    
-    context.addToCart(item);
-    
-    toast.success("Article ajouté", {
-      description: `${item.name} a été ajouté au panier`,
+  const [cart, setCart] = useState<CartState>({
+    items: [],
+    total: 0
+  });
+
+  const addToCart = useCallback((item: CartItem) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.items.find(cartItem => cartItem.id === item.id);
+      
+      if (existingItem) {
+        // Mettre à jour la quantité si l'article existe déjà
+        const updatedItems = prevCart.items.map(cartItem =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + (item.quantity || 1) }
+            : cartItem
+        );
+        
+        const newTotal = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        return {
+          items: updatedItems,
+          total: newTotal
+        };
+      } else {
+        // Ajouter un nouvel article
+        const newItem = { ...item, quantity: item.quantity || 1 };
+        const newItems = [...prevCart.items, newItem];
+        const newTotal = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        
+        return {
+          items: newItems,
+          total: newTotal
+        };
+      }
     });
-  };
-  
-  // Fonction étendue pour supprimer un article avec notification
-  const removeFromCart = (itemId: string, itemName?: string) => {
-    context.removeFromCart(itemId);
-    
-    toast.info("Article supprimé", {
-      description: itemName 
-        ? `${itemName} a été retiré du panier` 
-        : "L'article a été retiré du panier",
+  }, []);
+
+  const removeFromCart = useCallback((itemId: string) => {
+    setCart(prevCart => {
+      const updatedItems = prevCart.items.filter(item => item.id !== itemId);
+      const newTotal = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      
+      return {
+        items: updatedItems,
+        total: newTotal
+      };
     });
-  };
-  
-  // Fonction pour vider le panier avec confirmation
-  const clearCartWithConfirmation = () => {
-    if (context.cart.items.length > 0) {
-      context.clearCart();
-      toast.info("Panier vidé", {
-        description: "Tous les articles ont été retirés du panier",
-      });
-    }
-  };
-  
-  // Vérifie si un article est déjà dans le panier
-  const isInCart = (itemId: string): boolean => {
-    return context.cart.items.some(item => item.id === itemId);
-  };
-  
-  // Obtient la quantité d'un article dans le panier
-  const getItemQuantity = (itemId: string): number => {
-    const item = context.cart.items.find(item => item.id === itemId);
-    return item ? item.quantity : 0;
-  };
-  
-  // Vérifie si le panier est vide
-  const isEmpty = (): boolean => {
-    return context.cart.items.length === 0;
-  };
-  
-  // Calcule le total avec frais de livraison
-  const calculateTotalWithDelivery = (deliveryFee: number = 299): number => {
-    return context.cart.total + deliveryFee;
-  };
-  
-  // Pour compatibilité avec les composants existants
-  const items = context.cart.items;
-  const total = context.cart.total;
-  const totalItems = context.cart.items.reduce((sum, item) => sum + item.quantity, 0);
-  const updateItemQuantity = context.updateQuantity;
-  
-  // Add state property for compatibility with existing components
-  const state = {
-    items: context.cart.items,
-    total: context.cart.total,
-    count: context.cart.items.length,
-    totalItems: totalItems
-  };
-  
+  }, []);
+
+  const updateQuantity = useCallback((itemId: string, quantity: number) => {
+    setCart(prevCart => {
+      const updatedItems = prevCart.items.map(item =>
+        item.id === itemId ? { ...item, quantity } : item
+      );
+      const newTotal = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      
+      return {
+        items: updatedItems,
+        total: newTotal
+      };
+    });
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setCart({ items: [], total: 0 });
+  }, []);
+
+  const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
   return {
     // État du panier
-    cartState: context.cart,
-    addItem: context.addToCart,
-    removeItem: context.removeFromCart,
-    updateQuantity: context.updateQuantity,
-    clearCart: context.clearCart,
+    cartState: cart,
+    addItem: addToCart,
+    removeItem: removeFromCart,
+    updateQuantity,
+    clearCart,
     
     // Pour compatibilité avec les composants existants
-    items,
-    total,
+    items: cart.items,
+    total: cart.total,
     totalItems,
-    updateItemQuantity,
-    state,
+    updateItemQuantity: updateQuantity,
+    state: {
+      items: cart.items,
+      total: cart.total,
+      count: cart.items.length,
+      totalItems
+    },
     
     // Fonctionnalités étendues
     addToCart,
     removeFromCart,
-    clearCartWithConfirmation,
-    isInCart,
-    getItemQuantity,
-    isEmpty,
-    calculateTotalWithDelivery,
+    clearCartWithConfirmation: clearCart,
+    isInCart: (itemId: string) => cart.items.some(item => item.id === itemId),
+    getItemQuantity: (itemId: string) => {
+      const item = cart.items.find(item => item.id === itemId);
+      return item ? item.quantity : 0;
+    },
+    isEmpty: () => cart.items.length === 0,
+    calculateTotalWithDelivery: (deliveryFee: number = 299) => cart.total + deliveryFee,
   };
 };

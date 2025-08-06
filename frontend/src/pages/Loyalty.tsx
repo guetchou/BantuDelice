@@ -4,7 +4,7 @@ import { Award, Share2 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useLoyalty } from "@/contexts/LoyaltyContext";
+import { useLoyalty } from "@/hooks/useLoyalty";
 import UserStats from "@/components/stats/UserStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoyaltyStatus from "@/components/loyalty/LoyaltyStatus";

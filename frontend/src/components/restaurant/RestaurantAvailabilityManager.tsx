@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Card,
@@ -89,7 +89,7 @@ export function RestaurantAvailabilityManager({ restaurantId, isOwner = true }: 
       
       if (data.special_days) {
         const specialDays = Array.isArray(data.special_days) ? data.special_days : [];
-        setSpecialHours(specialDays.map((day: any) => ({
+        setSpecialHours(specialDays.map((day: unknown) => ({
           ...day,
           date: new Date(day.date)
         })));

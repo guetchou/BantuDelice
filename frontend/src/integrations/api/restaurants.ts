@@ -5,7 +5,7 @@ import { Restaurant } from '@/types/globalTypes';
 
 export const restaurantApi = {
   // Existing methods with real implementations
-  getAll: async (filters?: any): Promise<ApiResponse<Restaurant[]>> => {
+  getAll: async (filters?: unknown): Promise<ApiResponse<Restaurant[]>> => {
     let queryParams = '';
     if (filters) {
       const params = new URLSearchParams();
@@ -21,22 +21,22 @@ export const restaurantApi = {
     return fetchWithAuth<Restaurant>(`/restaurants/${id}`);
   },
   
-  getMenuItems: async (restaurantId: string): Promise<ApiResponse<any[]>> => {
-    return fetchWithAuth<any[]>(`/restaurants/${restaurantId}/menu-items`);
+  getMenuItems: async (restaurantId: string): Promise<ApiResponse<unknown[]>> => {
+    return fetchWithAuth<unknown[]>(`/restaurants/${restaurantId}/menu-items`);
   },
   
-  getMenu: async (restaurantId: string): Promise<ApiResponse<any[]>> => {
-    return fetchWithAuth<any[]>(`/restaurants/${restaurantId}/menu`);
+  getMenu: async (restaurantId: string): Promise<ApiResponse<unknown[]>> => {
+    return fetchWithAuth<unknown[]>(`/restaurants/${restaurantId}/menu`);
   },
   
-  updateMenuItemAvailability: async (itemId: string, available: boolean): Promise<ApiResponse<any>> => {
+  updateMenuItemAvailability: async (itemId: string, available: boolean): Promise<ApiResponse<unknown>> => {
     return fetchWithAuth(`/menu-items/${itemId}/availability`, {
       method: 'PUT',
       body: JSON.stringify({ available }),
     });
   },
   
-  updateMenuItemStock: async (itemId: string, stock: number): Promise<ApiResponse<any>> => {
+  updateMenuItemStock: async (itemId: string, stock: number): Promise<ApiResponse<unknown>> => {
     return fetchWithAuth(`/menu-items/${itemId}/stock`, {
       method: 'PUT',
       body: JSON.stringify({ stock }),
@@ -44,14 +44,14 @@ export const restaurantApi = {
   },
   
   // Adding missing methods with real implementations
-  updateStatus: async (restaurantId: string, isOpen: boolean): Promise<ApiResponse<any>> => {
+  updateStatus: async (restaurantId: string, isOpen: boolean): Promise<ApiResponse<unknown>> => {
     return fetchWithAuth(`/restaurants/${restaurantId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ is_open: isOpen }),
     });
   },
   
-  getSpecialHours: async (restaurantId: string, params?: any): Promise<ApiResponse<any>> => {
+  getSpecialHours: async (restaurantId: string, params?: unknown): Promise<ApiResponse<unknown>> => {
     let queryParams = '';
     if (params) {
       const urlParams = new URLSearchParams();
@@ -63,14 +63,14 @@ export const restaurantApi = {
     return fetchWithAuth(`/restaurants/${restaurantId}/special-hours${queryParams}`);
   },
   
-  setSpecialHours: async (restaurantId: string, specialHours: any): Promise<ApiResponse<any>> => {
+  setSpecialHours: async (restaurantId: string, specialHours: unknown): Promise<ApiResponse<unknown>> => {
     return fetchWithAuth(`/restaurants/${restaurantId}/special-hours`, {
       method: 'POST',
       body: JSON.stringify(specialHours),
     });
   },
   
-  deleteSpecialHours: async (restaurantId: string, day: string): Promise<ApiResponse<any>> => {
+  deleteSpecialHours: async (restaurantId: string, day: string): Promise<ApiResponse<unknown>> => {
     return fetchWithAuth(`/restaurants/${restaurantId}/special-hours/${day}`, {
       method: 'DELETE',
     });

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import apiService from '@/services/api';
 import { DeliveryDriver, DeliveryRequest, ExternalDeliveryService } from '@/types/delivery';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -160,9 +160,9 @@ const DeliveryManagement = ({ restaurantId }: DeliveryManagementProps) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(driversChannel);
-      supabase.removeChannel(ordersChannel);
-      supabase.removeChannel(requestsChannel);
+      apiService.removeChannel(driversChannel);
+      apiService.removeChannel(ordersChannel);
+      apiService.removeChannel(requestsChannel);
     };
   }, [restaurantId]);
 
@@ -173,7 +173,7 @@ const DeliveryManagement = ({ restaurantId }: DeliveryManagementProps) => {
     }
 
     try {
-      const { data, error } = await supabase.from('delivery_drivers').insert({
+      const { data, error } = await apiService.from('delivery_drivers').insert({
         restaurant_id: restaurantId,
         name: driverName.trim(),
         phone: driverPhone.trim(),
@@ -209,7 +209,7 @@ const DeliveryManagement = ({ restaurantId }: DeliveryManagementProps) => {
     try {
       if (useExternalService && selectedExternalService) {
         // Create delivery request with external service
-        const { data, error } = await supabase.from('delivery_requests').insert({
+        const { data, error } = await apiService.from('delivery_requests').insert({
           order_id: selectedOrder.id,
           restaurant_id: restaurantId,
           status: 'pending',
@@ -231,14 +231,14 @@ const DeliveryManagement = ({ restaurantId }: DeliveryManagementProps) => {
         if (error) throw error;
 
         // Update order status
-        await supabase.from('orders').update({
+        await apiService.from('orders').update({
           delivery_status: 'assigned'
         }).eq('id', selectedOrder.id);
 
         toast.success('Commande envoyée au service de livraison externe');
       } else if (selectedDriver) {
         // Assign to internal driver
-        const { data, error } = await supabase.from('delivery_requests').insert({
+        const { data, error } = await apiService.from('delivery_requests').insert({
           order_id: selectedOrder.id,
           restaurant_id: restaurantId,
           status: 'accepted',
@@ -261,18 +261,18 @@ const DeliveryManagement = ({ restaurantId }: DeliveryManagementProps) => {
         if (error) throw error;
 
         // Update order status
-        await supabase.from('orders').update({
+        await apiService.from('orders').update({
           delivery_status: 'assigned'
         }).eq('id', selectedOrder.id);
 
         // Update driver status
-        await supabase.from('delivery_drivers').update({
+        await apiService.from('delivery_drivers').update({
           is_available: false,
           status: 'delivering'
         }).eq('id', selectedDriver);
 
         // Create initial tracking entry
-        await supabase.from('delivery_tracking').insert({
+        await apiService.from('delivery_tracking').insert({
           delivery_request_id: data.id,
           driver_id: selectedDriver,
           order_id: selectedOrder.id,
@@ -301,7 +301,7 @@ const DeliveryManagement = ({ restaurantId }: DeliveryManagementProps) => {
 
   const handleToggleDriverStatus = async (driverId: string, currentStatus: boolean) => {
     try {
-      await supabase.from('delivery_drivers').update({
+      await apiService.from('delivery_drivers').update({
         is_available: !currentStatus,
         status: !currentStatus ? 'online' : 'offline'
       }).eq('id', driverId);

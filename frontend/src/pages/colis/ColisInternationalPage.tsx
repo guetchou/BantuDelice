@@ -1,426 +1,397 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Package, User, MapPin, Calculator, Download, Send, Shield, Clock, Globe, FileText } from 'lucide-react';
-import ColisImageUpload from './ColisExpedierPage';
-
-type FormData = {
-  expediteur: string;
-  destinataire: string;
-  adresse: string;
-  paysDestination: string;
-  poids: string;
-  description: string;
-  service: string;
-  documents: string[];
-  declarationDouane: boolean;
-};
-
-const COUNTRIES = [
-  "France", "Belgique", "Allemagne", "Espagne", "Italie", 
-  "États-Unis", "Canada", "Côte d'Ivoire", "Sénégal", "Cameroun"
-];
-
-const SERVICES = [
-  { value: "express", label: "Express (3-5 jours)", price: 25000 },
-  { value: "standard", label: "Standard (7-10 jours)", price: 15000 },
-  { value: "economy", label: "Économique (10-15 jours)", price: 10000 }
-];
-
-const DOCUMENTS = [
-  { value: "facture", label: "Facture commerciale" },
-  { value: "cni", label: "Copie CNI" },
-  { value: "certificat", label: "Certificat d'origine" }
-];
+import { 
+  Package, 
+  Globe, 
+  Shield, 
+  Clock, 
+  Star,
+  Calculator,
+  Plane,
+  Ship,
+  Zap,
+  CheckCircle
+} from 'lucide-react';
 
 const ColisInternationalPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState<FormData>({
-    expediteur: '',
-    destinataire: '',
-    adresse: '',
-    paysDestination: '',
-    poids: '',
-    description: '',
-    service: 'standard',
-    documents: [],
-    declarationDouane: false
+  const [calculatorData, setCalculatorData] = useState({
+    origin: '',
+    destination: '',
+    weight: '',
+    service: 'standard'
   });
+  const [calculatedPrice, setCalculatedPrice] = useState(0);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [generatedColisId, setGeneratedColisId] = useState<string | null>(null);
-  const [uploadCompleted, setUploadCompleted] = useState(false);
+  const serviceTypes = [
+    {
+      id: 'economy',
+      name: 'Économique',
+      price: '15 000 FCFA',
+      delay: '7-15 jours',
+      transport: 'Maritime',
+      icon: Ship
+    },
+    {
+      id: 'standard',
+      name: 'Standard',
+      price: '25 000 FCFA',
+      delay: '5-10 jours',
+      transport: 'Aérien',
+      icon: Plane,
+      popular: true
+    },
+    {
+      id: 'express',
+      name: 'Express',
+      price: '45 000 FCFA',
+      delay: '2-5 jours',
+      transport: 'Aérien Premium',
+      icon: Plane
+    }
+  ];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const countries = [
+    'France',
+    'Belgique',
+    'Suisse',
+    'Allemagne',
+    'Italie',
+    'Espagne',
+    'Pays-Bas',
+    'Royaume-Uni',
+    'États-Unis',
+    'Canada',
+    'Brésil',
+    'Chine',
+    'Japon',
+    'Corée du Sud',
+    'Inde',
+    'Australie',
+    'Afrique du Sud',
+    'Nigeria',
+    'Ghana',
+    'Côte d\'Ivoire',
+    'Sénégal',
+    'Mali',
+    'Cameroun',
+    'Gabon',
+    'RCA',
+    'Tchad',
+    'RDC'
+  ];
 
-  const handleSelectChange = (name: keyof FormData, value: string | string[]) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (name: keyof FormData, checked: boolean) => {
-    setFormData(prev => ({ ...prev, [name]: checked }));
-  };
-
-  const calculateEstimatedCost = () => {
-    if (!formData.poids || !formData.paysDestination || !formData.service) return null;
-    
-    const selectedService = SERVICES.find(s => s.value === formData.service);
-    let basePrice = selectedService?.price || 15000;
-    
-    const countrySurcharge = ["États-Unis", "Canada"].includes(formData.paysDestination) ? 5000 : 0;
-    const weightSurcharge = parseFloat(formData.poids) > 5 ? 3000 : 0;
-    const documentsSurcharge = formData.documents.length > 1 ? 2000 : 0;
-    
-    return basePrice + countrySurcharge + weightSurcharge + documentsSurcharge;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.declarationDouane) {
-      alert("Vous devez accepter la déclaration douanière");
+  const calculatePrice = () => {
+    if (!calculatorData.origin || !calculatorData.destination || !calculatorData.weight) {
       return;
     }
 
-    setIsSubmitting(true);
+    const basePrice = 15000;
+    const weightPrice = parseFloat(calculatorData.weight) * 2000;
+    let serviceMultiplier = 1;
 
-    try {
-      // Simulation d'appel API
-      const mockResponse = await new Promise((resolve) => 
-        setTimeout(() => resolve({ 
-          success: true, 
-          colisId: `INT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-          trackingNumber: `TRK${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`
-        }), 1500)
-      );
-
-      if (mockResponse.success) {
-        setGeneratedColisId(mockResponse.colisId);
-        setSubmitSuccess(true);
-      }
-    } catch (error) {
-      console.error("Erreur de soumission", error);
-    } finally {
-      setIsSubmitting(false);
+    switch (calculatorData.service) {
+      case 'economy':
+        serviceMultiplier = 1;
+        break;
+      case 'standard':
+        serviceMultiplier = 1.67;
+        break;
+      case 'express':
+        serviceMultiplier = 3;
+        break;
+      default:
+        serviceMultiplier = 1;
     }
+
+    const totalPrice = (basePrice + weightPrice) * serviceMultiplier;
+    setCalculatedPrice(totalPrice);
   };
 
-  const handleUploadComplete = () => {
-    setUploadCompleted(true);
-    setTimeout(() => navigate(`/colis/tracking/${generatedColisId}`), 3000);
-  };
+  const features = [
+    {
+      icon: Globe,
+      title: "Couverture Mondiale",
+      description: "Expédition vers plus de 200 pays et territoires"
+    },
+    {
+      icon: Shield,
+      title: "Assurance Premium",
+      description: "Protection jusqu'à 1 000 000 FCFA incluse"
+    },
+    {
+      icon: Clock,
+      title: "Délais Garantis",
+      description: "Livraison express et économique selon vos besoins"
+    },
+    {
+      icon: Star,
+      title: "Tarifs Transparents",
+      description: "Prix clairs sans frais cachés"
+    }
+  ];
 
-  const estimatedCost = calculateEstimatedCost();
+  const testimonials = [
+    {
+      name: "Pierre D.",
+      country: "France",
+      rating: 5,
+      comment: "Service impeccable ! Mon colis est arrivé en 3 jours à Paris."
+    },
+    {
+      name: "Sarah M.",
+      country: "Canada",
+      rating: 5,
+      comment: "Suivi en temps réel très pratique. Je recommande !"
+    },
+    {
+      name: "Ahmed K.",
+      country: "Maroc",
+      rating: 4,
+      comment: "Prix compétitifs et service professionnel."
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
-      {/* Header inchangé */}
-      <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-blue-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <img src="/images/logo/logo.png" alt="BantuDelice" className="h-10 w-10 rounded-full border-2 border-blue-400 shadow" />
-              <span className="font-bold text-blue-700 text-xl">Colis International</span>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Badge className="bg-blue-100 text-blue-600 hover:bg-blue-200">
+                <Shield className="h-4 w-4 mr-2" />
+                Service Officiel Poste Congo
+              </Badge>
             </div>
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/colis" className="text-blue-700 hover:text-blue-900 font-medium">Accueil</Link>
-              <Link to="/colis/tracking" className="text-blue-700 hover:text-blue-900 font-medium">Suivi</Link>
-              <Link to="/colis/tarifs" className="text-blue-700 hover:text-blue-900 font-medium">Tarifs</Link>
-              <Link to="/colis/expedier" className="text-blue-700 hover:text-blue-900 font-medium">Expédier</Link>
-              <Link to="/colis/historique" className="text-blue-700 hover:text-blue-900 font-medium">Historique</Link>
-            </nav>
-            <Button asChild className="bg-gradient-to-r from-blue-400 to-blue-600 text-white font-bold">
-              <Link to="/colis/tracking">Suivre un colis</Link>
-            </Button>
+            <Link to="/colis/expedition">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Package className="h-4 w-4 mr-2" />
+                Expédier un colis
+              </Button>
+            </Link>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="bg-white/90 backdrop-blur border-0 shadow-xl mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Livraison <span className="text-blue-600">Internationale</span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Expédiez vos colis partout dans le monde avec notre réseau international
+          </p>
+        </div>
+
+        {/* Calculateur de tarifs */}
+        <Card className="mb-12 bg-white/95 backdrop-blur border-0 shadow-xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
-              <Globe className="h-6 w-6" />
-              Expédition internationale
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <Calculator className="h-6 w-6 text-blue-600" />
+              Calculer votre tarif international
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-gray-700">Envoyez vos colis dans le monde entier avec nos partenaires internationaux. Livraison rapide, suivi universel, assurance premium.</p>
-            
-            {!submitSuccess ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="expediteur" className="block text-sm font-medium text-gray-700 mb-1">
-                      <User className="inline h-4 w-4 mr-1" />
-                      Expéditeur
-                    </label>
-                    <Input
-                      id="expediteur"
-                      name="expediteur"
-                      value={formData.expediteur}
-                      onChange={handleChange}
-                      required
-                      placeholder="Nom complet"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="destinataire" className="block text-sm font-medium text-gray-700 mb-1">
-                      <User className="inline h-4 w-4 mr-1" />
-                      Destinataire
-                    </label>
-                    <Input
-                      id="destinataire"
-                      name="destinataire"
-                      value={formData.destinataire}
-                      onChange={handleChange}
-                      required
-                      placeholder="Nom complet"
-                    />
-                  </div>
-                </div>
-
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
                 <div>
-                  <label htmlFor="adresse" className="block text-sm font-medium text-gray-700 mb-1">
-                    <MapPin className="inline h-4 w-4 mr-1" />
-                    Adresse de livraison
-                  </label>
-                  <Textarea
-                    id="adresse"
-                    name="adresse"
-                    value={formData.adresse}
-                    onChange={handleChange}
-                    required
-                    placeholder="Adresse complète avec code postal"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label htmlFor="paysDestination" className="block text-sm font-medium text-gray-700 mb-1">
-                      <Globe className="inline h-4 w-4 mr-1" />
-                      Pays de destination
-                    </label>
-                    <Select 
-                      value={formData.paysDestination} 
-                      onValueChange={(value) => handleSelectChange('paysDestination', value)}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un pays" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COUNTRIES.map(country => (
-                          <SelectItem key={country} value={country}>{country}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="poids" className="block text-sm font-medium text-gray-700 mb-1">
-                      <Package className="inline h-4 w-4 mr-1" />
-                      Poids (kg)
-                    </label>
-                    <Input
-                      id="poids"
-                      name="poids"
-                      type="number"
-                      min="0.1"
-                      step="0.1"
-                      value={formData.poids}
-                      onChange={handleChange}
-                      required
-                      placeholder="0.5"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="service" className="block text-sm font-medium text-gray-700 mb-1">
-                      <Clock className="inline h-4 w-4 mr-1" />
-                      Service de livraison
-                    </label>
-                    <Select 
-                      value={formData.service} 
-                      onValueChange={(value) => handleSelectChange('service', value)}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un service" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SERVICES.map(service => (
-                          <SelectItem key={service.value} value={service.value}>{service.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                    <Package className="inline h-4 w-4 mr-1" />
-                    Description du contenu
-                  </label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                    placeholder="Décrivez précisément le contenu pour les formalités douanières"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <FileText className="inline h-4 w-4 mr-1" />
-                    Documents requis
-                  </label>
-                  <Select 
-                    value={formData.documents} 
-                    onValueChange={(value) => handleSelectChange('documents', value)}
-                    multiple
-                  >
+                  <Label htmlFor="origin">Pays d'origine</Label>
+                  <Select value={calculatorData.origin} onValueChange={(value) => setCalculatorData({...calculatorData, origin: value})}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez les documents" />
+                      <SelectValue placeholder="Sélectionnez le pays d'origine" />
                     </SelectTrigger>
                     <SelectContent>
-                      {DOCUMENTS.map(doc => (
-                        <SelectItem key={doc.value} value={doc.value}>{doc.label}</SelectItem>
+                      <SelectItem value="Congo">Congo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="destination">Pays de destination</Label>
+                  <Select value={calculatorData.destination} onValueChange={(value) => setCalculatorData({...calculatorData, destination: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez le pays de destination" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>{country}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-gray-500">Sélectionnez les documents que vous joindrez</p>
                 </div>
-
-                <div className="pt-2">
-                  <label className="flex items-start space-x-2">
-                    <Checkbox 
-                      id="douane" 
-                      checked={formData.declarationDouane}
-                      onCheckedChange={(checked) => handleCheckboxChange('declarationDouane', !!checked)}
-                      required
-                    />
-                    <span className="text-sm font-medium leading-none">
-                      Je certifie que les informations fournies sont exactes et complètes pour les formalités douanières.
-                      Toute fausse déclaration peut entraîner des pénalités.
-                    </span>
-                  </label>
+                
+                <div>
+                  <Label htmlFor="weight">Poids (kg)</Label>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 2.5"
+                    value={calculatorData.weight}
+                    onChange={(e) => setCalculatorData({...calculatorData, weight: e.target.value})}
+                  />
                 </div>
-
-                {estimatedCost && (
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-blue-700">Estimation du coût:</span>
-                      <span className="font-bold text-lg">{estimatedCost.toLocaleString()} FCFA</span>
+                
+                <div>
+                  <Label htmlFor="service">Service</Label>
+                  <Select value={calculatorData.service} onValueChange={(value) => setCalculatorData({...calculatorData, service: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {serviceTypes.map((service) => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name} - {service.price}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button onClick={calculatePrice} className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Calculator className="h-4 w-4 mr-2" />
+                  Calculer le tarif
+                </Button>
+              </div>
+              
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Résultat du calcul</h3>
+                {calculatedPrice > 0 ? (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600">{calculatedPrice.toLocaleString()} FCFA</div>
+                      <p className="text-sm text-gray-600">Prix total estimé</p>
                     </div>
-                    <div className="text-sm text-blue-600 mt-1">
-                      Inclut l'assurance de base et le suivi international
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Prix de base:</span>
+                        <span>15 000 FCFA</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Poids ({calculatorData.weight}kg):</span>
+                        <span>{(parseFloat(calculatorData.weight) * 2000).toLocaleString()} FCFA</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Service {serviceTypes.find(s => s.id === calculatorData.service)?.name}:</span>
+                        <span>+{((15000 + parseFloat(calculatorData.weight) * 2000) * (serviceTypes.find(s => s.id === calculatorData.service)?.id === 'standard' ? 0.67 : serviceTypes.find(s => s.id === calculatorData.service)?.id === 'express' ? 2 : 0)).toLocaleString()} FCFA</span>
+                      </div>
+                      <hr className="my-2" />
+                      <div className="flex justify-between font-semibold">
+                        <span>Total:</span>
+                        <span>{calculatedPrice.toLocaleString()} FCFA</span>
+                      </div>
                     </div>
                   </div>
-                )}
-
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800"
-                  >
-                    {isSubmitting ? (
-                      <span className="flex items-center">
-                        <Clock className="h-4 w-4 mr-2 animate-spin" />
-                        En cours...
-                      </span>
-                    ) : (
-                      <span className="flex items-center">
-                        <Send className="h-4 w-4 mr-2" />
-                        Envoyer le colis
-                      </span>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-6">
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h3 className="font-bold text-green-800 flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Colis international créé avec succès
-                  </h3>
-                  <p className="mt-2">
-                    Votre numéro de suivi: <span className="font-mono font-bold">{generatedColisId}</span>
-                  </p>
-                  <p className="mt-1 text-sm">
-                    Vous pouvez maintenant ajouter des photos ou documents supplémentaires pour faciliter le traitement douanier.
-                  </p>
-                </div>
-
-                <ColisImageUpload 
-                  colisId={generatedColisId!} 
-                  onUploadSuccess={handleUploadComplete}
-                />
-
-                {uploadCompleted && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                    <p className="text-blue-700">Téléversement terminé! Redirection vers le suivi...</p>
+                ) : (
+                  <div className="text-center text-gray-500">
+                    <Calculator className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                    <p>Remplissez les informations pour calculer le tarif</p>
                   </div>
                 )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Section tarifs, partenaires, etc. */}
-        <Card className="bg-white/90 backdrop-blur border-0 shadow-xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-700">
-              <Calculator className="h-6 w-6" />
-              Tarifs & Partenaires
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="mb-4 text-gray-700 list-disc pl-6">
-              <li>Livraison express vers l'Europe, l'Afrique, l'Asie, l'Amérique</li>
-              <li>Partenaires : DHL, FedEx, UPS, La Poste, etc.</li>
-              <li>Assurance premium jusqu'à 500 000 FCFA</li>
-              <li>Tarifs à partir de 15 000 FCFA selon la destination</li>
-            </ul>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-              <div className="flex flex-col items-center p-3 bg-blue-50 rounded-lg">
-                <Shield className="h-8 w-8 text-blue-600 mb-2" />
-                <span className="font-medium text-center">Assurance incluse</span>
-              </div>
-              <div className="flex flex-col items-center p-3 bg-blue-50 rounded-lg">
-                <Globe className="h-8 w-8 text-blue-600 mb-2" />
-                <span className="font-medium text-center">200+ pays</span>
-              </div>
-              <div className="flex flex-col items-center p-3 bg-blue-50 rounded-lg">
-                <Clock className="h-8 w-8 text-blue-600 mb-2" />
-                <span className="font-medium text-center">Suivi en temps réel</span>
-              </div>
-              <div className="flex flex-col items-center p-3 bg-blue-50 rounded-lg">
-                <Download className="h-8 w-8 text-blue-600 mb-2" />
-                <span className="font-medium text-center">Documents inclus</span>
               </div>
             </div>
-            
-            <Badge className="bg-blue-200 text-blue-700 mt-4">Service international</Badge>
           </CardContent>
         </Card>
+
+        {/* Services */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold text-center mb-8">Nos Services Internationaux</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {serviceTypes.map((service) => (
+              <Card key={service.id} className={`relative hover:shadow-lg transition-shadow ${service.popular ? 'border-blue-300 shadow-xl' : ''}`}>
+                {service.popular && (
+                  <Badge className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white">
+                    Le plus choisi
+                  </Badge>
+                )}
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <service.icon className="h-5 w-5 text-blue-600" />
+                    {service.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-blue-600 mb-2">{service.price}</div>
+                  <p className="text-gray-600 mb-4">{service.delay} • {service.transport}</p>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Suivi en temps réel
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Assurance incluse
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Livraison à domicile
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold text-center mb-8">Pourquoi nous choisir ?</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
+              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <feature.icon className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Témoignages */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold text-center mb-8">Ce que disent nos clients</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-1 mb-3">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 mb-4">"{testimonial.comment}"</p>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">{testimonial.name}</span>
+                    <span className="text-sm text-gray-500">{testimonial.country}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardContent className="pt-6">
+              <h3 className="text-2xl font-bold mb-4">Prêt à expédier à l'international ?</h3>
+              <p className="mb-6">Rejoignez des milliers de clients satisfaits</p>
+              <Link to="/colis/expedition">
+                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+                  <Zap className="h-4 w-4 mr-2" />
+                  Commencer maintenant
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
