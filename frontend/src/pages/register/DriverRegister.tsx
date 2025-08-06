@@ -11,15 +11,19 @@ import {
   Phone, 
   CheckCircle,
   ArrowLeft,
-  Users,
+  Car,
   Camera,
-  Upload
+  Upload,
+  MapPin,
+  CreditCard,
+  FileText
 } from 'lucide-react';
 
-export default function CustomerRegister() {
+export default function DriverRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [licensePreview, setLicensePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -27,9 +31,12 @@ export default function CustomerRegister() {
     phone: '',
     password: '',
     confirmPassword: '',
-    address: '',
-    city: '',
-    postalCode: '',
+    licenseNumber: '',
+    vehicleType: '',
+    vehicleModel: '',
+    vehiclePlate: '',
+    workZones: '',
+    experience: '',
     acceptTerms: false
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +50,17 @@ export default function CustomerRegister() {
       const reader = new FileReader();
       reader.onload = (e) => {
         setAvatarPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLicenseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLicensePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -80,15 +98,21 @@ export default function CustomerRegister() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
-        userType: 'customer',
-        avatar: avatarPreview
+        userType: 'driver',
+        avatar: avatarPreview,
+        licenseNumber: formData.licenseNumber,
+        vehicleType: formData.vehicleType,
+        vehicleModel: formData.vehicleModel,
+        vehiclePlate: formData.vehiclePlate,
+        workZones: formData.workZones,
+        experience: formData.experience
       });
 
       if (result.success) {
         addNotification({
           type: 'success',
           title: 'Inscription réussie !',
-          message: 'Votre compte client a été créé avec succès',
+          message: 'Votre compte chauffeur a été créé avec succès',
           duration: 3000,
         });
         navigate('/login');
@@ -112,17 +136,17 @@ export default function CustomerRegister() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     });
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full">
+      <div className="max-w-3xl w-full">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
@@ -131,10 +155,10 @@ export default function CustomerRegister() {
                 <ArrowLeft className="w-6 h-6" />
               </Link>
               <div className="flex items-center space-x-3">
-                <Users className="w-8 h-8" />
+                <Car className="w-8 h-8" />
                 <div>
-                  <h1 className="text-2xl font-bold">Inscription Client</h1>
-                  <p className="text-indigo-100">Créez votre compte pour accéder à tous nos services</p>
+                  <h1 className="text-2xl font-bold">Inscription Chauffeur Taxi</h1>
+                  <p className="text-indigo-100">Rejoignez notre équipe de chauffeurs professionnels</p>
                 </div>
               </div>
             </div>
@@ -143,54 +167,100 @@ export default function CustomerRegister() {
           {/* Formulaire */}
           <div className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Avatar */}
+              {/* Avatar et permis */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Photo de profil</h3>
-                <div className="flex items-center space-x-6">
-                  <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                      {avatarPreview ? (
-                        <img 
-                          src={avatarPreview} 
-                          alt="Avatar preview" 
-                          className="w-full h-full object-cover"
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Photos et documents</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Avatar */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Photo de profil
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                          {avatarPreview ? (
+                            <img 
+                              src={avatarPreview} 
+                              alt="Avatar preview" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-10 h-10 text-gray-400" />
+                          )}
+                        </div>
+                        <label 
+                          htmlFor="avatar" 
+                          className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1.5 rounded-full cursor-pointer hover:bg-indigo-700 transition-colors"
+                        >
+                          <Camera className="w-3 h-3" />
+                        </label>
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          id="avatar"
+                          name="avatar"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarChange}
+                          className="hidden"
                         />
-                      ) : (
-                        <User className="w-12 h-12 text-gray-400" />
-                      )}
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('avatar')?.click()}
+                          className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                        >
+                          <Upload className="w-4 h-4" />
+                          <span>Choisir une photo</span>
+                        </button>
+                      </div>
                     </div>
-                    <label 
-                      htmlFor="avatar" 
-                      className="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-full cursor-pointer hover:bg-indigo-700 transition-colors"
-                    >
-                      <Camera className="w-4 h-4" />
-                    </label>
                   </div>
-                  <div className="flex-1">
-                    <label htmlFor="avatar" className="block text-sm font-medium text-gray-700 mb-2">
-                      Ajouter une photo de profil
+
+                  {/* Permis de conduire */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Permis de conduire
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        id="avatar"
-                        name="avatar"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => document.getElementById('avatar')?.click()}
-                        className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <Upload className="w-4 h-4" />
-                        <span className="text-sm">Choisir une image</span>
-                      </button>
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300">
+                          {licensePreview ? (
+                            <img 
+                              src={licensePreview} 
+                              alt="License preview" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FileText className="w-8 h-8 text-gray-400" />
+                          )}
+                        </div>
+                        <label 
+                          htmlFor="license" 
+                          className="absolute bottom-0 right-0 bg-green-600 text-white p-1.5 rounded-full cursor-pointer hover:bg-green-700 transition-colors"
+                        >
+                          <Camera className="w-3 h-3" />
+                        </label>
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          id="license"
+                          name="license"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLicenseChange}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('license')?.click()}
+                          className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                        >
+                          <Upload className="w-4 h-4" />
+                          <span>Scanner le permis</span>
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Formats acceptés : JPG, PNG, GIF (max 5MB)
-                    </p>
                   </div>
                 </div>
               </div>
@@ -242,7 +312,7 @@ export default function CustomerRegister() {
               {/* Contact */}
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Informations de contact</h3>
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                       Adresse email *
@@ -283,55 +353,125 @@ export default function CustomerRegister() {
                 </div>
               </div>
 
-              {/* Adresse */}
+              {/* Informations professionnelles */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Adresse de livraison</h3>
-                <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Informations professionnelles</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                      Adresse
+                    <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                      Numéro de permis *
                     </label>
                     <input
-                      id="address"
-                      name="address"
+                      id="licenseNumber"
+                      name="licenseNumber"
                       type="text"
+                      required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      placeholder="123 Rue de la Paix"
-                      value={formData.address}
+                      placeholder="1234567890"
+                      value={formData.licenseNumber}
                       onChange={handleChange}
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                        Ville
-                      </label>
-                      <input
-                        id="city"
-                        name="city"
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="Paris"
-                        value={formData.city}
-                        onChange={handleChange}
-                      />
-                    </div>
+                  <div>
+                    <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-2">
+                      Années d'expérience
+                    </label>
+                    <select
+                      id="experience"
+                      name="experience"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      value={formData.experience}
+                      onChange={handleChange}
+                    >
+                      <option value="">Sélectionnez</option>
+                      <option value="0-1">0-1 an</option>
+                      <option value="1-3">1-3 ans</option>
+                      <option value="3-5">3-5 ans</option>
+                      <option value="5-10">5-10 ans</option>
+                      <option value="10+">10+ ans</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
 
-                    <div>
-                      <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-2">
-                        Code postal
-                      </label>
-                      <input
-                        id="postalCode"
-                        name="postalCode"
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        placeholder="75001"
-                        value={formData.postalCode}
-                        onChange={handleChange}
-                      />
-                    </div>
+              {/* Informations véhicule */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Informations véhicule</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="vehicleType" className="block text-sm font-medium text-gray-700 mb-2">
+                      Type de véhicule *
+                    </label>
+                    <select
+                      id="vehicleType"
+                      name="vehicleType"
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      value={formData.vehicleType}
+                      onChange={handleChange}
+                    >
+                      <option value="">Sélectionnez</option>
+                      <option value="sedan">Berline</option>
+                      <option value="suv">SUV</option>
+                      <option value="van">Fourgon</option>
+                      <option value="luxury">Luxe</option>
+                      <option value="electric">Électrique</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-700 mb-2">
+                      Modèle *
+                    </label>
+                    <input
+                      id="vehicleModel"
+                      name="vehicleModel"
+                      type="text"
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="Toyota Camry"
+                      value={formData.vehicleModel}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="vehiclePlate" className="block text-sm font-medium text-gray-700 mb-2">
+                      Plaque d'immatriculation *
+                    </label>
+                    <input
+                      id="vehiclePlate"
+                      name="vehiclePlate"
+                      type="text"
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="AB-123-CD"
+                      value={formData.vehiclePlate}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Zones de travail */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Zones de travail</h3>
+                <div>
+                  <label htmlFor="workZones" className="block text-sm font-medium text-gray-700 mb-2">
+                    Zones où vous souhaitez travailler
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      id="workZones"
+                      name="workZones"
+                      type="text"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="Paris, Lyon, Marseille (séparés par des virgules)"
+                      value={formData.workZones}
+                      onChange={handleChange}
+                    />
                   </div>
                 </div>
               </div>
@@ -339,7 +479,7 @@ export default function CustomerRegister() {
               {/* Mot de passe */}
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Sécurité</h3>
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                       Mot de passe *
@@ -417,33 +557,33 @@ export default function CustomerRegister() {
                 </label>
               </div>
 
-              {/* Services disponibles */}
+              {/* Avantages */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-2">Services disponibles avec votre compte client :</h4>
+                <h4 className="font-medium text-gray-900 mb-2">Avantages de rejoindre notre équipe :</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
                   <div className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Réservation de taxi
+                    Horaires flexibles
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Livraison à domicile
+                    Revenus attractifs
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Commandes restaurants
+                    Support technique 24/7
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Location de voiture
+                    Formation continue
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Covoiturage
+                    Assurance complète
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                    Shopping en ligne
+                    Paiements sécurisés
                   </div>
                 </div>
               </div>
@@ -459,7 +599,7 @@ export default function CustomerRegister() {
                     Création du compte...
                   </div>
                 ) : (
-                  'Créer mon compte client'
+                  'Créer mon compte chauffeur'
                 )}
               </button>
             </form>

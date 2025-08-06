@@ -59,7 +59,7 @@ const FooterColis: React.FC = () => {
               links: [
                 { to: "/colis/support", label: "Centre d'aide", icon: HelpCircle },
                 { to: "/colis/restrictions", label: "Restrictions", icon: Shield },
-                { href: "tel:+33123456789", label: "Support téléphonique", icon: Phone }
+                { href: "tel:+242123456789", label: "Support téléphonique", icon: Phone }
               ]
             },
             { 
@@ -176,7 +176,7 @@ const FooterColis: React.FC = () => {
               {[
                 { to: "/colis/support", label: "Centre d'aide", icon: HelpCircle },
                 { to: "/colis/restrictions", label: "Restrictions", icon: Shield },
-                { href: "tel:+33123456789", label: "Support téléphonique", icon: Phone }
+                { href: "tel:+242123456789", label: "Support téléphonique", icon: Phone }
               ].map((link, index) => (
                 <motion.li 
                   key={index}

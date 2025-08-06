@@ -141,7 +141,7 @@ const ColisInternationalPage: React.FC = () => {
       name: "Pierre D.",
       country: "France",
       rating: 5,
-      comment: "Service impeccable ! Mon colis est arrivé en 3 jours à Paris."
+      comment: "Service impeccable ! Mon colis est arrivé en 3 jours à Brazzaville."
     },
     {
       name: "Sarah M.",

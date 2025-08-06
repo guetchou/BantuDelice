@@ -407,7 +407,7 @@ export class TarificationService {
       { from: 'Brazzaville', to: 'Dolisie', weight: 3, service: 'standard' },
       { from: 'Brazzaville', to: 'Ouesso', weight: 8, service: 'standard' },
       { from: 'Brazzaville', to: 'Kinshasa', weight: 2, service: 'express' },
-      { from: 'Brazzaville', to: 'Paris', weight: 5, service: 'express' }
+      { from: 'Brazzaville', to: 'Brazzaville', weight: 5, service: 'express' }
     ];
 
     const calculatedExamples = examples.map(example => ({

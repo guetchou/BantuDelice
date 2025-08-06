@@ -156,7 +156,7 @@
 | **Visualisations** | 2/10 | 9/10 | +350% |
 | **Interactivité** | 4/10 | 9/10 | +125% |
 | **Fonctionnalités** | 5/10 | 9/10 | +80% |
-| **Performance** | 6/10 | 8/10 | +33% |
+| **Performance** | 6/10 | 8/10 | +242% |
 | **UX/UI** | 7/10 | 9/10 | +29% |
 | **Innovation** | 3/10 | 8/10 | +167% |
 

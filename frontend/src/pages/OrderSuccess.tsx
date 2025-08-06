@@ -23,7 +23,7 @@ const OrderSuccess = () => {
   const orderDetails = {
     id: id || 'order-12345',
     restaurantName: 'Burger Deluxe',
-    deliveryAddress: '123 Rue de Paris, 75001 Paris',
+    deliveryAddress: '123 Rue de Brazzaville, 75001 Brazzaville',
     estimatedDeliveryTime: '30-45 minutes',
   };
 

@@ -163,7 +163,7 @@ const ColisRestrictionsPage: React.FC = () => {
         'Certificat de conformité',
         'Déclaration en douane'
       ],
-      contact: 'Douanes françaises - +33 1 72 40 78 50'
+      contact: 'Douanes françaises - +242 1 72 40 78 50'
     },
     {
       country: 'États-Unis',

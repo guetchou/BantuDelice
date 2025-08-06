@@ -28,7 +28,7 @@ const DELIVERY_CONFIG = {
 const RESTAURANT_LOCATION = {
   lat: 48.8566,
   lng: 2.3522,
-  address: "Restaurant Bantu Delice, Paris"
+  address: "Restaurant Bantu Delice, Brazzaville"
 };
 
 // Calcul de la distance entre deux points (formule de Haversine)

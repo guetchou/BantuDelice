@@ -37,7 +37,7 @@ const ColisHistoriquePage: React.FC = () => {
       sender: 'Jean Dupont',
       recipient: 'Pierre Durand',
       from: 'Brazzaville',
-      to: 'Paris',
+      to: 'Brazzaville',
       date: '2024-07-10',
       price: 15000,
       weight: '1.8kg'

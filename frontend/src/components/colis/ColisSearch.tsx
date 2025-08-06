@@ -73,7 +73,7 @@ const ColisSearch: React.FC<ColisSearchProps> = ({
       type: 'international',
       status: 'in_transit',
       from: 'Brazzaville',
-      to: 'Paris',
+      to: 'Brazzaville',
       date: '2024-07-10',
       price: 15000
     },

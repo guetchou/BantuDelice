@@ -112,7 +112,7 @@ const ExecutiveDashboard: React.FC = () => {
       { name: 'Le Gourmet Congolais', revenue: 2850000, orders: 456, rating: 4.8 },
       { name: 'Chez Mama', revenue: 2240000, orders: 389, rating: 4.6 },
       { name: 'Restaurant Brazza', revenue: 1980000, orders: 312, rating: 4.7 },
-      { name: 'Le Petit Paris', revenue: 1650000, orders: 298, rating: 4.5 },
+      { name: 'Le Petit Brazzaville', revenue: 1650000, orders: 298, rating: 4.5 },
       { name: 'Cuisine Traditionnelle', revenue: 1420000, orders: 267, rating: 4.4 }
     ],
     regionalPerformance: [

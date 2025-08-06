@@ -233,7 +233,7 @@ const OrderSummary: React.FC = () => {
                 <MapPin className="h-5 w-5 mr-2 mt-0.5 text-muted-foreground" />
                 <div>
                   <p className="font-medium">Adresse de livraison</p>
-                  <p className="text-muted-foreground">123 Rue de Paris, 75001 Paris</p>
+                  <p className="text-muted-foreground">123 Rue de Brazzaville, 75001 Brazzaville</p>
                   <Button variant="link" className="px-0 h-auto py-1">Modifier</Button>
                 </div>
               </div>

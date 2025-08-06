@@ -77,7 +77,7 @@ export const mockData = {
       id: 'driver-1',
       user_id: 'driver-user-1',
       name: 'Jean Conducteur',
-      phone: '+3366778899',
+      phone: '+24266778899',
       vehicle_type: 'car',
       average_rating: 4.8,
       profile_picture: 'https://example.com/profile.jpg',
@@ -126,7 +126,7 @@ export const mockData = {
       email: 'user@example.com',
       first_name: 'John',
       last_name: 'Doe',
-      phone: '+33123456789',
+      phone: '+242123456789',
       role: 'customer',
       created_at: '2023-01-01T10:00:00Z'
     }

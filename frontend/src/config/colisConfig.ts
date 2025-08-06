@@ -35,7 +35,7 @@ export const colisConfig = {
       'Sibiti'
     ],
     international: [
-      'Paris',
+      'Brazzaville',
       'Lyon',
       'Marseille',
       'Bruxelles',

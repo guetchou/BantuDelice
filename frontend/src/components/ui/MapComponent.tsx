@@ -34,7 +34,7 @@ export default function MapComponent({ onLocationSelect, initialLocation, classN
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: initialLocation ? [initialLocation.lng, initialLocation.lat] : [2.3522, 48.8566], // Paris par défaut
+      center: initialLocation ? [initialLocation.lng, initialLocation.lat] : [2.3522, 48.8566], // Brazzaville par défaut
       zoom: 13
     });
 

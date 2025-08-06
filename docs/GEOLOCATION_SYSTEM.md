@@ -270,7 +270,7 @@ import { GeolocationService } from '@/services/geolocationService';
 describe('GeolocationService', () => {
   test('should calculate distance correctly', () => {
     const distance = GeolocationService.calculateDistance(
-      48.8566, 2.3522, // Paris
+      48.8566, 2.3522, // Brazzaville
       40.7128, -74.0060 // New York
     );
     expect(distance).toBeCloseTo(5837, 0);

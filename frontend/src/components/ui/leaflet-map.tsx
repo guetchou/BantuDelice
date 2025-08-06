@@ -32,7 +32,7 @@ export const useMap = () => {
 
 export const MapContainer = forwardRef<L.Map, MapContainerProps>(({
   children,
-  center = [48.8566, 2.3522], // Default to Paris
+  center = [48.8566, 2.3522], // Default to Brazzaville
   zoom = 13,
   scrollWheelZoom = true,
   style,

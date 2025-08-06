@@ -73,7 +73,7 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
         id: 'd1',
         user_id: 'user1',
         name: 'Jean Dupont',
-        phone: '+33123456789',
+        phone: '+242123456789',
         current_latitude: 48.8566,
         current_longitude: 2.3522,
         is_available: true,
@@ -91,7 +91,7 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
         id: 'd2',
         user_id: 'user2',
         name: 'Marie Martin',
-        phone: '+33623456789',
+        phone: '+242623456789',
         current_latitude: 48.8606,
         current_longitude: 2.3376,
         is_available: true,
@@ -109,7 +109,7 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
         id: 'd3',
         user_id: 'user3',
         name: 'Pierre Dubois',
-        phone: '+33723456789',
+        phone: '+242723456789',
         current_latitude: 48.8474,
         current_longitude: 2.3591,
         is_available: true,
@@ -129,13 +129,13 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
       {
         id: 'req1',
         order_id: 'order123',
-        pickup_address: '12 Rue du Commerce, Paris',
-        delivery_address: '45 Avenue Victor Hugo, Paris',
+        pickup_address: '12 Rue du Commerce, Brazzaville',
+        delivery_address: '45 Avenue Victor Hugo, Brazzaville',
         status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         customer_name: 'Sophie Bernard',
-        customer_phone: '+33612345678',
+        customer_phone: '+242612345678',
         notes: 'Sonner à l\'interphone 42B'
       }
     ];
@@ -232,7 +232,7 @@ const DeliveryAssignment: React.FC<DeliveryAssignmentProps> = ({
   
   // Calculate map center
   const calculateMapCenter = (): [number, number] => {
-    if (mapMarkers.length === 0) return [48.8566, 2.3522]; // Default to Paris
+    if (mapMarkers.length === 0) return [48.8566, 2.3522]; // Default to Brazzaville
     
     const latitudes = mapMarkers.map(m => m.latitude);
     const longitudes = mapMarkers.map(m => m.longitude);

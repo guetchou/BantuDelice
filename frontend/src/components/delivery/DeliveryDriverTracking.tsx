@@ -29,7 +29,7 @@ interface DeliveryDriver {
 const DeliveryDriverTracking = () => {
   const { driverId } = useParams<{ driverId: string }>();
   const [driver, setDriver] = useState<DeliveryDriver | null>(null);
-  const [position, setPosition] = useState<[number, number]>([48.8566, 2.3522]); // Default to Paris coordinates
+  const [position, setPosition] = useState<[number, number]>([48.8566, 2.3522]); // Default to Brazzaville coordinates
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);

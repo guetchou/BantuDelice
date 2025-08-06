@@ -19,6 +19,13 @@ const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const CustomerRegister = lazy(() => import("@/pages/register/CustomerRegister"));
+const DriverRegister = lazy(() => import("@/pages/register/DriverRegister"));
+const DeliveryRegister = lazy(() => import("@/pages/register/DeliveryRegister"));
+const RestaurantRegister = lazy(() => import("@/pages/register/RestaurantRegister"));
+const HotelRegister = lazy(() => import("@/pages/register/HotelRegister"));
+const ShopRegister = lazy(() => import("@/pages/register/ShopRegister"));
+const ServiceProviderRegister = lazy(() => import("@/pages/register/ServiceProviderRegister"));
+const BusinessRegister = lazy(() => import("@/pages/register/BusinessRegister"));
 const Cart = lazy(() => import("@/pages/Cart"));
 const Checkout = lazy(() => import("@/pages/Checkout"));
 const OrderTracking = lazy(() => import("@/pages/OrderTracking"));
@@ -108,6 +115,13 @@ const mainRoutes = [
       { path: "auth/login", element: suspense(<Auth />) },
       { path: "auth/register", element: suspense(<Auth />) },
       { path: "register/customer", element: suspense(<CustomerRegister />) },
+      { path: "register/driver", element: suspense(<DriverRegister />) },
+      { path: "register/delivery", element: suspense(<DeliveryRegister />) },
+      { path: "register/restaurant", element: suspense(<RestaurantRegister />) },
+      { path: "register/hotel", element: suspense(<HotelRegister />) },
+      { path: "register/shop", element: suspense(<ShopRegister />) },
+      { path: "register/service-provider", element: suspense(<ServiceProviderRegister />) },
+      { path: "register/business", element: suspense(<BusinessRegister />) },
       // Intégration des routes Colis
       ...colisRoutes,
       { path: "*", element: <NotFound /> }

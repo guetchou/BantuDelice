@@ -91,7 +91,7 @@ INSERT INTO restaurants (name, description, image_url, rating, delivery_time, de
 ('Pizza Express', 'Pizzas italiennes fraîches et délicieuses', 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400', 4.2, 30, 1000, 'Italienne', '456 Avenue du Commerce, Brazzaville', '+242 987 654 321'),
 ('Sushi Bar', 'Sushi et sashimi de qualité premium', 'https://images.unsplash.com/photo-1579584425555-c3d17c2f9b6b?w=400', 4.7, 35, 1200, 'Japonaise', '789 Boulevard Central, Brazzaville', '+242 555 123 456'),
 ('Burger House', 'Burgers gourmets avec des ingrédients frais', 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', 4.3, 20, 600, 'Américaine', '321 Rue des Délices, Brazzaville', '+242 777 888 999'),
-('Café Parisien', 'Café et pâtisseries françaises', 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400', 4.6, 15, 500, 'Française', '654 Place de la République, Brazzaville', '+242 111 222 333');
+('Café Brazzavilleien', 'Café et pâtisseries françaises', 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400', 4.6, 15, 500, 'Française', '654 Place de la République, Brazzaville', '+242 111 222 333');
 
 -- Insert sample menu items
 INSERT INTO menu_items (restaurant_id, name, description, price, image_url, category) VALUES
