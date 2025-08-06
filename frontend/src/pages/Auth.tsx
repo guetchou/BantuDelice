@@ -22,7 +22,8 @@ import {
   CreditCard,
   Clock,
   Star,
-  ArrowRight
+  ArrowRight,
+  Home
 } from 'lucide-react';
 
 export default function Auth() {
@@ -170,7 +171,18 @@ export default function Auth() {
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Section gauche - Image/Illustration */}
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 lg:p-12 flex flex-col justify-center">
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 lg:p-12 flex flex-col justify-center relative">
+              {/* Bouton retour à l'accueil */}
+              <div className="absolute top-4 left-4">
+                <Link
+                  to="/"
+                  className="flex items-center space-x-2 text-white hover:text-indigo-200 transition-colors bg-black bg-opacity-20 rounded-lg px-3 py-2"
+                >
+                  <Home className="w-4 h-4" />
+                  <span className="text-sm font-medium">Accueil</span>
+                </Link>
+              </div>
+              
               <div className="text-center lg:text-left">
                 <h1 className="text-4xl font-bold text-white mb-4">
                   BantuDelice
