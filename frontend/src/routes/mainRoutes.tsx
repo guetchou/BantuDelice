@@ -18,6 +18,7 @@ const Hotel = lazy(() => import("@/pages/Hotel"));
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const Auth = lazy(() => import("@/pages/Auth"));
+const CustomerRegister = lazy(() => import("@/pages/register/CustomerRegister"));
 const Cart = lazy(() => import("@/pages/Cart"));
 const Checkout = lazy(() => import("@/pages/Checkout"));
 const OrderTracking = lazy(() => import("@/pages/OrderTracking"));
@@ -106,6 +107,7 @@ const mainRoutes = [
       { path: "auth", element: suspense(<Auth />) },
       { path: "auth/login", element: suspense(<Auth />) },
       { path: "auth/register", element: suspense(<Auth />) },
+      { path: "register/customer", element: suspense(<CustomerRegister />) },
       // Intégration des routes Colis
       ...colisRoutes,
       { path: "*", element: <NotFound /> }
