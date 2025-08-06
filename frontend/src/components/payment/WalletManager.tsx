@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/utils/formatCurrency";
-import { Wallet, CreditCard, ReceiptText, PlusCircle, ArrowRightLeft, ChevronRight } from "lucide-react";
+import { Wallet, CreditCard, Receipt, PlusCircle, ArrowRightLeft, ChevronRight } from "lucide-react";
 import apiService from "@/services/api";
 import { toast } from "sonner";
 import MobilePayment from '@/components/payment/MobilePayment';
@@ -387,7 +387,7 @@ const WalletManager = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center py-6">
-                <ReceiptText className="h-12 w-12 mx-auto text-muted-foreground" />
+                <Receipt className="h-12 w-12 mx-auto text-muted-foreground" />
                 <p className="mt-2 text-muted-foreground">Aucune facture à afficher</p>
                 <Button 
                   variant="outline" 

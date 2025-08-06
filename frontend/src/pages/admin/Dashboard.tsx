@@ -30,7 +30,7 @@ import {
   Utensils, 
   Car, 
   DollarSign,
-  CircleUser,
+  User,
   Settings,
   any,
   Flag
@@ -132,7 +132,7 @@ const AdminDashboard = () => {
                     className="justify-start px-2 data-[state=active]:bg-muted data-[state=active]:shadow-none"
                     onClick={() => setActiveTab('users')}
                   >
-                    <CircleUser className="h-4 w-4 mr-2" />
+                    <User className="h-4 w-4 mr-2" />
                     Utilisateurs
                   </TabsTrigger>
                   <TabsTrigger 

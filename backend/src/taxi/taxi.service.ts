@@ -157,8 +157,12 @@ export class TaxiService {
     }
 
     ride.rating = rating;
-    ride.comment = comment;
-    ride.ratingCategories = categories;
+    if (comment) {
+      ride.comment = comment;
+    }
+    if (categories) {
+      ride.ratingCategories = categories;
+    }
 
     return this.taxiRideRepository.save(ride);
   }

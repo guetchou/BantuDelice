@@ -19,7 +19,7 @@ import {
   User,
   Phone,
   Mail,
-  Weight,
+  Scale,
   DollarSign,
   Navigation,
   Wifi,
@@ -275,7 +275,7 @@ const PackageInfo = React.memo<{
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-2">
-              <Weight className="h-4 w-4 text-gray-400" />
+              <Scale className="h-4 w-4 text-gray-400" />
               <span className="text-sm">{trackingInfo.package?.weight ?? '–'} kg</span>
             </div>
             <div className="flex items-center gap-2">
@@ -623,7 +623,7 @@ const ColisTracking: React.FC = React.memo(() => {
                       </div>
                       <div className="bg-gray-50 p-3 rounded-lg">
                         <p className="text-gray-600 font-medium">Arrivée estimée</p>
-                        <p>{trackingInfo.estimatedArrival ? new Date(trackingInfo.estimatedArrival).toLocaleString('fr-FR') : 'Non disponible'}</p>
+                        <p>{trackingInfo.estimatedDelivery ? new Date(trackingInfo.estimatedDelivery).toLocaleString('fr-FR') : 'Non disponible'}</p>
                       </div>
                     </div>
                   )}

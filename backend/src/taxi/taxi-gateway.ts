@@ -11,7 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '../common/guards/ws-jwt.guard';
 import { TaxiService } from './taxi.service';
-import { TaxiRideStatus } from './entities/taxi-ride.entity';
+import { TaxiRideStatus, VehicleType, PaymentMethod } from './entities/taxi-ride.entity';
 
 @WebSocketGateway({
   cors: {
@@ -166,8 +166,8 @@ export class TaxiGateway implements OnGatewayConnection, OnGatewayDisconnect {
       destinationAddress: string;
       destinationLatitude: number;
       destinationLongitude: number;
-      vehicleType: string;
-      paymentMethod: string;
+      vehicleType: VehicleType;
+      paymentMethod: PaymentMethod;
     },
     @ConnectedSocket() client: Socket
   ) {

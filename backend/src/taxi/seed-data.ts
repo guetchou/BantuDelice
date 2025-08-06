@@ -113,7 +113,7 @@ export async function seedTaxiData(dataSource: DataSource) {
   ]);
 
   // Create pricing rules
-  const pricingRules = await pricingRepository.save([
+  const pricingData = [
     {
       id: 'pricing-standard',
       type: PricingType.BASE,
@@ -231,7 +231,14 @@ export async function seedTaxiData(dataSource: DataSource) {
       priority: 1,
       description: 'Tarif majoré le weekend',
     },
-  ]);
+  ];
+
+  const pricingRules: any[] = [];
+  for (const data of pricingData) {
+    const pricing = pricingRepository.create(data as any);
+    const savedPricing = await pricingRepository.save(pricing);
+    pricingRules.push(savedPricing);
+  }
 
   console.log(`✅ Seeded ${drivers.length} drivers`);
   console.log(`✅ Seeded ${vehicles.length} vehicles`);

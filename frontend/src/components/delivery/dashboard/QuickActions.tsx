@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Route, MessageSquare, Settings } from 'lucide-react';
+import { MapPin, Navigation, MessageSquare, Settings } from 'lucide-react';
 
 interface QuickActionsProps {
   onOptimizationClick: () => void;
@@ -21,7 +21,7 @@ const QuickActions = ({ onOptimizationClick }: QuickActionsProps) => {
             className="flex flex-col h-24 items-center justify-center"
             onClick={onOptimizationClick}
           >
-            <Route className="h-8 w-8 mb-2" />
+                            <Navigation className="h-8 w-8 mb-2" />
             <span>Optimisation</span>
           </Button>
           

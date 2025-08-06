@@ -17,6 +17,7 @@ const RestaurantDetail = lazy(() => import("@/pages/RestaurantDetail"));
 const Hotel = lazy(() => import("@/pages/Hotel"));
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
+const Auth = lazy(() => import("@/pages/Auth"));
 const Cart = lazy(() => import("@/pages/Cart"));
 const Checkout = lazy(() => import("@/pages/Checkout"));
 const OrderTracking = lazy(() => import("@/pages/OrderTracking"));
@@ -102,8 +103,9 @@ const mainRoutes = [
       // Routes d'authentification (unifiées)
       { path: "login", element: suspense(<Login />) },
       { path: "register", element: suspense(<Register />) },
-      { path: "auth/login", element: suspense(<Login />) },
-      { path: "auth/register", element: suspense(<Register />) },
+      { path: "auth", element: suspense(<Auth />) },
+      { path: "auth/login", element: suspense(<Auth />) },
+      { path: "auth/register", element: suspense(<Auth />) },
       // Intégration des routes Colis
       ...colisRoutes,
       { path: "*", element: <NotFound /> }

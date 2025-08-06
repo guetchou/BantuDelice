@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Navigation, MapPinned, CornerDownLeft, Phone, MessageCircle, Loader2 } from "lucide-react";
+import { MapPin, Navigation, MapPinIcon, CornerDownLeft, Phone, MessageCircle, Loader2 } from "lucide-react";
 import { ComboboxPopover } from "@/components/ui/combobox";
 import { toast } from "@/hooks/use-toast";
 import TaxiMap from './TaxiMap';
@@ -226,7 +226,7 @@ const LocationSection: React.FC<LocationSectionProps> = ({
                   onClick={() => onUseCurrentLocation()}
                   title="Utiliser ma position actuelle"
                 >
-                  <MapPinned className="h-4 w-4 text-primary" />
+                  <MapPinIcon className="h-4 w-4 text-primary" />
                 </Button>
                 <Button 
                   size="icon" 

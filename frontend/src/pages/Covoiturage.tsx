@@ -15,7 +15,7 @@ import {
   CreditCard,
   MessageCircle,
   Calendar,
-  Route
+  Navigation
 } from 'lucide-react';
 
 const Covoiturage: React.FC = () => {
@@ -36,7 +36,7 @@ const Covoiturage: React.FC = () => {
       description: "Communiquez directement avec votre conducteur"
     },
     {
-      icon: Route,
+      icon: Navigation,
       title: "Trajets optimisés",
       description: "Routes calculées pour minimiser le temps de trajet"
     }
@@ -103,7 +103,7 @@ const Covoiturage: React.FC = () => {
             </Button>
             <Button asChild variant="outline" size="lg" className="backdrop-blur-md bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300">
               <Link to="/covoiturage/rechercher">
-                <Route className="h-4 w-4 mr-2" />
+                <Navigation className="h-4 w-4 mr-2" />
                 Rechercher un trajet
               </Link>
             </Button>
