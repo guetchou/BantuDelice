@@ -3,7 +3,26 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../context/NotificationContext';
-import { Eye, EyeOff, Mail, Lock, User, Phone, Building, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  Eye, 
+  EyeOff, 
+  Mail, 
+  Lock, 
+  User, 
+  Phone, 
+  Building, 
+  Shield, 
+  CheckCircle, 
+  AlertCircle,
+  Car,
+  Truck,
+  Store,
+  Users,
+  MapPin,
+  CreditCard,
+  Clock,
+  Star
+} from 'lucide-react';
 
 export default function Auth() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -17,13 +36,80 @@ export default function Auth() {
     lastName: '',
     phone: '',
     company: '',
-    userType: 'customer' as 'customer' | 'business' | 'driver'
+    userType: 'customer' as 'customer' | 'driver' | 'restaurant' | 'delivery' | 'business' | 'hotel' | 'shop' | 'service_provider' | 'admin'
   });
   const [isLoading, setIsLoading] = useState(false);
   const { login, register, isAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Types de comptes avec descriptions
+  const accountTypes = [
+    {
+      value: 'customer',
+      label: 'Client',
+      icon: Users,
+      description: 'Utilisateur final - Accès à tous les services',
+      features: ['Réservation de taxi', 'Livraison à domicile', 'Commandes restaurants', 'Location de voiture', 'Covoiturage', 'Shopping en ligne', 'Services à domicile']
+    },
+    {
+      value: 'driver',
+      label: 'Chauffeur Taxi',
+      icon: Car,
+      description: 'Conducteur de taxi - Transport de passagers',
+      features: ['Transport de passagers', 'Gestion des courses', 'Suivi GPS', 'Calcul des tarifs', 'Historique des courses']
+    },
+    {
+      value: 'delivery',
+      label: 'Livreur',
+      icon: Truck,
+      description: 'Livreur de colis et nourriture',
+      features: ['Livraison de colis', 'Livraison de nourriture', 'Suivi des livraisons', 'Gestion des tournées', 'Validation des livraisons']
+    },
+    {
+      value: 'restaurant',
+      label: 'Restaurant',
+      icon: Store,
+      description: 'Restaurant - Gestion des commandes et menus',
+      features: ['Gestion des menus', 'Commandes en ligne', 'Livraison', 'Gestion des stocks', 'Analytics des ventes']
+    },
+    {
+      value: 'hotel',
+      label: 'Hôtel',
+      icon: Building,
+      description: 'Hôtel - Gestion des réservations',
+      features: ['Gestion des chambres', 'Réservations en ligne', 'Gestion des clients', 'Services hôteliers']
+    },
+    {
+      value: 'shop',
+      label: 'Boutique',
+      icon: Store,
+      description: 'Boutique en ligne - E-commerce',
+      features: ['Gestion des produits', 'Commandes en ligne', 'Livraison', 'Gestion des stocks', 'Marketing']
+    },
+    {
+      value: 'service_provider',
+      label: 'Prestataire de services',
+      icon: Building,
+      description: 'Services à domicile (plombier, électricien, etc.)',
+      features: ['Gestion des interventions', 'Devis en ligne', 'Planification', 'Facturation']
+    },
+    {
+      value: 'business',
+      label: 'Entreprise B2B',
+      icon: Building,
+      description: 'Compte entreprise - Services B2B',
+      features: ['Services corporate', 'Facturation', 'Gestion d\'équipe', 'Réservations groupées']
+    },
+    {
+      value: 'admin',
+      label: 'Administrateur',
+      icon: Shield,
+      description: 'Administration du système',
+      features: ['Gestion des utilisateurs', 'Configuration système', 'Analytics', 'Support technique']
+    }
+  ];
 
   // Rediriger si déjà connecté
   React.useEffect(() => {
@@ -129,9 +215,11 @@ export default function Auth() {
     });
   };
 
+  const selectedAccountType = accountTypes.find(type => type.value === formData.userType);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl w-full">
+      <div className="max-w-6xl w-full">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Section gauche - Image/Illustration */}
@@ -147,19 +235,19 @@ export default function Auth() {
                 {/* Fonctionnalités */}
                 <div className="space-y-4">
                   <div className="flex items-center text-indigo-100">
-                    <CheckCircle className="w-5 h-5 mr-3" />
+                    <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0" />
                     <span>Livraison rapide et sécurisée</span>
                   </div>
                   <div className="flex items-center text-indigo-100">
-                    <CheckCircle className="w-5 h-5 mr-3" />
+                    <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0" />
                     <span>Service taxi professionnel</span>
                   </div>
                   <div className="flex items-center text-indigo-100">
-                    <CheckCircle className="w-5 h-5 mr-3" />
+                    <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0" />
                     <span>Restaurants et services locaux</span>
                   </div>
                   <div className="flex items-center text-indigo-100">
-                    <CheckCircle className="w-5 h-5 mr-3" />
+                    <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0" />
                     <span>Support client 24/7</span>
                   </div>
                 </div>
@@ -342,31 +430,59 @@ export default function Auth() {
                       </div>
                     </div>
 
+                    {/* Sélection du type de compte */}
                     <div>
-                      <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-4">
                         Type de compte
                       </label>
-                      <div className="relative">
-                        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <select
-                          id="userType"
-                          name="userType"
-                          required
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                          value={formData.userType}
-                          onChange={handleChange}
-                        >
-                          <option value="customer">Client particulier</option>
-                          <option value="business">Entreprise</option>
-                          <option value="driver">Chauffeur</option>
-                        </select>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {accountTypes.map((type) => {
+                          const IconComponent = type.icon;
+                          return (
+                            <div
+                              key={type.value}
+                              className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                                formData.userType === type.value
+                                  ? 'border-indigo-500 bg-indigo-50'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              }`}
+                              onClick={() => setFormData({ ...formData, userType: type.value as any })}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className={`p-2 rounded-lg ${
+                                  formData.userType === type.value
+                                    ? 'bg-indigo-500 text-white'
+                                    : 'bg-gray-100 text-gray-600'
+                                }`}>
+                                  <IconComponent className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="font-medium text-gray-900">{type.label}</h3>
+                                  <p className="text-sm text-gray-600 mt-1">{type.description}</p>
+                                  <div className="mt-2 space-y-1">
+                                    {type.features.map((feature, index) => (
+                                      <div key={index} className="flex items-center text-xs text-gray-500">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        {feature}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    {formData.userType === 'business' && (
+                    {(formData.userType === 'restaurant' || formData.userType === 'business' || formData.userType === 'hotel' || formData.userType === 'shop' || formData.userType === 'service_provider') && (
                       <div>
                         <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
-                          Nom de l'entreprise
+                          {formData.userType === 'restaurant' ? 'Nom du restaurant' : 
+                           formData.userType === 'hotel' ? 'Nom de l\'hôtel' :
+                           formData.userType === 'shop' ? 'Nom de la boutique' :
+                           formData.userType === 'service_provider' ? 'Nom de l\'entreprise' :
+                           'Nom de l\'entreprise'}
                         </label>
                         <div className="relative">
                           <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -376,7 +492,13 @@ export default function Auth() {
                             type="text"
                             required
                             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            placeholder="Nom de votre entreprise"
+                            placeholder={
+                              formData.userType === 'restaurant' ? 'Nom de votre restaurant' :
+                              formData.userType === 'hotel' ? 'Nom de votre hôtel' :
+                              formData.userType === 'shop' ? 'Nom de votre boutique' :
+                              formData.userType === 'service_provider' ? 'Nom de votre entreprise' :
+                              'Nom de votre entreprise'
+                            }
                             value={formData.company}
                             onChange={handleChange}
                           />

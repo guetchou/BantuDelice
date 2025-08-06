@@ -66,6 +66,7 @@
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
     "yet-another-react-lightbox": "^3.25.0",
+    "zod": "^4.0.15",
     "zustand": "^4.4.6"
   },
   "devDependencies": {
