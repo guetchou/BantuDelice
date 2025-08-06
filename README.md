@@ -1,6 +1,9 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 6dbd45fb (chore: commit all local changes before rebase)
 =======
 >>>>>>> 6dbd45fb (chore: commit all local changes before rebase)
 # Welcome to your GPT Engineer project
@@ -132,6 +135,10 @@ PAYPAL_MODE=sandbox
 PAYPAL_SANDBOX_CLIENT_ID=Ac21YqLXHrRWw7XgQEeiJGz7RGM5SfK7b_m4swrMdfchbXk1e9yhRZpeAzzVOdGHO6PazuGlbGLwsmeP
 PAYPAL_SANDBOX_CLIENT_SECRET=EAoM3_5QmUT3aOTH-H3CRa06HjNR3tWLMfiRy1Py_ye8sWkrZvQYu40k4cROaWJYaisluT2ZbL1z_Qpm
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> c01673cf (first commit)
+>>>>>>> 6dbd45fb (chore: commit all local changes before rebase)
 =======
 >>>>>>> c01673cf (first commit)
 >>>>>>> 6dbd45fb (chore: commit all local changes before rebase)
